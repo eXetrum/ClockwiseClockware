@@ -35,7 +35,7 @@ CREATE TABLE booking (
 	item_id INT NOT NULL,
 	city_id INT NOT NULL,
 	master_id INT NOT NULL,
-	datetime DATETIME NOT NULL,
+	datetime DATE NOT NULL,
 	
 	CONSTRAINT FK_client_id
 		FOREIGN KEY(client_id)
