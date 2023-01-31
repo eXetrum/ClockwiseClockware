@@ -1,15 +1,22 @@
 import React, {Component} from 'react';
-import AccountBalance from './AccountBalance';
-import {Link} from 'react-router-dom';
-//import {TextLinkExample } from './Navbar';
 import Container from 'react-bootstrap/Container';
-import Navbar from 'react-bootstrap/Navbar';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Header from './Header';
 import AuthService from "../services/auth.service";
 
 class Home extends Component {
+  constructor() {
+    super();
+    const user = AuthService.getCurrentUser();
+    this.state = {
+      user: {
+        email: user?.email || '',
+        password: user?.password || '',
+      },
+    };
+  }
+
   render() {
     return (
       <Container>

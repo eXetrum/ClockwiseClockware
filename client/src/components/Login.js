@@ -1,7 +1,6 @@
 import React, { Component } from 'react'
 import { Redirect } from 'react-router-dom'
 import Container from 'react-bootstrap/Container';
-import Navbar from 'react-bootstrap/Navbar';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
@@ -19,7 +18,7 @@ class LogIn extends Component {
         password: ''
       },
       error: '',
-      redirect: false
+      redirect: AuthService.getCurrentUser() != null,
     }
   }
 
@@ -43,12 +42,16 @@ class LogIn extends Component {
       if (response.data.accessToken) {
         localStorage.setItem("user", response.data.accessToken);
         this.setState({redirect: true});
-        this.props.mockLogIn(AuthService.getCurrentUser());
       }
     },
     error => {
       console.log('handleSubmit=>Failure(error): ', error);
-      this.setState({error: 'Incorrect login/password'});
+      if(error && error.response && error.response.status === 401) {
+        this.setState({error: 'Incorrect login/password'});
+      } else {
+        // TODO
+        this.setState({error: error?.message || 'unknown error'});
+      }
     });
   }
 

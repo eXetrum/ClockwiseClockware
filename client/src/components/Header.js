@@ -1,5 +1,4 @@
 import React, {Component} from 'react';
-import {Link} from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Nav from 'react-bootstrap/Nav';
 import Navbar from 'react-bootstrap/Navbar';
@@ -23,6 +22,16 @@ class Header extends Component {
         <Navbar bg="light" variant="light" className="mb-3">
             <Container>
             <Navbar.Brand href="/">Clockwise Clockware</Navbar.Brand>
+            <Navbar.Toggle />
+            <Navbar.Collapse className="justify-content-auto">
+            
+            {isLoggedIn ? (
+            <Nav>
+                <Nav.Link href="/admin/dashboard">Admin</Nav.Link>
+            </Nav>
+            ):("")}
+            </Navbar.Collapse>
+
             <Navbar.Toggle />
             <Navbar.Collapse className="justify-content-end">
                 <Navbar.Text>

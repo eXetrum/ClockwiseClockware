@@ -17,7 +17,7 @@ class AuthService {
   }
 
   register(username, email, password) {
-    return axios.post(API_URL + "register", {
+    return axios.post(`${API_URL}/register`, {
       username,
       email,
       password
@@ -27,9 +27,31 @@ class AuthService {
   getCurrentUser() {
     let jwtToken = localStorage.getItem('user');
     try {
-      return jwt(jwtToken);
-    } catch(e) { }
+      /*jwt.verify(token, 'shhhhh', function(err, decoded) {
+        if (err) {
+          
+          //  err = {
+          //    name: 'TokenExpiredError',
+          //    message: 'jwt expired',
+          //    expiredAt: 1408621000
+          //  }
+          
+        }
+      });*/
+      let user = jwt(jwtToken);
+      let date = new Date();
+      let elapsed = date.getTime() / 1000;
+      if(user.exp < elapsed) {
+        this.logout();
+        return null;
+      }
+      return user;
+    } catch(e) { this.logout(); console.log('error: ', e);}
     return null;
+  }
+  
+  isLogged() {
+    return this.getCurrentUser() != null;
   }
 }
 
