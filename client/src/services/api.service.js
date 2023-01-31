@@ -24,26 +24,10 @@ class ApiService {
         );
     }
     
-    // Get city name by id
-    getCityNameById(id) {
-        return axios.get(
-            `${API_URL}/cities/${id}`,
-            { headers: {"Authorization" : `Bearer ${this.token}`} }
-        );
-    }
-
     // Create new city
     createCity(cityName) {
         return axios.post(
             `${API_URL}/cities`, { cityName },
-            { headers: {"Authorization" : `Bearer ${this.token}`} }
-        );
-    }
-
-    // Update by id
-    updateCity(id, cityName) {
-        return axios.put(
-            `${API_URL}/cities/${id}`, { cityName },
             { headers: {"Authorization" : `Bearer ${this.token}`} }
         );
     }
@@ -54,6 +38,24 @@ class ApiService {
             { headers: {"Authorization" : `Bearer ${this.token}`} }
         );
     }
+    
+    // Get city by id
+    getCityById(id) {
+        return axios.get(
+            `${API_URL}/cities/${id}`,
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
+    }
+    
+    // Update by id
+    updateCityById(id, cityName) {
+        return axios.put(
+            `${API_URL}/cities/${id}`, { cityName },
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
+    }
+
+    
     ///////////////////////////////////////////////////////
     // Clients
     // Masters

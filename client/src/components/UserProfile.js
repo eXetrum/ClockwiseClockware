@@ -1,25 +1,13 @@
 import React, {Component} from 'react';
-import {Redirect} from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Header from './Header';
-import AuthService from "../services/auth.service";
-
+import AuthService from '../services/auth.service';
 
 class UserProfile extends Component {
-  constructor() {
-    super();
-    this.state = {
-      user: AuthService.getCurrentUser(),
-    };
-  }
-
   render() {
-    const { user } = this.state;
-    const isLoggedIn = user != null;
-    if(!isLoggedIn) { return (<Redirect to="/"/>); }
-
+    const user = AuthService.getCurrentUser();
     return (
         <Container>
           <Header />

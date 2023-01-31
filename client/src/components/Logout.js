@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import Container from 'react-bootstrap/Container';
 import Header from './Header';
 import AuthService from "../services/auth.service";
@@ -18,7 +18,7 @@ class LogOut extends Component {
 
   render () {
     if (this.state.redirect) {
-      return (<Redirect to="/"/>)
+      return (<Navigate to="/"/>)
     }
     return (
       <Container>

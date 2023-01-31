@@ -37,6 +37,33 @@ const getCities = async () => {
 	return result.rows;
 };
 
-module.exports = { pool, execQuery, getUser, getItems, getCities };
+const createCity = async (cityName) => {
+	console.log('createCity: ', cityName);
+	await execQuery('INSERT INTO cities (name) VALUES ($1);', [cityName]);
+	let result = await execQuery('SELECT * FROM cities');
+	console.log('createCity: ', result.rows);
+	return result.rows;
+};
+
+const deleteCityById = async (id) => {
+	console.log('deleteCityById: ', id);
+	let result = await execQuery('DELETE FROM cities WHERE id=($1);', [id]);
+	return result.rows;
+};
+
+const getCityById = async (id) => {
+	console.log('getCityById: ', id);
+	let result = await execQuery('SELECT * FROM cities WHERE id=($1);', [id]);
+	return result.rows;
+};
+
+const updateCityById = async (id, cityName) => {
+	console.log('updateCityById: ', id, cityName);
+	let result = await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
+	return result.rows;
+};
+
+
+module.exports = { pool, execQuery, getUser, getItems, getCities, createCity, deleteCityById, getCityById, updateCityById };
 
   

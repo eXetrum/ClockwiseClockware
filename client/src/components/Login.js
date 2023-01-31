@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Redirect } from 'react-router-dom'
+import { Navigate } from 'react-router-dom'
 import Container from 'react-bootstrap/Container';
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
@@ -57,7 +57,7 @@ class LogIn extends Component {
 
   render () {
     if (this.state.redirect) {
-      return (<Redirect to="/"/>)
+      return (<Navigate to="/"/>)
     }
     const error = this.state.error;
 

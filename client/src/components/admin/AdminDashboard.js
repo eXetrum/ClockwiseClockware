@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Link, Redirect } from 'react-router-dom';
+import {Link, Navigate } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Nav from 'react-bootstrap/Nav';
@@ -10,9 +10,9 @@ import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 //import { Edit, Delete } from '@mui/icons-material';
 
-import AuthService from '../services/auth.service';
-import ApiService from '../services/api.service';
-import Header from './Header';
+import AuthService from '../../services/auth.service';
+import ApiService from '../../services/api.service';
+import Header from './../Header';
 
 
 class AdminDashboard extends Component {
@@ -87,11 +87,7 @@ class AdminDashboard extends Component {
         //console.log('updateCity'
     }
 
-    render() {
-        const user = this.state.user;
-        const isLoggedIn = user != null;
-        if(!isLoggedIn) { return (<Redirect to="/"/>); }
-        
+    render() {        
         const { items, cities } = this.state;
         console.log('render: ', cities);
 
