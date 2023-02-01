@@ -9,6 +9,8 @@ import UserProfile from './components/UserProfile';
 import AdminDashboardCities from './components/admin/AdminDashboardCities';
 import AdminEditCity from './components/admin/AdminEditCity';
 
+import AdminDashboardMasters from './components/admin/AdminDashboardMasters';
+
 class App extends Component {
 
 	constructor() {
@@ -22,7 +24,7 @@ class App extends Component {
 		const AdminEditCityWrapper = () => {
 			const {id} = useParams();
 			return <AdminEditCity id={id} />;
-		  }
+		}
 
 		return (
 		<BrowserRouter>
@@ -37,7 +39,7 @@ class App extends Component {
 			} />
 			<Route exact path="/admin/cities" element={
 				<ProtectedRoute>
-				<AdminDashboardCities  />
+				<AdminDashboardCities />
 				</ProtectedRoute>
 			} />
 			<Route path="/admin/cities/:id" element={
@@ -53,7 +55,7 @@ class App extends Component {
 			} />
 			<Route exact path="/admin/masters" element={
 				<ProtectedRoute>
-				<AdminDashboardCities  />
+					<AdminDashboardMasters  />
 				</ProtectedRoute>
 			} />
 			<Route exact path="/admin/booking" element={

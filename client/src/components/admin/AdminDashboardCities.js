@@ -50,7 +50,7 @@ class AdminDashboardCities extends Component {
             return;
         }
 
-        ApiService.deleteCity(id)
+        ApiService.deleteCityById(id)
         .then(response => {
             if(response && response.data) {
                 this.setState({cities: response.data.cities });
@@ -66,9 +66,9 @@ class AdminDashboardCities extends Component {
           <Header />
           <Container>              
               <center>
-                <h1>Admin Cities Dashboard</h1>
+                <h1>Admin: Cities Dashboard</h1>
               </center>
-              <Form inline={true} className="d-flex align-items-end" onSubmit={this.handleSubmit}>
+              <Form inline="true" className="d-flex align-items-end" onSubmit={this.handleSubmit}>
                 <FormGroup controlId="formInlineCityName">
                     <Form.Label>City:</Form.Label>{' '}
                     <FormControl type="text" name="city" 
@@ -90,20 +90,20 @@ class AdminDashboardCities extends Component {
                 {cities.map(( item, index ) => {
                     return (
                     <tr key={index}>
-                        <td>{item.id}</td>
+                        <td>{item.city_id}</td>
                         <td>
                             <Form.Control
                                 type='text'
                                 disabled
-                                value={item.name} />
+                                value={item.city_name} />
                         </td>
                         <td className="text-center">
-                            <Link to={"/admin/cities/" + item.id} >
+                            <Link to={"/admin/cities/" + item.city_id} >
                                 <Button variant="warning">edit</Button>
                             </Link>
                         </td>
                         <td className="text-center">
-                            <Button variant="danger" onClick={() => {this.handleRemove(item.id) }}>x</Button>
+                            <Button variant="danger" onClick={() => {this.handleRemove(item.city_id) }}>x</Button>
                         </td>
                     </tr>
                     );

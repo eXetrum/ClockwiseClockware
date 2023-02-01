@@ -28,7 +28,7 @@ class AdminEditCity extends Component {
         .then(response => {
             console.log('ApiService.getCityById(): ', response.data.city);
             if(response && response.data) {
-                this.setState({city: response.data.city, newCityName: response.data.city?.name });
+                this.setState({city: response.data.city, newCityName: response.data.city?.city_name });
             }
         },
         error => { });
@@ -43,7 +43,7 @@ class AdminEditCity extends Component {
         ApiService.updateCityById(id, newCityName)
         .then(response => {
             if(response && response.data) {
-                this.setState({city: response.data.city, newCityName: response.data.city?.name });
+                this.setState({city: response.data.city, newCityName: response.data.city?.city_name });
             }
         }, error => {});
     }

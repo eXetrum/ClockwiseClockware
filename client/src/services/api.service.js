@@ -14,6 +14,7 @@ class ApiService {
         );
     }
 
+    ///////////////////////////////////////////////////////
     // Cities
 
     // Get All
@@ -32,7 +33,7 @@ class ApiService {
         );
     }
 
-    deleteCity(id) {
+    deleteCityById(id) {
         return axios.delete(
             `${API_URL}/cities/${id}`,
             { headers: {"Authorization" : `Bearer ${this.token}`} }
@@ -58,11 +59,18 @@ class ApiService {
     
     ///////////////////////////////////////////////////////
     // Clients
+    ///////////////////////////////////////////////////////
     // Masters
-    // Booking
     getMasters() {
-        return axios.get(`${API_URL}/masters`);
+        return axios.get(
+            `${API_URL}/masters`,
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
     }
+
+    deleteMasterById(id) {
+        return axios.delete(`${API_URL}/masters/${id}`);
+    } 
 
     getMasterById(id) {
         return axios.get(`${API_URL}/masters/${id}`);
@@ -72,9 +80,8 @@ class ApiService {
         return axios.put(`${API_URL}/masters/${id}`, { master });
     }
 
-    deleteMaster(id) {
-        return axios.delete(`${API_URL}/masters/${id}`);
-    }  
+     
+    // Booking
 }
 
 export default new ApiService();

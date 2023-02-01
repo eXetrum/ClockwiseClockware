@@ -1,7 +1,11 @@
 require('dotenv').config();
 const router = require('express').Router();
 const jwt = require("jsonwebtoken");
-const { getUser, getItems, getCities, createCity, deleteCityById, getCityById, updateCityById } = require('./db');
+const { 
+	getUser, getItems, 
+	getCities, createCity, deleteCityById, getCityById, updateCityById,
+	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById
+} = require('./db');
 
 
 router.post('/api/register', (req, res) => {
@@ -128,6 +132,17 @@ router.put('/api/cities/:id', RouteProtector, async (req, res) => {
 		console.log('update: ', city);
 		res.status(200).json({
 			city
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+///////////////////////////////////
+router.get('/api/masters', RouteProtector, async (req, res) => {
+	try {
+		let masters = await getMasters();
+		console.log('masters: ', masters);
+		res.status(200).json({
+			masters
 		}).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });

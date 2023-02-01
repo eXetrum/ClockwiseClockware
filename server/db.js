@@ -39,7 +39,7 @@ const getCities = async () => {
 
 const createCity = async (cityName) => {
 	console.log('createCity: ', cityName);
-	await execQuery('INSERT INTO cities (name) VALUES ($1);', [cityName]);
+	await execQuery('INSERT INTO cities (city_name) VALUES ($1);', [cityName]);
 	let result = await execQuery('SELECT * FROM cities');
 	console.log('createCity: ', result.rows);
 	return result.rows;
@@ -47,23 +47,76 @@ const createCity = async (cityName) => {
 
 const deleteCityById = async (id) => {
 	console.log('deleteCityById: ', id);
-	let result = await execQuery('DELETE FROM cities WHERE id=($1);', [id]);
+	let result = await execQuery('DELETE FROM cities WHERE city_id=($1);', [id]);
 	return result.rows;
 };
 
 const getCityById = async (id) => {
 	console.log('getCityById: ', id);
-	let result = await execQuery('SELECT * FROM cities WHERE id=($1);', [id]);
+	let result = await execQuery('SELECT * FROM cities WHERE city_id=($1);', [id]);
 	return result.rows;
 };
 
 const updateCityById = async (id, cityName) => {
 	console.log('updateCityById: ', id, cityName);
+	let result = await execQuery('UPDATE cities SET city_name=$1 WHERE city_id=($2);', [cityName, id]);
+	return result.rows;
+};
+
+/////////////////////////////////////////////////////////////////////// Masters
+const getMasters = async () => {
+	let joined = await execQuery('SELECT * FROM masters INNER JOIN master_city_list USING(master_id) INNER JOIN cities USING(city_id)');
+	let result = [];
+	console.log(joined.rows.length, joined.rows);
+	for(let i = 0; i < joined.rows.length; ++i) {
+		const item = joined.rows[i];
+		console.log(item);
+		const idx = result.map(item => item.master_id).indexOf(item.master_id);
+		if(idx == -1) {
+			result.push({
+				master_id: item.master_id,
+				master_name: item.master_name,
+				master_email: item.master_email,
+				master_rating: item.master_rating,
+				cities: [{city_id: item.city_id, city_name: item.city_name}],
+			});
+		} else {
+			result[idx].cities.push({city_id: item.city_id, city_name: item.city_name});
+		}
+	}
+	
+	return result;
+};
+
+const createMaster = async (cityName) => {
+	console.log('createMaster: ', cityName);
+	await execQuery('INSERT INTO cities (name) VALUES ($1);', [cityName]);
+	let result = await execQuery('SELECT * FROM cities');
+	console.log('createCity: ', result.rows);
+	return result.rows;
+};
+
+const deleteMasterById = async (id) => {
+	console.log('deleteMasterById: ', id);
+	let result = await execQuery('DELETE FROM cities WHERE id=($1);', [id]);
+	return result.rows;
+};
+
+const getMasterById = async (id) => {
+	console.log('getMasterById: ', id);
+	let result = await execQuery('SELECT * FROM cities WHERE id=($1);', [id]);
+	return result.rows;
+};
+
+const updateMasterById = async (id, cityName) => {
+	console.log('updateMasterById: ', id, cityName);
 	let result = await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
 	return result.rows;
 };
 
-
-module.exports = { pool, execQuery, getUser, getItems, getCities, createCity, deleteCityById, getCityById, updateCityById };
+module.exports = { pool, execQuery, getUser, getItems, 
+	getCities, createCity, deleteCityById, getCityById, updateCityById,
+	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById
+};
 
   
