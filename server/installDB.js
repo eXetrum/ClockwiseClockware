@@ -18,10 +18,10 @@ const install = async () => {
 			city_name VARCHAR ( 255 ) NOT NULL
 		);
 		
-		CREATE TABLE items (
-			item_id serial PRIMARY KEY,
-			item_name VARCHAR ( 255 ) NOT NULL,
-			item_repair_time INTEGER NOT NULL
+		CREATE TABLE watch_types (
+			watch_id serial PRIMARY KEY,
+			watch_name VARCHAR ( 255 ) NOT NULL,
+			watch_repair_time INTEGER NOT NULL
 		);
 		CREATE TABLE clients (
 			client_id serial PRIMARY KEY,

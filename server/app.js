@@ -8,7 +8,6 @@ const app = express()
 
 const port = process.env.PORT || 4200
 
-//const { pool } = require("./db");
 const routes = require('./routes');
 
 

@@ -34,12 +34,12 @@ class App extends Component {
 			<Route exact path="/logout" element={<LogOut />} />
 			<Route exact path="/profile" element={
 				<ProtectedRoute>
-				<UserProfile />
+					<UserProfile />
 				</ProtectedRoute>
 			} />
 			<Route exact path="/admin/cities" element={
 				<ProtectedRoute>
-				<AdminDashboardCities />
+					<AdminDashboardCities />
 				</ProtectedRoute>
 			} />
 			<Route path="/admin/cities/:id" element={
@@ -50,7 +50,7 @@ class App extends Component {
 
 			<Route exact path="/admin/clients" element={
 				<ProtectedRoute>
-				<AdminDashboardCities  />
+					<AdminDashboardCities  />
 				</ProtectedRoute>
 			} />
 			<Route exact path="/admin/masters" element={
@@ -60,7 +60,7 @@ class App extends Component {
 			} />
 			<Route exact path="/admin/booking" element={
 				<ProtectedRoute>
-				<AdminDashboardCities  />
+					<AdminDashboardCities  />
 				</ProtectedRoute>
 			} />
 			<Route path="*" element={<Navigate to="/" />} />
