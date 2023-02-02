@@ -28,7 +28,8 @@ class ApiService {
     // Create new city
     createCity(cityName) {
         return axios.post(
-            `${API_URL}/cities`, { cityName },
+            `${API_URL}/cities`, 
+            { cityName },
             { headers: {"Authorization" : `Bearer ${this.token}`} }
         );
     }
@@ -68,16 +69,33 @@ class ApiService {
         );
     }
 
+    createMaster(master) {
+        return axios.post(
+            `${API_URL}/masters`, 
+            { master },
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
+    }
+
     deleteMasterById(id) {
-        return axios.delete(`${API_URL}/masters/${id}`);
+        return axios.delete(
+            `${API_URL}/masters/${id}`,
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
     } 
 
     getMasterById(id) {
-        return axios.get(`${API_URL}/masters/${id}`);
+        return axios.get(
+            `${API_URL}/masters/${id}`,
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
     }
 
     updateMaster(id, master) {
-        return axios.put(`${API_URL}/masters/${id}`, { master });
+        return axios.put(
+            `${API_URL}/masters/${id}`, { master },
+            { headers: {"Authorization" : `Bearer ${this.token}`} }
+        );
     }
 
      
