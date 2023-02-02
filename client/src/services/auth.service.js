@@ -1,7 +1,7 @@
 import axios from "axios";
 import jwt from 'jwt-decode';
 
-const API_URL = "http://localhost:4200/api";
+const API_URL = process.env.REACT_APP_API_URL;
 
 class AuthService {
   login(email, password) {
