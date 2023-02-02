@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Link, Navigate } from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import ReactStars from "react-rating-stars-component";
 
 import Container from 'react-bootstrap/Container';
@@ -20,9 +20,12 @@ class AdminDashboardMasters extends Component {
         this.state = {
             cities: [],
             masters: [],
-            newMasterName: '',
-            newMasterEmail: '',
-            newMasterRating: 0,
+            newMaster: {
+                name: '',
+                email: '',
+                rating: 0,
+                cities: []
+            },
             error: '',
         };
     }
@@ -47,16 +50,31 @@ class AdminDashboardMasters extends Component {
         error => { });
     }
 
+    handleChecks = (event, city) => {
+        console.log('handleChecks: ', event.target.checked, city);
+        let { newMaster } = this.state;
+        if(event.target.checked) {
+            newMaster.cities.push(city.id);
+        } else {
+            newMaster.cities = newMaster.cities.filter(item => item.id != city.id);
+        }
+        this.setState({ newMaster: newMaster });
+    }
+
+    validateNewMasterForm = () => {
+        const { newMaster } = this.state;
+        return !newMaster.name || !newMaster.email || !newMaster.cities.length;
+    }
 
     handleSubmit = (e) => {
         e.preventDefault()
-        const { newCityName } = this.state;
-        this.setState({error: '', newCityName: ''});
+        const { newMaster } = this.state;
+        this.setState({error: '', newMaster: {name: '', email: '', rating: 0, cities: []} });
         
-        ApiService.createCity(newCityName)
+        ApiService.createMaster(newMaster)
         .then(response => {
             if(response && response.data) {
-                this.setState({cities: response.data.cities });
+                this.setState({masters: response.data.masters });
             }
         }, error => {});
     }
@@ -75,14 +93,9 @@ class AdminDashboardMasters extends Component {
         }, error => {});
     }
 
-    
-    ratingChanged = (newRating) => {
-        console.log(newRating);
-    };
-
     render() {        
-        const { cities, masters } = this.state;
-        console.log(this.state.newMasterName, this.state.newMasterEmail, this.state.newMasterRating);
+        const { cities, masters, newMaster } = this.state;
+        console.log(this.state.newMaster);
         return (
         <Container>
           <Header />
@@ -96,22 +109,34 @@ class AdminDashboardMasters extends Component {
                         <FormGroup>
                             <Form.Label>Master name:</Form.Label>
                             <FormControl type="text" name="masterName" 
-                                value={this.state.newMasterName}
-                                onChange={(event) => {this.setState({newMasterName: event.target.value }); }}
+                                value={newMaster.name}
+                                onChange={(event) => {
+                                    this.setState(prevState => ({
+                                        newMaster: {...prevState.newMaster, name: event.target.value}
+                                    }))
+                                }}
                             />
                         </FormGroup>
                         <FormGroup>
                             <Form.Label>Master email:</Form.Label>
                             <FormControl type="email" name="masterEmail" 
-                                value={this.state.newMasterEmail}
-                                onChange={(event) => {this.setState({newMasterEmail: event.target.value }); }}
+                                value={newMaster.email}
+                                onChange={(event) => {
+                                    this.setState(prevState => ({
+                                        newMaster: {...prevState.newMaster, email: event.target.value}
+                                    }))
+                                }}
                             />
                         </FormGroup>
                         <FormGroup className="ms-3">
                             <Form.Label>Rating:</Form.Label>
                             <ReactStars
                                 count={5}
-                                onChange={(value) => { this.setState({newMasterRating: value}); }}
+                                onChange={(value) => {
+                                    this.setState(prevState => ({
+                                        newMaster: {...prevState.newMaster, rating: value}
+                                    }))
+                                }}
                                 size={24}
                                 activeColor="#ffd700"
                             />
@@ -125,8 +150,9 @@ class AdminDashboardMasters extends Component {
                                     <Form.Check 
                                     key={index}
                                         type='checkbox'
-                                        id={"city" + item.city_id}
+                                        id={"city_id_" + item.city_id}
                                         label={item.city_name}
+                                        onChange={(event) => {this.handleChecks(event, item)}}
                                     />
                                 )
                             })
@@ -134,7 +160,7 @@ class AdminDashboardMasters extends Component {
                         </FormGroup>
                         
 
-                        <Button type="submit" disabled={!this.state.newMasterName || !this.state.newMasterEmail} >Create</Button>
+                        <Button type="submit" disabled={this.validateNewMasterForm()} >Create</Button>
                     </Form>
                 </Col>
               </Row>
@@ -150,35 +176,35 @@ class AdminDashboardMasters extends Component {
                 {masters.map(( item, index ) => {
                     return (
                     <tr key={index}>
-                        <td>{item.master_id}</td>
+                        <td>{item.id}</td>
                         <td>
                             <Form.Control
                                 type='text'
                                 disabled
-                                value={item.master_name} />
+                                value={item.name} />
                         </td>
                         <td>
                             <Form.Control
                                 type='text'
                                 disabled
-                                value={item.master_email} />
+                                value={item.email} />
                         </td>
                         <td>
                             <ReactStars
                                 count={5}
-                                value={item.master_rating}
+                                value={item.rating}
                                 edit={false}
                                 size={24}
                                 activeColor="#ffd700"
                             />
                         </td>
                         <td className="text-center">
-                            <Link to={"/admin/masters/" + item.master_id} >
+                            <Link to={"/admin/masters/" + item.id} >
                                 <Button variant="warning">edit</Button>
                             </Link>
                         </td>
                         <td className="text-center">
-                            <Button variant="danger" onClick={() => {this.handleRemove(item.master_id) }}>x</Button>
+                            <Button variant="danger" onClick={() => {this.handleRemove(item.id) }}>x</Button>
                         </td>
                     </tr>
                     );

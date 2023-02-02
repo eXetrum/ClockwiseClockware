@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Link, Navigate } from 'react-router-dom';
+import {Link} from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
 import {Form, FormGroup, FormControl} from 'react-bootstrap';
 import Table from 'react-bootstrap/Table';
@@ -90,20 +90,20 @@ class AdminDashboardCities extends Component {
                 {cities.map(( item, index ) => {
                     return (
                     <tr key={index}>
-                        <td>{item.city_id}</td>
+                        <td>{item.id}</td>
                         <td>
                             <Form.Control
                                 type='text'
                                 disabled
-                                value={item.city_name} />
+                                value={item.name} />
                         </td>
                         <td className="text-center">
-                            <Link to={"/admin/cities/" + item.city_id} >
+                            <Link to={"/admin/cities/" + item.id} >
                                 <Button variant="warning">edit</Button>
                             </Link>
                         </td>
                         <td className="text-center">
-                            <Button variant="danger" onClick={() => {this.handleRemove(item.city_id) }}>x</Button>
+                            <Button variant="danger" onClick={() => {this.handleRemove(item.id) }}>x</Button>
                         </td>
                     </tr>
                     );
