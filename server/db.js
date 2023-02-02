@@ -26,8 +26,8 @@ const getUser = async (email, password) => {
 };
 
 /////////////////////////////////////////////////////////////////////// Items
-const getItems = async () => {
-	let result = await execQuery('SELECT * FROM items');
+const getWatchTypes = async () => {
+	let result = await execQuery('SELECT * FROM watch_type');
 	return result.rows;
 };
 
@@ -39,7 +39,7 @@ const getCities = async () => {
 
 const createCity = async (cityName) => {
 	console.log('createCity: ', cityName);
-	await execQuery('INSERT INTO cities (city_name) VALUES ($1);', [cityName]);
+	await execQuery('INSERT INTO cities (name) VALUES ($1);', [cityName]);
 	let result = await execQuery('SELECT * FROM cities');
 	console.log('createCity: ', result.rows);
 	return result.rows;
@@ -47,25 +47,25 @@ const createCity = async (cityName) => {
 
 const deleteCityById = async (id) => {
 	console.log('deleteCityById: ', id);
-	let result = await execQuery('DELETE FROM cities WHERE city_id=($1);', [id]);
+	let result = await execQuery('DELETE FROM cities WHERE id=($1);', [id]);
 	return result.rows;
 };
 
 const getCityById = async (id) => {
 	console.log('getCityById: ', id);
-	let result = await execQuery('SELECT * FROM cities WHERE city_id=($1);', [id]);
+	let result = await execQuery('SELECT * FROM cities WHERE id=($1);', [id]);
 	return result.rows;
 };
 
 const updateCityById = async (id, cityName) => {
 	console.log('updateCityById: ', id, cityName);
-	let result = await execQuery('UPDATE cities SET city_name=$1 WHERE city_id=($2);', [cityName, id]);
+	let result = await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
 	return result.rows;
 };
 
 /////////////////////////////////////////////////////////////////////// Masters
 const getMasters = async () => {
-	let joined = await execQuery('SELECT * FROM masters INNER JOIN master_city_list USING(master_id) INNER JOIN cities USING(city_id)');
+	let joined = await execQuery('SELECT * FROM masters AS M INNER JOIN master_city_list AS MCL ON M.id=MCL.master_id INNER JOIN cities AS C ON C.id=MCL.city_id');
 	let result = [];
 	console.log(joined.rows.length, joined.rows);
 	for(let i = 0; i < joined.rows.length; ++i) {
@@ -114,7 +114,7 @@ const updateMasterById = async (id, cityName) => {
 	return result.rows;
 };
 
-module.exports = { pool, execQuery, getUser, getItems, 
+module.exports = { pool, execQuery, getUser, getWatchTypes, 
 	getCities, createCity, deleteCityById, getCityById, updateCityById,
 	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById
 };
