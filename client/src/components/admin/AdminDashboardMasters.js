@@ -4,6 +4,7 @@ import ReactStars from "react-rating-stars-component";
 
 import Container from 'react-bootstrap/Container';
 import {Form, FormGroup, FormControl} from 'react-bootstrap';
+import Badge from 'react-bootstrap/Badge';
 import Table from 'react-bootstrap/Table';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -54,7 +55,8 @@ class AdminDashboardMasters extends Component {
         console.log('handleChecks: ', event.target.checked, city);
         let { newMaster } = this.state;
         if(event.target.checked) {
-            newMaster.cities.push(city.id);
+            if(newMaster.cities.indexOf(city.id) == -1)
+                newMaster.cities.push(city.id);
         } else {
             newMaster.cities = newMaster.cities.filter(item => item.id != city.id);
         }
@@ -145,14 +147,14 @@ class AdminDashboardMasters extends Component {
                         
                         <FormGroup className="ms-3">
                             <Form.Label>Master work cities:</Form.Label>
-                            {cities.map((item, index) => {
+                            {cities.map((city, index) => {
                                 return (
                                     <Form.Check 
                                     key={index}
                                         type='checkbox'
-                                        id={"city_id_" + item.city_id}
-                                        label={item.city_name}
-                                        onChange={(event) => {this.handleChecks(event, item)}}
+                                        id={"city_id_" + city.id}
+                                        label={city.name}
+                                        onChange={(event) => {this.handleChecks(event, city)}}
                                     />
                                 )
                             })
@@ -169,42 +171,48 @@ class AdminDashboardMasters extends Component {
               <Table bordered hover responsive size="sm">
                 <thead>
                     <tr>
-                        <th>id</th><th>name</th><th></th><th></th>
+                        <th>id</th><th>name</th><th>email</th><th>cities</th><th>rating</th><th></th>
                     </tr>
                 </thead>
                 <tbody>
-                {masters.map(( item, index ) => {
+                {masters.map(( master, index ) => {
                     return (
                     <tr key={index}>
-                        <td>{item.id}</td>
+                        <td>{master.id}</td>
                         <td>
                             <Form.Control
                                 type='text'
                                 disabled
-                                value={item.name} />
+                                value={master.name} />
                         </td>
                         <td>
                             <Form.Control
                                 type='text'
                                 disabled
-                                value={item.email} />
+                                value={master.email} />
+                        </td>
+                        <td>
+                        {master.cities.map((city, index2) => {
+                            return <Badge bg="info" className="p-2 m-1" key={index + "_" + index2}>{city.name}</Badge>
+                        })}
+
                         </td>
                         <td>
                             <ReactStars
                                 count={5}
-                                value={item.rating}
+                                value={master.rating}
                                 edit={false}
                                 size={24}
                                 activeColor="#ffd700"
                             />
                         </td>
                         <td className="text-center">
-                            <Link to={"/admin/masters/" + item.id} >
+                            <Link to={"/admin/masters/" + master.id} >
                                 <Button variant="warning">edit</Button>
                             </Link>
                         </td>
                         <td className="text-center">
-                            <Button variant="danger" onClick={() => {this.handleRemove(item.id) }}>x</Button>
+                            <Button variant="danger" onClick={() => {this.handleRemove(master.id) }}>x</Button>
                         </td>
                     </tr>
                     );
