@@ -190,12 +190,12 @@ router.get('/api/masters/:id', RouteProtector, async (req, res) => {
 router.put('/api/masters/:id', RouteProtector, async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { master } = req.body;
+		let { master } = req.body;
 		console.log('update master: ', id, master);
 		let result = await updateMasterById(id, master);
 		console.log('result: ', result);
 		result = await getMasterById(id);
-		let master = result[0];
+		master = result[0]; 
 		console.log('update: ', master);
 		res.status(200).json({
 			master
