@@ -25,8 +25,9 @@ class AdminDashboardMasters extends Component {
                 name: '',
                 email: '',
                 rating: 0,
-                cities: []
+                cities: [],
             },
+            cityCheck: [],
             error: '',
         };
     }
@@ -46,21 +47,30 @@ class AdminDashboardMasters extends Component {
             console.log('ApiService.getCities(): ', response.data.cities);
             if(response && response.data) {
                 this.setState({cities: response.data.cities });
+                let cityCheck = {};
+                response.data.cities.map((item, index) => { cityCheck[item.id] = false; });
+                this.setState({cityCheck: cityCheck });
             }
         },
         error => { });
     }
 
     handleChecks = (event, city) => {
-        console.log('handleChecks: ', event.target.checked, city);
-        let { newMaster } = this.state;
-        if(event.target.checked) {
+        console.log('handleChecks: ', event, city);
+        let { newMaster, cityCheck, cities } = this.state;
+        console.log(cityCheck );
+        cityCheck[city.id] = event.target.checked;
+        newMaster.cities = [];
+        cities.forEach(item => {
+            if(cityCheck[item.id]) newMaster.cities.push(item.id);
+        });
+        /*if(event.target.checked) {
             if(newMaster.cities.indexOf(city.id) == -1)
                 newMaster.cities.push(city.id);
         } else {
             newMaster.cities = newMaster.cities.filter(item => item.id != city.id);
-        }
-        this.setState({ newMaster: newMaster });
+        }*/
+        this.setState({ newMaster: newMaster, cityCheck: cityCheck});
     }
 
     validateNewMasterForm = () => {
@@ -70,8 +80,11 @@ class AdminDashboardMasters extends Component {
 
     handleSubmit = (e) => {
         e.preventDefault()
-        const { newMaster } = this.state;
-        this.setState({error: '', newMaster: {name: '', email: '', rating: 0, cities: []} });
+        const { newMaster, cities } = this.state;
+        let cityCheck = this.state.cityCheck;
+        console.log('submit: ', newMaster);
+        cities.map((item, index) => { cityCheck[item.id] = false; });
+        this.setState({error: '', newMaster: {name: '', email: '', rating: 0, cities: []}, cityCheck: cityCheck });
         
         ApiService.createMaster(newMaster)
         .then(response => {
@@ -90,14 +103,14 @@ class AdminDashboardMasters extends Component {
         ApiService.deleteMasterById(id)
         .then(response => {
             if(response && response.data) {
-                this.setState({cities: response.data.cities });
+                this.setState({masters: response.data.masters });
             }
         }, error => {});
     }
 
     render() {        
-        const { cities, masters, newMaster } = this.state;
-        console.log(this.state.newMaster);
+        const { cities, masters, newMaster, cityCheck } = this.state;
+        
         return (
         <Container>
           <Header />
@@ -152,6 +165,7 @@ class AdminDashboardMasters extends Component {
                                     <Form.Check 
                                     key={index}
                                         type='checkbox'
+                                        defaultChecked={this.state.cityCheck[city.id]}
                                         id={"city_id_" + city.id}
                                         label={city.name}
                                         onChange={(event) => {this.handleChecks(event, city)}}
@@ -160,7 +174,6 @@ class AdminDashboardMasters extends Component {
                             })
                             }
                         </FormGroup>
-                        
 
                         <Button type="submit" disabled={this.validateNewMasterForm()} >Create</Button>
                     </Form>

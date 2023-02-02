@@ -65,52 +65,68 @@ const updateCityById = async (id, cityName) => {
 
 /////////////////////////////////////////////////////////////////////// Masters
 const getMasters = async () => {
-	let joined = await execQuery('SELECT * FROM masters AS M INNER JOIN master_city_list AS MCL ON M.id=MCL.master_id INNER JOIN cities AS C ON C.id=MCL.city_id');
-	let result = [];
-	console.log(joined.rows.length, joined.rows);
-	for(let i = 0; i < joined.rows.length; ++i) {
-		const item = joined.rows[i];
-		console.log(item);
-		const idx = result.map(item => item.master_id).indexOf(item.master_id);
-		if(idx == -1) {
-			result.push({
-				master_id: item.master_id,
-				master_name: item.master_name,
-				master_email: item.master_email,
-				master_rating: item.master_rating,
-				cities: [{city_id: item.city_id, city_name: item.city_name}],
-			});
-		} else {
-			result[idx].cities.push({city_id: item.city_id, city_name: item.city_name});
-		}
-	}
-	
-	return result;
+	let result = await execQuery(
+	`SELECT id, name, email, rating, (
+			SELECT json_agg(C.*) 
+			FROM 
+				cities C 
+				INNER JOIN master_city_list MCL 
+				ON C.id = MCL.city_id AND MCL.master_id = M.id
+			) AS cities 
+	FROM masters M;`);
+	return result.rows;
 };
 
-const createMaster = async (cityName) => {
-	console.log('createMaster: ', cityName);
-	await execQuery('INSERT INTO cities (name) VALUES ($1);', [cityName]);
-	let result = await execQuery('SELECT * FROM cities');
-	console.log('createCity: ', result.rows);
+const createMaster = async (master) => {
+	console.log('createMaster before query: ', master);
+	const res = await execQuery(
+		`WITH new_master AS(
+			INSERT INTO masters (name, email, rating)
+			VALUES ($1, $2, $3)
+			RETURNING id
+		)
+		INSERT INTO master_city_list (master_id, city_id)
+		VALUES(
+			(SELECT id FROM new_master),
+			unnest($4::integer[])
+		);
+	`, [master.name, master.email, master.rating, master.cities]);
+	let result = await execQuery(
+	`SELECT id, name, email, rating, (
+			SELECT json_agg(C.*) 
+			FROM 
+				cities C 
+				INNER JOIN master_city_list MCL 
+				ON C.id = MCL.city_id AND MCL.master_id = M.id
+			) AS cities 
+	FROM masters M;`);
+	console.log('createMaster result: ', result.rows);
 	return result.rows;
 };
 
 const deleteMasterById = async (id) => {
 	console.log('deleteMasterById: ', id);
-	let result = await execQuery('DELETE FROM cities WHERE id=($1);', [id]);
+	let result = await execQuery('DELETE FROM masters WHERE id=($1);', [id]);
 	return result.rows;
 };
 
 const getMasterById = async (id) => {
 	console.log('getMasterById: ', id);
-	let result = await execQuery('SELECT * FROM cities WHERE id=($1);', [id]);
+	let result = await execQuery(
+		`SELECT id, name, email, rating, (
+			SELECT json_agg(C.*) 
+			FROM 
+				cities C 
+				INNER JOIN master_city_list MCL 
+				ON C.id = MCL.city_id AND MCL.master_id = M.id
+			) AS cities 
+		FROM masters M WHERE id=$1;`, [id]);
 	return result.rows;
 };
 
-const updateMasterById = async (id, cityName) => {
-	console.log('updateMasterById: ', id, cityName);
-	let result = await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
+const updateMasterById = async (id, master) => {
+	console.log('updateMasterById: ', id, master);
+	let result = [];//await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
 	return result.rows;
 };
 

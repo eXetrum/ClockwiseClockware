@@ -98,7 +98,7 @@ router.delete('/api/cities/:id', RouteProtector, async (req, res) => {
 		console.log('Delete City: ', id);
 		let result = await deleteCityById(id);
 		console.log('delete result:', result);
-		cities = await getCities();
+		const cities = await getCities();
 		console.log('cities: ', cities);
 		res.status(200).json({
 			cities
@@ -143,6 +143,62 @@ router.get('/api/masters', RouteProtector, async (req, res) => {
 		console.log('masters: ', masters);
 		res.status(200).json({
 			masters
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.post('/api/masters', RouteProtector, async (req, res) => {
+	try {
+		const { master } = req.body;
+		console.log('create master route: ', master);
+		let masters = await createMaster(master);
+		console.log('masters: ', masters);
+		res.status(200).json({
+			masters
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.delete('/api/masters/:id', RouteProtector, async (req, res) => {
+	try {
+		const { id } = req.params;
+		console.log('Delete master: ', id);
+		let result = await deleteMasterById(id);
+		console.log('delete result:', result);
+		const masters = await getMasters();
+		console.log('masters: ', masters);
+		res.status(200).json({
+			masters
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.get('/api/masters/:id', RouteProtector, async (req, res) => {
+	try {
+		const { id } = req.params;
+		console.log('get master: ', id);
+		let result = await getMasterById(id);
+		console.log('result: ', result);
+		let master = result[0];
+		console.log('citiy: ', master);
+		res.status(200).json({
+			master
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.put('/api/masters/:id', RouteProtector, async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { master } = req.body;
+		console.log('update master: ', id, master);
+		let result = await updateMasterById(id, master);
+		console.log('result: ', result);
+		result = await getMasterById(id);
+		let master = result[0];
+		console.log('update: ', master);
+		res.status(200).json({
+			master
 		}).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
