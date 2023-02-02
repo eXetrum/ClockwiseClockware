@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import Container from 'react-bootstrap/Container';
 import {Form, FormGroup, FormControl} from 'react-bootstrap';
 import Button from 'react-bootstrap/Button';
+import Alert from 'react-bootstrap/Alert';
 
 
 import ApiService from '../../services/api.service';
@@ -17,6 +18,8 @@ class AdminEditCity extends Component {
             city: null,
             id: this.props.id,
             newCityName: '',
+            info: '',
+            error: '',
         };
     }
 
@@ -44,8 +47,11 @@ class AdminEditCity extends Component {
         .then(response => {
             if(response && response.data) {
                 this.setState({city: response.data.city, newCityName: response.data.city?.city_name });
+                this.setState({info: 'success'});
             }
-        }, error => {});
+        }, error => {
+            this.setState({error: 'error'});
+        });
     }
 
 
@@ -63,12 +69,14 @@ class AdminEditCity extends Component {
                     <Form.Label>City:</Form.Label>{' '}
                     <FormControl type="text" name="city" 
                         value={this.state.newCityName}
-                        onChange={(event) => {this.setState({newCityName: event.target.value}); }}
+                        onChange={(event) => {this.setState({newCityName: event.target.value, info: '', error: ''}); }}
                     />
                 </FormGroup>{' '}
                 <Button type="submit" variant="success" disabled={!this.state.newCityName}>Save</Button>
               </Form>
             <hr/>
+            {this.state.info && <Alert key='success' variant='success'>{this.state.info}</Alert>}
+            {this.state.error && <Alert key='danger' variant='danger'>{this.state.error}</Alert>}
           </Container>
         </Container>
         );
