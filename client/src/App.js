@@ -8,6 +8,7 @@ import LogOut from './components/Logout';
 import UserProfile from './components/UserProfile';
 import AdminDashboardCities from './components/admin/AdminDashboardCities';
 import AdminEditCity from './components/admin/AdminEditCity';
+import AdminEditMaster from './components/admin/AdminEditMaster';
 
 import AdminDashboardMasters from './components/admin/AdminDashboardMasters';
 
@@ -24,6 +25,10 @@ class App extends Component {
 		const AdminEditCityWrapper = () => {
 			const {id} = useParams();
 			return <AdminEditCity id={id} />;
+		}
+		const AdminEditMasterWrapper = () => {
+			const {id} = useParams();
+			return <AdminEditMaster id={id} />;
 		}
 
 		return (
@@ -56,6 +61,11 @@ class App extends Component {
 			<Route exact path="/admin/masters" element={
 				<ProtectedRoute>
 					<AdminDashboardMasters  />
+				</ProtectedRoute>
+			} />
+			<Route path="/admin/masters/:id" element={
+				<ProtectedRoute >
+					<AdminEditMasterWrapper />
 				</ProtectedRoute>
 			} />
 			<Route exact path="/admin/booking" element={

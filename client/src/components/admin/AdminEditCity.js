@@ -62,7 +62,7 @@ class AdminEditCity extends Component {
           <Header />
           <Container>              
               <center>
-                <h1>Admin Cities</h1>
+                <h1>Admin: Edit city</h1>
               </center>
               <Form inline={true} className="d-flex align-items-end" onSubmit={this.handleSubmit}>
                 <FormGroup controlId="formInlineCityName">

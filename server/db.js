@@ -134,7 +134,11 @@ const getMasterById = async (id) => {
 
 const updateMasterById = async (id, master) => {
 	console.log('updateMasterById: ', id, master);
-	let result = [];//await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
+	//'UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
+	let result = await execQuery(	
+		`UPDATE masters SET name=$1, email=$2, rating=$3 WHERE id=($4)`,
+		[master.name, master.email, master.rating, id]
+	);
 	return result.rows;
 };
 

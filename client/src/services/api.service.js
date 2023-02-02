@@ -91,7 +91,7 @@ class ApiService {
         );
     }
 
-    updateMaster(id, master) {
+    updateMasterById(id, master) {
         return axios.put(
             `${API_URL}/masters/${id}`, { master },
             { headers: {"Authorization" : `Bearer ${this.token}`} }
