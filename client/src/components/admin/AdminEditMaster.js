@@ -127,7 +127,7 @@ const AdminEditMaster = () => {
                             {cities.map((city, index) => {
                                 return (
                                     <Form.Check 
-                                    key={"city_id_" + city.id + "_" + index}
+                                        key={"city_id_" + city.id + "_" + index}
                                         type='checkbox'
                                         defaultChecked={cityCheck[city.id]}
                                         id={"city_id_" + city.id}
