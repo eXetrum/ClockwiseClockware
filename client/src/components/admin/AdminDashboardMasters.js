@@ -219,6 +219,12 @@ const AdminDashboardMasters = () => {
             <hr/>
             </>
             }
+            <Row className="justify-content-md-center">
+                <Col md="auto">
+                    {info && <Alert key='success' variant='success'>{info}</Alert>}
+                    {error && <Alert key='danger' variant='danger'>{error.toString() }</Alert>}
+                </Col>
+            </Row> 
             {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
             {masters && 
                 <Table bordered hover responsive size="sm">
@@ -272,7 +278,7 @@ const AdminDashboardMasters = () => {
                 </Table>
             }
             <hr/>
-            
+                       
         </Container>
     </Container>
     );
