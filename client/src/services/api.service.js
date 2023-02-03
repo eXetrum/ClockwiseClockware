@@ -6,10 +6,10 @@ class ApiService {
     constructor() {
         this.token = localStorage.getItem('user');
     }
-    // Items
-    getItems() {
+    // Watch types
+    getWatchTypes() {
         return axios.get(
-            `${API_URL}/items`, 
+            `${API_URL}/watch_types`, 
             { headers: {"Authorization" : `Bearer ${this.token}`} }
         );
     }
