@@ -42,9 +42,9 @@ class AdminEditMaster extends Component {
             console.log('ApiService.getCities(): ', response.data.cities);
             if(response && response.data) {
                 this.setState({cities: response.data.cities});
-                //let cityCheck = {};
-                //response.data.cities.map((item, index) => { cityCheck[item.id] = false; });
-                //this.setState({cityCheck: cityCheck });
+                let cityCheck = {};
+                response.data.cities.map((item, index) => { cityCheck[item.id] = false; });
+                this.setState({cityCheck: cityCheck });
             }
         },
         error => {});
@@ -54,7 +54,7 @@ class AdminEditMaster extends Component {
             console.log('ApiService.getMasterById(): ', response.data.master);
             if(response && response.data) {
                 this.setState({master: response.data.master});
-                let cityCheck = {};
+                let cityCheck = this.state.cityCheck;
                 response.data.master.cities.map((item, index) => { cityCheck[item.id] = true; });
                 this.setState({cityCheck: cityCheck });
             }
