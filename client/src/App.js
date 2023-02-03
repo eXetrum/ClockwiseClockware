@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Home from './components/Home';
 import LogIn from './components/Login';
 import LogOut from './components/Logout';
+import Order from './components/Order';
 import UserProfile from './components/UserProfile';
 import AdminDashboardCities from './components/admin/AdminDashboardCities';
 import AdminEditCity from './components/admin/AdminEditCity';
@@ -18,6 +19,7 @@ const App = () => {
 		<Route exact path="/" element={<Home />} />
 		<Route exact path="/login" element={<LogIn />} />
 		<Route exact path="/logout" element={<LogOut />} />
+		<Route exact path="/order" element={<Order />} />
 		<Route exact path="/profile" element={
 			<ProtectedRoute>
 				<UserProfile />
