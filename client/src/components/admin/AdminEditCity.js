@@ -1,86 +1,105 @@
-import React, {Component} from 'react';
-import Container from 'react-bootstrap/Container';
-import {Form, FormGroup, FormControl} from 'react-bootstrap';
-import Button from 'react-bootstrap/Button';
-import Alert from 'react-bootstrap/Alert';
-
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import {
+    Form, FormGroup, FormControl, Container, Row, Col, Button, Alert, Spinner
+} from 'react-bootstrap';
 
 import ApiService from '../../services/api.service';
-import Header from './../Header';
+import Header from '../Header';
 
+const AdminEditCity = () => {
+    const {id} = useParams();
+    // Initial
+    const [city, setCity] = useState(null);
+	const [newCityName, setNewCityName] = useState('');
+    const [pending, setPending] = useState(true);
+    const [info, setInfo] = useState(null);
+    const [error, setError] = useState(null);
 
-
-class AdminEditCity extends Component {
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            city: null,
-            id: this.props.id,
-            newCityName: '',
-            info: '',
-            error: '',
-        };
-    }
-
-    componentDidMount() {
-        const id = this.state.id;
-        console.log('componentDidMount: ', id);
-
-        ApiService.getCityById(id)
-        .then(response => {
-            console.log('ApiService.getCityById(): ', response.data.city);
-            if(response && response.data) {
-                this.setState({city: response.data.city, newCityName: response.data.city?.name });
+    // 'componentDidMount'
+    useEffect(() => {
+        console.log('"componentDidMount" getCityById');
+        const getCityById = async (id) => {
+            try {
+                const response = await ApiService.getCityById(id)
+                if (response && response.data && response.data.city) {                    
+                    const { city } = response.data;
+                    setCity(city);
+                    setNewCityName(city.name);
+                }
+            } catch (e) {
+                setError(e);
+            } finally {
+                setPending(false);
             }
-        },
-        error => { });
-    }
+        }
+        getCityById(id);
+    }, [id]);
 
 
-    handleSubmit = (e) => {
-        e.preventDefault()
-        const { id, newCityName } = this.state;
-        this.setState({error: '', newCityName: ''});
-        
-        ApiService.updateCityById(id, newCityName)
-        .then(response => {
-            if(response && response.data) {
-                this.setState({city: response.data.city, newCityName: response.data.city?.name });
-                this.setState({info: 'success'});
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        const curCityName = newCityName;
+        setPending(true);
+        setNewCityName('');
+        setInfo(null);
+        setError(null);
+
+        const updateCityById = async (id, newCityName) => {
+            try {
+                const response = await ApiService.updateCityById(id, newCityName);
+                if(response && response.data && response.data.city) {
+                    const { city } = response.data;
+                    setCity(city);
+                    setNewCityName(city.name);
+                    setInfo('success');
+                }
+            } catch(e) {
+                setError(e);
+            } finally {
+                setPending(false);
             }
-        }, error => {
-            this.setState({error: 'error'});
-        });
+        }
+
+        updateCityById(id, curCityName);        
     }
 
-
-    render() {
-
-        return (
-        <Container>
-          <Header />
-          <Container>              
-              <center>
+    return (
+    <Container>
+        <Header />
+        <Container>              
+            <center>
                 <h1>Admin: Edit city</h1>
-              </center>
-              <Form inline={true} className="d-flex align-items-end" onSubmit={this.handleSubmit}>
-                <FormGroup controlId="formInlineCityName">
+            </center>
+            <hr/>
+            {!city && <center><Spinner animation="grow" /> </center>}
+            {city &&
+            <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
+                <FormGroup>
                     <Form.Label>City:</Form.Label>{' '}
                     <FormControl type="text" name="city" 
-                        value={this.state.newCityName}
-                        onChange={(event) => {this.setState({newCityName: event.target.value, info: '', error: ''}); }}
+                        disabled={pending}
+                        value={newCityName}
+                        onChange={(event) => {
+                            setNewCityName(event.target.value);
+                            setInfo('');
+                            setError('');
+                        }}
                     />
-                </FormGroup>{' '}
-                <Button type="submit" variant="success" disabled={!this.state.newCityName}>Save</Button>
-              </Form>
-            <hr/>
-            {this.state.info && <Alert key='success' variant='success'>{this.state.info}</Alert>}
-            {this.state.error && <Alert key='danger' variant='danger'>{this.state.error}</Alert>}
-          </Container>
+                </FormGroup>
+                <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
+            </Form>
+            }
+        <hr/>
+        <Row className="justify-content-md-center">
+            <Col md="auto">
+                {info && <Alert key='success' variant='success'>{info}</Alert>}
+                {error && <Alert key='danger' variant='danger'>{error}</Alert>}
+            </Col>
+        </Row>
         </Container>
-        );
-    }
-}
+    </Container>
+    );
+};
 
 export default AdminEditCity;

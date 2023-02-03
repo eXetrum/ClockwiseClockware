@@ -12,7 +12,7 @@ import Button from 'react-bootstrap/Button';
 
 import AuthService from '../../services/auth.service';
 import ApiService from '../../services/api.service';
-import Header from './../Header';
+import Header from '../Header';
 
 
 class AdminDashboard extends Component {

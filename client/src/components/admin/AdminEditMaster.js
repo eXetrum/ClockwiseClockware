@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, Component} from 'react';
+import React, { useState, useEffect} from 'react';
 import { useParams } from 'react-router-dom';
 import {Form, FormGroup, FormControl, Container, Row, Col, Button, Alert} from 'react-bootstrap';
 import StarRating from '../StarRating';
-import Header from './../Header';
+import Header from '../Header';
 import ApiService from '../../services/api.service';
 
 
@@ -47,6 +47,7 @@ const AdminEditMaster = () => {
         });
 	};
 
+
     const validateNewMasterForm = () => { return !master.name || !master.email || !master.cities.length; };
 
 	// 'componentDidMount'
@@ -75,6 +76,7 @@ const AdminEditMaster = () => {
         },
         error => { setError(error); });
     }, []);
+
 
 	// 'render'
     return (
@@ -125,21 +127,22 @@ const AdminEditMaster = () => {
                             {cities.map((city, index) => {
                                 return (
                                     <Form.Check 
-                                    key={index}
+                                    key={"city_id_" + city.id + "_" + index}
                                         type='checkbox'
                                         defaultChecked={cityCheck[city.id]}
                                         id={"city_id_" + city.id}
                                         label={city.name}
-                                        onChange={(event) => {
-											//console.log('handleChecks: ', event, city);
-											cityCheck[city.id] = event.target.checked;
-											master.cities = [];
-											cities.forEach(item => {
-												if(cityCheck[item.id]) master.cities.push(item.id);
-											});
-											setMaster(master);
-											setCityCheck(cityCheck);
-										}}
+                                        onClick={
+											(event) => {
+												cityCheck[city.id] = event.target.checked;
+												let curCities = [];
+												cities.forEach(item => {
+													if(cityCheck[item.id]) curCities.push(item.id);
+												});
+												setCityCheck(cityCheck);
+												setMaster((prev) => ({...prev, cities: curCities}));
+											}
+										}
                                     />
                                 )
                             })
@@ -152,8 +155,12 @@ const AdminEditMaster = () => {
               	</Row>
 
             <hr/>
-			{info && <Alert key='success' variant='success'>{info}</Alert>}
-            {error && <Alert key='danger' variant='danger'>{error}</Alert>}
+			<Row className="justify-content-md-center">
+                <Col md="auto">
+                    {info && <Alert key='success' variant='success'>{info}</Alert>}
+                    {error && <Alert key='danger' variant='danger'>{error}</Alert>}
+                </Col>
+            </Row>
 			</Container>
 		</Container>
     );
