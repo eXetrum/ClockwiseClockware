@@ -81,7 +81,7 @@ const Order = () => {
             <hr/>
             <Row className="justify-content-md-center">
                 <Col xs lg="4">
-                    {(!cities && pending || !watchTypes && pending) && <center><Spinner animation="grow" /> </center>}
+                    {((!cities && pending) || (!watchTypes && pending)) && <center><Spinner animation="grow" /> </center>}
                     {cities && watchTypes &&
                     <Form onSubmit={handleSubmit}>
                         <FormGroup className="mb-3">
