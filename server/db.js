@@ -158,9 +158,9 @@ const updateMasterById = async (id, master) => {
 	let toRemove = dbMasterCities.filter(item => remoteMasterCities.indexOf(item) == -1);
 	let toInsert = remoteMasterCities.filter(item => dbMasterCities.indexOf(item) == -1);
 
-	for(let i = 0; i < toRemove.length; ++i) {
-		await execQuery('DELETE FROM master_city_list WHERE master_id=($1) AND city_id=($2)', [id, toRemove[i]]);
-	}
+	await Promise.all(toRemove.map(item => {
+		return execQuery('DELETE FROM master_city_list WHERE master_id=($1) AND city_id=($2)', [id, item]);
+	}));
 	
 	result = await execQuery(`
 			WITH update_master AS (
