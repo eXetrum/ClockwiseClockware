@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import Container from 'react-bootstrap/Container';
 import {Form, FormGroup, FormControl} from 'react-bootstrap';
 import ReactStars from "react-rating-stars-component";
+import StarRating from '../StarRating';
 
 import Badge from 'react-bootstrap/Badge';
 import Row from 'react-bootstrap/Row';
@@ -53,10 +54,14 @@ class AdminEditMaster extends Component {
         .then(response => {
             console.log('ApiService.getMasterById(): ', response.data.master);
             if(response && response.data) {
-                this.setState({master: response.data.master});
+                const { master } = response.data;
+                //this.setState({master: response.data.master});
                 let cityCheck = this.state.cityCheck;
                 response.data.master.cities.map((item, index) => { cityCheck[item.id] = true; });
-                this.setState({cityCheck: cityCheck });
+                this.setState({
+                    cityCheck: cityCheck,
+                    master: master,
+                });
             }
         },
         error => { });
@@ -118,7 +123,7 @@ class AdminEditMaster extends Component {
     render() {
         
         const { master, cities, cityCheck } = this.state;
-        console.log('render:', master, cities, cityCheck);
+        console.log('render:', master.rating, master, cities, cityCheck);
 
         return (
         <Container>
@@ -127,7 +132,7 @@ class AdminEditMaster extends Component {
               <center>
                 <h1>Admin: Edit Master</h1>
               </center>
-              {master && <Row className="justify-content-md-center">
+              <Row className="justify-content-md-center">
                 <Col xs>
                     <Form inline="true" className="d-flex align-items-end" onSubmit={this.handleSubmit}>
                         <FormGroup>
@@ -136,7 +141,7 @@ class AdminEditMaster extends Component {
                                 value={master.name}
                                 onChange={(event) => {
                                     this.setState(prevState => ({
-                                        master: {...prevState.newMaster, name: event.target.value}
+                                        master: {...prevState.master, name: event.target.value}
                                     }))
                                 }}
                             />
@@ -154,16 +159,21 @@ class AdminEditMaster extends Component {
                         </FormGroup>
                         <FormGroup className="ms-3">
                             <Form.Label>Rating:</Form.Label>
-                            <ReactStars
-                                count={5}
+                            <StarRating
+                                total={5}
                                 value={master.rating}
-                                onChange={(value) => {
+                                onRatingChange={(value) => {
+                                    console.log('onRatingChange: ', value);
                                     this.setState(prevState => ({
                                         master: {...prevState.master, rating: value}
                                     }))
                                 }}
-                                size={24}
-                                activeColor="#ffd700"
+                                onRatingReset={(value) => {
+                                    console.log('onRatingReset: ', value);
+                                    this.setState(prevState => ({
+                                        master: {...prevState.master, rating: value}
+                                    }))
+                                }}      
                             />
                         </FormGroup>
 
@@ -189,7 +199,7 @@ class AdminEditMaster extends Component {
                     </Form>
                 </Col>
               </Row>
-            }
+
             <hr/>
             
             {this.state.info && <Alert key='success' variant='success'>{this.state.info}</Alert>}
