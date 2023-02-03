@@ -133,12 +133,44 @@ const getMasterById = async (id) => {
 };
 
 const updateMasterById = async (id, master) => {
+	
 	console.log('updateMasterById: ', id, master);
-	//'UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
-	let result = await execQuery(	
-		`UPDATE masters SET name=$1, email=$2, rating=$3 WHERE id=($4)`,
-		[master.name, master.email, master.rating, id]
-	);
+	let result = await execQuery(
+		`SELECT id, name, email, rating, (
+			SELECT json_agg(C.*) 
+			FROM 
+				cities C 
+				INNER JOIN master_city_list MCL 
+				ON C.id = MCL.city_id AND MCL.master_id = M.id
+			) AS cities 
+		FROM masters M WHERE id=$1;`, [id])
+	
+	let dbMaster = result.rows[0];
+	dbMasterCities = dbMaster.cities.map(item => item.id);
+	remoteMasterCities = master.cities.map(item => item.id);
+	
+	console.log('updateMasterById, dbMasterCities: ', dbMasterCities);
+	console.log('updateMasterById, remoteMasterCities: ', remoteMasterCities);
+	
+	let toRemove = dbMasterCities.filter(item => remoteMasterCities.indexOf(item) == -1);
+	let toInsert = remoteMasterCities.filter(item => dbMasterCities.indexOf(item) == -1);
+
+	for(let i = 0; i < toRemove.length; ++i) {
+		await execQuery('DELETE FROM master_city_list WHERE master_id=($1) AND city_id=($2)', [id, toRemove[i]]);
+	}
+	
+	result = await execQuery(`
+			WITH update_master AS (
+			UPDATE masters SET name=$1, email=$2, rating=$3 WHERE id=($4)
+			returning id
+		)
+		INSERT INTO master_city_list (master_id, city_id)
+		VALUES(
+			(SELECT id FROM update_master),
+			unnest($5::integer[])
+		)`, [master.name, master.email, master.rating, id, toInsert]
+	);	
+	
 	return result.rows;
 };
 
