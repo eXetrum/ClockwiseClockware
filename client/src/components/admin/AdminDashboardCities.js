@@ -4,8 +4,9 @@ import {
     Form, FormGroup, FormControl, Container, Row, Col, Table, Button, Alert, Spinner
 } from 'react-bootstrap';
 
-import ApiService from '../../services/api.service';
 import Header from '../Header';
+import ApiService from '../../services/api.service';
+
 
 const AdminDashboardCities = () => {
     const [cities, setCities] = useState(null);
