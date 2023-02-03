@@ -5,7 +5,7 @@ const StarRating = ({total, value, readonly=false, onRatingChange=null, onRating
     const [rating, setRating] = useState(value);
     const [hover, setHover] = useState(value);
     useEffect(() => { setRating(value); }, [value]);
-	console.log('readonly:',readonly);
+	
     return (
 		<div className="star-rating" >
 			{[...Array(total)].map((star, index) => {

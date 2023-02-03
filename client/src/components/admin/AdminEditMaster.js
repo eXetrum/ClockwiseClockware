@@ -21,7 +21,6 @@ const AdminEditMaster = () => {
 
 	// 'componentDidMount'
     useEffect(() => {
-        console.log('useEffect');
         const getCities = async () => {
             try {
                 const response = await ApiService.getCities();
@@ -41,7 +40,7 @@ const AdminEditMaster = () => {
         
         setPending(true);
         getCities();
-    }, []);
+    }, [id]);
 
     useEffect(() => {
         const getMasterById = async (id) => {
@@ -63,7 +62,7 @@ const AdminEditMaster = () => {
 
         setPending(true);
         getMasterById(id);
-    }, []);
+    }, [id]);
 
 	// Callbacks
 	const handleSubmit = (e) => {
@@ -90,7 +89,7 @@ const AdminEditMaster = () => {
         setPending(true);
         updateMasterById(id, master);
 
-        cities.map((item, index) => { cityCheck[item.id] = false; });
+        cities.forEach((item, index) => { cityCheck[item.id] = false; });
 		setCityCheck(cityCheck);
 		setMaster({ name: '', email: '', rating: 0, cities: [] });
         
@@ -121,7 +120,10 @@ const AdminEditMaster = () => {
                                 value={master.name}
                                 onChange={(event) => {
 									setMaster((prevState) => ({...prevState, name: event.target.value }));
+                                    setInfo(null);
+                                    setError(null);
                                 }}
+                                disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup>
@@ -130,7 +132,10 @@ const AdminEditMaster = () => {
                                 value={master.email}
                                 onChange={(event) => {
 									setMaster((prevState) => ({...prevState, email: event.target.value }));
+                                    setInfo(null);
+                                    setError(null);
                                 }}
+                                disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup className="ms-3">
@@ -145,7 +150,8 @@ const AdminEditMaster = () => {
                                 onRatingReset={(value) => {
                                     console.log('onRatingReset: ', value);
 									setMaster((prevState) => ({...prevState, rating: value }));
-                                }}      
+                                }} 
+                                readonly={pending}
                             />
                         </FormGroup>                        
                         <FormGroup className="ms-3">
@@ -153,6 +159,7 @@ const AdminEditMaster = () => {
                             {cities.map((city, index) => {
                                 return (
                                     <Form.Check 
+                                        disabled={pending}
                                         key={"city_id_" + city.id + "_" + index}
                                         type='checkbox'
                                         defaultChecked={cityCheck[city.id]}

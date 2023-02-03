@@ -74,24 +74,6 @@ const AdminDashboardMasters = () => {
         getCities();
     }, []);
 
-    const handleChecks = (event, city) => {
-        console.log('handleChecks: ', event, city);
-        let { newMaster, cityCheck, cities } = this.state;
-        console.log(cityCheck );
-        cityCheck[city.id] = event.target.checked;
-        newMaster.cities = [];
-        cities.forEach(item => {
-            if(cityCheck[item.id]) newMaster.cities.push(item.id);
-        });
-        /*if(event.target.checked) {
-            if(newMaster.cities.indexOf(city.id) == -1)
-                newMaster.cities.push(city.id);
-        } else {
-            newMaster.cities = newMaster.cities.filter(item => item.id != city.id);
-        }*/
-        this.setState({ newMaster: newMaster, cityCheck: cityCheck});
-    }
-
     const validateNewMasterForm = () => {
         return !newMaster || !newMaster.name || !newMaster.email || !newMaster.cities.length;
     };
@@ -99,25 +81,21 @@ const AdminDashboardMasters = () => {
     const handleSubmit = (e) => {
         e.preventDefault()
         console.log('submit: ', newMaster);
-        //cities.forEach((item, index) => { cityCheck[item.id] = false; });
-        //this.setState({error: '', newMaster: {name: '', email: '', rating: 0, cities: []}, cityCheck: cityCheck });
         const createMaster = async (master) => {
             try {
                 const response = await ApiService.createMaster(master);
                 if(response && response.data && response.data.masters) {
                     const { masters } = response.data;
                     setMasters(masters);
-                    
-                    //let curCityCheck = [];
-                    //cities.forEach((item, index) => { curCityCheck[item.id] = false; });
-                    //setCityCheck(curCityCheck);
                 }
             } catch(e) {
                 setError(e);
             } finally {
-
+                setPending(false);
             }
         };
+
+        setPending(true);
         createMaster(newMaster);
     };
 
@@ -157,6 +135,7 @@ const AdminDashboardMasters = () => {
                                 onChange={(event) => {
                                     setNewMaster((prev) => ({...prev, name: event.target.value}));
                                 }}
+                                disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup>
@@ -166,6 +145,7 @@ const AdminDashboardMasters = () => {
                                 onChange={(event) => {
                                     setNewMaster((prev) => ({...prev, email: event.target.value}));
                                 }}
+                                disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup className="ms-3">
@@ -181,6 +161,7 @@ const AdminDashboardMasters = () => {
                                     console.log('rating reset: ', value);
                                     setNewMaster((prev) => ({...prev, rating: value}));
                                 }}
+                                readonly={pending}
                             />
                         </FormGroup>
 
@@ -190,6 +171,7 @@ const AdminDashboardMasters = () => {
                             {cities.map((city, index) => {
                                 return (
                                     <Form.Check 
+                                        disabled={pending}
                                         key={"city_id_" + city.id + "_" + index}
                                         type='checkbox'
                                         defaultChecked={cityCheck[city.id]}
