@@ -3,7 +3,7 @@ import { Link }  from 'react-router-dom';
 import {
     Container, Row, Col, Form, FormGroup, FormControl, Table, Button, Badge, Alert, Spinner
 } from 'react-bootstrap';
-
+import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
 import ApiService from '../../services/api.service';
@@ -19,7 +19,6 @@ const AdminDashboardMasters = () => {
         rating: 0,
         cities: [],
     });
-    const [cityCheck, setCityCheck] = useState([]);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
@@ -54,10 +53,6 @@ const AdminDashboardMasters = () => {
                 if(response && response.data && response.data.cities) {
                     const { cities } = response.data;
                     setCities(cities);
-                    
-                    let curCityCheck = [];
-                    cities.forEach((item, index) => { curCityCheck[item.id] = false; });
-                    setCityCheck(curCityCheck);
                 }
             } catch(e) {
                 setError(e);
@@ -95,7 +90,15 @@ const AdminDashboardMasters = () => {
             }
         };
 
+        setNewMaster({
+            name: '',
+            email: '',
+            rating: 0,
+            cities: [],
+        });
         setPending(true);
+        setInfo(null);
+        setError(null);
         createMaster(newMaster);
     };
 
@@ -104,16 +107,34 @@ const AdminDashboardMasters = () => {
         if (!window.confirm("Delete?")) {
             return;
         }
-
-        ApiService.deleteMasterById(id)
-        .then(response => {
-            if(response && response.data) {
-                this.setState({masters: response.data.masters });
+        const deleteMasterById = async (id) => {
+            try {
+                const response = await ApiService.deleteMasterById(id);
+                if(response && response.data && response.data.masters) {
+                    const { masters } = response.data;
+                    setMasters(masters);
+                }
+            } catch(e) {
+                setError(e);
+            } finally {
+                setPending(false);
             }
-        }, error => {});
+        };
+
+        setPending(true);
+        deleteMasterById(id);
     }
 
-    //const { cities, masters, newMaster, cityCheck } = this.state;
+    const onSelect = (selectedList, selectedItem)=> {
+        console.log('OnSelect: ', selectedList, selectedItem);
+        setNewMaster((prevState) => ({...prevState, cities: selectedList }));
+    };
+
+    const onRemove = (selectedList, removedItem) => {
+        console.log('OnRemove: ', selectedList, removedItem);
+        setNewMaster((prevState) => ({...prevState, cities: selectedList }));
+    };
+
     return (
     <Container>
         <Header />
@@ -168,30 +189,13 @@ const AdminDashboardMasters = () => {
                         
                         <FormGroup className="ms-3">
                             <Form.Label>Master work cities:</Form.Label>
-                            {cities.map((city, index) => {
-                                return (
-                                    <Form.Check 
-                                        disabled={pending}
-                                        key={"city_id_" + city.id + "_" + index}
-                                        type='checkbox'
-                                        defaultChecked={cityCheck[city.id]}
-                                        id={"city_id_" + city.id}
-                                        label={city.name}
-                                        onClick={
-											(event) => {
-												cityCheck[city.id] = event.target.checked;
-												let curCities = [];
-												cities.forEach(item => {
-													if(cityCheck[item.id]) curCities.push(item.id);
-												});
-												setCityCheck(cityCheck);
-												setNewMaster((prev) => ({...prev, cities: curCities}));
-											}
-										}
-                                    />
-                                )
-                            })
-                            }
+                            <Multiselect
+                                options={cities} // Options to display in the dropdown
+                                selectedValues={newMaster.cities} // Preselected value to persist in dropdown
+                                onSelect={onSelect} // Function will trigger on select event
+                                onRemove={onRemove} // Function will trigger on remove event
+                                displayValue="name" // Property name to display in the dropdown options
+                            />
                         </FormGroup>
 
                         <Button type="submit" className="ms-2" disabled={validateNewMasterForm()} >Create</Button>
