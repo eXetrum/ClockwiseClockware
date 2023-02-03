@@ -1,61 +1,80 @@
-import React, {Component} from 'react';
-import {Link} from 'react-router-dom';
-import ReactStars from "react-rating-stars-component";
+import React, { useState, useEffect } from 'react';
+import { Link }  from 'react-router-dom';
+import {
+    Container, Row, Col, Form, FormGroup, FormControl, Table, Button, Badge, Alert, Spinner
+} from 'react-bootstrap';
 
-import Container from 'react-bootstrap/Container';
-import {Form, FormGroup, FormControl} from 'react-bootstrap';
-import Badge from 'react-bootstrap/Badge';
-import Table from 'react-bootstrap/Table';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import Button from 'react-bootstrap/Button';
+import StarRating from '../StarRating';
+import Header from '../Header';
 import ApiService from '../../services/api.service';
-import Header from './../Header';
 
 
+const AdminDashboardMasters = () => {
 
-class AdminDashboardMasters extends Component {
+    const [cities, setCities] = useState(null);
+    const [masters, setMasters] = useState(null);
+    const [newMaster, setNewMaster] = useState({
+        name: '',
+        email: '',
+        rating: 0,
+        cities: [],
+    });
+    const [cityCheck, setCityCheck] = useState([]);
+    const [pending, setPending] = useState(true);
+    const [info, setInfo] = useState(null);
+    const [error, setError] = useState(null);
 
-    constructor() {
-        super();
-        this.state = {
-            cities: [],
-            masters: [],
-            newMaster: {
-                name: '',
-                email: '',
-                rating: 0,
-                cities: [],
-            },
-            cityCheck: [],
-            error: '',
+    useEffect(() => {
+        const getMasters = async () => {
+            try {
+                const response = await ApiService.getMasters();
+                if(response && response.data && response.data.masters) {
+                    const { masters } = response.data;
+                    setMasters(masters);
+                }
+            } catch(e) {
+                setError(e);
+            } finally {
+                setPending(false);
+            }
         };
-    }
 
-    componentDidMount() {
-        ApiService.getMasters()
-        .then(response => {
-            console.log('ApiService.getMasters(): ', response.data.masters);
-            if(response && response.data) {
-                this.setState({masters: response.data.masters });
+        setMasters(null);
+        setPending(true);
+        setInfo(null);
+        setError(null);
+
+        getMasters();
+    }, []);
+
+    useEffect(() => {
+        const getCities = async () => {
+            try {
+                const response = await ApiService.getCities();
+                if(response && response.data && response.data.cities) {
+                    const { cities } = response.data;
+                    setCities(cities);
+                    
+                    let curCityCheck = [];
+                    cities.forEach((item, index) => { curCityCheck[item.id] = false; });
+                    setCityCheck(curCityCheck);
+                }
+            } catch(e) {
+                setError(e);
+            } finally {
+                setPending(false);
             }
-        },
-        error => { });
+        };
 
-        ApiService.getCities()
-        .then(response => {
-            console.log('ApiService.getCities(): ', response.data.cities);
-            if(response && response.data) {
-                this.setState({cities: response.data.cities });
-                let cityCheck = {};
-                response.data.cities.map((item, index) => { cityCheck[item.id] = false; });
-                this.setState({cityCheck: cityCheck });
-            }
-        },
-        error => { });
-    }
+        setCities(null);
+        setPending(true);
+        setInfo(null);
+        setError(null);
 
-    handleChecks = (event, city) => {
+        getCities();
+    }, []);
+
+    const handleChecks = (event, city) => {
         console.log('handleChecks: ', event, city);
         let { newMaster, cityCheck, cities } = this.state;
         console.log(cityCheck );
@@ -73,28 +92,36 @@ class AdminDashboardMasters extends Component {
         this.setState({ newMaster: newMaster, cityCheck: cityCheck});
     }
 
-    validateNewMasterForm = () => {
-        const { newMaster } = this.state;
-        return !newMaster.name || !newMaster.email || !newMaster.cities.length;
-    }
+    const validateNewMasterForm = () => {
+        return !newMaster || !newMaster.name || !newMaster.email || !newMaster.cities.length;
+    };
 
-    handleSubmit = (e) => {
+    const handleSubmit = (e) => {
         e.preventDefault()
-        const { newMaster, cities } = this.state;
-        let cityCheck = this.state.cityCheck;
         console.log('submit: ', newMaster);
-        cities.map((item, index) => { cityCheck[item.id] = false; });
-        this.setState({error: '', newMaster: {name: '', email: '', rating: 0, cities: []}, cityCheck: cityCheck });
-        
-        ApiService.createMaster(newMaster)
-        .then(response => {
-            if(response && response.data) {
-                this.setState({masters: response.data.masters });
-            }
-        }, error => {});
-    }
+        //cities.forEach((item, index) => { cityCheck[item.id] = false; });
+        //this.setState({error: '', newMaster: {name: '', email: '', rating: 0, cities: []}, cityCheck: cityCheck });
+        const createMaster = async (master) => {
+            try {
+                const response = await ApiService.createMaster(master);
+                if(response && response.data && response.data.masters) {
+                    const { masters } = response.data;
+                    setMasters(masters);
+                    
+                    //let curCityCheck = [];
+                    //cities.forEach((item, index) => { curCityCheck[item.id] = false; });
+                    //setCityCheck(curCityCheck);
+                }
+            } catch(e) {
+                setError(e);
+            } finally {
 
-    handleRemove = (id) => {
+            }
+        };
+        createMaster(newMaster);
+    };
+
+    const handleRemove = (id) => {
         console.log('handleRemove');
         if (!window.confirm("Delete?")) {
             return;
@@ -108,27 +135,27 @@ class AdminDashboardMasters extends Component {
         }, error => {});
     }
 
-    render() {        
-        const { cities, masters, newMaster, cityCheck } = this.state;
-        
-        return (
-        <Container>
-          <Header />
-          <Container>              
-              <center>
-                <h1>Admin: Masters Dashboard</h1>
-              </center>
-              <Row className="justify-content-md-center">
+    //const { cities, masters, newMaster, cityCheck } = this.state;
+    return (
+    <Container>
+        <Header />
+        <Container>              
+            <center>
+            <h1>Admin: Masters Dashboard</h1>
+            </center>
+            <hr/>
+            {(!cities && pending) && <center><Spinner animation="grow" /> </center>}
+            {cities &&
+            <>
+            <Row className="justify-content-md-center mb-3">
                 <Col xs>
-                    <Form inline="true" className="d-flex align-items-end" onSubmit={this.handleSubmit}>
+                    <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
                         <FormGroup>
                             <Form.Label>Master name:</Form.Label>
                             <FormControl type="text" name="masterName" 
                                 value={newMaster.name}
                                 onChange={(event) => {
-                                    this.setState(prevState => ({
-                                        newMaster: {...prevState.newMaster, name: event.target.value}
-                                    }))
+                                    setNewMaster((prev) => ({...prev, name: event.target.value}));
                                 }}
                             />
                         </FormGroup>
@@ -137,23 +164,23 @@ class AdminDashboardMasters extends Component {
                             <FormControl type="email" name="masterEmail" 
                                 value={newMaster.email}
                                 onChange={(event) => {
-                                    this.setState(prevState => ({
-                                        newMaster: {...prevState.newMaster, email: event.target.value}
-                                    }))
+                                    setNewMaster((prev) => ({...prev, email: event.target.value}));
                                 }}
                             />
                         </FormGroup>
                         <FormGroup className="ms-3">
                             <Form.Label>Rating:</Form.Label>
-                            <ReactStars
-                                count={5}
-                                onChange={(value) => {
-                                    this.setState(prevState => ({
-                                        newMaster: {...prevState.newMaster, rating: value}
-                                    }))
+                            <StarRating
+                                total={5}
+                                value={newMaster.rating}
+                                onRatingChange={(value) => {
+                                    console.log('rating change: ', value);
+                                    setNewMaster((prev) => ({...prev, rating: value}));
                                 }}
-                                size={24}
-                                activeColor="#ffd700"
+                                onRatingReset={(value) => {
+                                    console.log('rating reset: ', value);
+                                    setNewMaster((prev) => ({...prev, rating: value}));
+                                }}
                             />
                         </FormGroup>
 
@@ -163,25 +190,38 @@ class AdminDashboardMasters extends Component {
                             {cities.map((city, index) => {
                                 return (
                                     <Form.Check 
-                                    key={index}
+                                        key={"city_id_" + city.id + "_" + index}
                                         type='checkbox'
-                                        defaultChecked={this.state.cityCheck[city.id]}
+                                        defaultChecked={cityCheck[city.id]}
                                         id={"city_id_" + city.id}
                                         label={city.name}
-                                        onChange={(event) => {this.handleChecks(event, city)}}
+                                        onClick={
+											(event) => {
+												cityCheck[city.id] = event.target.checked;
+												let curCities = [];
+												cities.forEach(item => {
+													if(cityCheck[item.id]) curCities.push(item.id);
+												});
+												setCityCheck(cityCheck);
+												setNewMaster((prev) => ({...prev, cities: curCities}));
+											}
+										}
                                     />
                                 )
                             })
                             }
                         </FormGroup>
 
-                        <Button type="submit" disabled={this.validateNewMasterForm()} >Create</Button>
+                        <Button type="submit" className="ms-2" disabled={validateNewMasterForm()} >Create</Button>
                     </Form>
                 </Col>
-              </Row>
-              
-              <hr/>
-              <Table bordered hover responsive size="sm">
+            </Row>
+            <hr/>
+            </>
+            }
+            {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
+            {masters && 
+                <Table bordered hover responsive size="sm">
                 <thead>
                     <tr>
                         <th>id</th><th>name</th><th>email</th><th>cities</th><th>rating</th><th></th>
@@ -211,12 +251,10 @@ class AdminDashboardMasters extends Component {
 
                         </td>
                         <td>
-                            <ReactStars
-                                count={5}
+                            <StarRating
+                                total={5}
                                 value={master.rating}
-                                edit={false}
-                                size={24}
-                                activeColor="#ffd700"
+                                readonly={true}
                             />
                         </td>
                         <td className="text-center">
@@ -225,18 +263,19 @@ class AdminDashboardMasters extends Component {
                             </Link>
                         </td>
                         <td className="text-center">
-                            <Button variant="danger" onClick={() => {this.handleRemove(master.id) }}>x</Button>
+                            <Button variant="danger" onClick={() => {handleRemove(master.id) }}>x</Button>
                         </td>
                     </tr>
                     );
                 })}
                 </tbody>
-            </Table>
+                </Table>
+            }
             <hr/>
-          </Container>
+            
         </Container>
-        );
-    }
-}
+    </Container>
+    );
+};
 
 export default AdminDashboardMasters;
