@@ -1,14 +1,20 @@
-import React from 'react'
-import {Navigate} from "react-router-dom"
+import { useEffect, useState } from 'react'
+import { useNavigate } from "react-router-dom"
 import AuthService from '../services/auth.service';
 
 const ProtectedRoute = ({ children }) => {
-    const user = AuthService.getCurrentUser();
-    if (!user) {
-      return <Navigate to="/login" replace />;
-    }
-  
-    return children;
-  };
+	const [user, setUser] = useState(null);
+	const navigate = useNavigate();
+	useEffect(() => {
+		console.log('protected route');
+		const serviceUser = AuthService.getCurrentUser();
+		setUser(serviceUser);
+		if(serviceUser == null) {
+			navigate("/");
+		}
+	}, [navigate]);
+	
+	return children;    
+};
 
 export default ProtectedRoute;

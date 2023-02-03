@@ -1,32 +1,30 @@
-import React, { Component } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import Container from 'react-bootstrap/Container';
 import Header from './Header';
 import AuthService from "../services/auth.service";
 
 
-class LogOut extends Component {
-  constructor () {
-    super();
-    this.state = { redirect: false };
-  }
+const LogOut = () => {
 
-  componentDidMount() {
-    AuthService.logout();
-    this.setState({ redirect: true });
-  }
+	const [redirect, setRedirect] = useState(false);
 
-  render () {
-    if (this.state.redirect) {
-      return (<Navigate to="/"/>)
-    }
-    return (
-      <Container>
-        <Header />
-        <p>Logout...</p>
-      </Container>
-    )
-  }
-}
+	useEffect(()=> {
+		AuthService.logout();
+		setRedirect(true);	
+	}, []);
+
+
+	return (
+		<>
+    	{redirect &&  <Navigate to="/" />}
+		{!redirect &&
+		<Container>
+			<Header />
+			<p>Logout...</p>
+		</Container>}
+		</>
+	);
+};
 
 export default LogOut;

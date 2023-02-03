@@ -1,28 +1,31 @@
-import React, {Component} from 'react';
-import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+import React, { useEffect, useState } from 'react';
+import { Container, Row, Col } from 'react-bootstrap';
 import Header from './Header';
 import AuthService from '../services/auth.service';
 
-class UserProfile extends Component {
-  render() {
-    const user = AuthService.getCurrentUser();
+const UserProfile = () =>  {
+	const [user, setUser] = useState(null);
+
+	useEffect( () => {
+		const user = AuthService.getCurrentUser();
+		setUser(user);
+	}, []);
+
     return (
-        <Container>
-          <Header />
-          <Container>
-            <Row className="justify-content-md-center">
-              <Col md="auto">
-                <h1>User Profile</h1>
-                <div>Email: {user.email}</div>
-                <div>Password: {user.password}</div>
-              </Col>
-            </Row>
-          </Container>
-        </Container>
+	<Container>
+		<Header />
+		{user && <Container>
+			<Row className="justify-content-md-center">
+				<Col md="auto">
+					<h1>User Profile</h1>
+					<div>Email: {user.email}</div>
+					<div>Password: {user.password}</div>
+				</Col>
+			</Row>
+		</Container>
+		}
+	</Container>
     );
-  }
-}
+};
 
 export default UserProfile;
