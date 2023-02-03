@@ -111,7 +111,7 @@ const AdminDashboardCities = () => {
 			<Row className="justify-content-md-center">
                 <Col md="auto">
                     {info && <Alert key='success' variant='success'>{info}</Alert>}
-                    {error && <Alert key='danger' variant='danger'>{error.toString() }</Alert>}
+                    {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
                 </Col>
             </Row>			
 			</>
