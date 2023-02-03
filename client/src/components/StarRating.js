@@ -16,7 +16,9 @@ const StarRating = ({total, value, onRatingChange, onRatingReset}) => {
 					className={index <= ((rating && hover) || rating || hover) ? "on" : "off"}
 					onClick={() => {
 						setRating(index); 
-						onRatingChange(index); 
+						if(onRatingChange) {
+							onRatingChange(index); 
+						}
 					}}
 					onDoubleClick={() => {
 						setRating(0);
