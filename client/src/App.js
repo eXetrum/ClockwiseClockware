@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {Navigate, BrowserRouter, Route, Routes} from "react-router-dom";
-import { useParams } from 'react-router-dom';
+
 import ProtectedRoute from './components/ProtectedRoute';
 import Home from './components/Home';
 import LogIn from './components/Login';
@@ -9,6 +9,7 @@ import UserProfile from './components/UserProfile';
 import AdminDashboardCities from './components/admin/AdminDashboardCities';
 import AdminEditCity from './components/admin/AdminEditCity';
 import AdminEditMaster from './components/admin/AdminEditMaster';
+import AdminEditCityWrapper from './components/admin/AdminEditCityWrapper';
 
 import AdminDashboardMasters from './components/admin/AdminDashboardMasters';
 
@@ -21,16 +22,6 @@ class App extends Component {
 	}
 
 	render() {
-
-		const AdminEditCityWrapper = () => {
-			const {id} = useParams();
-			return <AdminEditCity id={id} />;
-		}
-		const AdminEditMasterWrapper = () => {
-			const {id} = useParams();
-			return <AdminEditMaster id={id} />;
-		}
-
 		return (
 		<BrowserRouter>
 		<Routes>
@@ -49,7 +40,7 @@ class App extends Component {
 			} />
 			<Route path="/admin/cities/:id" element={
 				<ProtectedRoute >
-					<AdminEditCityWrapper />
+					<AdminEditCity />
 				</ProtectedRoute>
 			} />
 
@@ -65,7 +56,7 @@ class App extends Component {
 			} />
 			<Route path="/admin/masters/:id" element={
 				<ProtectedRoute >
-					<AdminEditMasterWrapper />
+					<AdminEditMaster />
 				</ProtectedRoute>
 			} />
 			<Route exact path="/admin/booking" element={
