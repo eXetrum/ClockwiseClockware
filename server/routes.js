@@ -59,12 +59,12 @@ router.post('/api/login', async (req, res) => {
 
 
 ////////////////////////////
-router.get('/api/items', RouteProtector, async (req, res) => {
+router.get('/api/watch_types', RouteProtector, async (req, res) => {
 	try {
-		let watch_types = await getWatchTypes();
-		console.log('watch_types: ', watch_types);
+		let watchTypes = await getWatchTypes();
+		console.log('watchTypes: ', watchTypes);
 		res.status(200).json({
-			watch_types
+			watchTypes
 		}).end();
 	} catch(e) { console.log(e); res.status(400).end();}
 });
