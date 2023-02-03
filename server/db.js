@@ -79,6 +79,9 @@ const getMasters = async () => {
 
 const createMaster = async (master) => {
 	console.log('createMaster before query: ', master);
+	let cities = [];
+	master.cities.forEach(item => cities.push(item.id));
+	
 	const res = await execQuery(
 		`WITH new_master AS(
 			INSERT INTO masters (name, email, rating)
@@ -90,7 +93,7 @@ const createMaster = async (master) => {
 			(SELECT id FROM new_master),
 			unnest($4::integer[])
 		);
-	`, [master.name, master.email, master.rating, master.cities]);
+	`, [master.name, master.email, master.rating, cities]);
 	let result = await execQuery(
 	`SELECT id, name, email, rating, (
 			SELECT json_agg(C.*) 
