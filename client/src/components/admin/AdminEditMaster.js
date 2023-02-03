@@ -12,11 +12,44 @@ const AdminEditMaster = () => {
     // Initial
 	const [cities, setCities] = useState([]);
     const [cityCheck, setCityCheck] = useState({});
-    const [master, setMaster] = useState({ name: '', email: '', rating: 0, cities: [] });
-    const [info, setInfo] = useState('');
-    const [error, setError] = useState('');
+    const [master, setMaster] = useState(null);
+    const [pending, setPending] = useState(true);
+    const [info, setInfo] = useState(null);
+    const [error, setError] = useState(null);
 
-	console.log(id, master);
+	// 'componentDidMount'
+    useEffect(() => {
+        console.log('useEffect');
+        const getCities = async () => {
+            try {
+
+            } catch(e) {
+                setError(e);
+            }
+        };
+        ApiService.getCities()
+        .then(response => {
+            console.log('ApiService.getCities(): ', response.data.cities);
+            if(response && response.data) {
+                setCities(response.data.cities);
+                let cityCheck = {};
+                response.data.cities.map((item, index) => { cityCheck[item.id] = false; });
+                setCityCheck(cityCheck);
+            }
+        },
+        error => { setError(error); });
+        ApiService.getMasterById(id)
+        .then(response => {
+            console.log('ApiService.getMasterById(): ', response.data.master);
+            if(response && response.data) {
+                const { master } = response.data;
+                master.cities.map((item, index) => { cityCheck[item.id] = true; });
+                setCityCheck(cityCheck);
+                setMaster(master);
+            }
+        },
+        error => { setError(error); });
+    }, []);
 
 	// Callbacks
 	const handleSubmit = (e) => {
@@ -50,32 +83,7 @@ const AdminEditMaster = () => {
 
     const validateNewMasterForm = () => { return !master.name || !master.email || !master.cities.length; };
 
-	// 'componentDidMount'
-    useEffect(() => {
-        console.log('useEffect');
-        ApiService.getCities()
-        .then(response => {
-            console.log('ApiService.getCities(): ', response.data.cities);
-            if(response && response.data) {
-                setCities(response.data.cities);
-                let cityCheck = {};
-                response.data.cities.map((item, index) => { cityCheck[item.id] = false; });
-                setCityCheck(cityCheck);
-            }
-        },
-        error => { setError(error); });
-        ApiService.getMasterById(id)
-        .then(response => {
-            console.log('ApiService.getMasterById(): ', response.data.master);
-            if(response && response.data) {
-                const { master } = response.data;
-                master.cities.map((item, index) => { cityCheck[item.id] = true; });
-                setCityCheck(cityCheck);
-                setMaster(master);
-            }
-        },
-        error => { setError(error); });
-    }, []);
+	
 
 
 	// 'render'
