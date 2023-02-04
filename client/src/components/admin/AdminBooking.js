@@ -48,7 +48,14 @@ const AdminBooking = () => {
 				</center>
                 <hr/>
                 {(!orders && pending) && <center><Spinner animation="grow" /></center>}
-                {orders &&
+                {orders && orders.length == 0 && 
+                <Row className="justify-content-md-center">
+                    <Col md="auto">
+                        <Alert>No records yet</Alert>
+                    </Col>
+                </Row>
+                }
+                {orders && orders.length > 0 && 
                 <Table>
                     <thead>
                         <tr>

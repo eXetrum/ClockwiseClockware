@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import EditIcon from '@mui/icons-material/Edit';
+
 import {
     Form, FormGroup, FormControl, Container, Row, Col, Table, Button, Alert, Spinner
 } from 'react-bootstrap';
-
 import Header from '../Header';
-//import ApiService from '../../api/api.service';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
 
@@ -119,30 +120,31 @@ const AdminDashboardCities = () => {
 			</>
 			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}
 			{cities && 
-			<Table bordered hover responsive size="sm">
+			<Table striped bordered responsive size="sm" className="mt-3">
 				<thead>
 					<tr>
-						<th>id</th><th>name</th><th></th><th></th>
+						<th className="text-center p-2 m-0">id</th>
+						<th className="text-center p-2 m-0">name</th>
+						<th colSpan="2" className="text-center p-2 m-0"></th>
 					</tr>
 				</thead>
 			  	<tbody>
 				{cities.map(( city, index ) => {
 					return (
 					<tr key={index}>
-						<td>{city.id}</td>
-						<td>
-							<Form.Control
-								type='text'
-								disabled
-								value={city.name} />
+						<td className="text-center p-2 m-0">{city.id}</td>
+						<td className="p-2 m-0">
+							{city.name}
 						</td>
-						<td className="text-center">
+						<td className="text-center p-2 m-0">
 							<Link to={"/admin/cities/" + city.id} >
-								<Button variant="warning">edit</Button>
+								<EditIcon />
 							</Link>
 						</td>
-						<td className="text-center">
-							<Button variant="danger" onClick={() => { handleRemove(city.id) }}>x</Button>
+						<td className="text-center p-2 m-0">
+							<Link to="#">
+								<DeleteForeverIcon onClick={() => { handleRemove(city.id) }} />
+							</Link>
 						</td>
 					</tr>
 					);

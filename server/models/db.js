@@ -16,4 +16,4 @@ const execQuery = async (code, bind_args=null) => {
 		return await pool.query(code);
 };
 
-module.exports = { execQuery }
+module.exports = { execQuery, pool }

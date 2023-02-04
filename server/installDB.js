@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { pool } = require('./db');
+const { pool } = require('./models/db');
 
 
 const install = async () => {
@@ -53,10 +53,10 @@ const install = async () => {
 			city_id INT NOT NULL,
 			master_id INT NOT NULL,
 			date_time timestamp  NOT NULL,
-			FOREIGN KEY(client_id) REFERENCES clients(id),
-			FOREIGN KEY(watch_type_id) REFERENCES watch_type(id),
-			FOREIGN KEY(city_id) REFERENCES cities(id),
-			FOREIGN KEY(master_id) REFERENCES masters(id)
+			FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE ON UPDATE CASCADE,
+			FOREIGN KEY(watch_type_id) REFERENCES watch_type(id) ON DELETE CASCADE ON UPDATE CASCADE,
+			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE CASCADE ON UPDATE CASCADE,
+			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE CASCADE ON UPDATE CASCADE
 		);
 		INSERT INTO cities (name) VALUES ('Дніпро'), ('Ужгород');
 		INSERT INTO watch_type (name, repair_time) VALUES ('Маленький', 1), ('Середній', 2), ('Великий', 3);

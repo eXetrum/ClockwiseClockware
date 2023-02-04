@@ -20,8 +20,8 @@ const Header = () => {
         {user ? (
         <Nav>
             <Nav.Link href="/admin/cities">Cities</Nav.Link>
-            <Nav.Link href="/admin/clients">Clients</Nav.Link>
             <Nav.Link href="/admin/masters">Masters</Nav.Link>
+            <Nav.Link href="/admin/clients">Clients</Nav.Link>            
             <Nav.Link href="/admin/booking">Booking</Nav.Link>
         </Nav>
         ):("")}
