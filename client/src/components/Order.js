@@ -3,6 +3,13 @@ import {
     Container, Row, Col, Form, FormGroup, FormControl, Button, Alert, Spinner 
 } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
+//import * as React from 'react';
+import dayjs, { Dayjs } from 'dayjs';
+import TextField from '@mui/material/TextField';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+
 import Header from './Header';
 import { getCities } from '../api/cities';
 import { getWatchTypes, getAvailableMasters } from '../api/booking';
@@ -17,6 +24,8 @@ const Order = () => {
     });
     const [watchTypes, setWatchTypes] = useState(null);
     const [cities, setCities] = useState(null);
+    const [dateTime, onChange] = useState(new Date());
+
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
@@ -150,7 +159,22 @@ const Order = () => {
                                 displayValue="name" // Property name to display in the dropdown options
                             />
                         </FormGroup>
-                        <Button className="mb-3" type="submit" variant="success" disabled={client.name.length < 3 || !client.email || !client.watchType || !client.cities.length || pending}>Save</Button>
+                        <FormGroup className="mb-3">
+                            
+                            
+                                <DateTimePicker
+                                    renderInput={(props) => <TextField {...props} />}
+                                    label="DateTimePicker"
+                                    value={value}
+                                    onChange={(newValue) => {
+                                    setValue(newValue);
+                                    }}
+                                />
+                            
+                        </FormGroup>
+                        <Button className="mb-3" type="submit" variant="success" disabled={client.name.length < 3 || !client.email || !client.watchType || !client.cities.length || pending}>
+                            Next
+                        </Button>
                     </Form>
                     }
                 </Col>

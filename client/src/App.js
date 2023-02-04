@@ -1,6 +1,12 @@
 import React from 'react';
 import { Navigate, BrowserRouter, Route, Routes } from "react-router-dom";
 
+import '@fontsource/roboto/300.css';
+import '@fontsource/roboto/400.css';
+import '@fontsource/roboto/500.css';
+import '@fontsource/roboto/700.css';
+import './App.css';
+
 import RouteGuard from './components/RouteGuard';
 import Home from './components/Home';
 import LogIn from './components/Login';
