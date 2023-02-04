@@ -8,17 +8,24 @@ const app = express()
 
 const port = process.env.NODE_APP_PORT || 4200
 
-const routes = require('./routes');
-
+const users = require('./routes/users');
+const cities = require('./routes/cities');
+const masters = require('./routes/masters');
+const booking = require('./routes/booking');
+const clients = require('./routes/clients');
 
 
 app.use(morgan('dev'));
-app.use(cors({
+app.use(cors({ 
     origin: '*'
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(routes); 
+app.use(users); 
+app.use(cities);
+app.use(masters);
+app.use(booking);
+app.use(clients);
 
 app.listen(port, () => {
 	console.log(`Server App listening on port ${port}`)
