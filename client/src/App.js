@@ -17,6 +17,8 @@ import AdminDashboardCities from './components/admin/AdminDashboardCities';
 import AdminEditCity from './components/admin/AdminEditCity';
 import AdminDashboardMasters from './components/admin/AdminDashboardMasters';
 import AdminEditMaster from './components/admin/AdminEditMaster';
+import AdminBooking from './components/admin/AdminBooking';
+import AdminClients from './components/admin/AdminClients';
 
 const App = () => {
 	return (
@@ -44,7 +46,7 @@ const App = () => {
 
 		<Route exact path="/admin/clients" element={
 			<RouteGuard>
-				<div>Client route</div>
+				<AdminClients />
 			</RouteGuard>
 		} />
 		<Route exact path="/admin/masters" element={
@@ -59,7 +61,7 @@ const App = () => {
 		} />
 		<Route exact path="/admin/booking" element={
 			<RouteGuard>
-				<div>Booking route</div>
+				<AdminBooking />
 			</RouteGuard>
 		} />
 		<Route path="*" element={<Navigate to="/" />} />

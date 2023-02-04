@@ -2,10 +2,11 @@ require('dotenv').config();
 const router = require('express').Router();
 const jwt = require("jsonwebtoken");
 const { 
-	getUser, getWatchTypes, 
+	getUser, 
 	getCities, createCity, deleteCityById, getCityById, updateCityById,
 	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById,
-	getAvailableMasters
+	getWatchTypes, getAvailableMasters, placeOrder, getOrders,
+	getClients, deleteClientById, getClientById, updateClientById
 } = require('./db');
 
 
@@ -60,15 +61,7 @@ router.post('/api/login', async (req, res) => {
 
 
 ////////////////////////////
-router.get('/api/watch_types', RouteProtector, async (req, res) => {
-	try {
-		let watchTypes = await getWatchTypes();
-		console.log('watchTypes: ', watchTypes);
-		res.status(200).json({
-			watchTypes
-		}).end();
-	} catch(e) { console.log(e); res.status(400).end();}
-});
+
 
 ////////////////////////////
 router.get('/api/cities', RouteProtector, async (req, res) => {
@@ -205,15 +198,54 @@ router.put('/api/masters/:id', RouteProtector, async (req, res) => {
 });
 
 /////////////////////////////////////////////
+router.get('/api/watch_types', RouteProtector, async (req, res) => {
+	try {
+		let watchTypes = await getWatchTypes();
+		console.log('watchTypes: ', watchTypes);
+		res.status(200).json({
+			watchTypes
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end();}
+});
 
 router.get('/api/available_masters', RouteProtector, async (req, res) => {
 	try {
-		let { city, watchType } = req.body;
-		console.log('GET [available_masters]: ', city, watchType);
-		let result = getAvailableMasters(city, watchType);
-		let masters = result;
+		let { cityId, watchTypeId, dateTime } = req.query;
+		console.log('GET [available_masters]: ', cityId, watchTypeId, dateTime);
+		let masters = await getAvailableMasters(cityId, watchTypeId, dateTime);
+		console.log('GET [available_masters] result: ', masters);
 		res.status(200).json({
 			masters
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.post('/api/place_order', RouteProtector, async (req, res) => {
+	try {
+		const { client, master } = req.body;
+		console.log('POST [place_order]: ', client, master);
+		let result = await placeOrder(client, master);
+		res.status(201).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.get('/api/orders', RouteProtector, async (req, res) => {
+	try {
+		console.log('get [orders]');
+		let orders = await getOrders();
+		res.status(200).json({
+			orders
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+/////////////////////////////////////////////
+router.get('/api/clients', RouteProtector, async (req, res) => {
+	try {
+		console.log('get [clients]');
+		let clients = await getClients();
+		res.status(200).json({
+			clients
 		}).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import './StarRating.css';
 
-const StarRating = ({total, value, readonly=false, onRatingChange=null, onRatingReset=null}) => {
+const StarRating = ({total=5, value=0, readonly=false, onRatingChange=null, onRatingReset=null}) => {
     const [rating, setRating] = useState(value);
     const [hover, setHover] = useState(value);
     useEffect(() => { setRating(value); setHover(value); }, [value]);

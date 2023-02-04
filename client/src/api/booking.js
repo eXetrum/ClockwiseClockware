@@ -6,10 +6,27 @@ SetupInterceptor();
 // Watch types
 const getWatchTypes = () => { return axios.get(`/watch_types`); };
 
-const getAvailableMasters = (city, watchType) => { return axios.get(`/available_masters`, { city, watchType }); };
+const getAvailableMasters = (cityId, watchTypeId, dateTime) => { 
+    return axios.get(`/available_masters`, { 
+        params: { 
+            cityId: cityId, 
+            watchTypeId: watchTypeId, 
+            dateTime: dateTime,
+        } 
+    }); 
+};
 
+const placeOrder = (client, master) => {
+    return axios.post(`/place_order`, { client, master });
+};
+
+const getOrders = () => {
+    return axios.get(`/orders`);
+};
 
 export {
     getWatchTypes,
-    getAvailableMasters
+    getAvailableMasters,
+    placeOrder,
+    getOrders
 };

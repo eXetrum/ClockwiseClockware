@@ -52,7 +52,7 @@ const install = async () => {
 			watch_type_id INT NOT NULL,
 			city_id INT NOT NULL,
 			master_id INT NOT NULL,
-			datetime DATE NOT NULL,
+			date_time timestamp  NOT NULL,
 			FOREIGN KEY(client_id) REFERENCES clients(id),
 			FOREIGN KEY(watch_type_id) REFERENCES watch_type(id),
 			FOREIGN KEY(city_id) REFERENCES cities(id),
