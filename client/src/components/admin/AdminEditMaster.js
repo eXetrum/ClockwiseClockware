@@ -6,7 +6,9 @@ import {
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import ApiService from '../../services/api.service';
+//import ApiService from '../../api/api.service';
+import { getCities } from '../../api/cities';
+import { getMasterById, updateMasterById } from '../../api/masters';
 
 
 const AdminEditMaster = () => {
@@ -14,7 +16,6 @@ const AdminEditMaster = () => {
     
     // Initial
 	const [cities, setCities] = useState([]);
-    const [cityCheck, setCityCheck] = useState({});
     const [master, setMaster] = useState(null);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
@@ -22,15 +23,12 @@ const AdminEditMaster = () => {
 
 	// 'componentDidMount'
     useEffect(() => {
-        const getCities = async () => {
+        const fetchCities = async () => {
             try {
-                const response = await ApiService.getCities();
+                const response = await getCities();
                 if(response && response.data && response.data.cities) {
                     const { cities } = response.data;
                     setCities(cities);
-                    let curCityCheck = [];
-                    cities.forEach((item, index) => { curCityCheck[item.id] = false; });
-                    setCityCheck(curCityCheck);
                 }
             } catch(e) {
                 setError(e);
@@ -40,21 +38,15 @@ const AdminEditMaster = () => {
         };
         
         setPending(true);
-        getCities();
+        fetchCities();
     }, [id]);
 
     useEffect(() => {
-        const getMasterById = async (id) => {
+        const fetchMasterById = async (id) => {
             try {
-                const response = await ApiService.getMasterById(id);
+                const response = await getMasterById(id);
                 if(response && response.data && response.data.master) {
                     let { master } = response.data;
-                    //let curCityCheck = [];
-                    //master.cities.forEach((item, index) => { curCityCheck[item.id] = true; });
-                    //setCityCheck(curCityCheck);
-                    //let masterCities = [];
-                    //master.cities.forEach(item => masterCities.push(item.id));
-                    //master.cities = masterCities;
                     setMaster(master);
                 }
             } catch(e) {
@@ -65,17 +57,17 @@ const AdminEditMaster = () => {
         };
 
         setPending(true);
-        getMasterById(id);
+        fetchMasterById(id);
     }, [id]);
 
 	// Callbacks
 	const handleSubmit = (e) => {
 		e.preventDefault()
         console.log('handleSubmit: ', master);
-        // Reset to default		
-        const updateMasterById = async (id, master) => {
+
+        const doUpdateMasterById = async (id, master) => {
             try {
-                const response = await ApiService.updateMasterById(id, master);
+                const response = await updateMasterById(id, master);
                 if(response && response.data && response.data.master) {
                     const { master } = response.data;
                     setMaster(master);
@@ -89,14 +81,15 @@ const AdminEditMaster = () => {
         };
 
         setPending(true);
-        updateMasterById(id, master);
-
-        cities.forEach((item, index) => { cityCheck[item.id] = false; });
-		setCityCheck(cityCheck);
-		setMaster({ name: '', email: '', rating: 0, cities: [] });
-        
-		setInfo(null);
+        setInfo(null);
 		setError(null);
+        doUpdateMasterById(id, master);
+
+        //cities.forEach((item, index) => { cityCheck[item.id] = false; });
+		//setCityCheck(cityCheck);
+		//setMaster({ name: '', email: '', rating: 0, cities: [] });
+        
+		
 	};
 
     const validateNewMasterForm = () => { return !master.name || !master.email || !master.cities.length; };

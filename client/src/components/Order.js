@@ -4,10 +4,11 @@ import {
 } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
 import Header from './Header';
-import ApiService from '../services/api.service';
+import { getCities } from '../api/cities';
+import { getWatchTypes, getAvailableMasters } from '../api/booking';
+
 
 const Order = () => {
-
     const [client, setClient] = useState({
         name: '',
         email: '',
@@ -21,9 +22,9 @@ const Order = () => {
     const [error, setError] = useState(null);
 
     useEffect( () => {
-        const getWachTypes = async() => {
+        const fetchWachTypes = async() => {
             try {
-                const response = await ApiService.getWatchTypes();
+                const response = await getWatchTypes();
                 if(response && response.data && response.data.watchTypes) {
                     const { watchTypes } = response.data;
                     setWatchTypes(watchTypes);
@@ -35,13 +36,13 @@ const Order = () => {
             }
         };
 
-        getWachTypes();
+        fetchWachTypes();
     }, []);
 
     useEffect( () => {
-        const getCities = async() => {
+        const fetchCities = async() => {
             try {
-                const response = await ApiService.getCities();
+                const response = await getCities();
                 if(response && response.data && response.data.cities) {
                     const { cities } = response.data;
                     setCities(cities);
@@ -53,12 +54,13 @@ const Order = () => {
             }
         };
 
-        getCities();
+        fetchCities();
     }, []);
 
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('handleSubmit', client);
+
     };
 
     const onSelect = (selectedList, selectedItem)=> {

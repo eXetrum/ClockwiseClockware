@@ -5,7 +5,8 @@ import {
 } from 'react-bootstrap';
 
 import Header from '../Header';
-import ApiService from '../../services/api.service';
+//import ApiService from '../../api/api.service';
+import { getCities, createCity, deleteCityById } from '../../api/cities';
 
 
 const AdminDashboardCities = () => {
@@ -18,9 +19,9 @@ const AdminDashboardCities = () => {
     // 'componentDidMount'
     useEffect(() => {
         console.log('"componentDidMount" getCityById');
-        const getCities = async () => {
+        const fetchCities = async () => {
             try {
-                const response = await ApiService.getCities();
+                const response = await getCities();
                 if (response && response.data && response.data.cities) {                    
                     const { cities } = response.data;
                     setCities(cities);
@@ -31,7 +32,7 @@ const AdminDashboardCities = () => {
                 setPending(false);
             }
         }
-		getCities();
+		fetchCities();
     }, []);
 
 	const handleSubmit = (e) => {
@@ -42,9 +43,9 @@ const AdminDashboardCities = () => {
         setInfo(null);
         setError(null);
 
-        const createCity = async (cityName) => {
+        const doCreateCity = async (cityName) => {
 			try {
-				const response = await ApiService.createCity(newCityName);
+				const response = await createCity(cityName);
 				if (response && response.data && response.data.cities) {                    
                     const { cities } = response.data;
                     setCities(cities);
@@ -56,7 +57,7 @@ const AdminDashboardCities = () => {
 			}
 		};
 
-        createCity(curCityName);
+        doCreateCity(curCityName);
 	};
 
 	const handleRemove = (cityId) => {
@@ -68,9 +69,9 @@ const AdminDashboardCities = () => {
         setInfo(null);
         setError(null);
 
-		const deleteCityById = async (id) => {
+		const doDeleteCityById = async (id) => {
 			try {
-				const response = await ApiService.deleteCityById(id);
+				const response = await deleteCityById(id);
 				if (response && response.data && response.data.cities) {                    
                     const { cities } = response.data;
                     setCities(cities);
@@ -81,7 +82,8 @@ const AdminDashboardCities = () => {
 				setPending(false);
 			}
 		};
-        deleteCityById(cityId);
+
+        doDeleteCityById(cityId);
 	};
 
     return (

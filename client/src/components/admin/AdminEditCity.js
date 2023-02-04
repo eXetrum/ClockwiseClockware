@@ -4,7 +4,7 @@ import {
     Form, FormGroup, FormControl, Container, Row, Col, Button, Alert, Spinner
 } from 'react-bootstrap';
 
-import ApiService from '../../services/api.service';
+import { getCityById, updateCityById } from '../../api/cities';
 import Header from '../Header';
 
 const AdminEditCity = () => {
@@ -19,9 +19,9 @@ const AdminEditCity = () => {
     // 'componentDidMount'
     useEffect(() => {
         console.log('"componentDidMount" getCityById');
-        const getCityById = async (id) => {
+        const fetchCityById = async (id) => {
             try {
-                const response = await ApiService.getCityById(id)
+                const response = await getCityById(id)
                 if (response && response.data && response.data.city) {                    
                     const { city } = response.data;
                     setCity(city);
@@ -33,7 +33,7 @@ const AdminEditCity = () => {
                 setPending(false);
             }
         }
-        getCityById(id);
+        fetchCityById(id);
     }, [id]);
 
 
@@ -45,9 +45,9 @@ const AdminEditCity = () => {
         setInfo(null);
         setError(null);
 
-        const updateCityById = async (id, newCityName) => {
+        const doUpdateCityById = async (id, newCityName) => {
             try {
-                const response = await ApiService.updateCityById(id, newCityName);
+                const response = await updateCityById(id, newCityName);
                 if(response && response.data && response.data.city) {
                     const { city } = response.data;
                     setCity(city);
@@ -61,7 +61,7 @@ const AdminEditCity = () => {
             }
         }
 
-        updateCityById(id, curCityName);        
+        doUpdateCityById(id, curCityName);        
     }
 
     return (
@@ -94,7 +94,7 @@ const AdminEditCity = () => {
         <Row className="justify-content-md-center">
             <Col md="auto">
                 {info && <Alert key='success' variant='success'>{info}</Alert>}
-                {error && <Alert key='danger' variant='danger'>{error}</Alert>}
+                {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
             </Col>
         </Row>
         </Container>

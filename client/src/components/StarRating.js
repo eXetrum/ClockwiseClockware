@@ -4,7 +4,7 @@ import './StarRating.css';
 const StarRating = ({total, value, readonly=false, onRatingChange=null, onRatingReset=null}) => {
     const [rating, setRating] = useState(value);
     const [hover, setHover] = useState(value);
-    useEffect(() => { setRating(value); }, [value]);
+    useEffect(() => { setRating(value); setHover(value); }, [value]);
 	
     return (
 		<div className="star-rating" >
@@ -14,7 +14,7 @@ const StarRating = ({total, value, readonly=false, onRatingChange=null, onRating
 					<button
 					type="button"
 					key={index}					
-					className={index <= ((rating && hover) || rating || hover) ? "on" : "off"}
+					className={index <= ((rating && hover) || hover) ? "on" : "off"}
 					onClick={() => {
 						if(readonly) return;
 						setRating(index); 

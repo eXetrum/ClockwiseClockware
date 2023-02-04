@@ -4,7 +4,8 @@ const jwt = require("jsonwebtoken");
 const { 
 	getUser, getWatchTypes, 
 	getCities, createCity, deleteCityById, getCityById, updateCityById,
-	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById
+	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById,
+	getAvailableMasters
 } = require('./db');
 
 
@@ -199,6 +200,20 @@ router.put('/api/masters/:id', RouteProtector, async (req, res) => {
 		console.log('update: ', master);
 		res.status(200).json({
 			master
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+/////////////////////////////////////////////
+
+router.get('/api/available_masters', RouteProtector, async (req, res) => {
+	try {
+		let { city, watchType } = req.body;
+		console.log('GET [available_masters]: ', city, watchType);
+		let result = getAvailableMasters(city, watchType);
+		let masters = result;
+		res.status(200).json({
+			masters
 		}).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });

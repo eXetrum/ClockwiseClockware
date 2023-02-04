@@ -1,101 +1,111 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
-import Container from 'react-bootstrap/Container';
-import Form from 'react-bootstrap/Form';
-import Button from 'react-bootstrap/Button';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
+import { 
+	Container, Row, Col, Form, Button, Alert
+} from 'react-bootstrap';
 import Header from './Header';
-import AuthService from "../services/auth.service";
+import { isLoggedIn, login, setToken } from '../api/auth';
 
 
-class LogIn extends Component {
-  constructor () {
-    super()
-    this.state = {
-      user: {
-        email: '',
-        password: ''
-      },
-      error: '',
-      redirect: AuthService.getCurrentUser() != null,
-    }
-  }
+const LogIn = () => {
+	const [user, setUser] = useState({email: '', password: ''});
+	const [pending, setPending] = useState(false);
+	const [redirect, setRedirect] = useState(false);
+	const [info, setInfo] = useState(null);
+	const [error, setError] = useState(null);
 
-  handleChange = (e) => {
-    const updatedUser = {...this.state.user}
-    const inputField = e.target.name
-    const inputValue = e.target.value
-    updatedUser[inputField] = inputValue
+	useEffect( () => {
+		setRedirect(isLoggedIn());
+	}, []);
+	
+	const handleChange = (event) => {
+    	const inputField = event.target.name
+    	const inputValue = event.target.value
+		
+		setUser((prev) => ({...prev, [inputField]: inputValue }));
+		
+		setInfo(null);
+		setError(null);
+    	
+		//updatedUser[inputField] = inputValue
+		//this.setState({user: updatedUser})
+	};
 
-    this.setState({user: updatedUser})
-  }
+  	const handleSubmit = (event) => {
+		event.preventDefault();
 
-  handleSubmit = (e) => {
-    e.preventDefault()
-    const { user } = this.state;
-    this.setState({error: ''});
+		setPending(true);
+		setInfo(null);
+		setError(null);
 
-    AuthService.login(user.email, user.password)
-    .then(response => {
-      console.log('handleSubmit=>Success(then): ', response);
-      if (response.data.accessToken) {
-        localStorage.setItem("user", response.data.accessToken);
-        this.setState({redirect: true});
-      }
-    },
-    error => {
-      console.log('handleSubmit=>Failure(error): ', error);
-      if(error && error.response && error.response.status === 401) {
-        this.setState({error: 'Incorrect login/password'});
-      } else {
-        // TODO
-        this.setState({error: error?.message || 'unknown error'});
-      }
-    });
-  }
+		const doLogin = async (email, password) => {
+			try {
+				const response = await login(email, password);
+				if(response && response.data && response.data.accessToken) {
+					setToken(response.data.accessToken);
+					setRedirect(true);
+				}
+			} catch(e) {
+				if(e && e.response && e.response.status === 401) {
+					setError('Incorrect login/password');
+				} else {
+					setError(e);
+				}
+			} finally {
+				setPending(false);
+			}
+		};
+		
+		doLogin(user.email, user.password);
+  	};
 
-  render () {
-    if (this.state.redirect) {
-      return (<Navigate to="/"/>)
-    }
-    const error = this.state.error;
-
-    return (
-      <Container>
-        <Header />
-        <Container>
-          <Row className="justify-content-md-center">
-            <Col xs lg="4" md="auto">
-              <h1>Login page</h1>
-              <Form onSubmit={this.handleSubmit}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Email address</Form.Label>
-                  <Form.Control type="email" placeholder="Enter email" 
-                    name="email"
-                    onChange={this.handleChange} 
-                    value={this.state.user.email}
-                  />
-                </Form.Group>
-                <Form.Group className="mb-3">
-                  <Form.Label>Password</Form.Label>
-                  <Form.Control type="password" placeholder="Password" 
-                    name="password"
-                    onChange={this.handleChange} 
-                    value={this.state.user.password}
-                  />
-                </Form.Group>
-                <Button variant="primary" type="submit">
-                  Login
-                </Button>                
-              </Form>
-              {error}
-            </Col>
-          </Row>
-        </Container>
-      </Container>
-    )
-  }
-}
+	return (
+		<>
+		{redirect && <Navigate to="/"/>}
+		{!redirect &&
+		<Container>
+			<Header />
+			<Container>
+				<Row className="justify-content-md-center">
+					<Col xs lg="4" md="auto">
+					<h1>Login page</h1>
+					<Form onSubmit={handleSubmit}>
+						<Form.Group className="mb-3">
+						<Form.Label>Email address</Form.Label>
+						<Form.Control type="email" placeholder="Enter email" 
+							name="email"
+							onChange={handleChange} 
+							value={user.email}
+							disabled={pending}
+						/>
+						</Form.Group>
+						<Form.Group className="mb-3">
+						<Form.Label>Password</Form.Label>
+						<Form.Control type="password" placeholder="Password" 
+							name="password"
+							onChange={handleChange} 
+							value={user.password}
+							disabled={pending}
+						/>
+						</Form.Group>
+						<Button variant="primary" type="submit" disabled={!user.email || !user.password || pending}>
+						Login
+						</Button>                
+					</Form>
+					</Col>
+				</Row>
+				<hr/>
+				<Row className="justify-content-md-center">
+					<Col md="auto">
+						{info && <Alert key='success' variant='success'>{info}</Alert>}
+						{error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
+					</Col>
+				</Row>
+			</Container>
+      	</Container>
+		}
+		</>
+	);
+};
 
 export default LogIn;

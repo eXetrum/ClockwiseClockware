@@ -1,27 +1,32 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import Header from './Header';
-import AuthService from '../services/auth.service';
+import { getCurrentUser } from '../api/auth';
 
 const UserProfile = () =>  {
 	const [user, setUser] = useState(null);
 
 	useEffect( () => {
-		const user = AuthService.getCurrentUser();
+		const user = getCurrentUser();
 		setUser(user);
 	}, []);
 
     return (
 	<Container>
 		<Header />
-		{user && <Container>
+		{user && 
+		<Container>
+			<center>
+				<h1>User Profile</h1>
+            </center>
+            <hr/>
 			<Row className="justify-content-md-center">
-				<Col md="auto">
-					<h1>User Profile</h1>
+				<Col md="auto">					
 					<div>Email: {user.email}</div>
 					<div>Password: {user.password}</div>
 				</Col>
 			</Row>
+			<hr/>
 		</Container>
 		}
 	</Container>

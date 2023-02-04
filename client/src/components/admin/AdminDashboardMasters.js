@@ -6,7 +6,9 @@ import {
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import ApiService from '../../services/api.service';
+//import ApiService from '../../api/api.service';
+import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
+import { getCities } from '../../api/cities';
 
 
 const AdminDashboardMasters = () => {
@@ -24,9 +26,9 @@ const AdminDashboardMasters = () => {
     const [error, setError] = useState(null);
 
     useEffect(() => {
-        const getMasters = async () => {
+        const fetchMasters = async () => {
             try {
-                const response = await ApiService.getMasters();
+                const response = await getMasters();
                 if(response && response.data && response.data.masters) {
                     const { masters } = response.data;
                     setMasters(masters);
@@ -43,13 +45,13 @@ const AdminDashboardMasters = () => {
         setInfo(null);
         setError(null);
 
-        getMasters();
+        fetchMasters();
     }, []);
 
     useEffect(() => {
-        const getCities = async () => {
+        const fetchCities = async () => {
             try {
-                const response = await ApiService.getCities();
+                const response = await getCities();
                 if(response && response.data && response.data.cities) {
                     const { cities } = response.data;
                     setCities(cities);
@@ -66,7 +68,7 @@ const AdminDashboardMasters = () => {
         setInfo(null);
         setError(null);
 
-        getCities();
+        fetchCities();
     }, []);
 
     const validateNewMasterForm = () => {
@@ -76,9 +78,9 @@ const AdminDashboardMasters = () => {
     const handleSubmit = (e) => {
         e.preventDefault()
         console.log('submit: ', newMaster);
-        const createMaster = async (master) => {
+        const doCreateMaster = async (master) => {
             try {
-                const response = await ApiService.createMaster(master);
+                const response = await createMaster(master);
                 if(response && response.data && response.data.masters) {
                     const { masters } = response.data;
                     setMasters(masters);
@@ -99,7 +101,7 @@ const AdminDashboardMasters = () => {
         setPending(true);
         setInfo(null);
         setError(null);
-        createMaster(newMaster);
+        doCreateMaster(newMaster);
     };
 
     const handleRemove = (id) => {
@@ -107,9 +109,9 @@ const AdminDashboardMasters = () => {
         if (!window.confirm("Delete?")) {
             return;
         }
-        const deleteMasterById = async (id) => {
+        const doDeleteMasterById = async (id) => {
             try {
-                const response = await ApiService.deleteMasterById(id);
+                const response = await deleteMasterById(id);
                 if(response && response.data && response.data.masters) {
                     const { masters } = response.data;
                     setMasters(masters);
@@ -122,7 +124,7 @@ const AdminDashboardMasters = () => {
         };
 
         setPending(true);
-        deleteMasterById(id);
+        doDeleteMasterById(id);
     }
 
     const onSelect = (selectedList, selectedItem)=> {
@@ -222,7 +224,7 @@ const AdminDashboardMasters = () => {
                 <tbody>
                 {masters.map(( master, index ) => {
                     return (
-                    <tr key={index}>
+                    <tr key={"master_id_" + index}>
                         <td>{master.id}</td>
                         <td>
                             <Form.Control

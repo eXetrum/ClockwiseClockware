@@ -1,7 +1,7 @@
 import React from 'react';
-import {Navigate, BrowserRouter, Route, Routes} from "react-router-dom";
+import { Navigate, BrowserRouter, Route, Routes } from "react-router-dom";
 
-import ProtectedRoute from './components/ProtectedRoute';
+import RouteGuard from './components/RouteGuard';
 import Home from './components/Home';
 import LogIn from './components/Login';
 import LogOut from './components/Logout';
@@ -21,40 +21,40 @@ const App = () => {
 		<Route exact path="/logout" element={<LogOut />} />
 		<Route exact path="/order" element={<Order />} />
 		<Route exact path="/profile" element={
-			<ProtectedRoute>
+			<RouteGuard>
 				<UserProfile />
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 		<Route exact path="/admin/cities" element={
-			<ProtectedRoute>
+			<RouteGuard>
 				<AdminDashboardCities />
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 		<Route path="/admin/cities/:id" element={
-			<ProtectedRoute >
+			<RouteGuard >
 				<AdminEditCity />
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 
 		<Route exact path="/admin/clients" element={
-			<ProtectedRoute>
+			<RouteGuard>
 				<div>Client route</div>
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 		<Route exact path="/admin/masters" element={
-			<ProtectedRoute>
+			<RouteGuard>
 				<AdminDashboardMasters  />
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 		<Route path="/admin/masters/:id" element={
-			<ProtectedRoute >
+			<RouteGuard >
 				<AdminEditMaster />
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 		<Route exact path="/admin/booking" element={
-			<ProtectedRoute>
+			<RouteGuard>
 				<div>Booking route</div>
-			</ProtectedRoute>
+			</RouteGuard>
 		} />
 		<Route path="*" element={<Navigate to="/" />} />
 	</Routes>

@@ -177,9 +177,27 @@ const updateMasterById = async (id, master) => {
 	return result.rows;
 };
 
+
+const getAvailableMasters = async (city, watchType) => {
+	let result = await execQuery(
+	`SELECT id, name, email, rating, (
+			SELECT json_agg(C.*) 
+			FROM 
+				cities C 
+				INNER JOIN master_city_list MCL 
+				ON C.id = MCL.city_id AND MCL.master_id = M.id
+			) AS cities 
+	FROM masters M
+	WHERE C.id=($1)`, [city.id]);
+	return result.rows;
+};
+///////////////////////////////////////////////////////////
+
+
 module.exports = { pool, execQuery, getUser, getWatchTypes, 
 	getCities, createCity, deleteCityById, getCityById, updateCityById,
-	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById
+	getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById, 
+	getAvailableMasters
 };
 
   

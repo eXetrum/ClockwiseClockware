@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
-import AuthService from "../services/auth.service";
+import { getCurrentUser } from "../api/auth";
 
 const Header = () => {
     const [user, setUser] = useState(null);
 
     useEffect( () => {
-        const user = AuthService.getCurrentUser();
+        const user = getCurrentUser();
         setUser(user);
     }, []);
 
-    const isLoggedIn = user != null;
     return (
     <Navbar bg="light" variant="light" className="mb-3">
         <Container>
@@ -18,7 +17,7 @@ const Header = () => {
         <Navbar.Toggle />
         <Navbar.Collapse className="justify-content-auto">
         
-        {isLoggedIn ? (
+        {user ? (
         <Nav>
             <Nav.Link href="/admin/cities">Cities</Nav.Link>
             <Nav.Link href="/admin/clients">Clients</Nav.Link>
@@ -32,7 +31,7 @@ const Header = () => {
         <Navbar.Collapse className="justify-content-end">
             <Navbar.Text>
             </Navbar.Text>
-            {isLoggedIn ? (
+            {user ? (
             <>
                 <Nav.Link href="/order" className="me-3">Order</Nav.Link>
                 <NavDropdown title={user.email} id="basic-nav-dropdown">

@@ -2,15 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import Container from 'react-bootstrap/Container';
 import Header from './Header';
-import AuthService from "../services/auth.service";
-
+import { logout } from "../api/auth";
 
 const LogOut = () => {
 
 	const [redirect, setRedirect] = useState(false);
 
 	useEffect(()=> {
-		AuthService.logout();
+		logout();
 		setRedirect(true);	
 	}, []);
 
