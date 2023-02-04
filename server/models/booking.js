@@ -2,7 +2,7 @@ const { execQuery } = require('./db');
 
 const getWatchTypes = async () => {
 	console.log('[db] getWatchTypes');
-	let result = await execQuery('SELECT * FROM watch_type');
+	let result = await execQuery('SELECT * FROM watch_type ORDER BY id');
 	console.log('[db] getWatchTypes result: ', result.rows);
 	return result.rows;
 };
@@ -42,7 +42,8 @@ const getAvailableMasters = async (cityId, watchTypeId, dateTime) => {
 				to_timestamp ($2) + interval '1h' * (SELECT repair_time FROM watch_type WHERE id=($3) LIMIT 1) 
 			)
 		)
-	);
+	)
+	ORDER BY M.rating DESC;
 	`, [cityId, dateTime / 1000, watchTypeId]);
 
 	console.log('[db] getAvailableMasters free masters: ', result.rows);
@@ -81,7 +82,7 @@ const getOrders = async () => {
 				INNER JOIN clients CL ON B.client_id=CL.id
 				INNER JOIN masters M ON B.master_id=M.id
 				INNER JOIN cities C ON B.city_id=C.id
-				
+		ORDER BY B.id				
 		;
 	`);
 	console.log('[db] getOrders result: ', result.rows);

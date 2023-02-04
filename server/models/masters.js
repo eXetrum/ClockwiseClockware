@@ -18,7 +18,8 @@ const getMasters = async () => {
 		masters M
 		INNER JOIN master_city_list MCL ON M.id=MCL.master_id
 		INNER JOIN cities C ON C.id = MCL.city_id AND MCL.master_id = M.id
-	GROUP BY M.id`);
+	GROUP BY M.id
+	ORDER BY id`);
 	console.log('[db] getMasters result: ', result.rows);
 	return result.rows;
 };

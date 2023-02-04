@@ -2,7 +2,7 @@ const { execQuery } = require('./db');
 
 const getClients = async () => {
 	console.log('[db] getClients');
-	let result = await execQuery('SELECT * FROM clients');
+	let result = await execQuery('SELECT * FROM clients ORDER BY id');
 	console.log('[db] getClients result: ', result.rows);
 	return result.rows;
 };

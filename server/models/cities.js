@@ -2,7 +2,7 @@ const { execQuery } = require('./db');
 
 const getCities = async () => {
 	console.log('[db] getCities');
-	let result = await execQuery('SELECT * FROM cities');
+	let result = await execQuery('SELECT * FROM cities ORDER BY id');
 	console.log('[db] getCities result: ', result.rows);
 	return result.rows;
 };
