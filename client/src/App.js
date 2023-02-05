@@ -19,7 +19,7 @@ import AdminDashboardMasters from './components/admin/AdminDashboardMasters';
 import AdminEditMaster from './components/admin/AdminEditMaster';
 import AdminDashboardClients from './components/admin/AdminDashboardClients';
 import AdminEditClient from './components/admin/AdminEditClient';
-import AdminDashboardBooking from './components/admin/AdminDashboardBooking';
+import AdminDashboardOrders from './components/admin/AdminDashboardOrders';
 
 const App = () => {
 	return (
@@ -64,9 +64,9 @@ const App = () => {
 				<AdminEditClient />
 			</RouteGuard>
 		} />
-		<Route exact path="/admin/booking" element={
+		<Route exact path="/admin/orders" element={
 			<RouteGuard>
-				<AdminDashboardBooking />
+				<AdminDashboardOrders />
 			</RouteGuard>
 		} />
 		<Route path="*" element={<Navigate to="/" />} />

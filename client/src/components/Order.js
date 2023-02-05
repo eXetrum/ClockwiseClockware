@@ -13,7 +13,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import StarRating from './StarRating';
 import Header from './Header';
 import { getCities } from '../api/cities';
-import { getWatchTypes, getAvailableMasters, placeOrder } from '../api/booking';
+import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
 
 
 
@@ -26,13 +26,14 @@ const Order = () => {
         return rounded;
     };
 
-    const [client, setClient] = useState({
-        name: '',
-        email: '',
+    const [order, setOrder] = useState({
+        client : { name: '', email: '' },
         watchType: null,
         city: null,
+        master: null,
         dateTime: roundMinutes(new Date()).getTime(),
-    });
+        cities: []
+    })
     const [watchTypes, setWatchTypes] = useState(null);
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
@@ -77,16 +78,62 @@ const Order = () => {
         fetchCities();
     }, []);
 
+
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log('handleSubmit', client);
-        console.log(client.dateTime);
+        console.log('handleSubmit', order);
 
-        const fetchMasters = async (client) => {
+        const fetchMasters = async (cityId, watchTypeId, dateTime) => {
             try {
                 const response = await getAvailableMasters(
-                    client.city.id, client.watchType.id, client.dateTime
+                    cityId, watchTypeId, dateTime
                 );
+    
+                if(response && response.data && response.data.masters) {
+                    const { masters } = response.data;
+                    setMasters(masters);
+                }
+            } catch(e) {
+                setError(e);
+            } finally {
+                setPending(false);
+            }
+        };
+
+        setPending(true);
+        setInfo(null);
+        setError(null);
+
+        fetchMasters(order.city.id, order.watchType.id, order.dateTime);
+    };
+
+    const onSelect = (selectedList, selectedItem)=> {
+        console.log('OnSelect: ', selectedList, selectedItem);
+        setOrder( (prev) => ({...prev, city: selectedItem }));
+        setMasters(null);
+    };
+
+    const onRemove = (selectedList, removedItem) => {
+        console.log('OnRemove: ', selectedList, removedItem);
+        setOrder( (prev) => ({...prev, city: null }));
+        setMasters(null);
+    };
+
+    const pickUpMaster = (event, master) => {        
+        
+        if (!window.confirm("Confirm?")) {
+            return;
+        }
+
+        order.master = master;
+        setOrder((prev) => ({...prev, master: master}));
+        console.log('pickup: ', order);
+
+        const doCreateOrder = async (order) => {
+            try {
+                const response = await createOrder(order);
+
+                console.log('Response: ', response.data);
 
                 if(response && response.data && response.data.masters) {
                     const { masters } = response.data;
@@ -103,56 +150,15 @@ const Order = () => {
         setInfo(null);
         setError(null);
 
-        fetchMasters(client);
-    };
-
-    const onSelect = (selectedList, selectedItem)=> {
-        console.log('OnSelect: ', selectedList, selectedItem);
-        setClient((prevState) => ({...prevState, city: selectedItem }));
-    };
-
-    const onRemove = (selectedList, removedItem) => {
-        console.log('OnRemove: ', selectedList, removedItem);
-        setClient((prevState) => ({...prevState, city: null }));
-    };
-
-    const pickUpMaster = (event, master) => {
-        console.log('pickup: ', client, master);
-        if (!window.confirm("Confirm?")) {
-            return;
-        }
-
-        const doPlaceOrder = async (client, master) => {
-            try {
-                const response = await placeOrder(
-                    client, master
-                );
-
-                console.log('Response: ', response.data);
-
-                if(response && response.data && response.data.masters) {
-                    // TODO
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
-
-        setPending(true);
-        setInfo(null);
-        setError(null);
-
-        doPlaceOrder(client, master);
+        doCreateOrder(order);
     };
 
     const isFormValid = () => {
-        return client.name.length >= 3 
-            && client.email 
-            && client.watchType 
-            && client.city
-            && client.dateTime > new Date().getTime()
+        return order.client.name.length >= 3 
+            && order.client.email 
+            && order.watchType 
+            && order.city
+            && order.dateTime > new Date().getTime()
             && !pending;
     };
 
@@ -173,12 +179,16 @@ const Order = () => {
                             <Form.Label>Name:</Form.Label>
                             <FormControl type="text" name="name" 
                                 disabled={pending}
-                                value={client.name}
+                                value={order.client.name}
                                 onChange={(event) => {
-                                    setClient( (prev) => ({
+                                    setOrder( (prev) => ({
                                         ...prev,
-                                        name: event.target.value
+                                        client: {
+                                            ...prev.client,
+                                            name: event.target.value
+                                        }
                                     }));
+                                    setMasters(null);
                                     setInfo(null);
                                     setError(null);
                                 }}
@@ -188,12 +198,16 @@ const Order = () => {
                             <Form.Label>Email:</Form.Label>
                             <FormControl type="email" name="email" 
                                 disabled={pending}
-                                value={client.email}
+                                value={order.client.email}
                                 onChange={(event) => {
-                                    setClient( (prev) => ({
+                                    setOrder( (prev) => ({
                                         ...prev,
-                                        email: event.target.value
+                                        client: {
+                                            ...prev.client,
+                                            email: event.target.value
+                                        }
                                     }));
+                                    setMasters(null);
                                     setInfo(null);
                                     setError(null);
                                 }}
@@ -211,10 +225,14 @@ const Order = () => {
                                         type="radio"
                                         onClick={(event) => {
                                             console.log('check: ', event);
-                                            setClient((prev) => ({
+                                            setOrder( (prev) => ({
                                                 ...prev,
                                                 watchType: item
                                             }));
+                                            setMasters(null);
+                                            setInfo(null);
+                                            setError(null);
+
                                         }}
                                     />
                                 )
@@ -227,7 +245,7 @@ const Order = () => {
                             <Multiselect
                                 selectionLimit={1}
                                 options={cities} // Options to display in the dropdown
-                                selectedValues={client.cities} // Preselected value to persist in dropdown
+                                selectedValues={order.cities} // Preselected value to persist in dropdown
                                 onSelect={onSelect} // Function will trigger on select event
                                 onRemove={onRemove} // Function will trigger on remove event
                                 displayValue="name" // Property name to display in the dropdown options
@@ -238,21 +256,24 @@ const Order = () => {
                                 <DateTimePicker
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
-                                    value={new Date(client.dateTime)}
-                                    minDate={dayjs(client.dateTime)}
+                                    value={new Date(order.dateTime)}
+                                    minDate={dayjs(order.dateTime)}
                                     views={['year', 'month', 'day', 'hours']}
                                     onChange={(newValue) => {
-                                        setClient((prev) => ({
+                                        setOrder( (prev) => ({
                                             ...prev,
                                             dateTime: new Date(newValue).getTime()
                                         }));
+                                        setMasters(null);
+                                        setInfo(null);
+                                        setError(null);
                                     }}
                                 />
                             </LocalizationProvider>
                         </FormGroup>
                         <Button className="mb-3" type="submit" variant="success" 
                             disabled={!isFormValid()}>
-                            Next
+                            Search
                         </Button>
                     </Form>
                     }
@@ -270,7 +291,6 @@ const Order = () => {
         <Row className="justify-content-md-center">
             {masters.map((master, index) => {
                 return (
-                    <>
                     <Col key={"master_id_" + master.id} md="auto" onClick={(event) => { pickUpMaster(event, master); }}>
                         <Card className="mb-3" style={{ width: '18rem' }}>
                             <Card.Body>
@@ -285,7 +305,6 @@ const Order = () => {
                             </Card.Body>
                         </Card>
                     </Col>
-                    </>
                 );
             })
             }

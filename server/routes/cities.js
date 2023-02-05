@@ -2,7 +2,8 @@ const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { getCities, createCity, deleteCityById, getCityById, updateCityById } = require('../models/cities');
 
-router.get('/api/cities', RouteProtector, async (req, res) => {
+// No route protector
+router.get('/api/cities', async (req, res) => {
 	try {
 		console.log('[route] GET /cities');
 		let cities = await getCities();

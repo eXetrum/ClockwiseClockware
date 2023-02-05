@@ -7,10 +7,10 @@ import {
 } from 'react-bootstrap';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import { getOrders, deleteOrderById } from '../../api/booking';
+import { getOrders, deleteOrderById } from '../../api/orders';
 
 
-const AdminDashboardBooking = () => {
+const AdminDashboardOrders = () => {
     
     // Initial
 	const [orders, setOrders] = useState(null);
@@ -71,7 +71,7 @@ const AdminDashboardBooking = () => {
 			<Header />
 			<Container>            
 				<center>
-					<h1>Admin: Booking</h1>
+					<h1>Admin: Orders</h1>
 				</center>
                 <hr/>
                 {(!orders && pending) && <center><Spinner animation="grow" /></center>}
@@ -147,4 +147,4 @@ const AdminDashboardBooking = () => {
     );
 };
 
-export default AdminDashboardBooking;
+export default AdminDashboardOrders;

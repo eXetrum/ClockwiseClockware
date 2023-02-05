@@ -11,7 +11,7 @@ const port = process.env.NODE_APP_PORT || 4200
 const users = require('./routes/users');
 const cities = require('./routes/cities');
 const masters = require('./routes/masters');
-const booking = require('./routes/booking');
+const orders = require('./routes/orders');
 const clients = require('./routes/clients');
 
 
@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(users); 
 app.use(cities);
 app.use(masters);
-app.use(booking);
+app.use(orders);
 app.use(clients);
 
 app.listen(port, () => {

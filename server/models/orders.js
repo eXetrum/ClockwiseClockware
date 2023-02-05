@@ -50,8 +50,8 @@ const getAvailableMasters = async (cityId, watchTypeId, dateTime) => {
 	return result.rows;
 };
 
-const placeOrder = async (client, master) => {
-	console.log('[db] placeOrder: ', client, master);
+const createOrder = async (order) => {
+	console.log('[db] createOrder: ', order);
 
 	let result = await execQuery(`
 		WITH new_client AS(
@@ -62,10 +62,12 @@ const placeOrder = async (client, master) => {
 		)
 		INSERT INTO booking (client_id, watch_type_id, city_id, master_id, date_time)
 		VALUES ((SELECT id FROM new_client), $3, $4, $5, to_timestamp($6))
-	`, [client.name, client.email, client.watchType.id, client.city.id, master.id, client.dateTime / 1000]);
+	`, [order.client.name, order.client.email, order.watchType.id, order.city.id, order.master.id, order.dateTime / 1000]);
 	
-	console.log('[db] placeOrder result: ', result.rows);
-	return result.rows;
+	console.log('[db] createOrder result: ', result.rows);
+	const masters = await getAvailableMasters(order.city.id, order.watchType.id, order.dateTime)
+	console.log('[db] createOrder result array of masters: ', masters);
+	return masters;
 };
 
 const getOrders = async () => {
@@ -99,4 +101,4 @@ const deleteOrderById = async (id) => {
 };
 
 
-module.exports = { getWatchTypes, getAvailableMasters, placeOrder, getOrders, deleteOrderById };
+module.exports = { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById };

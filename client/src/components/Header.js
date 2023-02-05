@@ -22,7 +22,7 @@ const Header = () => {
             <Nav.Link href="/admin/cities">Cities</Nav.Link>
             <Nav.Link href="/admin/masters">Masters</Nav.Link>
             <Nav.Link href="/admin/clients">Clients</Nav.Link>            
-            <Nav.Link href="/admin/booking">Booking</Nav.Link>
+            <Nav.Link href="/admin/orders">Orders</Nav.Link>
         </Nav>
         ):("")}
         </Navbar.Collapse>

@@ -1,8 +1,9 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
-const { getWatchTypes, getAvailableMasters, placeOrder, getOrders, deleteOrderById } = require('../models/booking');
+const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById } = require('../models/orders');
 
-router.get('/api/watch_types', RouteProtector, async (req, res) => {
+///////// Client part (No route protection)
+router.get('/api/watch_types', async (req, res) => {
 	try {
 		console.log('[route] GET /watch_types');
 		let watchTypes = await getWatchTypes();
@@ -13,7 +14,7 @@ router.get('/api/watch_types', RouteProtector, async (req, res) => {
 	} catch(e) { console.log(e); res.status(400).end();}
 });
 
-router.get('/api/available_masters', RouteProtector, async (req, res) => {
+router.get('/api/available_masters', async (req, res) => {
 	try {
 		let { cityId, watchTypeId, dateTime } = req.query;
 		console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, dateTime);
@@ -25,16 +26,19 @@ router.get('/api/available_masters', RouteProtector, async (req, res) => {
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
-router.post('/api/place_order', RouteProtector, async (req, res) => {
+router.post('/api/orders', async (req, res) => {
 	try {
-		const { client, master } = req.body;
-		console.log('[route] POST /place_order ', client, master);
-		let result = await placeOrder(client, master);
-		console.log('[route] POST /place_order result: ', result);
-		res.status(201).end();
+		const { order } = req.body;
+		console.log('[route] POST /orders ', order);
+		let masters = await createOrder(order);
+		console.log('[route] POST /orders result: ', masters);
+		res.status(201).json({
+			masters
+		}).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
+///////// Admin part (WITH route protection)
 router.get('/api/orders', RouteProtector, async (req, res) => {
 	try {
 		console.log('[route] GET /orders');

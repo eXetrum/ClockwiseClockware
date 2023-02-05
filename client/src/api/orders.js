@@ -16,8 +16,8 @@ const getAvailableMasters = (cityId, watchTypeId, dateTime) => {
     }); 
 };
 
-const placeOrder = (client, master) => {
-    return axios.post(`/place_order`, { client, master });
+const createOrder = (order) => {
+    return axios.post(`/orders`, { order });
 };
 
 const getOrders = () => {
@@ -31,7 +31,7 @@ const deleteOrderById = (id) => {
 export {
     getWatchTypes,
     getAvailableMasters,
-    placeOrder,
+    createOrder,
     getOrders,
     deleteOrderById
 };
