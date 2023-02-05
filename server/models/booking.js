@@ -89,5 +89,14 @@ const getOrders = async () => {
 	return result.rows;
 };
 
+const deleteOrderById = async (id) => {
+	console.log('[db] deleteOrderById ', id);
+	let result = await execQuery(`DELETE FROM booking WHERE id=($1);`, [id]);
+	console.log('[db] deleteOrderById result: ', result.rows);
+	let orders = await getOrders();
+	console.log('[db] deleteOrderById result orders array: ', orders);
+	return orders;
+};
 
-module.exports = { getWatchTypes, getAvailableMasters, placeOrder, getOrders };
+
+module.exports = { getWatchTypes, getAvailableMasters, placeOrder, getOrders, deleteOrderById };

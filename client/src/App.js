@@ -17,9 +17,9 @@ import AdminDashboardCities from './components/admin/AdminDashboardCities';
 import AdminEditCity from './components/admin/AdminEditCity';
 import AdminDashboardMasters from './components/admin/AdminDashboardMasters';
 import AdminEditMaster from './components/admin/AdminEditMaster';
-
 import AdminDashboardClients from './components/admin/AdminDashboardClients';
-import AdminBooking from './components/admin/AdminBooking';
+import AdminEditClient from './components/admin/AdminEditClient';
+import AdminDashboardBooking from './components/admin/AdminDashboardBooking';
 
 const App = () => {
 	return (
@@ -59,9 +59,14 @@ const App = () => {
 				<AdminDashboardClients />
 			</RouteGuard>
 		} />
+		<Route exact path="/admin/clients/:id" element={
+			<RouteGuard>
+				<AdminEditClient />
+			</RouteGuard>
+		} />
 		<Route exact path="/admin/booking" element={
 			<RouteGuard>
-				<AdminBooking />
+				<AdminDashboardBooking />
 			</RouteGuard>
 		} />
 		<Route path="*" element={<Navigate to="/" />} />

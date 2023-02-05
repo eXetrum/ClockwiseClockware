@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
-const { getWatchTypes, getAvailableMasters, placeOrder, getOrders } = require('../models/booking');
+const { getWatchTypes, getAvailableMasters, placeOrder, getOrders, deleteOrderById } = require('../models/booking');
 
 router.get('/api/watch_types', RouteProtector, async (req, res) => {
 	try {
@@ -40,6 +40,18 @@ router.get('/api/orders', RouteProtector, async (req, res) => {
 		console.log('[route] GET /orders');
 		let orders = await getOrders();
 		console.log('[route] GET /orders result: ', orders);
+		res.status(200).json({
+			orders
+		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.delete('/api/orders/:id', RouteProtector, async (req, res) => {
+	try {
+		const { id } = req.params;
+		console.log('[route] DELETE /orders/:id ', id);
+		let orders = await deleteOrderById(id);
+		console.log('[route] DELETE /orders/:id result: ', orders);
 		res.status(200).json({
 			orders
 		}).end();
