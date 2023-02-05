@@ -7,7 +7,7 @@ const SetupInterceptor = () => {
         if (isLoggedIn()){
             request.headers['Authorization'] = `Bearer ${user.token}`
         }
-        console.log(request);
+        //console.log(request);
         return request;
     }, error => {
         console.log(error);
