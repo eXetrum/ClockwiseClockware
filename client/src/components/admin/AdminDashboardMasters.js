@@ -149,7 +149,7 @@ const AdminDashboardMasters = () => {
         <Header />
         <Container>              
             <center>
-            <h1>Admin: Masters Dashboard</h1>
+                <h1>Admin: Masters Dashboard</h1>
             </center>
             <hr/>
             {(!cities && pending) && <center><Spinner animation="grow" /> </center>}

@@ -4,7 +4,7 @@ import {
 } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
 
-import dayjs, { Dayjs } from 'dayjs';
+import dayjs from 'dayjs';
 import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -14,6 +14,7 @@ import StarRating from './StarRating';
 import Header from './Header';
 import { getCities } from '../api/cities';
 import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
+import ErrorBox from './ErrorBox';
 
 
 
@@ -279,13 +280,11 @@ const Order = () => {
                     }
                 </Col>
             </Row>
-        <hr/>
-        <Row className="justify-content-md-center">
-            <Col md="auto">
-                {info && <Alert key='success' variant='success'>{info}</Alert>}
-                {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
-            </Col>
-        </Row>
+        
+        {cities && <hr />}
+        <ErrorBox info={info} error={error} pending={pending} />
+        {!cities && <hr />}  
+
         {masters &&
         <>
         <Row className="justify-content-md-center">
@@ -308,7 +307,7 @@ const Order = () => {
                 );
             })
             }
-            {masters && masters.length == 0 &&
+            {masters && masters.length === 0 &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
                     <Alert>No free masters available for specified city and date time</Alert>
