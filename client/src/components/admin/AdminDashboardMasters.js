@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link }  from 'react-router-dom';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import EditIcon from '@mui/icons-material/Edit';
+
 import {
-    Container, Row, Col, Form, FormGroup, FormControl, Table, Button, Badge, Alert, Spinner
+    Container, Row, Col, Form, FormGroup, FormControl, Button, Spinner
 } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-
+import MastersList from './MastersList';
+import ErrorBox from '../ErrorBox';
 import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
 
@@ -36,6 +35,7 @@ const AdminDashboardMasters = () => {
                 if(response && response.data && response.data.masters) {
                     const { masters } = response.data;
                     setMasters(masters);
+                    console.log(masters);
                 }
             } catch(e) {
                 setError(e);
@@ -215,69 +215,13 @@ const AdminDashboardMasters = () => {
             <hr/>
             </>
             }
-            <Row className="justify-content-md-center">
-                <Col md="auto">
-                    {info && <Alert key='success' variant='success'>{info}</Alert>}
-                    {error && <Alert key='danger' variant='danger'>{error.toString() }</Alert>}
-                </Col>
-            </Row> 
-            {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
-            {masters && 
-                <Table striped bordered responsive size="sm" className="mt-3">
-                <thead>
-                    <tr>
-                        <th className="text-center p-3 m-0">id</th>
-                        <th className="text-center p-3 m-0">name</th>
-                        <th className="text-center p-3 m-0">email</th>
-                        <th className="text-center p-3 m-0">cities</th>
-                        <th className="text-center p-3 m-0">rating</th>
-                        <th colSpan="2" className="text-center p-3 m-0"></th>
-                    </tr>
-                </thead>
-                <tbody>
-                {masters.map(( master, index ) => {
-                    return (
-                    <tr key={"master_id_" + index}>
-                        <td className="text-center p-3 m-0">
-                            {master.id}
-                        </td>
-                        <td className="p-3 m-0">
-                            {master.name}
-                        </td>
-                        <td className="p-3 m-0">
-                            {master.email}
-                        </td>
-                        <td className="pt-2 m-0">
-                        {master.cities.map((city, index2) => {
-                            return <Badge bg="info" className="p-2 m-1" key={index + "_" + index2}>{city.name}</Badge>
-                        })}
 
-                        </td>
-                        <td className="text-center p-2 m-0">
-                            <StarRating
-                                total={5}
-                                value={master.rating}
-                                readonly={true}
-                            />
-                        </td>
-                        <td className="text-center p-3 m-0">
-                            <Link to={"/admin/masters/" + master.id} >
-                                <EditIcon />
-                            </Link>
-                        </td>
-                        <td className="text-center p-3 m-0">
-                            <Link to="#">
-                                <DeleteForeverIcon onClick={() => { handleRemove(master.id) }} />
-                            </Link>
-                        </td>
-                    </tr>
-                    );
-                })}
-                </tbody>
-                </Table>
-            }
-            <hr/>
-                       
+
+            {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
+			<MastersList masters={masters} onRemove={handleRemove} />
+			{masters && <hr />}
+            <ErrorBox info={info} error={error} pending={pending} />
+            {!masters && <hr />}                        
         </Container>
     </Container>
     );

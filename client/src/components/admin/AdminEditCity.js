@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
-    Form, FormGroup, FormControl, Container, Row, Col, Button, Alert, Spinner
+    Form, FormGroup, FormControl, Container, Button, Spinner
 } from 'react-bootstrap';
-
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { getCityById, updateCityById } from '../../api/cities';
 import Header from '../Header';
+import ErrorBox from '../ErrorBox';
 
 const AdminEditCity = () => {
     const {id} = useParams();
@@ -39,9 +40,7 @@ const AdminEditCity = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        const curCityName = newCityName;
         setPending(true);
-        setNewCityName('');
         setInfo(null);
         setError(null);
 
@@ -61,7 +60,7 @@ const AdminEditCity = () => {
             }
         }
 
-        doUpdateCityById(id, curCityName);        
+        doUpdateCityById(id, newCityName);        
     }
 
     return (
@@ -70,9 +69,10 @@ const AdminEditCity = () => {
         <Container>              
             <center>
                 <h1>Admin: Edit city</h1>
+                <Link to={"/admin/cities"} ><ArrowLeftIcon/>Back</Link>
             </center>
             <hr/>
-            {!city && <center><Spinner animation="grow" /> </center>}
+            {(!city && pending) && <center><Spinner animation="grow" /> </center>}
             {city &&
             <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
                 <FormGroup>
@@ -90,13 +90,9 @@ const AdminEditCity = () => {
                 <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
             </Form>
             }
-        <hr/>
-        <Row className="justify-content-md-center">
-            <Col md="auto">
-                {info && <Alert key='success' variant='success'>{info}</Alert>}
-                {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
-            </Col>
-        </Row>
+        {city && <hr />}
+        <ErrorBox info={info} error={error} pending={pending} />
+        {!city && <hr />}  
         </Container>
     </Container>
     );

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-    Form, FormGroup, FormControl, Container, Row, Col, Button, Alert, Spinner
+    Form, FormGroup, FormControl, Container, Button, Spinner
 } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { getClientById, updateClientById } from '../../api/clients';
 import Header from '../Header';
+import ErrorBox from '../ErrorBox';
 
 const AdminEditClient = () => {
     const {id} = useParams();
     // Initial
+    const [originalClient, setOriginalClient] = useState(null);
     const [client, setClient] = useState(null);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
@@ -24,6 +26,7 @@ const AdminEditClient = () => {
                 if (response && response.data && response.data.client) {
                     const { client } = response.data;
                     setClient(client);
+                    setOriginalClient(client);
                 }
             } catch (e) {
                 setError(e);
@@ -38,27 +41,29 @@ const AdminEditClient = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
 
+        setPending(true);
+        setClient(null);        
+        setInfo(null);
+        setError(null);
+
         const doUpdateClientById = async (id, client) => {
             try {
                 const response = await updateClientById(id, client);
                 if(response && response.data && response.data.client) {
                     const { client } = response.data;
                     setClient(client);
+                    setOriginalClient(client);
                     setInfo('success');
                 }
             } catch(e) {
                 setError(e);
+                setClient(originalClient);
             } finally {
                 setPending(false);
             }
         }
 
         doUpdateClientById(id, client);
-        setClient(null);
-        setPending(true);
-        setInfo(null);
-        setError(null);
-
     }
 
     return (
@@ -70,7 +75,7 @@ const AdminEditClient = () => {
                 <Link to={"/admin/clients"} ><ArrowLeftIcon/>Back</Link>
             </center>
             <hr/>
-            {!client && <center><Spinner animation="grow" /> </center>}
+            {(!client && pending) && <center><Spinner animation="grow" /> </center>}
             {client  &&
             <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
                 <FormGroup>
@@ -106,13 +111,9 @@ const AdminEditClient = () => {
                 <Button className="ms-2" type="submit" variant="success" disabled={!client.name || !client.email || pending}>Save</Button>
             </Form>
             }
-        <hr/>
-        <Row className="justify-content-md-center">
-            <Col md="auto">
-                {info && <Alert key='success' variant='success'>{info}</Alert>}
-                {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
-            </Col>
-        </Row>
+        {client && <hr />}
+        <ErrorBox info={info} error={error} pending={pending} />
+        {!client && <hr />}          
         </Container>
     </Container>
     );

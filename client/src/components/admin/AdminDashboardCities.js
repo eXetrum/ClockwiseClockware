@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-import EditIcon from '@mui/icons-material/Edit';
-
 import {
-    Form, FormGroup, FormControl, Container, Row, Col, Table, Button, Alert, Spinner
+    Form, FormGroup, FormControl, Container, Button, Spinner
 } from 'react-bootstrap';
 import Header from '../Header';
+import CitiesList from './CitiesList';
+import ErrorBox from '../ErrorBox';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
-
 
 const AdminDashboardCities = () => {
     const [cities, setCities] = useState(null);
@@ -110,49 +107,14 @@ const AdminDashboardCities = () => {
 				</FormGroup>
 				<Button type="submit" className="ms-2" disabled={!newCityName} >Add</Button>
 		  	</Form>
-			<hr/>
-			<Row className="justify-content-md-center">
-                <Col md="auto">
-                    {info && <Alert key='success' variant='success'>{info}</Alert>}
-                    {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
-                </Col>
-            </Row>			
+			<hr />
 			</>
+
 			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}
-			{cities && 
-			<Table striped bordered responsive size="sm" className="mt-3">
-				<thead>
-					<tr>
-						<th className="text-center p-2 m-0">id</th>
-						<th className="text-center p-2 m-0">name</th>
-						<th colSpan="2" className="text-center p-2 m-0"></th>
-					</tr>
-				</thead>
-			  	<tbody>
-				{cities.map(( city, index ) => {
-					return (
-					<tr key={index}>
-						<td className="text-center p-2 m-0">{city.id}</td>
-						<td className="p-2 m-0">
-							{city.name}
-						</td>
-						<td className="text-center p-2 m-0">
-							<Link to={"/admin/cities/" + city.id} >
-								<EditIcon />
-							</Link>
-						</td>
-						<td className="text-center p-2 m-0">
-							<Link to="#">
-								<DeleteForeverIcon onClick={() => { handleRemove(city.id) }} />
-							</Link>
-						</td>
-					</tr>
-					);
-				})}
-			  	</tbody>
-		  	</Table>
-			}
-			<hr/>		
+			<CitiesList cities={cities} onRemove={handleRemove} />
+			{cities && <hr />}
+            <ErrorBox info={info} error={error} pending={pending} />
+            {!cities && <hr />} 
 		</Container>
 	</Container>
     );

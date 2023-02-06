@@ -15,7 +15,7 @@ router.get('/api/clients', RouteProtector, async (req, res) => {
 
 router.delete('/api/clients/:id', RouteProtector, async (req, res) => {
 	try {
-		const { id } = req.params;
+		let { id } = req.params;
 		console.log('[route] DELETE /clients/:id ', id);
 		let result = await deleteClientById(id);
 		console.log('[route] DELETE /clients/:id del result: ', result);
@@ -29,15 +29,19 @@ router.delete('/api/clients/:id', RouteProtector, async (req, res) => {
 
 router.get('/api/clients/:id', RouteProtector, async (req, res) => {
 	try {
-		const { id } = req.params;
+		const { id } = req.params;		
 		console.log('[route] GET /clients/:id ', id);
 		let result = await getClientById(id);
 		console.log('[route] GET /clients/:id result: ', result);
 		let client = result[0];
 		console.log('[route] GET /clients/:id result: ', client);
-		res.status(200).json({
-			client
-		}).end();
+		if(!client) {
+			res.status(404).json({'message': 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({
+				client
+			}).end();
+		}
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
@@ -51,10 +55,12 @@ router.put('/api/clients/:id', RouteProtector, async (req, res) => {
 		result = await getClientById(id);
 		client = result[0];
 		console.log('[route] PUT /clients/:id result: ', client);
-		res.status(200).json({
-			client
-		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+		if(!client) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({client}).end();
+		}
+	} catch(e) { console.log(e); res.status(400).json(e).end(); }
 });
 
 module.exports = router;

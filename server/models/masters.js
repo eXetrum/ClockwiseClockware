@@ -16,10 +16,14 @@ const getMasters = async () => {
 	`SELECT M.id, M.name, M.email, M.rating, json_agg(C.*) as cities
 	FROM 
 		masters M
-		INNER JOIN master_city_list MCL ON M.id=MCL.master_id
-		INNER JOIN cities C ON C.id = MCL.city_id AND MCL.master_id = M.id
+		LEFT JOIN master_city_list MCL ON M.id=MCL.master_id
+		LEFT JOIN cities C ON C.id = MCL.city_id AND MCL.master_id = M.id
 	GROUP BY M.id
 	ORDER BY id`);
+	result.rows = result.rows.map(item => {
+		if(item.cities == null || Array.isArray(item.cities) && item.cities.length > 0 && item.cities[0] == null) item.cities = [];
+		return item;
+	});
 	console.log('[db] getMasters result: ', result.rows);
 	return result.rows;
 };
@@ -79,7 +83,11 @@ const getMasterById = async (id) => {
 				INNER JOIN master_city_list MCL 
 				ON C.id = MCL.city_id AND MCL.master_id = M.id
 			) AS cities 
-		FROM masters M WHERE id=$1;`, [id]);
+		FROM masters M WHERE M.id=$1;`, [id]);
+	result.rows = result.rows.map(item => {
+		if(item.cities == null || Array.isArray(item.cities) && item.cities.length > 0 && item.cities[0] == null) item.cities = [];
+		return item;
+	});
 	console.log('[db] getMasterById result: ', result.rows);
 	return result.rows;
 };
@@ -97,7 +105,7 @@ const updateMasterById = async (id, master) => {
 		FROM masters M WHERE id=$1;`, [id])
 	
 	let dbMaster = result.rows[0];
-	dbMasterCities = dbMaster.cities.map(item => item.id);
+	dbMasterCities = dbMaster.cities == null ? [] : dbMaster.cities.map(item => item.id);
 	remoteMasterCities = master.cities.map(item => item.id);
 	
 	console.log('[db] updateMasterById, dbMasterCities: ', dbMasterCities);

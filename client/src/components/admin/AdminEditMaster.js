@@ -1,12 +1,13 @@
 import React, { useState, useEffect} from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
     Form, FormGroup, FormControl, Container, Row, Col, Button, Alert, Spinner
 } from 'react-bootstrap';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-//import ApiService from '../../api/api.service';
+import ErrorBox from '../ErrorBox';
 import { getCities } from '../../api/cities';
 import { getMasterById, updateMasterById } from '../../api/masters';
 
@@ -83,13 +84,7 @@ const AdminEditMaster = () => {
         setPending(true);
         setInfo(null);
 		setError(null);
-        doUpdateMasterById(id, master);
-
-        //cities.forEach((item, index) => { cityCheck[item.id] = false; });
-		//setCityCheck(cityCheck);
-		//setMaster({ name: '', email: '', rating: 0, cities: [] });
-        
-		
+        doUpdateMasterById(id, master);		
 	};
 
     const validateNewMasterForm = () => { return !master.name || !master.email || !master.cities.length; };
@@ -111,6 +106,7 @@ const AdminEditMaster = () => {
 			<Container>            
 				<center>
 					<h1>Admin: Edit Master</h1>
+                    <Link to={"/admin/masters"} ><ArrowLeftIcon/>Back</Link>
 				</center>
                 <hr/>
                 {(!master && pending) && <center><Spinner animation="grow" /> </center>}
@@ -176,13 +172,9 @@ const AdminEditMaster = () => {
               	</Row>
                 }
 
-            <hr/>
-			<Row className="justify-content-md-center">
-                <Col md="auto">
-                    {info && <Alert key='success' variant='success'>{info}</Alert>}
-                    {error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
-                </Col>
-            </Row>
+            {master && <hr />}
+            <ErrorBox info={info} error={error} pending={pending} />
+            {!master && <hr />}  
             
 			</Container>
 		</Container>

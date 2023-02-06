@@ -47,9 +47,11 @@ router.get('/api/masters/:id', RouteProtector, async (req, res) => {
 		console.log('[route] GET /masters/:id result: ', result);
 		let master = result[0];
 		console.log('[route] GET /masters/:id result: ', master);
-		res.status(200).json({
-			master
-		}).end();
+		if(!master) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({ master }).end();
+		}
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
@@ -63,9 +65,11 @@ router.put('/api/masters/:id', RouteProtector, async (req, res) => {
 		result = await getMasterById(id);
 		master = result[0]; 
 		console.log('[route] PUT /masters/:id result: ', master);
-		res.status(200).json({
-			master
-		}).end();
+		if(!master) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({ master }).end();
+		}
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 

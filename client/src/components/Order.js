@@ -121,7 +121,7 @@ const Order = () => {
 
     const pickUpMaster = (event, master) => {        
         
-        if (!window.confirm("Confirm?")) {
+        if (!window.confirm("Choose this master?")) {
             return;
         }
 
@@ -311,7 +311,7 @@ const Order = () => {
             {masters && masters.length == 0 &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
-                    <Alert>No free masters available for specified date time</Alert>
+                    <Alert>No free masters available for specified city and date time</Alert>
                 </Col>
             </Row>
             }

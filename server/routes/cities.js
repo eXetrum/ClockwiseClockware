@@ -18,7 +18,9 @@ router.post('/api/cities', RouteProtector, async (req, res) => {
 	try {
 		const { cityName } = req.body;
 		console.log('[route] POST /cities: ', cityName);
-		let cities = await createCity(cityName);
+		let result = await createCity(cityName);
+		console.log('[route] POST /cities: ', result);
+		const cities = await getCities();
 		console.log('[route] POST /cities result: ', cities);
 		res.status(200).json({
 			cities
@@ -48,9 +50,11 @@ router.get('/api/cities/:id', RouteProtector, async (req, res) => {
 		console.log('[route] GET /cities/:id result: ', result);
 		let city = result[0];
 		console.log('[route] GET /cities/:id result: ', city);
-		res.status(200).json({
-			city
-		}).end();
+		if(!city) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({ city }).end();
+		}
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
@@ -64,9 +68,11 @@ router.put('/api/cities/:id', RouteProtector, async (req, res) => {
 		result = await getCityById(id);
 		let city = result[0];
 		console.log('[route] PUT /cities/:id result: ', city);
-		res.status(200).json({
-			city
-		}).end();
+		if(!city) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({city}).end();
+		}
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
