@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import {
     Form, FormGroup, FormControl, Container, Row, Col, Button, Alert, Spinner
 } from 'react-bootstrap';
-
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { getClientById, updateClientById } from '../../api/clients';
 import Header from '../Header';
 
@@ -67,6 +67,7 @@ const AdminEditClient = () => {
         <Container>              
             <center>
                 <h1>Admin: Edit client</h1>
+                <Link to={"/admin/clients"} ><ArrowLeftIcon/>Back</Link>
             </center>
             <hr/>
             {!client && <center><Spinner animation="grow" /> </center>}
