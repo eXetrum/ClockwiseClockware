@@ -7,66 +7,59 @@ import {
     Row, Col, Table, Alert
 } from 'react-bootstrap';
 
-const ClientsList = ({clients, onRemove=null}) => {
+const AdminCitiesList = ({cities, onRemove=null}) => {
     
     // Initial
-	const [_clients, setClients] = useState(null);
+	const [_cities, setCities] = useState(null);
 
 	// 'componentDidMount'
-    useEffect(() => { setClients(clients); }, [clients]);
+    useEffect(() => { setCities(cities); }, [cities]);
 
 	// 'render'
     return (
         <>            
-            {_clients && _clients.length === 0 && 
+            {_cities && _cities.length === 0 && 
             <Row className="justify-content-md-center">
                 <Col md="auto">
                     <Alert>No records yet</Alert>
                 </Col>
             </Row>
             }
-            {_clients && _clients.length > 0 &&
+            {_cities && _cities.length > 0 &&
             <Table striped bordered responsive size="sm" className="mt-3">
                 <thead>
                     <tr>
                         <th className="text-center p-2 m-0">id</th>
                         <th className="text-center p-2 m-0">name</th>
-                        <th className="text-center p-2 m-0">email</th>
                         <th colSpan="2" className="text-center p-2 m-0"></th>
                     </tr>
                 </thead>
-                <tbody>
-                {clients.map((client, index) => {
+                    <tbody>
+                {cities.map(( city, index ) => {
                     return (
-                    <tr key={"client_id_" + client.id} className="m-0">
-                        <td className="text-center p-2 m-0">{ client.id }</td>
+                    <tr key={index}>
+                        <td className="text-center p-2 m-0">{city.id}</td>
                         <td className="p-2 m-0">
-                            { client.name }
-                        </td>
-                        <td className="p-2 m-0">
-                            { client.email }
+                            {city.name}
                         </td>
                         <td className="text-center p-2 m-0">
-                            <Link to={"/admin/clients/" + client.id} >
+                            <Link to={"/admin/cities/" + city.id} >
                                 <EditIcon />
                             </Link>
                         </td>
                         <td className="text-center p-2 m-0">
                             <Link to="#">
-                                <DeleteForeverIcon onClick={() => { 
-                                    if(onRemove != null) { onRemove(client.id); }
-                                }} />
+                                <DeleteForeverIcon onClick={() => { if(onRemove != null) { onRemove(city.id); } }} />
                             </Link>
                         </td>
                     </tr>
                     );
-                })
-                }
-                </tbody>
-            </Table>
+                })}
+                    </tbody>
+                </Table>
             }
 		</>
     );
 };
 
-export default ClientsList;
+export default AdminCitiesList;

@@ -3,7 +3,7 @@ import {
     Container, Spinner
 } from 'react-bootstrap';
 import Header from '../Header';
-import ClientsList from './ClientsList';
+import AdminClientsList from './AdminClientsList';
 import ErrorBox from '../ErrorBox';
 import { deleteClientById, getClients } from '../../api/clients';
 
@@ -68,7 +68,7 @@ const AdminDashboardClients = () => {
 				</center>
                 <hr/>
                 {(!clients && pending) && <center><Spinner animation="grow" /></center>}
-                <ClientsList clients={clients} onRemove={handleRemove} />
+                <AdminClientsList clients={clients} onRemove={handleRemove} />
 
                 {clients && <hr />}
                 <ErrorBox info={null} error={error} pending={pending} />

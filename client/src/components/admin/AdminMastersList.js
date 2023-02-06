@@ -8,7 +8,7 @@ import {
 } from 'react-bootstrap';
 import StarRating from '../StarRating';
 
-const MastersList = ({masters, onRemove=null}) => {
+const AdminMastersList = ({masters, onRemove=null}) => {
     
     // Initial
 	const [_masters, setMasters] = useState(null);
@@ -80,4 +80,4 @@ const MastersList = ({masters, onRemove=null}) => {
     </>);
 };
 
-export default MastersList;
+export default AdminMastersList;

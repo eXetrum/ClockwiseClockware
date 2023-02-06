@@ -28,10 +28,20 @@ const deleteOrderById = (id) => {
     return axios.delete(`/orders/${id}`);
 };
 
+const getOrderById = (id) => {
+    return axios.get(`/orders/${id}`);
+};
+
+const updateOrderById = (id, order) => {
+    return axios.put(`/orders/${id}`, order)
+};
+
 export {
     getWatchTypes,
     getAvailableMasters,
     createOrder,
     getOrders,
-    deleteOrderById
+    deleteOrderById,
+    getOrderById,
+    updateOrderById
 };

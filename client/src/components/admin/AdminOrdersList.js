@@ -8,7 +8,7 @@ import {
 } from 'react-bootstrap';
 import StarRating from '../StarRating';
 
-const OrdersList = ({orders, onRemove=null}) => {
+const AdminOrdersList = ({orders, onRemove=null}) => {
     
     // Initial
 	const [_orders, setOrders] = useState(null);
@@ -60,7 +60,7 @@ const OrdersList = ({orders, onRemove=null}) => {
                         <td className="text-center p-2 m-0">{ order.watch_type.end_date }</td>
 
                         <td className="text-center p-2 m-0">
-                            <Link to={"/admin/booking/" + order.id} >
+                            <Link to={"/admin/orders/" + order.id} >
                                 <EditIcon />
                             </Link>
                         </td>
@@ -79,4 +79,4 @@ const OrdersList = ({orders, onRemove=null}) => {
     </>);
 };
 
-export default OrdersList;
+export default AdminOrdersList;

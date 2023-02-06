@@ -6,7 +6,7 @@ import {
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import MastersList from './MastersList';
+import AdminMastersList from './AdminMastersList';
 import ErrorBox from '../ErrorBox';
 import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
@@ -218,7 +218,7 @@ const AdminDashboardMasters = () => {
 
 
             {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
-			<MastersList masters={masters} onRemove={handleRemove} />
+			<AdminMastersList masters={masters} onRemove={handleRemove} />
 			{masters && <hr />}
             <ErrorBox info={info} error={error} pending={pending} />
             {!masters && <hr />}                        

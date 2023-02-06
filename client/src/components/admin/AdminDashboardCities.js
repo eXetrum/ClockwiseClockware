@@ -3,7 +3,7 @@ import {
     Form, FormGroup, FormControl, Container, Button, Spinner
 } from 'react-bootstrap';
 import Header from '../Header';
-import CitiesList from './CitiesList';
+import AdminCitiesList from './AdminCitiesList';
 import ErrorBox from '../ErrorBox';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
@@ -111,7 +111,7 @@ const AdminDashboardCities = () => {
 			</>
 
 			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}
-			<CitiesList cities={cities} onRemove={handleRemove} />
+			<AdminCitiesList cities={cities} onRemove={handleRemove} />
 			{cities && <hr />}
             <ErrorBox info={info} error={error} pending={pending} />
             {!cities && <hr />} 

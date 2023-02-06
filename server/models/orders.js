@@ -65,9 +65,7 @@ const createOrder = async (order) => {
 	`, [order.client.name, order.client.email, order.watchType.id, order.city.id, order.master.id, order.dateTime / 1000]);
 	
 	console.log('[db] createOrder result: ', result.rows);
-	const masters = await getAvailableMasters(order.city.id, order.watchType.id, order.dateTime)
-	console.log('[db] createOrder result array of masters: ', masters);
-	return masters;
+	return result.rows;
 };
 
 const getOrders = async () => {
@@ -95,10 +93,34 @@ const deleteOrderById = async (id) => {
 	console.log('[db] deleteOrderById ', id);
 	let result = await execQuery(`DELETE FROM booking WHERE id=($1);`, [id]);
 	console.log('[db] deleteOrderById result: ', result.rows);
-	let orders = await getOrders();
-	console.log('[db] deleteOrderById result orders array: ', orders);
-	return orders;
+	return result.rows;
+};
+
+const getOrderById = async (id) => {
+	console.log('[db] getOrderById ', id);
+	let result = await execQuery(`
+		SELECT B.id, 
+			client_id, json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
+			master_id, json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
+			city_id, json_build_object('id', C.id, 'name', C.name) as city,
+			watch_type_id, json_build_object('id', W.id, 'name', W.name, 'repair_time', W.repair_time, 'start_date', B.date_time, 'end_date', B.date_time + interval '1h' * W.repair_time) as watch_type
+			FROM 
+				booking B 
+				INNER JOIN watch_type W ON B.watch_type_id=W.id
+				INNER JOIN clients CL ON B.client_id=CL.id
+				INNER JOIN masters M ON B.master_id=M.id
+				INNER JOIN cities C ON B.city_id=C.id
+			WHERE B.id=($1)
+		ORDER BY B.id				
+		;
+	`, [id]);
+	console.log('[db] deleteOrderById result: ', result.rows);
+	return result.rows;
+	return [];
+};
+
+const updateOrderById = async (id) => {
 };
 
 
-module.exports = { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById };
+module.exports = { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById };

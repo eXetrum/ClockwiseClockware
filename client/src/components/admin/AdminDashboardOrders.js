@@ -4,7 +4,7 @@ import {
 } from 'react-bootstrap';
 import Header from '../Header';
 
-import OrdersList from './OrdersList';
+import AdminOrdersList from './AdminOrdersList';
 import ErrorBox from '../ErrorBox';
 
 import { getOrders, deleteOrderById } from '../../api/orders';
@@ -75,7 +75,7 @@ const AdminDashboardOrders = () => {
 				</center>
                 <hr/>
                 {(!orders && pending) && <center><Spinner animation="grow" /></center>}
-                <OrdersList orders={orders} onRemove={handleRemove} />
+                <AdminOrdersList orders={orders} onRemove={handleRemove} />
                 {orders && <hr />}
                 <ErrorBox info={info} error={error} pending={pending} />
                 {!orders && <hr />}  

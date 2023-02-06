@@ -20,6 +20,7 @@ import AdminEditMaster from './components/admin/AdminEditMaster';
 import AdminDashboardClients from './components/admin/AdminDashboardClients';
 import AdminEditClient from './components/admin/AdminEditClient';
 import AdminDashboardOrders from './components/admin/AdminDashboardOrders';
+import AdminEditOrder from './components/admin/AdminEditOrder';
 
 const App = () => {
 	return (
@@ -67,6 +68,11 @@ const App = () => {
 		<Route exact path="/admin/orders" element={
 			<RouteGuard>
 				<AdminDashboardOrders />
+			</RouteGuard>
+		} />
+		<Route exact path="/admin/orders/:id" element={
+			<RouteGuard>
+				<AdminEditOrder />
 			</RouteGuard>
 		} />
 		<Route path="*" element={<Navigate to="/" />} />

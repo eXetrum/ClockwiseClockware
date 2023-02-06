@@ -166,7 +166,7 @@ const AdminEditMaster = () => {
                             
                         </FormGroup>
 
-                        <Button type="submit" className="ms-2" disabled={validateNewMasterForm()} >Update</Button>
+                        <Button type="submit" className="ms-2 btn btn-success" disabled={validateNewMasterForm()} >Save</Button>
                     </Form>
                 	</Col>
               	</Row>

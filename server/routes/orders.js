@@ -1,7 +1,7 @@
 require('dotenv').config();
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
-const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById } = require('../models/orders');
+const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
 
 const nodemailer = require('nodemailer');
 /*const transporter = nodemailer.createTransport({
@@ -71,18 +71,18 @@ router.get('/api/available_masters', async (req, res) => {
 });
 
 router.post('/api/orders', async (req, res) => {
-
 	try {
 		const { order } = req.body;
 		console.log('[route] POST /orders ', order);
-		let masters = await createOrder(order);
-		console.log('[route] POST /orders result: ', masters);
-		res.status(201).json({
-			masters
-		}).end();
+		let result = await createOrder(order);
+		console.log('[route] POST /orders result: ', result);
+		const masters = await getAvailableMasters(order.city.id, order.watchType.id, order.dateTime)
+		console.log('[route] POST /orders result array of masters: ', masters);
+		
+		res.status(201).json({ masters }).end();
 
-		// TODO send email to client
-		const result = await sendMail(order.client.email);
+		// TODO: send email to client
+		result = await sendMail(order.client.email);
 	} catch(e) { console.log(e); res.status(400).end(); }	
 });
 
@@ -102,11 +102,29 @@ router.delete('/api/orders/:id', RouteProtector, async (req, res) => {
 	try {
 		const { id } = req.params;
 		console.log('[route] DELETE /orders/:id ', id);
-		let orders = await deleteOrderById(id);
-		console.log('[route] DELETE /orders/:id result: ', orders);
+		let result = await deleteOrderById(id);
+		console.log('[route] DELETE /orders/:id result: ', result);
+		let orders = await getOrders();
+		console.log('[route] DELETE /orders/:id result orders array: ', orders);
 		res.status(200).json({
 			orders
 		}).end();
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.get('/api/orders/:id', RouteProtector, async (req, res) => {
+	try {
+		const { id } = req.params;
+		console.log('[route] GET /orders/:id ', id);
+		let result = await getOrderById(id);
+		console.log('[route] GET /orders/:id result: ', result);
+		let order = result[0];
+		console.log('[route] GET /orders/:id result: ', order);
+		if(!order) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({ order }).end();
+		}
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
