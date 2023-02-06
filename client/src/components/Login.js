@@ -26,9 +26,6 @@ const LogIn = () => {
 		
 		setInfo(null);
 		setError(null);
-    	
-		//updatedUser[inputField] = inputValue
-		//this.setState({user: updatedUser})
 	};
 
   	const handleSubmit = (event) => {
@@ -66,6 +63,7 @@ const LogIn = () => {
 		<Container>
 			<Header />
 			<Container>
+				<hr/>
 				<Row className="justify-content-md-center">
 					<Col xs lg="4" md="auto">
 					<h1>Login page</h1>
