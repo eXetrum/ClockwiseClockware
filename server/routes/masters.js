@@ -22,7 +22,7 @@ router.post('/api/masters', RouteProtector, async (req, res) => {
 		res.status(200).json({
 			masters
 		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+	} catch(e) { console.log(e); res.status(400).json(e).end(); }
 });
 
 router.delete('/api/masters/:id', RouteProtector, async (req, res) => {
@@ -70,7 +70,7 @@ router.put('/api/masters/:id', RouteProtector, async (req, res) => {
 		} else {
 			res.status(200).json({ master }).end();
 		}
-	} catch(e) { console.log(e); res.status(400).end(); }
+	} catch(e) { console.log(e); res.status(400).json(e).end(); }
 });
 
 module.exports = router;

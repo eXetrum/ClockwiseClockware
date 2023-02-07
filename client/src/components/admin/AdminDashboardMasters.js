@@ -90,6 +90,7 @@ const AdminDashboardMasters = () => {
                     setMasters(masters);
                 }
             } catch(e) {
+                console.log(e);
                 setError(e);
             } finally {
                 setPending(false);

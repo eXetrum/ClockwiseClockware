@@ -82,10 +82,34 @@ const getMasterById = async (id) => {
 				cities C 
 				INNER JOIN master_city_list MCL 
 				ON C.id = MCL.city_id AND MCL.master_id = M.id
-			) AS cities 
+			) AS cities,(
+				SELECT json_agg(T.*)
+				
+				FROM (
+					SELECT O.id, 
+						json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
+						json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
+						json_build_object('id', C.id, 'name', C.name) as city,
+						json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
+						json_build_object('startDate', O.date_time, 'endDate', O.date_time + interval '1h' * W.repair_time) as "dateTime"
+						FROM 
+							orders O
+							INNER JOIN watch_type W ON O.watch_type_id=W.id
+							INNER JOIN clients CL ON O.client_id=CL.id
+							INNER JOIN masters M ON O.master_id=M.id
+							INNER JOIN cities C ON O.city_id=C.id
+					WHERE O.master_id = ($1)
+					ORDER BY O.date_time
+				) T
+				
+			) AS orders
 		FROM masters M WHERE M.id=$1;`, [id]);
 	result.rows = result.rows.map(item => {
 		if(item.cities == null || Array.isArray(item.cities) && item.cities.length > 0 && item.cities[0] == null) item.cities = [];
+		return item;
+	});
+	result.rows = result.rows.map(item => {
+		if(item.orders == null || Array.isArray(item.orders) && item.orders.length > 0 && item.orders[0] == null) item.orders = [];
 		return item;
 	});
 	console.log('[db] getMasterById result: ', result.rows);

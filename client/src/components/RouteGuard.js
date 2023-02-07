@@ -7,7 +7,7 @@ const RouteGuard = ({ children }) => {
 	useEffect(() => {
 		console.log('protected route');
 		if(!isLoggedIn()) {
-			navigate("/");
+			navigate("/login");
 		}
 	}, [navigate]);
 	

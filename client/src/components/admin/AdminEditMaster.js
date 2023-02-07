@@ -17,6 +17,7 @@ const AdminEditMaster = () => {
     
     // Initial
 	const [cities, setCities] = useState([]);
+    const [originalMaster, setOriginalMaster] = useState(null);
     const [master, setMaster] = useState(null);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
@@ -49,6 +50,8 @@ const AdminEditMaster = () => {
                 if(response && response.data && response.data.master) {
                     let { master } = response.data;
                     setMaster(master);
+                    setOriginalMaster(master);
+                    console.log(master);
                 }
             } catch(e) {
                 setError(e);
@@ -76,6 +79,7 @@ const AdminEditMaster = () => {
                 }
             } catch(e) {
                 setError(e);
+                setMaster(originalMaster);
             } finally {
                 setPending(false);
             }

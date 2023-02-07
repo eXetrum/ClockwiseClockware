@@ -5,7 +5,7 @@ const { pool } = require('./models/db');
 const install = async () => {
 	console.log('CREATE TABLES');
 	return pool.query(`
-		DROP TABLE IF EXISTS booking;
+		DROP TABLE IF EXISTS orders;
 		DROP TABLE IF EXISTS master_city_list;
 		DROP TABLE IF EXISTS masters;		
 		DROP TABLE IF EXISTS admins;
@@ -46,7 +46,7 @@ const install = async () => {
 			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE CASCADE ON UPDATE CASCADE,
 			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE CASCADE ON UPDATE CASCADE
 		);
-		CREATE TABLE booking (
+		CREATE TABLE orders (
 			id serial PRIMARY KEY,
 			client_id INT NOT NULL,
 			watch_type_id INT NOT NULL,

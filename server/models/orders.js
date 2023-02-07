@@ -32,7 +32,7 @@ const getAvailableMasters = async (cityId, watchTypeId, dateTime) => {
 			SELECT master_id, date_time as start_date, date_time + interval '1h' * repair_time as end_date
 			FROM 
 				watch_type W
-				INNER JOIN booking B ON B.watch_type_id=W.id
+				INNER JOIN orders O ON O.watch_type_id=W.id
 		) InnerSubQ
 		WHERE (
 			(InnerSubQ.start_date, InnerSubQ.end_date) 
@@ -60,7 +60,7 @@ const createOrder = async (order) => {
 			ON CONFLICT (email) DO UPDATE SET name=($1)
 			RETURNING id
 		)
-		INSERT INTO booking (client_id, watch_type_id, city_id, master_id, date_time)
+		INSERT INTO orders (client_id, watch_type_id, city_id, master_id, date_time)
 		VALUES ((SELECT id FROM new_client), $3, $4, $5, to_timestamp($6))
 	`, [order.client.name, order.client.email, order.watchType.id, order.city.id, order.master.id, order.dateTime / 1000]);
 	
@@ -71,18 +71,19 @@ const createOrder = async (order) => {
 const getOrders = async () => {
 	console.log('[db] getOrders');
 	let result = await execQuery(`
-		SELECT B.id, 
-			client_id, json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
-			master_id, json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
-			city_id, json_build_object('id', C.id, 'name', C.name) as city,
-			watch_type_id, json_build_object('id', W.id, 'name', W.name, 'repair_time', W.repair_time, 'start_date', B.date_time, 'end_date', B.date_time + interval '1h' * W.repair_time) as watch_type
+		SELECT O.id, 
+			json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
+			json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
+			json_build_object('id', C.id, 'name', C.name) as city,
+			json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
+			json_build_object('startDate', O.date_time, 'endDate', O.date_time + interval '1h' * W.repair_time) as "dateTime"
 			FROM 
-				booking B 
-				INNER JOIN watch_type W ON B.watch_type_id=W.id
-				INNER JOIN clients CL ON B.client_id=CL.id
-				INNER JOIN masters M ON B.master_id=M.id
-				INNER JOIN cities C ON B.city_id=C.id
-		ORDER BY B.id				
+				orders O
+				INNER JOIN watch_type W ON O.watch_type_id=W.id
+				INNER JOIN clients CL ON O.client_id=CL.id
+				INNER JOIN masters M ON O.master_id=M.id
+				INNER JOIN cities C ON O.city_id=C.id
+		ORDER BY O.id				
 		;
 	`);
 	console.log('[db] getOrders result: ', result.rows);
@@ -91,7 +92,7 @@ const getOrders = async () => {
 
 const deleteOrderById = async (id) => {
 	console.log('[db] deleteOrderById ', id);
-	let result = await execQuery(`DELETE FROM booking WHERE id=($1);`, [id]);
+	let result = await execQuery(`DELETE FROM orders WHERE id=($1);`, [id]);
 	console.log('[db] deleteOrderById result: ', result.rows);
 	return result.rows;
 };
@@ -99,28 +100,36 @@ const deleteOrderById = async (id) => {
 const getOrderById = async (id) => {
 	console.log('[db] getOrderById ', id);
 	let result = await execQuery(`
-		SELECT B.id, 
-			client_id, json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
-			master_id, json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
-			city_id, json_build_object('id', C.id, 'name', C.name) as city,
-			watch_type_id, json_build_object('id', W.id, 'name', W.name, 'repair_time', W.repair_time, 'start_date', B.date_time, 'end_date', B.date_time + interval '1h' * W.repair_time) as watch_type
+		SELECT O.id, 
+			json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
+			json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating, 'cities', (
+			SELECT json_agg(C.*) 
 			FROM 
-				booking B 
-				INNER JOIN watch_type W ON B.watch_type_id=W.id
-				INNER JOIN clients CL ON B.client_id=CL.id
-				INNER JOIN masters M ON B.master_id=M.id
-				INNER JOIN cities C ON B.city_id=C.id
-			WHERE B.id=($1)
-		ORDER BY B.id				
+				cities C 
+				INNER JOIN master_city_list MCL 
+				ON C.id = MCL.city_id AND MCL.master_id = M.id
+			)) as master,
+			json_build_object('id', C.id, 'name', C.name) as city,
+			json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
+			json_build_object('startDate', O.date_time, 'endDate', O.date_time + interval '1h' * W.repair_time) as "dateTime"
+			FROM 
+				orders O 
+				INNER JOIN watch_type W ON O.watch_type_id=W.id
+				INNER JOIN clients CL ON O.client_id=CL.id
+				INNER JOIN masters M ON O.master_id=M.id
+				INNER JOIN cities C ON O.city_id=C.id
+			WHERE O.id=($1)
+		ORDER BY O.id				
 		;
 	`, [id]);
 	console.log('[db] deleteOrderById result: ', result.rows);
 	return result.rows;
-	return [];
 };
 
 const updateOrderById = async (id) => {
+	throw "NOT IMPLEMENTED";
 };
+
 
 
 module.exports = { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById };

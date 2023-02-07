@@ -28,17 +28,22 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                 <thead>
                     <tr>
                         <th className="text-center p-2 m-0">id</th>
+                        
                         <th className="text-center p-2 m-0">client name</th>
                         <th className="text-center p-2 m-0">client email</th>
+
                         <th className="text-center p-2 m-0">master name</th>
                         <th className="text-center p-2 m-0">master email</th>
                         <th className="text-center p-2 m-0">master rating</th>
 
                         <th className="text-center p-2 m-0">city name</th>
+                        
                         <th className="text-center p-2 m-0">watch type name</th>
-                        <th className="text-center p-2 m-0">repair_time</th>
+                        <th className="text-center p-2 m-0">watch repair_time (hours)</th>
+                        
                         <th className="text-center p-2 m-0">date start</th>
                         <th className="text-center p-2 m-0">date end</th>
+                        
                         <th colSpan="2" className="text-center p-2 m-0"></th>
                     </tr>
                 </thead>
@@ -47,17 +52,20 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                     return (
                     <tr key={"order_id_" + order.id}>
                         <td className="text-center p-2 m-0">{ order.id }</td>
+                        
                         <td className="text-center p-2 m-0">{ order.client.name }</td>
                         <td className="text-center p-2 m-0">{ order.client.email }</td>
+                        
                         <td className="text-center p-2 m-0">{ order.master.name }</td>
                         <td className="text-center p-2 m-0">{ order.master.email }</td>
                         <td className="text-center p-2 m-0"><StarRating value={order.master.rating} readonly={true} /></td>
+                        
                         <td className="text-center p-2 m-0">{ order.city.name }</td>
 
-                        <td className="text-center p-2 m-0">{ order.watch_type.name }</td>
-                        <td className="text-center p-2 m-0">{ order.watch_type.repair_time }</td>
-                        <td className="text-center p-2 m-0">{ order.watch_type.start_date }</td>
-                        <td className="text-center p-2 m-0">{ order.watch_type.end_date }</td>
+                        <td className="text-center p-2 m-0">{ order.watchType.name }</td>
+                        <td className="text-center p-2 m-0">{ order.watchType.repairTime }</td>
+                        <td className="text-center p-2 m-0">{ order.dateTime.startDate }</td>
+                        <td className="text-center p-2 m-0">{ order.dateTime.endDate }</td>
 
                         <td className="text-center p-2 m-0">
                             <Link to={"/admin/orders/" + order.id} >

@@ -95,7 +95,7 @@ router.get('/api/orders', RouteProtector, async (req, res) => {
 		res.status(200).json({
 			orders
 		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+	} catch(e) { console.log(e); res.status(400).json(e).end(); }
 });
 
 router.delete('/api/orders/:id', RouteProtector, async (req, res) => {
@@ -109,7 +109,7 @@ router.delete('/api/orders/:id', RouteProtector, async (req, res) => {
 		res.status(200).json({
 			orders
 		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+	} catch(e) { console.log(e); res.status(400).json(e).end(); }
 });
 
 router.get('/api/orders/:id', RouteProtector, async (req, res) => {
