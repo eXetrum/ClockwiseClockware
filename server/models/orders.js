@@ -2,7 +2,7 @@ const { execQuery } = require('./db');
 
 const getWatchTypes = async () => {
 	console.log('[db] getWatchTypes');
-	let result = await execQuery('SELECT * FROM watch_type ORDER BY id');
+	let result = await execQuery('SELECT id, name, repair_time as "repairTime" FROM watch_type ORDER BY id');
 	console.log('[db] getWatchTypes result: ', result.rows);
 	return result.rows;
 };
@@ -191,8 +191,16 @@ const getOrderById = async (id) => {
 	return result.rows;
 };
 
-const updateOrderById = async (id) => {
-	throw "NOT IMPLEMENTED";
+const updateOrderById = async (id, order) => {
+	console.log('[db] updateOrderById: ', id, order);
+
+	let result = await execQuery(`
+		UPDATE orders SET watch_type_id=$1, city_id=$2, master_id=$3, date_time=to_timestamp($4)
+		WHERE id=($5);
+	`, [order.watchType.id, order.city.id, order.master.id, order.dateTime / 1000, id]);
+	
+	console.log('[db] updateOrderById result: ', result.rows);
+	return result.rows;
 };
 
 
