@@ -94,7 +94,7 @@ const AdminEditOrder = () => {
         fetchOrderById(id);
     }, [id]);
 
-    useEffect(() => {
+    /*useEffect(() => {
         console.log('useEffect order.master: ', order);
         if(order == null || order.master == null) return;
         const fetchMasterById = async (id) => {
@@ -118,7 +118,7 @@ const AdminEditOrder = () => {
             }
         }
         fetchMasterById(order.master.id);
-    }, [order]);
+    }, [order]);*/
 
 
     const submitForm = (e) => {
@@ -259,6 +259,11 @@ const AdminEditOrder = () => {
         && order.watchType         
         && order.dateTime
         && !pending;
+    };
+
+    const masterCanHandleThisOrder = (master, order) => {
+        // TODO: check if master cities list contains desired orderd city, 
+        // check required timeframe according to dateTime + watchType
     };
     
     return (
