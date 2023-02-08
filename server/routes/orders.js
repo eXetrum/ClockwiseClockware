@@ -50,7 +50,9 @@ router.post('/api/orders', async (req, res) => {
 		let endDate = new Date(order.dateTime);
 		endDate.setHours(endDate.getHours() + order.watchType.repairTime);
 		
-		let info = await transporter.sendMail({
+		console.log(process.env.NODEMAILER_AUTH_GMAIL_USER, process.env.NODEMAILER_AUTH_GMAIL_APP_PASS);
+		
+		const params = {
 			from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
 			to: order.client.email,
 			subject: 'Your order details at ClockwiseClockware',
@@ -78,7 +80,10 @@ router.post('/api/orders', async (req, res) => {
 					</tr>
 				</tbody>
 			</table>`, // html body
-		});
+		};
+		console.log(params);
+		
+		let info = await transporter.sendMail(params);
 
 		console.log(info);
 
