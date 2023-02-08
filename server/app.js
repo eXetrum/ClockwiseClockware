@@ -1,4 +1,4 @@
-//require('dotenv').config();
+require('dotenv').config();
 
 const express = require('express')
 const bodyParser = require('body-parser');
@@ -7,7 +7,7 @@ const morgan = require('morgan');
 const app = express()
 
 const port = process.env.NODE_APP_PORT || 4200
-/*
+
 const users = require('./routes/users');
 const cities = require('./routes/cities');
 const masters = require('./routes/masters');
@@ -25,11 +25,7 @@ app.use(users);
 app.use(cities);
 app.use(masters);
 app.use(orders);
-app.use(clients);*/
-
-app.get('/', (req, res) => {
-	res.json({message: "bark on you render.com"}).end();
-});
+app.use(clients);
 
 app.listen(port, () => {
 	console.log(`Server App listening on port ${port}`)
