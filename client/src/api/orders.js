@@ -33,7 +33,7 @@ const getOrderById = (id) => {
 };
 
 const updateOrderById = (id, order) => {
-    return axios.put(`/orders/${id}`, order)
+    return axios.put(`/orders/${id}`, { order })
 };
 
 export {
