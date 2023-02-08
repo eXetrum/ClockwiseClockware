@@ -50,8 +50,6 @@ router.post('/api/orders', async (req, res) => {
 		let endDate = new Date(order.dateTime);
 		endDate.setHours(endDate.getHours() + order.watchType.repairTime);
 		
-		console.log(process.env.NODEMAILER_AUTH_GMAIL_USER, process.env.NODEMAILER_AUTH_GMAIL_APP_PASS);
-		
 		const params = {
 			from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
 			to: order.client.email,
