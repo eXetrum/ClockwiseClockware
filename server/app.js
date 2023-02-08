@@ -6,7 +6,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const app = express()
 
-const port = process.env.PORT || 3001
+const port = process.env.NODE_APP_PORT || 4200
 
 const users = require('./routes/users');
 const cities = require('./routes/cities');
