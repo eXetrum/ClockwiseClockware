@@ -346,15 +346,11 @@ const AdminEditOrder = () => {
                                             setError(null);
                                             if(order.master != null && order.city != null && order.dateTime.startDate != null) {
                                                 if(!masterCanHandleOrder(order.master, order.id, order.city, item, order.dateTime.startDate)) {
-                                                    if (!window.confirm("Current master cant handle this order due lack of time or specified watch type or specified city is not supported by master. \n\
-                                                        Do you want to search new master?")) {
+                                                    if (!window.confirm("Current master cant handle this order due lack of time or specified watch type or specified city is not supported by master. \nDo you want to search new master?")) {
                                                         console.log('Revert to prev: ', order, prevWatchType);
                                                         
                                                         setOrder( (prev) => ({...prev, watchType: prevWatchType}));
                                                         return;
-                                                    } else {
-                                                        
-                                                        //fetchAvailableMasters(order.city.id, item.id, new Date(order.dateTime.startDate).getTime());
                                                     }
                                                     setShowMasters(true);
                                                     setOrder( (prev) => ({...prev, master: null}));                                                    
