@@ -51,7 +51,7 @@ router.post('/api/orders', async (req, res) => {
 		endDate.setHours(endDate.getHours() + order.watchType.repairTime);
 		
 		let info = await transporter.sendMail({
-			from: 'otp.2f.test.sec@gmail.com',
+			from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
 			to: order.client.email,
 			subject: 'Your order details at ClockwiseClockware',
 			text: '',
