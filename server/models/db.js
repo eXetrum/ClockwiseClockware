@@ -1,13 +1,17 @@
 require('dotenv').config();
 const { Pool } = require('pg');
 
+console.log(process.env.POSTGRES_DB, process.env.POSTGRES_USER, process.env.POSTGRES_PASS, process.env.POSTGRES_HOST, process.env.POSTGRES_PORT);
+
 const pool = new Pool({
 	database: process.env.POSTGRES_DB,
 	user: process.env.POSTGRES_USER,	
 	password: process.env.POSTGRES_PASS,
 	host: process.env.POSTGRES_HOST,
 	port: process.env.POSTGRES_PORT,
-	ssl: true
+	ssl: true,
+	/*idleTimeoutMillis: 0,
+	connectionTimeoutMillis: 0,*/	
 });
 
 const execQuery = async (code, bind_args=null) => { 
