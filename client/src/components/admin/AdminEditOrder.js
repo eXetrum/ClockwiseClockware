@@ -28,6 +28,8 @@ const AdminEditOrder = () => {
 
     const [originalOrder, setOriginalOrder] = useState(null);
     const [order, setOrder] = useState(null);
+    const [masterSchedule, setMasterSchedule] = useState(null);
+    const [lastAssignedCity, setLastAssignedCity] = useState(null);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
@@ -81,6 +83,7 @@ const AdminEditOrder = () => {
                     order.cities = [order.city];
                     setOrder(order);
                     setOriginalOrder(order);
+                    setLastAssignedCity(order.city);
                 }
             } catch (e) {
                 setError(e);
@@ -100,6 +103,7 @@ const AdminEditOrder = () => {
                 if (response && response.data && response.data.master) {
                     let { master } = response.data;
                     console.log('master schedule: ', master.orders);
+                    setMasterSchedule(master.orders);
                     master.orders.forEach(order => {
                         console.log(order);
                     });
@@ -205,7 +209,7 @@ const AdminEditOrder = () => {
             }
         };*/
 
-        setPending(true);
+        //setPending(true);
         setInfo(null);
         setError(null);
 
@@ -216,20 +220,20 @@ const AdminEditOrder = () => {
         console.log('OnSelect: ', selectedList, selectedItem);
         setMasters(null);
         if(order.master == null) {
-            if(originalOrder.master.cities.find(item => item.id === selectedItem.id) != null) {
+            /*if(originalOrder.master.cities.find(item => item.id === selectedItem.id) != null) {
                 setOrder( (prev) => ({...prev, 
                     master: originalOrder.master, 
                     city: originalOrder.city, 
                     cities: [originalOrder.city] 
                 }));
-            }
+            }*/
+            setOrder( (prev) => ({...prev, master: null, city: selectedItem, cities: [selectedItem] }));
         } else if(order.master.cities.find(item => item.id == selectedItem.id) == null) {
-            setOrder( (prev) => ({...prev, city: null, cities: [] }));
-            /*Promise.resolve(multiselectRef.current.resetSelectedValues());*/
+            //setOrder( (prev) => ({...prev, city: null, cities: [] }));
             if (!window.confirm("Current master is not available for selected city. \n\
                 Do you want to search new master?")) {
-
-                setOrder( (prev) => ({...prev, master: originalOrder.master, city: originalOrder.city, cities: [originalOrder.city] }));
+                console.log('Revert to prev city: ', order, lastAssignedCity);
+                setOrder( (prev) => ({...prev, master: order.master, city: lastAssignedCity, cities: [lastAssignedCity] }));
                 return;
             }
 
@@ -243,6 +247,7 @@ const AdminEditOrder = () => {
 
     const onRemove = (selectedList, removedItem) => {
         console.log('OnRemove: ', selectedList, removedItem);
+        setLastAssignedCity(removedItem);
         setOrder( (prev) => ({...prev, city: null, cities: [] }));
         setMasters(null);
     };
@@ -429,13 +434,20 @@ const AdminEditOrder = () => {
                             <Row xs={1} md={2} className="mt-4">
                                 <Col md={{ span: 8, offset: 8 }} >
                                     <Button className="mb-2" onClick={() => {
+                                        console.log('#1changeMaster[1]: ', order);
                                         if(!order.dateTime || !order.city || !order.watchType) return;
 
-                                        console.log('changeMaster', order, new Date(order.dateTime.startDate));
+                                        console.log('#1changeMaster[2]:', order, new Date(order.dateTime.startDate));
+                                        setOrder((prev) => ({
+                                            ...prev,
+                                            master: null
+                                        }))
                                         fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
                                     }}
-                                    variant="warning">
-                                        Reset Master
+                                    variant="warning"
+                                    disabled={!order.watchType || !order.city || !order.dateTime.startDate}
+                                    >
+                                        Find New Master
                                     </Button>
                                 </Col>
                             </Row>
@@ -457,12 +469,18 @@ const AdminEditOrder = () => {
                             <Row xs={1} md={2} className="mt-4">
                                 <Col md={{ span: 8, offset: 8 }} >
                                     <Button className="mb-2" onClick={() => {
+                                        console.log('#2changeMaster[1]: ', order);
                                         if(!order.dateTime || !order.city || !order.watchType) return;
-
+                                        console.log('#2changeMaster[2]: ', order);
+                                        setOrder((prev) => ({
+                                            ...prev,
+                                            master: null
+                                        }))
                                         console.log('changeMaster', order, new Date(order.dateTime.startDate));
                                         fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
                                     }}
-                                    variant="warning">
+                                    variant="warning"
+                                    disabled={!order.watchType || !order.city || !order.dateTime.startDate}>
                                         Find New Master
                                     </Button>
                                 </Col>
@@ -497,7 +515,19 @@ const AdminEditOrder = () => {
             <Row className="justify-content-md-center mt-4">
                 {masters.map((master, index) => {
                     return (
-                        <Col key={"master_id_" + master.id} md="auto" onClick={(event) => { pickUpMaster(event, master); }}>
+                        <Col key={"master_id_" + master.id} md="auto" onClick={(event) => { 
+        
+                                if (!window.confirm("Choose this master?")) {
+                                    return;
+                                }
+
+                                console.log('pickup: ', master);
+                                order.master = master;
+                                setOrder((prev) => ({...prev, master: master}));
+                                setMasters(null);
+                                setInfo(null);
+                                setError(null);
+                        }}>
                             <Card className="mb-3" style={{ width: '18rem' }}>
                                 <Card.Body>
                                     <Card.Title>{master.name}</Card.Title>
