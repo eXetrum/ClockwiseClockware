@@ -28,7 +28,7 @@ app.use(orders);
 app.use(clients);*/
 
 app.get('/', (req, res) => {
-	res.json({message: "barck on you render.com"}).end();
+	res.json({message: "bark on you render.com"}).end();
 });
 
 app.listen(port, () => {
