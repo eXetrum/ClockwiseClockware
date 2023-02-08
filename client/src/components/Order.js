@@ -298,7 +298,7 @@ const Order = () => {
         <ErrorBox info={info} error={error} pending={pending} />
         {!cities && <hr />}  
 
-        {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
+        {(!masters || pending) && <center><Spinner animation="grow" /> </center>}
         {masters &&
         <>
         <Row className="justify-content-md-center">
