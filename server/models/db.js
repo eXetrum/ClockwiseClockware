@@ -6,7 +6,8 @@ const pool = new Pool({
 	user: process.env.POSTGRES_USER,	
 	password: process.env.POSTGRES_PASS,
 	host: process.env.POSTGRES_HOST,
-	port: process.env.POSTGRES_PORT	
+	port: process.env.POSTGRES_PORT,
+	ssl: true
 });
 
 const execQuery = async (code, bind_args=null) => { 
