@@ -4,16 +4,16 @@ const { RouteProtector } = require('../middleware/RouteProtector');
 const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
 
 const nodemailer = require('nodemailer');
-/*const transporter = nodemailer.createTransport({
+const transporter = nodemailer.createTransport({
 	service: 'gmail',
-	auth: {
-		user: process.env.NODEMAILER_AUTH_GMAIL_USER || 'youremail@gmail.com',
-		pass: process.env.NODEMAILER_AUTH_GMAIL_PASS || 'yourpassword'
-	}
-});*/
+    auth: {
+        user: process.env.NODEMAILER_AUTH_GMAIL_USER,
+        pass: process.env.NODEMAILER_AUTH_GMAIL_APP_PASS
+    }
+});
 
 
-async function sendMail(clientEmail) {
+/*async function sendMail(clientEmail) {
 	// Generate test SMTP service account from ethereal.email
 	// Only needed if you don't have a real mail account for testing
 	let testAccount = await nodemailer.createTestAccount();
@@ -43,7 +43,7 @@ async function sendMail(clientEmail) {
 	// Preview only available when sending through an Ethereal account
 	console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
 	// Preview URL: https://ethereal.email/message/WaQKMgKddxQDoou...
-}
+}*/
 
 
 ///////// Client part (No route protection)
@@ -76,13 +76,47 @@ router.post('/api/orders', async (req, res) => {
 		console.log('[route] POST /orders ', order);
 		let result = await createOrder(order);
 		console.log('[route] POST /orders result: ', result);
-		const masters = await getAvailableMasters(order.city.id, order.watchType.id, order.dateTime)
-		console.log('[route] POST /orders result array of masters: ', masters);
+		//const masters = await getAvailableMasters(order.city.id, order.watchType.id, order.dateTime)
+		//console.log('[route] POST /orders result array of masters: ', masters);
 		
-		res.status(201).json({ masters }).end();
+		let startDate = new Date(order.dateTime);
+		let endDate = new Date(order.dateTime);
+		endDate.setHours(endDate.getHours() + order.watchType.repairTime);
+		
+		let info = await transporter.sendMail({
+			from: 'otp.2f.test.sec@gmail.com',
+			to: order.client.email,
+			subject: 'Your order details at ClockwiseClockware',
+			text: '',
+			html: `
+			<p>Mr(s) ${order.client.name} thank you for trusting us to do the repair work !</p><br/>
+			<p>Order details:</p>
+			<table>
+				<thead>
+					<tr>
+						<th>Master</th>
+						<th>City</th>
+						<th>Watch type</th>						
+						<th>Start Date</th>
+						<th>End Date</th>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><b>${order.master.name}</b>, <i>${order.master.email}</i></td>
+						<td>${order.city.name}</td>
+						<td>${order.watchType.name}</td>						
+						<td>${startDate}</td>
+						<td>${endDate}</td>
+					</tr>
+				</tbody>
+			</table>`, // html body
+		});
 
-		// TODO: send email to client
-		result = await sendMail(order.client.email);
+		console.log(info);
+
+		res.status(201).json({ info }).end();
+		
 	} catch(e) { console.log(e); res.status(400).end(); }	
 });
 
@@ -120,6 +154,25 @@ router.get('/api/orders/:id', RouteProtector, async (req, res) => {
 		console.log('[route] GET /orders/:id result: ', result);
 		let order = result[0];
 		console.log('[route] GET /orders/:id result: ', order);
+		if(!order) {
+			res.status(404).json({message: 'Record Not Found'}).end();
+		} else {
+			res.status(200).json({ order }).end();
+		}
+	} catch(e) { console.log(e); res.status(400).end(); }
+});
+
+router.put('/api/orders/:id', RouteProtector, async (req, res) => {
+	try {
+		const { id } = req.params;
+		let { order } = req.body;
+		console.log('[route] PUT /orders/:id ', id, order);
+		let result = await updateOrderById(id, order);
+		console.log('[route] PUT /orders/:id update result: ', result);
+		result = await getOrderById(id);
+		console.log('[route] PUT /orders/:id getbyid result: ', result);
+		order = result[0];
+		console.log('[route] PUT /orders/:id result: ', order);
 		if(!order) {
 			res.status(404).json({message: 'Record Not Found'}).end();
 		} else {
