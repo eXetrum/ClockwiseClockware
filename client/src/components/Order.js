@@ -38,6 +38,7 @@ const Order = () => {
     const [watchTypes, setWatchTypes] = useState(null);
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
+    const [confirmation, setConfirmation] = useState(null);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
@@ -102,6 +103,7 @@ const Order = () => {
         };
 
         setPending(true);
+        setMasters(null);
         setInfo(null);
         setError(null);
 
@@ -136,9 +138,11 @@ const Order = () => {
 
                 console.log('Response: ', response.data);
 
-                if(response && response.data && response.data.masters) {
-                    const { masters } = response.data;
-                    setMasters(masters);
+                if(response && response.data && response.data.info) {
+                    const { info } = response.data;
+                    //setMasters(masters);
+                    console.log("info: ", info);
+                    setConfirmation(info);
                 }
             } catch(e) {
                 setError(e);
@@ -147,7 +151,9 @@ const Order = () => {
             }
         };
 
+        
         setPending(true);
+        setMasters(null);
         setInfo(null);
         setError(null);
 
@@ -174,7 +180,7 @@ const Order = () => {
             <Row className="justify-content-md-center">
                 <Col xs lg="4">
                     {((!cities && pending) || (!watchTypes && pending)) && <center><Spinner animation="grow" /> </center>}
-                    {cities && watchTypes &&
+                    {!confirmation && cities && watchTypes &&
                     <Form onSubmit={handleSubmit}>
                         <FormGroup className="mb-3">
                             <Form.Label>Name:</Form.Label>
@@ -277,6 +283,13 @@ const Order = () => {
                             Search
                         </Button>
                     </Form>
+                    }
+
+                    {confirmation &&
+                        <Alert variant={"info"}>
+                            <p>Thank you ! Confirmation message was sent to your email. </p>
+                            <p>Message ID: {confirmation.messageId}</p>
+                        </Alert>
                     }
                 </Col>
             </Row>
