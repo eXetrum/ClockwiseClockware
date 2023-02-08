@@ -13,7 +13,28 @@ const getMasters = async () => {
 	
 	console.log('[db] getMasters');
 	let result = await execQuery(
-	`SELECT M.id, M.name, M.email, M.rating, json_agg(C.*) as cities
+	`SELECT M.id, M.name, M.email, M.rating, json_agg(C.*) as cities, 
+	(
+		SELECT json_agg(T.*)
+		
+		FROM (
+			SELECT O.id, 
+				json_build_object('id', CL.id, 'name', CL.name, 'email', CL.email) AS client, 
+				json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
+				json_build_object('id', C.id, 'name', C.name) as city,
+				json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
+				json_build_object('startDate', O.date_time, 'endDate', O.date_time + interval '1h' * W.repair_time) as "dateTime"
+				FROM 
+					orders O
+					INNER JOIN watch_type W ON O.watch_type_id=W.id
+					INNER JOIN clients CL ON O.client_id=CL.id
+					INNER JOIN masters M2 ON O.master_id=M2.id
+					INNER JOIN cities C ON O.city_id=C.id
+			WHERE O.master_id = M.id
+			ORDER BY O.date_time
+		) T
+		
+	) AS orders
 	FROM 
 		masters M
 		LEFT JOIN master_city_list MCL ON M.id=MCL.master_id
@@ -21,7 +42,9 @@ const getMasters = async () => {
 	GROUP BY M.id
 	ORDER BY id`);
 	result.rows = result.rows.map(item => {
-		if(item.cities == null || Array.isArray(item.cities) && item.cities.length > 0 && item.cities[0] == null) item.cities = [];
+		if(item.cities == null) item.cities = [];
+		item.cities = item.cities.filter(city => city);
+		if(item.orders == null) item.orders = [];
 		return item;
 	});
 	console.log('[db] getMasters result: ', result.rows);
@@ -104,12 +127,15 @@ const getMasterById = async (id) => {
 				
 			) AS orders
 		FROM masters M WHERE M.id=$1;`, [id]);
+		
 	result.rows = result.rows.map(item => {
-		if(item.cities == null || Array.isArray(item.cities) && item.cities.length > 0 && item.cities[0] == null) item.cities = [];
+		if(item.cities == null) item.cities = [];
+		item.cities = item.cities.filter(city => city);
 		return item;
 	});
 	result.rows = result.rows.map(item => {
-		if(item.orders == null || Array.isArray(item.orders) && item.orders.length > 0 && item.orders[0] == null) item.orders = [];
+		if(item.orders == null) item.orders = [];
+		item.orders = item.orders.filter(order => order);
 		return item;
 	});
 	console.log('[db] getMasterById result: ', result.rows);
