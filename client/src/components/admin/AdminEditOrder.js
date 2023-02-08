@@ -28,15 +28,33 @@ const AdminEditOrder = () => {
 
     const [originalOrder, setOriginalOrder] = useState(null);
     const [order, setOrder] = useState(null);
-    const [masterSchedule, setMasterSchedule] = useState(null);
     const [lastAssignedCity, setLastAssignedCity] = useState(null);
+    const [showMasters, setShowMasters] = useState(false);
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
 
-    // 'componentDidMount'
-    useEffect( () => {
+    const roundMinutes = (date) => {
+        let rounded = new Date(date);
+        rounded.setHours(date.getHours() + Math.ceil(date.getMinutes()/60));
+        rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
+        return rounded;
+    };
 
+    const addHours = (date, hours) => {
+        date.setHours(date.getHours() + hours);
+        return date;
+    };
+
+    const dateRangesOverlap = (start1, end1, start2, end2) => {
+        const min = (a, b) => { return a < b ? a : b; }
+        const max = (a, b) => { return a > b ? a : b; }
+        return max(start1, start2) < min(end1, end2);
+    };
+
+
+    // 'Component Did Mount' watch types
+    useEffect( () => {
         const fetchWachTypes = async() => {
             try {
                 const response = await getWatchTypes();
@@ -45,6 +63,7 @@ const AdminEditOrder = () => {
                     setWatchTypes(watchTypes);
                 }
             } catch(e) {
+                console.log('ERROR: ', e);
                 setError(e);
             } finally {
                 setPending(false);
@@ -54,6 +73,7 @@ const AdminEditOrder = () => {
         fetchWachTypes();
     }, []);
 
+    // 'Component Did Mount' cities
     useEffect( () => {
         const fetchCities = async() => {
             try {
@@ -63,6 +83,7 @@ const AdminEditOrder = () => {
                     setCities(cities);
                 }
             } catch(e) {
+                console.log('ERROR: ', e);
                 setError(e);
             } finally {
                 setPending(false);
@@ -86,6 +107,7 @@ const AdminEditOrder = () => {
                     setLastAssignedCity(order.city);
                 }
             } catch (e) {
+                console.log('ERROR: ', e);
                 setError(e);
             } finally {
                 setPending(false);
@@ -94,47 +116,18 @@ const AdminEditOrder = () => {
         fetchOrderById(id);
     }, [id]);
 
-    /*useEffect(() => {
-        console.log('useEffect order.master: ', order);
-        if(order == null || order.master == null) return;
-        const fetchMasterById = async (id) => {
-            try {
-                const response = await getMasterById(id)
-                if (response && response.data && response.data.master) {
-                    let { master } = response.data;
-                    console.log('master schedule: ', master.orders);
-                    setMasterSchedule(master.orders);
-                    master.orders.forEach(order => {
-                        console.log(order);
-                    });
-                    //order.cities = [order.city];
-                    //setOrder(order);
-                    //setOriginalOrder(order);
-                }
-            } catch (e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        }
-        fetchMasterById(order.master.id);
-    }, [order]);*/
 
 
     const submitForm = (e) => {
         e.preventDefault();
 
         console.log(order);
-        return;
 
-        setPending(true);
-        setOrder(null);        
-        setInfo(null);
-        setError(null);
+        
 
         const doUpdateOrderById = async (id, order) => {
             try {
-                const response = await updateOrderById(id, order);
+                const response = await updateOrderById(id, {...order, dateTime: new Date(order.dateTime.startDate).getTime() });
                 if(response && response.data && response.data.order) {
                     const { order } = response.data;
                     setOrder(order);
@@ -150,6 +143,11 @@ const AdminEditOrder = () => {
         }
 
         doUpdateOrderById(id, order);
+
+        setPending(true);
+        setOrder(null);        
+        setInfo(null);
+        setError(null);
     }
 
     const fetchAvailableMasters = async (cityId, watchTypeId, dateTime) => {
@@ -158,86 +156,61 @@ const AdminEditOrder = () => {
             const response = await getAvailableMasters(cityId, watchTypeId, dateTime);
             console.log(response.data);
             if(response && response.data && response.data.masters) {
-                const { masters } = response.data;
+                let { masters } = response.data;
+                // Collection does not contains original master order (which is currently stored in db)
+                console.log('append result: ', order);
+                if(originalOrder != null && order != null
+                    && masters.find(item => item.id == originalOrder.master.id) == null
+                    && order.city && order.watchType 
+                    
+                    // But master actually can handle this order
+                    && masterCanHandleOrder(originalOrder.master, order.id, order.city, order.watchType, order.dateTime.startDate)) {
+                    
+                    masters.push(originalOrder.master);
+                }
+
                 setMasters(masters);
-                if(masters.length > 0) {
+                /*if(masters.length > 0) {
                     setOrder((prev) => ({
                         ...prev,
                         master: null
                     }))
-                }
+                }*/
             }
         } catch(e) {
+            console.log('ERROR: ', e);
             setError(e);
         } finally {
             setPending(false);
         }
-    }
+    };
 
+    useEffect( () => {
+        console.log('useEffect order: ', order);
+        if(!order || !order.city || !order.watchType || !order.dateTime.startDate) return;
 
-    const changeMaster = () => {
-        if(!order.dateTime || !order.city || !order.watchType) return;
-
-        console.log('changeMaster', order, new Date(order.dateTime.startDate));
         fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
-    };
-
-    const pickUpMaster = (event, master) => {        
-        
-        if (!window.confirm("Choose this master?")) {
-            return;
-        }
-
-        order.master = master;
-        setOrder((prev) => ({...prev, master: master}));
-        console.log('pickup: ', order);
-
-        /*const doCreateOrder = async (order) => {
-            try {
-                const response = await createOrder(order);
-
-                console.log('Response: ', response.data);
-
-                if(response && response.data && response.data.masters) {
-                    const { masters } = response.data;
-                    setMasters(masters);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };*/
-
-        //setPending(true);
-        setInfo(null);
-        setError(null);
-
-        //doCreateOrder(order);
-    };
+    }, [order]);
     
     const onSelect = (selectedList, selectedItem)=> {
         console.log('OnSelect: ', selectedList, selectedItem);
         setMasters(null);
+        setShowMasters(false);
+        setInfo(null);
+        setError(null);
         if(order.master == null) {
-            /*if(originalOrder.master.cities.find(item => item.id === selectedItem.id) != null) {
-                setOrder( (prev) => ({...prev, 
-                    master: originalOrder.master, 
-                    city: originalOrder.city, 
-                    cities: [originalOrder.city] 
-                }));
-            }*/
             setOrder( (prev) => ({...prev, master: null, city: selectedItem, cities: [selectedItem] }));
-        } else if(order.master.cities.find(item => item.id == selectedItem.id) == null) {
-            //setOrder( (prev) => ({...prev, city: null, cities: [] }));
-            if (!window.confirm("Current master is not available for selected city. \n\
+            
+        } else if(!masterCanHandleOrder(order.master, order.id, selectedItem, order.watchType, order.dateTime.startDate)) {
+            if (!window.confirm("Current master is cant handle this order due lack of time or specified city is not supported by master. \n\
                 Do you want to search new master?")) {
                 console.log('Revert to prev city: ', order, lastAssignedCity);
                 setOrder( (prev) => ({...prev, master: order.master, city: lastAssignedCity, cities: [lastAssignedCity] }));
                 return;
             }
 
-            //setMasters
+            setMasters(null);
+            setShowMasters(true);
             setOrder( (prev) => ({...prev, master: null, city: selectedItem, cities: [selectedItem] }));
         } else {
             console.log('SUCCESS');
@@ -248,8 +221,11 @@ const AdminEditOrder = () => {
     const onRemove = (selectedList, removedItem) => {
         console.log('OnRemove: ', selectedList, removedItem);
         setLastAssignedCity(removedItem);
-        setOrder( (prev) => ({...prev, city: null, cities: [] }));
         setMasters(null);
+        setShowMasters(false);
+        setInfo(null);
+        setError(null);
+        setOrder( (prev) => ({...prev, city: null, cities: [] }));
     };
 
     const isFormValid = () => {
@@ -261,9 +237,36 @@ const AdminEditOrder = () => {
         && !pending;
     };
 
-    const masterCanHandleThisOrder = (master, order) => {
-        // TODO: check if master cities list contains desired orderd city, 
-        // check required timeframe according to dateTime + watchType
+    // master is not null, city is not null, watchType is not null, dateTime is not null
+    const masterCanHandleOrder = (master, orderId, city, watchType, dateTime) => {
+        console.log('test masterCanHandleOrder: ', master, orderId, city, watchType, dateTime);
+        
+        // Master cant handle specified city
+        if(master.cities.find(item => item.id == city.id) == null) {
+            console.log('NO CANT HANDLE due city');
+            return false;
+        }
+
+        // Now check if master schedule (already assigned orders except maybe this one is overlaps with current order)
+        const schedule = master.orders.filter(item => item.id != orderId);
+        console.log('masterCanHandleOrder: ', schedule);
+
+        let startDate = new Date(dateTime);
+        let endDate = addHours(new Date(dateTime), watchType.repairTime);
+        
+        for(let i = 0; i < schedule.length; ++i) {
+            const sch = schedule[i];
+            // At least one order is overlaps with current thus master cant handle this order
+            if(dateRangesOverlap(startDate, endDate, new Date(sch.dateTime.startDate), new Date(sch.dateTime.endDate))) {
+                console.log('NO CANT HANDLE due schedule: ');
+                console.log("Current order: ", order, startDate, endDate);
+                console.log("Order which overlaps with current: ", sch, sch.dateTime.startDate, sch.dateTime.endDate);
+                return false;
+            }
+        }
+
+        console.log('YES CAN HANDLE');
+        return true;
     };
     
     return (
@@ -278,24 +281,7 @@ const AdminEditOrder = () => {
             {(!originalOrder && pending) && <center><Spinner animation="grow" /> </center>}
             {originalOrder  &&
             <>
-            <Row>
-                    <Col className="text-center p-2 m-0">{ originalOrder.id }</Col>
-
-                    <Col className="text-center p-2 m-0">{ originalOrder.client.name }</Col>
-                    <Col className="text-center p-2 m-0">{ originalOrder.client.email }</Col>
-                    
-                    <Col className="text-center p-2 m-0">{ originalOrder.master.name }</Col>
-                    <Col className="text-center p-2 m-0">{ originalOrder.master.email }</Col>
-                    <Col className="text-center p-2 m-0"><StarRating value={originalOrder.master.rating} readonly={true} /></Col>
-                    
-                    <Col className="text-center p-2 m-0">{ originalOrder.city.name }</Col>
-
-                    <Col className="text-center p-2 m-0">{ originalOrder.watchType.name }</Col>
-                    <Col className="text-center p-2 m-0">{ originalOrder.watchType.repair_time }</Col>
-
-                    <Col className="text-center p-2 m-0">{ originalOrder.dateTime.startDate }</Col>
-                    <Col className="text-center p-2 m-0">{ originalOrder.dateTime.endDate }</Col>
-            </Row>
+            
             <Row className="justify-content-md-center">
                 <Col xs lg="6">
                     {((!cities || !watchTypes || !order) && pending) && <center><Spinner animation="grow" /> </center>}
@@ -341,7 +327,7 @@ const AdminEditOrder = () => {
                                         name="watchType"
                                         checked={order.watchType.id==item.id}
                                         type="radio"
-                                        onClick={(event) => {
+                                        /*onClick={(event) => {
                                             console.log('check: ', event);
                                             setOrder( (prev) => ({
                                                 ...prev,
@@ -351,15 +337,33 @@ const AdminEditOrder = () => {
                                             setInfo(null);
                                             setError(null);
 
-                                        }}
+                                        }}*/
                                         onChange={(event) => {
+                                            const prevWatchType = order.watchType;
+                                            setMasters(null);
+                                            setShowMasters(false);
+                                            setInfo(null);
+                                            setError(null);
+                                            if(order.master != null && order.city != null && order.dateTime.startDate != null) {
+                                                if(!masterCanHandleOrder(order.master, order.id, order.city, item, order.dateTime.startDate)) {
+                                                    if (!window.confirm("Current master cant handle this order due lack of time or specified watch type or specified city is not supported by master. \n\
+                                                        Do you want to search new master?")) {
+                                                        console.log('Revert to prev: ', order, prevWatchType);
+                                                        
+                                                        setOrder( (prev) => ({...prev, watchType: prevWatchType}));
+                                                        return;
+                                                    } else {
+                                                        
+                                                        //fetchAvailableMasters(order.city.id, item.id, new Date(order.dateTime.startDate).getTime());
+                                                    }
+                                                    setShowMasters(true);
+                                                    setOrder( (prev) => ({...prev, master: null}));                                                    
+                                                }
+                                            }
                                             setOrder( (prev) => ({
                                                 ...prev,
                                                 watchType: item
                                             }));
-                                            setMasters(null);
-                                            setInfo(null);
-                                            setError(null);
                                         }}
                                     />
                                 )
@@ -396,16 +400,17 @@ const AdminEditOrder = () => {
                                     minDate={dayjs(order.dateTime.startDate)}
                                     views={['year', 'month', 'day', 'hours']}
                                     onChange={(newValue) => {
+                                        setMasters(null);
+                                        setShowMasters(false);
+                                        setInfo(null);
+                                        setError(null);
                                         setOrder( (prev) => ({
                                             ...prev,
                                             dateTime: {
                                                 ...prev.dateTime,
-                                                startDate: new Date(newValue).getTime()
+                                                startDate: roundMinutes(new Date(newValue)).getTime()
                                             } 
-                                        }));
-                                        setMasters(null);
-                                        setInfo(null);
-                                        setError(null);
+                                        }));                                        
                                     }}
                                 />
                             </LocalizationProvider>
@@ -443,11 +448,15 @@ const AdminEditOrder = () => {
                                         if(!order.dateTime || !order.city || !order.watchType) return;
 
                                         console.log('#1changeMaster[2]:', order, new Date(order.dateTime.startDate));
+                                        setMasters(null);
+                                        setShowMasters(true);
+                                        setInfo(null);
+                                        setError(null);
                                         setOrder((prev) => ({
                                             ...prev,
                                             master: null
                                         }))
-                                        fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
+                                        //fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
                                     }}
                                     variant="warning"
                                     disabled={!order.watchType || !order.city || !order.dateTime.startDate}
@@ -477,12 +486,14 @@ const AdminEditOrder = () => {
                                         console.log('#2changeMaster[1]: ', order);
                                         if(!order.dateTime || !order.city || !order.watchType) return;
                                         console.log('#2changeMaster[2]: ', order);
+                                        setMasters(null);
+                                        setShowMasters(true);
+                                        setInfo(null);
+                                        setError(null);
                                         setOrder((prev) => ({
                                             ...prev,
                                             master: null
                                         }))
-                                        console.log('changeMaster', order, new Date(order.dateTime.startDate));
-                                        fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
                                     }}
                                     variant="warning"
                                     disabled={!order.watchType || !order.city || !order.dateTime.startDate}>
@@ -498,6 +509,10 @@ const AdminEditOrder = () => {
                                 <Col >
                                     <Button className="mb-3" onClick={(e) => {
                                         e.preventDefault();
+                                        setMasters(null);
+                                        setShowMasters(false);
+                                        setInfo(null);
+                                        setError(null);
                                         setOrder(originalOrder);
                                     }}>Reset</Button>
                                 </Col>
@@ -514,7 +529,7 @@ const AdminEditOrder = () => {
                 </Col>
             </Row>
             
-            {masters &&
+            {masters && showMasters &&
             <div>
                 <hr/>
             <Row className="justify-content-md-center mt-4">
@@ -527,11 +542,11 @@ const AdminEditOrder = () => {
                                 }
 
                                 console.log('pickup: ', master);
-                                order.master = master;
-                                setOrder((prev) => ({...prev, master: master}));
+                                setShowMasters(false);
                                 setMasters(null);
                                 setInfo(null);
                                 setError(null);
+                                setOrder((prev) => ({...prev, master: master}));
                         }}>
                             <Card className="mb-3" style={{ width: '18rem' }}>
                                 <Card.Body>
