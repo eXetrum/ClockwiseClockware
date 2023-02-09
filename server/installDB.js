@@ -15,7 +15,7 @@ const install = async () => {
 			
 		CREATE TABLE cities (
 			id serial PRIMARY KEY,
-			name VARCHAR ( 255 ) NOT NULL
+			name VARCHAR ( 255 ) UNIQUE NOT NULL
 		);
 		
 		CREATE TABLE watch_type (
