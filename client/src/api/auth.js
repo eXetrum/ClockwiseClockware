@@ -33,7 +33,7 @@ const getCurrentUser = () => {
 			return null;
 		}
 		return user;
-	} catch(e) { logout(); console.log('error: ', e);}
+	} catch(e) { if(jwtToken != null) logout(); }
 	
 	return null;
 };
