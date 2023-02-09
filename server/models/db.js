@@ -9,8 +9,6 @@ const pool = new Pool({
 	host: process.env.POSTGRES_HOST,
 	port: process.env.POSTGRES_PORT,
 	ssl: true,
-	/*idleTimeoutMillis: 0,
-	connectionTimeoutMillis: 0,*/	
 });
 
 const execQuery = async (code, bind_args=null) => { 
