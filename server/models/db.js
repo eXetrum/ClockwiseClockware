@@ -8,7 +8,7 @@ const pool = new Pool({
 	password: process.env.POSTGRES_PASS,
 	host: process.env.POSTGRES_HOST,
 	port: process.env.POSTGRES_PORT,
-	ssl: true,
+	ssl: process.env.POSTGRES_SSL
 });
 
 const execQuery = async (code, bind_args=null) => { 
