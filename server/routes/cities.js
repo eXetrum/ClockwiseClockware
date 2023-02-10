@@ -16,16 +16,25 @@ router.get('/api/cities', async (req, res) => {
 
 router.post('/api/cities', RouteProtector, async (req, res) => {
 	try {
-		const { cityName } = req.body;
+		let { cityName } = req.body;
+		cityName = cityName.trim();
+		if(!cityName || cityName == '' || cityName.length == 0) {
+			res.status(400).json({ detail: 'Empty city name is not allowed'}).end();
+			return;
+		}
 		console.log('[route] POST /cities: ', cityName);
 		let result = await createCity(cityName);
-		console.log('[route] POST /cities: ', result);
-		const cities = await getCities();
-		console.log('[route] POST /cities result: ', cities);
-		res.status(200).json({
-			cities
-		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+		let city = result[0];
+		console.log('[route] POST /cities: ', city);
+		res.status(201).json({ city }).end();
+	} catch(e) { 
+		console.log(e);
+		if(e.constraint == 'cities_name_key') {
+			res.status(409).json({ detail: `City already exists`}).end();
+			return;
+		}
+		res.status(400).json(e).end(); 
+	}
 });
 
 router.delete('/api/cities/:id', RouteProtector, async (req, res) => {
