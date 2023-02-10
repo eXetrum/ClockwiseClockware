@@ -1,22 +1,19 @@
-import axios from 'axios';
-import SetupInterceptor from './axios.interceptor';
-
-SetupInterceptor();
+import axiosInstance from "./axios.interceptor";
 
 // Get All
-const getCities = () => { return axios.get(`/cities`); };
+const getCities = () => { return axiosInstance.get(`/cities`); };
 
 // Create new city
-const createCity = (cityName) => { return axios.post('/cities', { cityName }); };
+const createCity = (cityName) => { return axiosInstance.post('/cities', { cityName }); };
 
 // Delete city by id
-const deleteCityById = (id) => { return axios.delete(`/cities/${id}`); };
+const deleteCityById = (id) => { return axiosInstance.delete(`/cities/${id}`); };
 
 // Get city by id
-const getCityById = (id) => { return axios.get(`/cities/${id}`); };
+const getCityById = (id) => { return axiosInstance.get(`/cities/${id}`); };
 
 // Update by id
-const updateCityById = (id, cityName) => { return axios.put(`/cities/${id}`, { cityName }); };
+const updateCityById = (id, cityName) => { return axiosInstance.put(`/cities/${id}`, { cityName }); };
 
 export {
     getCities,
