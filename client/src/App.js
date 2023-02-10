@@ -28,8 +28,6 @@ import { AxiosInterceptor } from './api/axios.interceptor';
 
 const App = () => {
 	return (
-		
-	<ToastProvider>
 	<BrowserRouter>
 		<AxiosInterceptor>
 			<Routes>
@@ -86,7 +84,6 @@ const App = () => {
 			</Routes>
 		</AxiosInterceptor>
 	</BrowserRouter>
-	</ToastProvider>
 	);
 };
 

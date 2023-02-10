@@ -8,11 +8,9 @@ import Header from '../Header';
 import AdminCitiesList from './AdminCitiesList';
 import ModalBox from '../ModalBox';
 import ErrorBox from '../ErrorBox';
-import { useToasts } from 'react-toast-notifications';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
 const AdminDashboardCities = () => {
-    const { addToast } = useToasts();
     const [cities, setCities] = useState(null);
     const [newCityName, setNewCityName] = useState('');
     const [pending, setPending] = useState(true);
@@ -48,18 +46,11 @@ const AdminDashboardCities = () => {
                 setCities([...cities, city]);
                 setNewCityName('');
                 setShow(false);
-                addToast('New city entry created', {
-                    appearance: 'success',
-                    autoDismiss: true,
-                })
             }
         } catch(e) {
             setError(e);
             console.log("Error: ", e);
-            addToast(e.toString(), {
-                appearance: 'error',
-                autoDismiss: true,
-            })
+
         } finally {
             setPending(false);
         }
@@ -142,9 +133,9 @@ const AdminDashboardCities = () => {
 			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}	
 
 			
-            
+            {!show &&
             <ErrorBox info={info} error={error} pending={pending} />
-            
+            }
 
             <AdminCitiesList cities={cities} onRemove={handleRemove} />
             <hr />

@@ -6,16 +6,24 @@ const getCities = (abortController=null) => {
 };
 
 // Create new city
-const createCity = (cityName) => { return axiosInstance.post('/cities', { cityName }); };
+const createCity = (cityName, abortController=null) => { 
+    return axiosInstance.post('/cities', { cityName }, { signal: abortController?.signal}); 
+};
 
 // Delete city by id
-const deleteCityById = (id) => { return axiosInstance.delete(`/cities/${id}`); };
+const deleteCityById = (id, abortController=null) => { 
+    return axiosInstance.delete(`/cities/${id}`, { signal: abortController?.signal}); 
+};
 
 // Get city by id
-const getCityById = (id) => { return axiosInstance.get(`/cities/${id}`); };
+const getCityById = (id, abortController=null) => { 
+    return axiosInstance.get(`/cities/${id}`, { signal: abortController?.signal}); 
+};
 
 // Update by id
-const updateCityById = (id, cityName) => { return axiosInstance.put(`/cities/${id}`, { cityName }); };
+const updateCityById = (id, cityName, abortController=null) => { 
+    return axiosInstance.put(`/cities/${id}`, { cityName }, { signal: abortController?.signal}); 
+};
 
 export {
     getCities,
