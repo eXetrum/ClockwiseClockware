@@ -9,7 +9,11 @@ const getCities = async () => {
 
 const createCity = async (cityName) => {
 	console.log('[db] createCity: ', cityName);
-	let result = await execQuery('INSERT INTO cities (name) VALUES ($1);', [cityName]);
+	let result = await execQuery(`
+		INSERT INTO cities (name) 
+			VALUES ($1)
+			RETURNING *;
+		`, [cityName]);
 	console.log('[db] createCity result: ', result.rows);
 	return result.rows;
 };
