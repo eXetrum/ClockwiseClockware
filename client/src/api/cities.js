@@ -1,7 +1,9 @@
 import axiosInstance from "./axios.interceptor";
 
 // Get All
-const getCities = () => { return axiosInstance.get(`/cities`); };
+const getCities = (abortController=null) => { 
+    return axiosInstance.get(`/cities`, { signal: abortController?.signal}); 
+};
 
 // Create new city
 const createCity = (cityName) => { return axiosInstance.post('/cities', { cityName }); };
