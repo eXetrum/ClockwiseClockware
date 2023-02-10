@@ -24,55 +24,83 @@ const AdminDashboardMasters = () => {
         rating: 0,
         cities: [],
     });
-    const [pending, setPending] = useState(true);
+    const [pending, setPending] = useState(false);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchMasters = async () => {
-            try {
-                const response = await getMasters();
-                if(response && response.data && response.data.masters) {
-                    const { masters } = response.data;
-                    setMasters(masters);
-                    console.log(masters);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
-
-        setMasters(null);
+    const resetBeforeApiCall = () => {
         setPending(true);
         setInfo(null);
         setError(null);
+    };
 
-        fetchMasters();
+    const fetchMasters = async () => {
+        try {
+            const response = await getMasters();
+            if(response && response.data && response.data.masters) {
+                const { masters } = response.data;
+                setMasters(masters);
+                console.log(masters);
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const fetchCities = async () => {
+        try {
+            const response = await getCities();
+            if(response && response.data && response.data.cities) {
+                const { cities } = response.data;
+                setCities(cities);
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const doCreateMaster = async (master) => {
+        try {
+            const response = await createMaster(master);
+            if(response && response.data && response.data.masters) {
+                const { masters } = response.data;
+                setMasters(masters);
+            }
+        } catch(e) {
+            console.log(e);
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const doDeleteMasterById = async (id) => {
+        try {
+            const response = await deleteMasterById(id);
+            if(response && response.data && response.data.masters) {
+                const { masters } = response.data;
+                setMasters(masters);
+                // TODO: backend, no point to return entire collection, just check 201/200
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    useEffect(async () => {
+        resetBeforeApiCall();
+        await fetchMasters();
     }, []);
 
-    useEffect(() => {
-        const fetchCities = async () => {
-            try {
-                const response = await getCities();
-                if(response && response.data && response.data.cities) {
-                    const { cities } = response.data;
-                    setCities(cities);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
-
-        setCities(null);
-        setPending(true);
-        setInfo(null);
-        setError(null);
-
-        fetchCities();
+    useEffect(async () => {
+        resetBeforeApiCall();
+        await fetchCities();
     }, []);
 
     const validateNewMasterForm = () => {
@@ -82,21 +110,7 @@ const AdminDashboardMasters = () => {
     const handleSubmit = (e) => {
         e.preventDefault()
         console.log('submit: ', newMaster, cities);
-        const doCreateMaster = async (master) => {
-            try {
-                const response = await createMaster(master);
-                if(response && response.data && response.data.masters) {
-                    const { masters } = response.data;
-                    setMasters(masters);
-                }
-            } catch(e) {
-                console.log(e);
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
-
+        
         setNewMaster({
             name: '',
             email: '',
@@ -106,9 +120,7 @@ const AdminDashboardMasters = () => {
 
         multiselectRef.current.resetSelectedValues();
         
-        setPending(true);
-        setInfo(null);
-        setError(null);
+        resetBeforeApiCall();
         doCreateMaster(newMaster);
     };
 
@@ -117,21 +129,9 @@ const AdminDashboardMasters = () => {
         if (!window.confirm("Delete?")) {
             return;
         }
-        const doDeleteMasterById = async (id) => {
-            try {
-                const response = await deleteMasterById(id);
-                if(response && response.data && response.data.masters) {
-                    const { masters } = response.data;
-                    setMasters(masters);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
+        
 
-        setPending(true);
+        resetBeforeApiCall();
         doDeleteMasterById(id);
     }
 

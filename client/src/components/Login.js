@@ -1,26 +1,45 @@
 import React, { useEffect, useState } from 'react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { 
 	Container, Row, Col, Form, Button, Alert
 } from 'react-bootstrap';
 import Header from './Header';
+import ErrorBox from './ErrorBox';
 import { isLoggedIn, login, setToken } from '../api/auth';
 
 
-const LogIn = () => {
+const Login = () => {
+	const navigate = useNavigate();
+	const location = useLocation();
+	const fromPage = location.state?.from?.pathname || '/';
+
 	const [user, setUser] = useState({email: '', password: ''});
 	const [pending, setPending] = useState(false);
-	const [redirect, setRedirect] = useState(false);
+	const [redirect, setRedirect] = useState(isLoggedIn());
 	const [info, setInfo] = useState(null);
 	const [error, setError] = useState(null);
 
-	useEffect( () => {
-		setRedirect(isLoggedIn());
-	}, []);
-	
+	const doLogin = async (email, password) => {
+		try {
+			const response = await login(email, password);
+			if(response && response.data && response.data.accessToken) {
+				setToken(response.data.accessToken);
+				setRedirect(true);
+			}
+		} catch(e) {
+			if(e && e.response && e.response.status === 401) {
+				setError('Incorrect login/password');
+			} else {
+				setError(e);
+			}
+		} finally {
+			setPending(false);
+		}
+	};
+
 	const handleChange = (event) => {
-    	const inputField = event.target.name
-    	const inputValue = event.target.value
+		const inputField = event.target.name
+		const inputValue = event.target.value
 		
 		setUser((prev) => ({...prev, [inputField]: inputValue }));
 		
@@ -28,38 +47,11 @@ const LogIn = () => {
 		setError(null);
 	};
 
-  	const handleSubmit = (event) => {
-		event.preventDefault();
-
-		setPending(true);
-		setInfo(null);
-		setError(null);
-
-		const doLogin = async (email, password) => {
-			try {
-				const response = await login(email, password);
-				if(response && response.data && response.data.accessToken) {
-					setToken(response.data.accessToken);
-					setRedirect(true);
-				}
-			} catch(e) {
-				if(e && e.response && e.response.status === 401) {
-					setError('Incorrect login/password');
-				} else {
-					setError(e);
-				}
-			} finally {
-				setPending(false);
-			}
-		};
-		
-		doLogin(user.email, user.password);
-  	};
+	if(redirect) {
+		return (<Navigate to={fromPage} />);
+	}
 
 	return (
-		<>
-		{redirect && <Navigate to="/"/>}
-		{!redirect &&
 		<Container>
 			<Header />
 			<Container>
@@ -67,7 +59,15 @@ const LogIn = () => {
 				<Row className="justify-content-md-center">
 					<Col xs lg="4" md="auto">
 					<h1>Login page</h1>
-					<Form onSubmit={handleSubmit}>
+					<Form onSubmit={(event) => {
+						event.preventDefault();
+				
+						setPending(true);
+						setInfo(null);
+						setError(null);
+						
+						doLogin(user.email, user.password);
+					}}>
 						<Form.Group className="mb-3">
 						<Form.Label>Email address</Form.Label>
 						<Form.Control type="email" placeholder="Enter email" 
@@ -93,17 +93,10 @@ const LogIn = () => {
 					</Col>
 				</Row>
 				<hr/>
-				<Row className="justify-content-md-center">
-					<Col md="auto">
-						{info && <Alert key='success' variant='success'>{info}</Alert>}
-						{error && <Alert key='danger' variant='danger'>{error.toString()}</Alert>}
-					</Col>
-				</Row>
+				<ErrorBox info={info} error={error} pending={pending} />
 			</Container>
       	</Container>
-		}
-		</>
 	);
 };
 
-export default LogIn;
+export default Login;
