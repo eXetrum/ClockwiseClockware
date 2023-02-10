@@ -25,8 +25,8 @@ const install = async () => {
 		);
 		CREATE TABLE clients (
 			id serial PRIMARY KEY,
-			name VARCHAR ( 255 ) NOT NULL,
-			email VARCHAR ( 255 ) UNIQUE NOT NULL
+			email VARCHAR ( 255 ) UNIQUE NOT NULL,
+			name VARCHAR ( 255 ) NOT NULL			
 		);
 		CREATE TABLE admins (
 			id serial PRIMARY KEY,
@@ -35,16 +35,16 @@ const install = async () => {
 		);
 		CREATE TABLE masters (
 			id serial PRIMARY KEY,
-			name VARCHAR ( 255 ) NOT NULL,	
-			email VARCHAR ( 255 ) UNIQUE NOT NULL,	
+			email VARCHAR ( 255 ) UNIQUE NOT NULL,
+			name VARCHAR ( 255 ) NOT NULL,			
 			rating INTEGER NOT NULL
 		);
 		CREATE TABLE master_city_list (
 			id serial PRIMARY KEY,
 			master_id INTEGER NOT NULL,
 			city_id INTEGER NOT NULL,
-			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE CASCADE ON UPDATE CASCADE
+			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE RESTRICT,
+			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE RESTRICT
 		);
 		CREATE TABLE orders (
 			id serial PRIMARY KEY,
@@ -53,10 +53,10 @@ const install = async () => {
 			city_id INT NOT NULL,
 			master_id INT NOT NULL,
 			date_time timestamp  NOT NULL,
-			FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			FOREIGN KEY(watch_type_id) REFERENCES watch_type(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE CASCADE ON UPDATE CASCADE,
-			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE CASCADE ON UPDATE CASCADE
+			FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE RESTRICT,
+			FOREIGN KEY(watch_type_id) REFERENCES watch_type(id) ON DELETE RESTRICT,
+			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE RESTRICT,
+			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE RESTRICT
 		);
 		INSERT INTO cities (name) VALUES ('Дніпро'), ('Ужгород');
 		INSERT INTO watch_type (name, repair_time) VALUES ('Маленький', 1), ('Середній', 2), ('Великий', 3);
