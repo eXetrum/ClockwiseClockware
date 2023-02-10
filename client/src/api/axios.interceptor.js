@@ -55,7 +55,7 @@ const AxiosInterceptor = ({ children }) => {
             axiosInstance.interceptors.response.eject(requestInterceptor);
             axiosInstance.interceptors.response.eject(responseInterceptor);
         }
-    }, [navigate]);
+    }, []);
 
     return children;
 };
