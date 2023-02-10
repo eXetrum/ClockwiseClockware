@@ -25,9 +25,9 @@ const AdminDashboardCities = () => {
 
     const createCityFormRef = React.createRef();
 
-    const fetchCities = async () => {
+    const fetchCities = async (abortController) => {
         try {
-            const response = await getCities();
+            const response = await getCities(abortController);
             if (response && response.data && response.data.cities) {                    
                 const { cities } = response.data;
                 setCities(cities);
@@ -80,9 +80,15 @@ const AdminDashboardCities = () => {
     };
 
     // 'componentDidMount'
-    useEffect(async () => {
+    useEffect(() => {
+        const abortController = new AbortController();
         console.log('"componentDidMount" getCityById');
-		await fetchCities();
+		fetchCities(abortController);
+
+        return () => {
+            console.log('ABORT FETCH');
+            abortController.abort();
+        }
     }, []);
 
 	const handleSubmit = (e) => {
