@@ -1,17 +1,14 @@
-import { useEffect } from 'react'
-import { useNavigate } from "react-router-dom"
+import { useLocation, Navigate } from "react-router-dom"
 import { isLoggedIn } from '../api/auth';
 
 const RouteGuard = ({ children }) => {
-	const navigate = useNavigate();
-	useEffect(() => {
-		console.log('protected route');
-		if(!isLoggedIn()) {
-			navigate("/login");
-		}
-	}, [navigate]);
-	
-	return children;    
+	const location = useLocation();
+
+	if(!isLoggedIn() && location.pathname !== '/login') {
+		return <Navigate to='/login' state={{from: location}} />
+	} else {	
+		return children;
+	}
 };
 
 export default RouteGuard;
