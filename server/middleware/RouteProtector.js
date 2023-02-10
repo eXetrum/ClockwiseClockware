@@ -3,14 +3,14 @@ const jwt = require("jsonwebtoken");
 
 const RouteProtector = async (req, res, next) => {
 	if(!req.headers.authorization) {
-		res.status(403).end();
+		res.status(401).end();
 		return;
 	}	
 	try {
 		const token = req.headers.authorization.split(" ")[1];  
 		jwt.verify(token, process.env.JWT_TOKEN_SECRET);
 	} catch(e) {
-		res.status(403).end();
+		res.status(401).end();
 		return;
 	}
 	
