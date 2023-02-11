@@ -1,8 +1,9 @@
 import jwt from 'jwt-decode';
-import axiosInstance from "./axios.interceptor";
+//import axiosInstance from "./axios.interceptor";
+import axios from 'axios';
 
 const login = (email, password) => {
-	return axiosInstance.post(`/login`, {
+	return axios.post(`/login`, {
 		email,
 		password
 	});
@@ -13,7 +14,7 @@ const logout = () => { localStorage.removeItem("user"); };
 const setToken = (token) => { localStorage.setItem("user", token); }
 
 const register = (username, email, password) => {
-	return axiosInstance.post(`/register`, {
+	return axios.post(`/register`, {
 		username,
 		email,
 		password

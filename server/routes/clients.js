@@ -24,7 +24,14 @@ router.delete('/api/clients/:id', RouteProtector, async (req, res) => {
 		res.status(200).json({
 			clients
 		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+	} catch(e) { 
+		console.log(e); 
+		console.log(e.constraint);
+		if(e.constraint == 'orders_client_id_fkey') {
+			return res.status(409).json({ detail: `Deletion restricted. At least one order contains reference to this client`}).end();
+		}
+		res.status(400).end();
+	}
 });
 
 router.get('/api/clients/:id', RouteProtector, async (req, res) => {

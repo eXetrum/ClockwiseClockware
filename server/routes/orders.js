@@ -81,9 +81,11 @@ router.post('/api/orders', async (req, res) => {
 		};
 		console.log(params);
 		
-		let info = await transporter.sendMail(params);
+		//let info = await transporter.sendMail(params);
 
-		console.log(info);
+		//console.log(info);
+		// DUMMY DUE TESTS
+		const info = {messageId: 42};
 
 		res.status(201).json({ info }).end();
 		

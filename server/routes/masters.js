@@ -32,11 +32,21 @@ router.delete('/api/masters/:id', RouteProtector, async (req, res) => {
 		let result = await deleteMasterById(id);
 		console.log('[route] DELETE /masters result: ', result);
 		const masters = await getMasters();
+		
 		console.log('[route] DELETE /masters result: ', masters);
 		res.status(200).json({
 			masters
 		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
+	} catch(e) { 
+		console.log(e); 
+		console.log(e.constraint);
+		if(e.constraint == 'master_city_list_master_id_fkey') {
+			return res.status(409).json({ detail: `Deletion restricted. Master contains reference to city/cities`}).end();
+		} else if(e.constraint == 'orders_master_id_fkey') {
+			return res.status(409).json({ detail: `Deletion restricted. At least one order contains reference to this master`}).end();
+		}
+		res.status(400).end(); 
+	}
 });
 
 router.get('/api/masters/:id', RouteProtector, async (req, res) => {

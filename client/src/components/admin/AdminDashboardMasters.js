@@ -11,8 +11,10 @@ import NotificationBox from '../NotificationBox';
 import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
 
+import { useSnackbar } from 'notistack';
 
 const AdminDashboardMasters = () => {
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     const multiselectRef = React.createRef();
 
@@ -49,14 +51,14 @@ const AdminDashboardMasters = () => {
         }
     };
 
-    const fetchCities = async () => {
+    const fetchCities = async (abortController) => {
         try {
-            const response = await getCities();
-            if(response && response.data && response.data.cities) {
+            const response = await getCities(abortController);
+            if (response && response.data && response.data.cities) {                    
                 const { cities } = response.data;
                 setCities(cities);
             }
-        } catch(e) {
+        } catch (e) {
             setError(e);
         } finally {
             setPending(false);
@@ -93,18 +95,41 @@ const AdminDashboardMasters = () => {
         }
     };
 
-    useEffect(async () => {
+    useEffect(() => {
         resetBeforeApiCall();
-        await fetchMasters();
+        
+        const abortController = new AbortController();
+        console.log('"componentDidMount" fetchInitData()');
+        const fetchData = async (abortController) => {
+            await fetchMasters(abortController);
+            await fetchCities(abortController);
+        };
+
+        fetchData();
+		
+
+        return () => {
+            console.log('[AdminDashboardMasters] ABORT FETCH1');
+            abortController.abort();
+            closeSnackbar();
+        };
     }, []);
 
-    useEffect(async () => {
-        resetBeforeApiCall();
-        await fetchCities();
-    }, []);
+    /*useEffect(() => {
+        const abortController = new AbortController();
+        console.log('"componentDidMount" getCities()');
+		fetchCities(abortController);
+
+        return () => {
+            console.log('[AdminDashboardMasters] ABORT FETCH2');
+            abortController.abort();
+            closeSnackbar();
+        };
+    }, []);*/
+    
 
     const validateNewMasterForm = () => {
-        return !newMaster || !newMaster.name || !newMaster.email || !newMaster.cities.length;
+        return !newMaster || !newMaster.name || !newMaster.email;// || !newMaster.cities.length;
     };
 
     const handleSubmit = (e) => {

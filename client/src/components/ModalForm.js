@@ -14,11 +14,9 @@ import { getCities, createCity, deleteCityById } from '../api/cities';
 const ModalForm = ({
     title,
     formRef, formContent, 
-    info, error, pending,
+    pending,
     // Call on submit and on validation
     onSubmit, isFormValid,
-    // Ok/Apply/
-    onAccept, onCancel, 
     ...props}) => {
     return (
         <Modal
@@ -34,7 +32,7 @@ const ModalForm = ({
                 <Container>
                     <Row className="align-items-center">
                         <Col>
-                            <Form ref={formRef} onSubmit={onSubmit}>
+                            <Form ref={formRef} onSubmit={onSubmit} disabled={pending}>
                                 {formContent}
                             </Form>
                         </Col>
@@ -45,23 +43,22 @@ const ModalForm = ({
                 <Container>
                     <Row className="align-items-center">
                         <Col xs>
-                            <Button variant="success" disabled={!isFormValid()} onClick={onAccept}>
+                            <Button variant="success" disabled={!isFormValid() || pending} onClick={() => {
+                                console.log('success'); 
+                                formRef.current.dispatchEvent(
+                                    new Event("submit", { cancelable: true, bubbles: true })
+                                );
+                            }}>
                             {pending && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                             Create
                             </Button>
                         </Col>
                         <Col md="auto">
-                            <Button variant="secondary" onClick={onCancel}>
+                            <Button variant="secondary" onClick={props.onHide}>
                             Cancel
                             </Button>
                         </Col>
                     </Row>
-                {error && 
-                <>
-                    <hr/>
-                    <NotificationBox info={info} error={error} pending={pending} />
-                </>
-                }
                 </Container>
             </Modal.Footer>
         </Modal>

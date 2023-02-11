@@ -1,15 +1,27 @@
-import axiosInstance from "./axios.interceptor";
+//import axiosInstance from "./axios.interceptor";
+import axios from "axios";
 
 // Masters
-const getMasters = () => { return axiosInstance.get(`/masters`); };
+const getMasters = (abortController=null) => { 
+    console.log('api getMasters');
+    return axios.get(`/masters`, { signal: abortController?.signal}); 
+};
 
-const createMaster = (master) => { return axiosInstance.post(`/masters`, { master }); };
+const createMaster = (master, abortController=null) => { 
+    return axios.post(`/masters`, { master }, { signal: abortController?.signal}); 
+};
 
-const deleteMasterById = (id) => { return axiosInstance.delete(`/masters/${id}`); };
+const deleteMasterById = (id, abortController=null) => { 
+    return axios.delete(`/masters/${id}`, { signal: abortController?.signal}); 
+};
 
-const getMasterById = (id) => { return axiosInstance.get(`/masters/${id}`); };
+const getMasterById = (id, abortController=null) => { 
+    return axios.get(`/masters/${id}`, { signal: abortController?.signal}); 
+};
 
-const updateMasterById = (id, master) => { return axiosInstance.put(`/masters/${id}`, { master }); };
+const updateMasterById = (id, master, abortController=null) => { 
+    return axios.put(`/masters/${id}`, { master }, { signal: abortController?.signal}); 
+};
 
 
 export {

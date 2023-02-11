@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
-    Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner
+    Form, FormGroup, FormControl, Container, Row, Col, Spinner,
 } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Header from '../Header';
 import AdminCitiesList from './AdminCitiesList';
 import ModalForm from '../ModalForm';
-import NotificationBox from '../NotificationBox';
+import ErrorServiceOffline from '../ErrorServiceOffline';
+
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
+import { useSnackbar } from 'notistack';
+
 const AdminDashboardCities = () => {
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
     const [cities, setCities] = useState(null);
     const [newCityName, setNewCityName] = useState('');
     const [pending, setPending] = useState(true);
-    const [info, setInfo] = useState(null);
-    const [error, setError] = useState(null);
-    
-    
-    
-	const [showAddForm, setShowAddForm] = useState(false);
+    const [error, setError] = useState(null);    
+	const [showAddForm, setShowAddForm] = useState(false);    
 
     const addCityFormRef = React.createRef();
 
     const resetBeforeApiCall = () => {
         setPending(true);
-        setInfo(null);
         setError(null);
     };
 
@@ -50,12 +50,15 @@ const AdminDashboardCities = () => {
             if (response && response && response.data && response.data.city) {                    
                 const { city } = response.data;
                 setCities([...cities, city]);
+                
+                //setInfo('Created');
+                enqueueSnackbar(`City "${city.name}" created`, { variant: 'success'});
                 setNewCityName('');
                 setShowAddForm(false);
-                setInfo('Created');
             }
         } catch(e) {
             setError(e);
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
             console.log("Error: ", e);
 
         } finally {
@@ -67,15 +70,19 @@ const AdminDashboardCities = () => {
         try {
             const response = await deleteCityById(id);
             if (response && (response.status == 200 || response.status == 204)) {
+                const removedCity = cities.find(item => item.id == id);
                 setCities(cities.filter(item => item.id != id));
-                setInfo('Removed');
+                enqueueSnackbar(`City ${removedCity.name} removed`, { variant: 'success'});
             }
         } catch(e) {
+            setError(e);
             // Looks like we trying to remove city which already removed or not exists at all
             if(e && e.response && e.response.status == 404) {
                 setCities(cities.filter(item => item.id != id));
             }
-            setError(e);
+            
+            console.log('doDeleteCityById error: ', e);
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
             setPending(false);
         }
@@ -88,8 +95,9 @@ const AdminDashboardCities = () => {
 		fetchCities(abortController);
 
         return () => {
-            console.log('ABORT FETCH');
+            console.log('[AdminDashboardCities] ABORT FETCH');
             abortController.abort();
+            closeSnackbar();
         }
     }, []);
 
@@ -100,11 +108,11 @@ const AdminDashboardCities = () => {
         doCreateCity(newCityName);
 	};
 
-	const handleRemove = async (cityId) => {
+	const handleRemove = (cityId) => {
 		console.log('handleRemove');
         if (!window.confirm("Delete?")) { return; }		
         resetBeforeApiCall();
-        await doDeleteCityById(cityId);
+        doDeleteCityById(cityId);
 	};
 
     return (
@@ -124,16 +132,11 @@ const AdminDashboardCities = () => {
                     </Col>
                 </Row>
                 <hr />
-                </>
-                }
+                </>}
 			</center>
 			
-			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}	
-
-			
-            {!showAddForm &&
-            <NotificationBox info={info} error={error} pending={pending} />
-            }
+			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}
+            <ErrorServiceOffline error={error} pending={pending} />
 
             <AdminCitiesList cities={cities} onRemove={handleRemove} />
             <hr />
@@ -142,6 +145,7 @@ const AdminDashboardCities = () => {
                 onHide={()=>{
                     console.log('cancel XXX'); 
                     setNewCityName(''); 
+                    setError(null);
                     setShowAddForm(false);
                 }}
                 formRef={addCityFormRef}
@@ -153,14 +157,11 @@ const AdminDashboardCities = () => {
                             value={newCityName}
                             onChange={(event) => { 
                                 setNewCityName(event.target.value); 
-                                setInfo(null);
                                 setError(null);
                             }}
                         />
                     </FormGroup>
                 }
-                info={info}
-                error={error}
                 pending={pending}
                 // Call on submit and on validation
                 onSubmit={(event) => {
@@ -170,18 +171,6 @@ const AdminDashboardCities = () => {
                     doCreateCity(newCityName);
                 }}
                 isFormValid={() => newCityName}
-                // Ok/Apply/
-                onAccept={() => {
-                    console.log('success'); 
-                    addCityFormRef.current.dispatchEvent(
-                        new Event("submit", { cancelable: true, bubbles: true })
-                    );
-                }}
-                onCancel={() => { 
-                    console.log('cancel'); 
-                    setNewCityName(''); 
-                    setShowAddForm(false);
-                }}
             />
 		</Container>
 	</Container>

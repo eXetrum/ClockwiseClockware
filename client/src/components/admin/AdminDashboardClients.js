@@ -8,7 +8,7 @@ import NotificationBox from '../NotificationBox';
 import { deleteClientById, getClients } from '../../api/clients';
 
 const AdminDashboardClients = () => {
-    
+
     // Initial
 	const [clients, setClients] = useState(null);
     const [pending, setPending] = useState(true);
@@ -71,7 +71,7 @@ const AdminDashboardClients = () => {
                 <AdminClientsList clients={clients} onRemove={handleRemove} />
 
                 {clients && <hr />}
-                <NotificationBox info={null} error={error} pending={pending} />
+                <NotificationBox error={error} pending={pending} />
                 {!clients && <hr />} 
 			</Container>
 		</Container>

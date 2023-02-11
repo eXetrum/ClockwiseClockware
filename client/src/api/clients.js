@@ -1,16 +1,20 @@
-import axiosInstance from "./axios.interceptor";
+//import axiosInstance from "./axios.interceptor";
+import axios from "axios";
 
 // Get All
-const getClients = () => { return axiosInstance.get(`/clients`); };
+const getClients = () => { 
+    console.log('api getClients');
+    return axios.get(`/clients`); 
+};
 
 // Delete client by id
-const deleteClientById = (id) => { return axiosInstance.delete(`/clients/${id}`); };
+const deleteClientById = (id) => { return axios.delete(`/clients/${id}`); };
 
 // Get client by id
-const getClientById = (id) => { return axiosInstance.get(`/clients/${id}`); };
+const getClientById = (id) => { return axios.get(`/clients/${id}`); };
 
 // Update by id
-const updateClientById = (id, client) => { return axiosInstance.put(`/clients/${id}`, { client }); };
+const updateClientById = (id, client) => { return axios.put(`/clients/${id}`, { client }); };
 
 export {
     getClients,

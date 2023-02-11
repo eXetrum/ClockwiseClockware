@@ -36,10 +36,15 @@ const BodyParamsValidator = (Params) => async (req, res, next) => {
 				return res.status(400)
 					.json({ detail: `${param.param_key} is of type ${typeof reqParam} but should be ${param.type}` });
 			}
-			if (!runValidators(reqParam, param)) {
+			for (let validator of param.validator_functions) {
+				if (!validator.func(reqParam)) {
+					return res.status(400).json({ detail: `Validation failed for ${param.param_key} => ${validator.errorText}` });
+				}
+			}
+			/*if (!runValidators(reqParam, param)) {
 				return res.status(400)
 					.json({ detail: `Validation failed for ${param.param_key}` });
-			}
+			}*/
 		} else if (param.required){
 			return res.status(400)
 				.json({ detail: `Missing Parameter ${param.param_key}` });
@@ -56,10 +61,13 @@ const RouteParamsValidator = (Params) => async (req, res, next) => {
 				return res.status(400)
 					.json({ detail: `${param.param_key} is of type ${typeof reqParam} but should be ${param.type}` });
 			}
-			if (!runValidators(reqParam, param)) {
-				return res.status(400)
-					.json({ detail: `Validation failed for ${param.param_key}` });
+	
+			for (let validator of param.validator_functions) {
+				if (!validator.func(reqParam)) {
+					return res.status(400).json({ detail: `Validation failed for ${param.param_key} => ${validator.errorText}` });
+				}
 			}
+			
 		} else if (param.required){
 			return res.status(400)
 				.json({ detail: `Missing Parameter ${param.param_key}` });
@@ -79,8 +87,9 @@ const checkParamType = (reqParam, paramObj) => {
 };
 
 const runValidators = (reqParam, paramObj) => {
+	console.log('runValidators', reqParam, paramObj);
     for (let validator of paramObj.validator_functions) {
-        if (!validator(reqParam)) {
+        if (!validator.func(reqParam)) {
             return false
         }
     }

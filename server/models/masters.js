@@ -83,7 +83,7 @@ const createMaster = async (master) => {
 
 const deleteMasterById = async (id) => {
 	console.log('[db] deleteMasterById: ', id);
-	let result = await execQuery(
+	/*let result = await execQuery(
 		`DELETE
 		FROM
 			masters AS ma
@@ -91,7 +91,12 @@ const deleteMasterById = async (id) => {
 			master_city_list AS mcl
 		WHERE
 			ma.id=mcl.master_id
-		AND ma.id=($1);`, [id]);
+		AND ma.id=($1) RETURNING *;`, [id]);*/
+	let result = await execQuery(
+		`DELETE
+		FROM
+			masters
+		WHERE id=($1) RETURNING *;`, [id]);
 	console.log('[db] deleteMasterById result: ', result.rows);
 	return result.rows;
 };

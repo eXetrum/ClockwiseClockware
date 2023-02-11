@@ -91,7 +91,7 @@ const AdminEditMaster = () => {
         doUpdateMasterById(id, master);		
 	};
 
-    const validateNewMasterForm = () => { return !master.name || !master.email || !master.cities.length; };
+    const validateNewMasterForm = () => { return !master.name || !master.email; }// || !master.cities.length; };
 
     const onSelect = (selectedList, selectedItem)=> {
         console.log('OnSelect: ', selectedList, selectedItem);

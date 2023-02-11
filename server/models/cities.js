@@ -34,7 +34,7 @@ const getCityById = async (id) => {
 
 const updateCityById = async (id, cityName) => {
 	console.log('[db] updateCityById: ', id, cityName);
-	let result = await execQuery('UPDATE cities SET name=$1 WHERE id=($2);', [cityName, id]);
+	let result = await execQuery('UPDATE cities SET name=$1 WHERE id=($2) RETURNING *;', [cityName, id]);
 	console.log('[db] updateCityById result: ', result.rows);
 	return result.rows;
 };

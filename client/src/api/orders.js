@@ -1,10 +1,11 @@
-import axiosInstance from "./axios.interceptor";
+//import axiosInstance from "./axios.interceptor";
+import axios from "axios";
 
 // Watch types
-const getWatchTypes = () => { return axiosInstance.get(`/watch_types`); };
+const getWatchTypes = () => { return axios.get(`/watch_types`); };
 
 const getAvailableMasters = (cityId, watchTypeId, dateTime) => { 
-    return axiosInstance.get(`/available_masters`, { 
+    return axios.get(`/available_masters`, { 
         params: { 
             cityId: cityId, 
             watchTypeId: watchTypeId, 
@@ -14,23 +15,23 @@ const getAvailableMasters = (cityId, watchTypeId, dateTime) => {
 };
 
 const createOrder = (order) => {
-    return axiosInstance.post(`/orders`, { order });
+    return axios.post(`/orders`, { order });
 };
 
 const getOrders = () => {
-    return axiosInstance.get(`/orders`);
+    return axios.get(`/orders`);
 };
 
 const deleteOrderById = (id) => {
-    return axiosInstance.delete(`/orders/${id}`);
+    return axios.delete(`/orders/${id}`);
 };
 
 const getOrderById = (id) => {
-    return axiosInstance.get(`/orders/${id}`);
+    return axios.get(`/orders/${id}`);
 };
 
 const updateOrderById = (id, order) => {
-    return axiosInstance.put(`/orders/${id}`, { order })
+    return axios.put(`/orders/${id}`, { order })
 };
 
 export {
