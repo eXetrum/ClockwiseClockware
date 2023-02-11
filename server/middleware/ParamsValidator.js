@@ -38,7 +38,8 @@ const BodyParamsValidator = (Params) => async (req, res, next) => {
 			}
 			for (let validator of param.validator_functions) {
 				if (!validator.func(reqParam)) {
-					return res.status(400).json({ detail: `Validation failed for ${param.param_key} => ${validator.errorText}` });
+					return res.status(400).json({ detail: `${validator.errorText}` });
+					//`Validation failed for ${param.param_key} => ${validator.errorText}` });
 				}
 			}
 			/*if (!runValidators(reqParam, param)) {
@@ -64,7 +65,8 @@ const RouteParamsValidator = (Params) => async (req, res, next) => {
 	
 			for (let validator of param.validator_functions) {
 				if (!validator.func(reqParam)) {
-					return res.status(400).json({ detail: `Validation failed for ${param.param_key} => ${validator.errorText}` });
+					return res.status(400).json({ detail: `${validator.errorText}` });
+					//return res.status(400).json({ detail: `Validation failed for ${param.param_key} => ${validator.errorText}` });
 				}
 			}
 			

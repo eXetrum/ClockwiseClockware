@@ -12,6 +12,7 @@ import ErrorServiceOffline from '../ErrorServiceOffline';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
 import { useSnackbar } from 'notistack';
+import { alert, confirm } from 'react-bootstrap-confirmation';
 
 const AdminDashboardCities = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -21,8 +22,11 @@ const AdminDashboardCities = () => {
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);    
 	const [showAddForm, setShowAddForm] = useState(false);    
+    const [showConfirmForm, setShowConfirmForm] = useState(false);
+    
 
     const addCityFormRef = React.createRef();
+    const confirmFormRef = React.createRef();
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -108,9 +112,14 @@ const AdminDashboardCities = () => {
         doCreateCity(newCityName);
 	};
 
-	const handleRemove = (cityId) => {
+	const handleRemove = async(cityId) => {
 		console.log('handleRemove');
-        if (!window.confirm("Delete?")) { return; }		
+        //setShowConfirmForm(true);
+        
+        const city = cities.find(item => item.id == cityId);
+
+        const result = await confirm(`Do you want to delete "${city.name}" city ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger'});
+        if(!result) return;
         resetBeforeApiCall();
         doDeleteCityById(cityId);
 	};
@@ -141,6 +150,38 @@ const AdminDashboardCities = () => {
             <AdminCitiesList cities={cities} onRemove={handleRemove} />
             <hr />
             
+            <ModalForm size="sm" show={showConfirmForm} title={'Confirm deletion'} 
+                onHide={()=>{
+                    console.log('cancel XXX'); 
+                    setNewCityName(''); 
+                    setError(null);
+                    setShowConfirmForm(false);
+                }}
+                formRef={confirmFormRef}
+                formContent={
+                    <FormGroup>
+                        <Form.Label>City:</Form.Label>
+                        <FormControl type="text" name="city" disabled={pending}
+                            autoFocus
+                            value={newCityName}
+                            onChange={(event) => { 
+                                setNewCityName(event.target.value); 
+                                setError(null);
+                            }}
+                        />
+                    </FormGroup>
+                }
+                pending={pending}
+                // Call on submit and on validation
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    console.log('handleSubmit');
+                    //resetBeforeApiCall();
+                    //doCreateCity(newCityName);
+                }}
+                isFormValid={() => true }
+            />
+
             <ModalForm size="sm" show={showAddForm} title={'Add New City'} 
                 onHide={()=>{
                     console.log('cancel XXX'); 
