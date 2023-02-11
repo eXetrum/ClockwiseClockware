@@ -6,7 +6,7 @@ import {
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { getClientById, updateClientById } from '../../api/clients';
 import Header from '../Header';
-import ErrorBox from '../ErrorBox';
+import NotificationBox from '../NotificationBox';
 
 const AdminEditClient = () => {
     const {id} = useParams();
@@ -112,7 +112,7 @@ const AdminEditClient = () => {
             </Form>
             }
         {client && <hr />}
-        <ErrorBox info={info} error={error} pending={pending} />
+        <NotificationBox info={info} error={error} pending={pending} />
         {!client && <hr />}          
         </Container>
     </Container>

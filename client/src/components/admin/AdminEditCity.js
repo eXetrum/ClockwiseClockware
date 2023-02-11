@@ -6,7 +6,7 @@ import {
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { getCityById, updateCityById } from '../../api/cities';
 import Header from '../Header';
-import ErrorBox from '../ErrorBox';
+import NotificationBox from '../NotificationBox';
 
 const AdminEditCity = () => {
     const {id} = useParams();
@@ -91,7 +91,7 @@ const AdminEditCity = () => {
             </Form>
             }
         {city && <hr />}
-        <ErrorBox info={info} error={error} pending={pending} />
+        <NotificationBox info={info} error={error} pending={pending} />
         {!city && <hr />}  
         </Container>
     </Container>

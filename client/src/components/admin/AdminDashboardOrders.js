@@ -5,7 +5,7 @@ import {
 import Header from '../Header';
 
 import AdminOrdersList from './AdminOrdersList';
-import ErrorBox from '../ErrorBox';
+import NotificationBox from '../NotificationBox';
 
 import { getOrders, deleteOrderById } from '../../api/orders';
 
@@ -77,7 +77,7 @@ const AdminDashboardOrders = () => {
                 {(!orders && pending) && <center><Spinner animation="grow" /></center>}
                 <AdminOrdersList orders={orders} onRemove={handleRemove} />
                 {orders && <hr />}
-                <ErrorBox info={info} error={error} pending={pending} />
+                <NotificationBox info={info} error={error} pending={pending} />
                 {!orders && <hr />}  
 			</Container>
 		</Container>

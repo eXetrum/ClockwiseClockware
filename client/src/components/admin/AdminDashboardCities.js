@@ -6,8 +6,8 @@ import {
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Header from '../Header';
 import AdminCitiesList from './AdminCitiesList';
-import ModalBox from '../ModalBox';
-import ErrorBox from '../ErrorBox';
+import ModalForm from '../ModalForm';
+import NotificationBox from '../NotificationBox';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
 const AdminDashboardCities = () => {
@@ -19,9 +19,15 @@ const AdminDashboardCities = () => {
     
     
     
-	const [show, setShow] = useState(false);
+	const [showAddForm, setShowAddForm] = useState(false);
 
-    const createCityFormRef = React.createRef();
+    const addCityFormRef = React.createRef();
+
+    const resetBeforeApiCall = () => {
+        setPending(true);
+        setInfo(null);
+        setError(null);
+    };
 
     const fetchCities = async (abortController) => {
         try {
@@ -45,7 +51,8 @@ const AdminDashboardCities = () => {
                 const { city } = response.data;
                 setCities([...cities, city]);
                 setNewCityName('');
-                setShow(false);
+                setShowAddForm(false);
+                setInfo('Created');
             }
         } catch(e) {
             setError(e);
@@ -59,11 +66,15 @@ const AdminDashboardCities = () => {
     const doDeleteCityById = async (id) => {
         try {
             const response = await deleteCityById(id);
-            if (response && response.data && response.data.cities) {                    
-                const { cities } = response.data;
-                setCities(cities);
+            if (response && (response.status == 200 || response.status == 204)) {
+                setCities(cities.filter(item => item.id != id));
+                setInfo('Removed');
             }
         } catch(e) {
+            // Looks like we trying to remove city which already removed or not exists at all
+            if(e && e.response && e.response.status == 404) {
+                setCities(cities.filter(item => item.id != id));
+            }
             setError(e);
         } finally {
             setPending(false);
@@ -83,29 +94,16 @@ const AdminDashboardCities = () => {
     }, []);
 
 	const handleSubmit = (e) => {
-		e.preventDefault()
-        const curCityName = newCityName;
-		setPending(true);
-        
-        setInfo(null);
-        setError(null);
-
-        
-
-        doCreateCity(curCityName);
+		e.preventDefault();
+        console.log('handleSubmit');
+		resetBeforeApiCall();
+        doCreateCity(newCityName);
 	};
 
-	const handleRemove = async(cityId) => {
+	const handleRemove = async (cityId) => {
 		console.log('handleRemove');
-        if (!window.confirm("Delete?")) { return; }
-
-		setPending(true);
-        setNewCityName('');
-        setInfo(null);
-        setError(null);
-
-		
-
+        if (!window.confirm("Delete?")) { return; }		
+        resetBeforeApiCall();
         await doDeleteCityById(cityId);
 	};
 
@@ -121,7 +119,7 @@ const AdminDashboardCities = () => {
                 <Row className="justify-content-md-center">
                     <Col md="auto">
                         <Link to="#">
-                            <AddCircleOutlineOutlinedIcon onClick={() => { setShow(true); }} />
+                            <AddCircleOutlineOutlinedIcon onClick={() => { setShowAddForm(true); }} />
                         </Link>
                     </Col>
                 </Row>
@@ -133,78 +131,57 @@ const AdminDashboardCities = () => {
 			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}	
 
 			
-            {!show &&
-            <ErrorBox info={info} error={error} pending={pending} />
+            {!showAddForm &&
+            <NotificationBox info={info} error={error} pending={pending} />
             }
 
             <AdminCitiesList cities={cities} onRemove={handleRemove} />
             <hr />
             
-
-			<ModalBox show={show} 
-                size="sm"
-                onHide={() => { setShow(false); }}  
-                title={'Add New City'}
-                body={
-                    <Container>
-                        <Row className="align-items-center">
-                            <Col>
-                                <Form ref={createCityFormRef}
-                                    onSubmit={handleSubmit}>
-                                    <FormGroup>
-                                        <Form.Label>City:</Form.Label>
-                                        <FormControl type="text" name="city" disabled={pending}
-                                            autoFocus
-                                            value={newCityName}
-                                            onChange={(event) => { 
-                                                console.log('city name: ', event.target.value);
-                                                setNewCityName(event.target.value); 
-                                                setInfo(null);
-                                                setError(null);
-                                            }}
-                                        />
-                                    </FormGroup>
-                                </Form>
-                            </Col>
-                        </Row>
-                    </Container>
+            <ModalForm size="sm" show={showAddForm} title={'Add New City'} 
+                onHide={()=>{
+                    console.log('cancel XXX'); 
+                    setNewCityName(''); 
+                    setShowAddForm(false);
+                }}
+                formRef={addCityFormRef}
+                formContent={
+                    <FormGroup>
+                        <Form.Label>City:</Form.Label>
+                        <FormControl type="text" name="city" disabled={pending}
+                            autoFocus
+                            value={newCityName}
+                            onChange={(event) => { 
+                                setNewCityName(event.target.value); 
+                                setInfo(null);
+                                setError(null);
+                            }}
+                        />
+                    </FormGroup>
                 }
-                footer={
-                    <Container>
-                        <Row className="align-items-center">
-                            <Col xs>
-                            <Button variant="success" disabled={!newCityName} 
-                                onClick={() => {
-                                    console.log('success'); 
-                                    createCityFormRef.current.dispatchEvent(
-                                        new Event("submit", { cancelable: true, bubbles: true })
-                                    );
-                                }}
-                            >
-                            {pending && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                            Create
-                            </Button>
-                            </Col>
-                            <Col md="auto">
-                            <Button variant="secondary" 
-                                onClick={() => { 
-                                    console.log('cancel'); 
-                                    setNewCityName(''); 
-                                    setShow(false);
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            </Col>
-                        </Row>
-                    {error && 
-                    <>
-                        <hr/>
-                        <ErrorBox info={info} error={error} pending={pending} />
-                    </>
-                    }
-                    </Container>
-                }
+                info={info}
+                error={error}
+                pending={pending}
+                // Call on submit and on validation
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    console.log('handleSubmit');
+                    resetBeforeApiCall();
+                    doCreateCity(newCityName);
+                }}
+                isFormValid={() => newCityName}
+                // Ok/Apply/
+                onAccept={() => {
+                    console.log('success'); 
+                    addCityFormRef.current.dispatchEvent(
+                        new Event("submit", { cancelable: true, bubbles: true })
+                    );
+                }}
+                onCancel={() => { 
+                    console.log('cancel'); 
+                    setNewCityName(''); 
+                    setShowAddForm(false);
+                }}
             />
 		</Container>
 	</Container>

@@ -14,7 +14,7 @@ import StarRating from './StarRating';
 import Header from './Header';
 import { getCities } from '../api/cities';
 import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
-import ErrorBox from './ErrorBox';
+import NotificationBox from './NotificationBox';
 
 
 
@@ -295,7 +295,7 @@ const Order = () => {
             </Row>
         
         {cities && <hr />}
-        <ErrorBox info={info} error={error} pending={pending} />
+        <NotificationBox info={info} error={error} pending={pending} />
         {!cities && <hr />}  
 
         {(!masters && pending) && <center><Spinner animation="grow" /> </center>}

@@ -7,7 +7,7 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import ErrorBox from '../ErrorBox';
+import NotificationBox from '../NotificationBox';
 import { getCities } from '../../api/cities';
 import { getMasterById, updateMasterById } from '../../api/masters';
 
@@ -177,7 +177,7 @@ const AdminEditMaster = () => {
                 }
 
             {master && <hr />}
-            <ErrorBox info={info} error={error} pending={pending} />
+            <NotificationBox info={info} error={error} pending={pending} />
             {!master && <hr />}  
             
 			</Container>

@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
+const { BodyParamsValidator, RouteParamsValidator } = require('../middleware/ParamsValidator');
 const { getCities, createCity, deleteCityById, getCityById, updateCityById } = require('../models/cities');
 
 // No route protector
@@ -14,11 +15,22 @@ router.get('/api/cities', async (req, res) => {
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
-router.post('/api/cities', RouteProtector, async (req, res) => {
+router.post('/api/cities', 
+	RouteProtector, 
+	BodyParamsValidator([
+		{
+			param_key: 'cityName',
+			required: true,
+			type: 'string',
+			validator_functions: [(param) => {return param.trim().length > 0}]
+		}
+	]), 
+	async (req, res) => {
+		
 	try {
 		let { cityName } = req.body;
 		cityName = cityName.trim();
-		if(!cityName || cityName == '' || cityName.length == 0) {
+		if(cityName == '' || cityName.length == 0) {
 			res.status(400).json({ detail: 'Empty city name is not allowed'}).end();
 			return;
 		}
@@ -37,21 +49,43 @@ router.post('/api/cities', RouteProtector, async (req, res) => {
 	}
 });
 
-router.delete('/api/cities/:id', RouteProtector, async (req, res) => {
+router.delete('/api/cities/:id', 
+	RouteProtector, 
+	RouteParamsValidator([
+		{
+			param_key: 'id',
+			required: true,
+			type: 'string',
+			validator_functions: [(param) => {return param != null && !isNaN(param)}]
+		}
+	]),
+	async (req, res) => {
+		
 	try {
 		const { id } = req.params;
+		if(id == null || id == undefined) {
+			return res.status(400).json({ detail: 'City id required' }).end();
+		}
 		console.log('[route] DELETE /cities/:id ', id);
 		let result = await deleteCityById(id);
+		if(Array.isArray(result) && result.length == 0) {
+			return res.status(404).json({ detail: 'City not found' }).end();
+		}
 		console.log('[route] DELETE /cities del result: ', result);
-		const cities = await getCities();
-		console.log('[route] DELETE /cities result cities array: ', cities);
-		res.status(200).json({
-			cities
-		}).end();
+		res.status(204).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
-router.get('/api/cities/:id', RouteProtector, async (req, res) => {
+router.get('/api/cities/:id', 
+	RouteProtector, 
+	RouteParamsValidator({
+		param_key: 'id',
+		required: true,
+		type: 'string',
+		validator_functions: [(param) => {return param != null && !isNaN(param)}]
+	}),
+	async (req, res) => {
+		
 	try {
 		const { id } = req.params;
 		console.log('[route] GET /cities/:id ', id);
@@ -67,7 +101,22 @@ router.get('/api/cities/:id', RouteProtector, async (req, res) => {
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
-router.put('/api/cities/:id', RouteProtector, async (req, res) => {
+router.put('/api/cities/:id', 
+	RouteProtector, 
+	RouteParamsValidator({
+		param_key: 'id',
+		required: true,
+		type: 'string',
+		validator_functions: [(param) => {return param != null && !isNaN(param)}]
+	}),
+	BodyParamsValidator({
+		param_key: 'cityName',
+		required: true,
+		type: 'string',
+		validator_functions: [(param) => {return param.trim().length > 0}]
+	}),
+	async (req, res) => {
+		
 	try {
 		const { id } = req.params;
 		const { cityName } = req.body;

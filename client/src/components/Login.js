@@ -4,7 +4,7 @@ import {
 	Container, Row, Col, Form, Button, Alert
 } from 'react-bootstrap';
 import Header from './Header';
-import ErrorBox from './ErrorBox';
+import NotificationBox from './NotificationBox';
 import { isLoggedIn, login, setToken } from '../api/auth';
 
 
@@ -93,7 +93,7 @@ const Login = () => {
 					</Col>
 				</Row>
 				<hr/>
-				<ErrorBox info={info} error={error} pending={pending} />
+				<NotificationBox info={info} error={error} pending={pending} />
 			</Container>
       	</Container>
 	);

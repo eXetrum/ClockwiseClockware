@@ -4,7 +4,7 @@ import {
 } from 'react-bootstrap';
 import Header from '../Header';
 import AdminClientsList from './AdminClientsList';
-import ErrorBox from '../ErrorBox';
+import NotificationBox from '../NotificationBox';
 import { deleteClientById, getClients } from '../../api/clients';
 
 const AdminDashboardClients = () => {
@@ -71,7 +71,7 @@ const AdminDashboardClients = () => {
                 <AdminClientsList clients={clients} onRemove={handleRemove} />
 
                 {clients && <hr />}
-                <ErrorBox info={null} error={error} pending={pending} />
+                <NotificationBox info={null} error={error} pending={pending} />
                 {!clients && <hr />} 
 			</Container>
 		</Container>

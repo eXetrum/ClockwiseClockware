@@ -16,7 +16,7 @@ import { getMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
 import Header from '../Header';
 import StarRating from '../StarRating';
-import ErrorBox from '../ErrorBox';
+import NotificationBox from '../NotificationBox';
 
 const AdminEditOrder = () => {
     const {id} = useParams();
@@ -574,7 +574,7 @@ const AdminEditOrder = () => {
             }
             
         {order && <hr />}
-        <ErrorBox info={info} error={error} pending={pending} />
+        <NotificationBox info={info} error={error} pending={pending} />
         {!order && <hr />}          
         </Container>
     </Container>

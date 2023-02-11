@@ -20,7 +20,7 @@ const createCity = async (cityName) => {
 
 const deleteCityById = async (id) => {
 	console.log('[db] deleteCityById: ', id);
-	let result = await execQuery('DELETE FROM cities WHERE id=($1);', [id]);
+	let result = await execQuery('DELETE FROM cities WHERE id=($1) RETURNING *;', [id]);
 	console.log('[db] deleteCityById result: ', result.rows);
 	return result.rows;
 };
