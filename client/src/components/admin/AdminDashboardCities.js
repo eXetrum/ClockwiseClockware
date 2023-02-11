@@ -12,7 +12,7 @@ import ErrorServiceOffline from '../ErrorServiceOffline';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
 import { useSnackbar } from 'notistack';
-import { alert, confirm } from 'react-bootstrap-confirmation';
+import { confirm } from 'react-bootstrap-confirmation';
 
 const AdminDashboardCities = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
