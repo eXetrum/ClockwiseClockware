@@ -55,7 +55,6 @@ const AdminDashboardCities = () => {
                 const { city } = response.data;
                 setCities([...cities, city]);
                 
-                //setInfo('Created');
                 enqueueSnackbar(`City "${city.name}" created`, { variant: 'success'});
                 setNewCityName('');
                 setShowAddForm(false);
@@ -76,7 +75,7 @@ const AdminDashboardCities = () => {
             if (response && (response.status == 200 || response.status == 204)) {
                 const removedCity = cities.find(item => item.id == id);
                 setCities(cities.filter(item => item.id != id));
-                enqueueSnackbar(`City ${removedCity.name} removed`, { variant: 'success'});
+                enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success'});
             }
         } catch(e) {
             setError(e);
@@ -150,59 +149,14 @@ const AdminDashboardCities = () => {
             <AdminCitiesList cities={cities} onRemove={handleRemove} />
             <hr />
             
-            <ModalForm size="sm" show={showConfirmForm} title={'Confirm deletion'} 
-                onHide={()=>{
-                    console.log('cancel XXX'); 
-                    setNewCityName(''); 
-                    setError(null);
-                    setShowConfirmForm(false);
-                }}
-                formRef={confirmFormRef}
-                formContent={
-                    <FormGroup>
-                        <Form.Label>City:</Form.Label>
-                        <FormControl type="text" name="city" disabled={pending}
-                            autoFocus
-                            value={newCityName}
-                            onChange={(event) => { 
-                                setNewCityName(event.target.value); 
-                                setError(null);
-                            }}
-                        />
-                    </FormGroup>
-                }
-                pending={pending}
-                // Call on submit and on validation
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    console.log('handleSubmit');
-                    //resetBeforeApiCall();
-                    //doCreateCity(newCityName);
-                }}
-                isFormValid={() => true }
-            />
 
-            <ModalForm size="sm" show={showAddForm} title={'Add New City'} 
+            <ModalForm size="sm" show={showAddForm} title={'Add New City'} okText={'Create'}
                 onHide={()=>{
-                    console.log('cancel XXX'); 
+                    console.log('cancel X'); 
                     setNewCityName(''); 
                     setError(null);
                     setShowAddForm(false);
                 }}
-                formRef={addCityFormRef}
-                formContent={
-                    <FormGroup>
-                        <Form.Label>City:</Form.Label>
-                        <FormControl type="text" name="city" disabled={pending}
-                            autoFocus
-                            value={newCityName}
-                            onChange={(event) => { 
-                                setNewCityName(event.target.value); 
-                                setError(null);
-                            }}
-                        />
-                    </FormGroup>
-                }
                 pending={pending}
                 // Call on submit and on validation
                 onSubmit={(event) => {
@@ -212,6 +166,19 @@ const AdminDashboardCities = () => {
                     doCreateCity(newCityName);
                 }}
                 isFormValid={() => newCityName}
+                formContent={
+                    <FormGroup>
+                        <Form.Label>City:</Form.Label>
+                        <FormControl type="text" name="city" disabled={pending}
+                            autoFocus
+                            value={newCityName}
+                            onChange={(event) => { 
+                                setNewCityName(event.target.value); 
+                                setError(null);
+                            }}
+                        />
+                    </FormGroup>
+                }                
             />
 		</Container>
 	</Container>

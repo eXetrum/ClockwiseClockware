@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from 'react';
-
+import { Link } from 'react-router-dom';
 import {
     Container, Row, Col, Form, FormGroup, FormControl, Button, Spinner
 } from 'react-bootstrap';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
 import AdminMastersList from './AdminMastersList';
-import NotificationBox from '../NotificationBox';
+import ModalForm from '../ModalForm';
+import ErrorServiceOffline from '../ErrorServiceOffline';
+
 import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
 
 import { useSnackbar } from 'notistack';
+import { confirm } from 'react-bootstrap-confirmation';
 
 const AdminDashboardMasters = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -26,13 +30,12 @@ const AdminDashboardMasters = () => {
         rating: 0,
         cities: [],
     });
-    const [pending, setPending] = useState(false);
-    const [info, setInfo] = useState(null);
+    const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false); 
 
     const resetBeforeApiCall = () => {
         setPending(true);
-        setInfo(null);
         setError(null);
     };
 
@@ -42,7 +45,6 @@ const AdminDashboardMasters = () => {
             if(response && response.data && response.data.masters) {
                 const { masters } = response.data;
                 setMasters(masters);
-                console.log(masters);
             }
         } catch(e) {
             setError(e);
@@ -68,13 +70,22 @@ const AdminDashboardMasters = () => {
     const doCreateMaster = async (master) => {
         try {
             const response = await createMaster(master);
-            if(response && response.data && response.data.masters) {
-                const { masters } = response.data;
-                setMasters(masters);
+            if(response && response.data && response.data.master) {
+                const { master } = response.data;
+                setMasters([...masters, master]);
+                enqueueSnackbar(`Master "${master.name}" created`, { variant: 'success'});
+                setNewMaster({
+                    name: '',
+                    email: '',
+                    rating: 0,
+                    cities: [],
+                });
+                multiselectRef.current.resetSelectedValues();
+                setShowAddForm(false);
             }
         } catch(e) {
-            console.log(e);
             setError(e);
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
             setPending(false);
         }
@@ -83,30 +94,28 @@ const AdminDashboardMasters = () => {
     const doDeleteMasterById = async (id) => {
         try {
             const response = await deleteMasterById(id);
-            if(response && response.data && response.data.masters) {
-                const { masters } = response.data;
-                setMasters(masters);
-                // TODO: backend, no point to return entire collection, just check 201/200
+            if (response && (response.status == 200 || response.status == 204)) {
+                const removedMaster = masters.find(item => item.id == id);
+                setMasters(masters.filter(item => item.id != id));
+                enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success'});
             }
         } catch(e) {
             setError(e);
+            if(e && e.response && e.response.status == 404) {
+                setMasters(masters.filter(item => item.id != id));
+            }
+            
+            console.log('doDeleteCityById error: ', e);
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
             setPending(false);
         }
     };
 
-    useEffect(() => {
-        resetBeforeApiCall();
-        
+    useEffect(() => {        
         const abortController = new AbortController();
-        console.log('"componentDidMount" fetchInitData()');
-        const fetchData = async (abortController) => {
-            await fetchMasters(abortController);
-            await fetchCities(abortController);
-        };
-
-        fetchData();
-		
+        console.log('"componentDidMount" fetchMasters()');
+        fetchMasters(abortController);
 
         return () => {
             console.log('[AdminDashboardMasters] ABORT FETCH1');
@@ -115,9 +124,9 @@ const AdminDashboardMasters = () => {
         };
     }, []);
 
-    /*useEffect(() => {
+    useEffect(() => {
         const abortController = new AbortController();
-        console.log('"componentDidMount" getCities()');
+        console.log('"componentDidMount" fetchCities()');
 		fetchCities(abortController);
 
         return () => {
@@ -125,39 +134,18 @@ const AdminDashboardMasters = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, []);*/
+    }, []);
     
 
-    const validateNewMasterForm = () => {
-        return !newMaster || !newMaster.name || !newMaster.email;// || !newMaster.cities.length;
-    };
-
-    const handleSubmit = (e) => {
-        e.preventDefault()
-        console.log('submit: ', newMaster, cities);
-        
-        setNewMaster({
-            name: '',
-            email: '',
-            rating: 0,
-            cities: []
-        });
-
-        multiselectRef.current.resetSelectedValues();
-        
-        resetBeforeApiCall();
-        doCreateMaster(newMaster);
-    };
-
-    const handleRemove = (id) => {
+    const handleRemove = async (masterId) => {
         console.log('handleRemove');
-        if (!window.confirm("Delete?")) {
-            return;
-        }
         
+        const master = masters.find(item => item.id == masterId);
 
+        const result = await confirm(`Do you want to delete "${master.email}" master ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger'});
+        if(!result) return;
         resetBeforeApiCall();
-        doDeleteMasterById(id);
+        doDeleteMasterById(masterId);
     }
 
     const onSelect = (selectedList, selectedItem)=> {
@@ -176,17 +164,48 @@ const AdminDashboardMasters = () => {
         <Container>              
             <center>
                 <h1>Admin: Masters Dashboard</h1>
+                <hr />
+                {cities && 
+                <>
+                <Row className="justify-content-md-center">
+                    <Col md="auto">
+                        <Link to="#">
+                            <AddCircleOutlineOutlinedIcon onClick={() => { setShowAddForm(true); }} />
+                        </Link>
+                    </Col>
+                </Row>
+                <hr />
+                </>}
             </center>
-            <hr/>
-            {(!cities && pending) && <center><Spinner animation="grow" /> </center>}
-            {cities &&
-            <>
-            <Row className="justify-content-md-center mb-3">
-                <Col xs>
-                    <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
-                        <FormGroup>
+
+            {((!cities || !masters) && pending) && <center><Spinner animation="grow" /> </center>}
+            <ErrorServiceOffline error={error} pending={pending} />
+            
+            <AdminMastersList masters={masters} onRemove={handleRemove} />
+            <hr />
+
+            <ModalForm size="sm" show={showAddForm} title={'Add New Master'} okText={'Create'}
+                onHide={()=>{
+                    console.log('cancel X'); 
+                    //setNewCityName(''); 
+                    setError(null);
+                    setShowAddForm(false);
+                }}
+                pending={pending}
+                // Call on submit and on validation
+                onSubmit={(event) => {
+                    event.preventDefault();
+                    console.log('handleSubmit');
+                    resetBeforeApiCall();
+                    doCreateMaster(newMaster);
+                }}
+                isFormValid={() => newMaster != null && newMaster.name && newMaster.email }
+                formContent={
+                    <>
+                    <FormGroup>
                             <Form.Label>Master name:</Form.Label>
                             <FormControl type="text" name="masterName" 
+                                autoFocus
                                 value={newMaster.name}
                                 onChange={(event) => {
                                     setNewMaster((prev) => ({...prev, name: event.target.value}));
@@ -202,6 +221,7 @@ const AdminDashboardMasters = () => {
                                     setNewMaster((prev) => ({...prev, email: event.target.value}));
                                 }}
                                 disabled={pending}
+                                required
                             />
                         </FormGroup>
                         <FormGroup className="ms-3">
@@ -231,23 +251,13 @@ const AdminDashboardMasters = () => {
                                 onRemove={onRemove} // Function will trigger on remove event
                                 displayValue="name" // Property name to display in the dropdown options
                                 ref={multiselectRef}
+                                disable={pending}
                             />
                         </FormGroup>
-
-                        <Button type="submit" className="ms-2" disabled={validateNewMasterForm()} >Create</Button>
-                    </Form>
-                </Col>
-            </Row>
-            <hr/>
-            </>
-            }
-
-
-            {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
-			<AdminMastersList masters={masters} onRemove={handleRemove} />
-			{masters && <hr />}
-            <NotificationBox info={info} error={error} pending={pending} />
-            {!masters && <hr />}                        
+                    </>
+                }
+                
+            />
         </Container>
     </Container>
     );

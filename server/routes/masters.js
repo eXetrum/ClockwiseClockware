@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
+const { BodyParamsValidator, RouteParamsValidator } = require('../middleware/ParamsValidator');
 const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
 
 router.get('/api/masters', RouteProtector, async (req, res) => {
@@ -7,21 +8,28 @@ router.get('/api/masters', RouteProtector, async (req, res) => {
 		console.log('[route] GET /masters');
 		let masters = await getMasters();
 		console.log('[route] GET /masters result: ', masters);
-		res.status(200).json({
-			masters
-		}).end();
+		res.status(200).json({ masters }).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 });
 
-router.post('/api/masters', RouteProtector, async (req, res) => {
+router.post('/api/masters', 
+	RouteProtector, 
+	BodyParamsValidator([
+		{
+			param_key: 'master',
+			required: true,
+			type: 'object',
+			validator_functions: [{ func: (param) => {return param != null && param != undefined }, errorText: 'Master object required' }]
+		},
+
+	]), 
+	async (req, res) => {
 	try {
 		const { master } = req.body;
 		console.log('[route] POST /masters ', master);
 		let masters = await createMaster(master);
-		console.log('[route] POST /masters result: ', masters);
-		res.status(200).json({
-			masters
-		}).end();
+		console.log('[route] POST /masters result: ', master);
+		res.status(200).json({master}).end();
 	} catch(e) { console.log(e); res.status(400).json(e).end(); }
 });
 
@@ -31,17 +39,15 @@ router.delete('/api/masters/:id', RouteProtector, async (req, res) => {
 		console.log('[route] DELETE /masters ', id);
 		let result = await deleteMasterById(id);
 		console.log('[route] DELETE /masters result: ', result);
-		const masters = await getMasters();
-		
-		console.log('[route] DELETE /masters result: ', masters);
-		res.status(200).json({
-			masters
-		}).end();
+		if(Array.isArray(result) && result.length == 0) {
+			return res.status(404).json({ detail: 'City not found' }).end();
+		}
+		res.status(204).end();
 	} catch(e) { 
 		console.log(e); 
 		console.log(e.constraint);
 		if(e.constraint == 'master_city_list_master_id_fkey') {
-			return res.status(409).json({ detail: `Deletion restricted. Master contains reference to city/cities`}).end();
+			return res.status(409).json({ detail: `Deletion restricted. Master contains reference(s) to city/cities`}).end();
 		} else if(e.constraint == 'orders_master_id_fkey') {
 			return res.status(409).json({ detail: `Deletion restricted. At least one order contains reference to this master`}).end();
 		}

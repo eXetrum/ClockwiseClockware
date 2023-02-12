@@ -30,6 +30,7 @@ module.exports = { RequireParams, RequireBodyArgs }
 
 const BodyParamsValidator = (Params) => async (req, res, next) => {
 	for (let param of Params) {
+		console.log('body param: ', param);
 		if (checkParamPresent(Object.keys(req.body), param)) {
 			let reqParam = req.body[param.param_key];
 			if (!checkParamType(reqParam, param)) {

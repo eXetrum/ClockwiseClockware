@@ -42,9 +42,10 @@ const getMasters = async () => {
 	GROUP BY M.id
 	ORDER BY id`);
 	result.rows = result.rows.map(item => {
-		if(item.cities == null) item.cities = [];
+		if(item.cities == null || item.cities == undefined) item.cities = [];
 		item.cities = item.cities.filter(city => city);
-		if(item.orders == null) item.orders = [];
+		if(item.orders == null || item.cities == undefined) item.orders = [];
+		item.orders = item.orders.filter(order => order);
 		return item;
 	});
 	console.log('[db] getMasters result: ', result.rows);
@@ -56,7 +57,7 @@ const createMaster = async (master) => {
 	let cities = [];
 	master.cities.forEach(item => cities.push(item.id));
 	
-	const res = await execQuery(
+	let result = await execQuery(
 		`WITH new_master AS(
 			INSERT INTO masters (name, email, rating)
 			VALUES ($1, $2, $3)
@@ -66,9 +67,11 @@ const createMaster = async (master) => {
 		VALUES(
 			(SELECT id FROM new_master),
 			unnest($4::integer[])
-		);
+		)
+		RETURNING *;
 	`, [master.name, master.email, master.rating, cities]);
-	let result = await execQuery(
+	console.log('[db] createMaster insertion result: ', result.rows);
+	result = await execQuery(
 	`SELECT id, name, email, rating, (
 			SELECT json_agg(C.*) 
 			FROM 
@@ -77,21 +80,18 @@ const createMaster = async (master) => {
 				ON C.id = MCL.city_id AND MCL.master_id = M.id
 			) AS cities 
 	FROM masters M;`);
-	console.log('[db] createMaster result: ', result.rows);
+	result.rows = result.rows.map(item => {
+		if(item.cities == null || item.cities == undefined) item.cities = [];
+		item.cities = item.cities.filter(city => city);
+		if(item.orders == null || item.cities == undefined) item.orders = [];
+		return item;
+	});
+	console.log('[db] createMaster selection result: ', result.rows);
 	return result.rows;
 };
 
 const deleteMasterById = async (id) => {
 	console.log('[db] deleteMasterById: ', id);
-	/*let result = await execQuery(
-		`DELETE
-		FROM
-			masters AS ma
-		USING
-			master_city_list AS mcl
-		WHERE
-			ma.id=mcl.master_id
-		AND ma.id=($1) RETURNING *;`, [id]);*/
 	let result = await execQuery(
 		`DELETE
 		FROM
@@ -134,12 +134,9 @@ const getMasterById = async (id) => {
 		FROM masters M WHERE M.id=$1;`, [id]);
 		
 	result.rows = result.rows.map(item => {
-		if(item.cities == null) item.cities = [];
+		if(item.cities == null || item.cities == undefined) item.cities = [];
 		item.cities = item.cities.filter(city => city);
-		return item;
-	});
-	result.rows = result.rows.map(item => {
-		if(item.orders == null) item.orders = [];
+		if(item.orders == null || item.cities == undefined) item.orders = [];
 		item.orders = item.orders.filter(order => order);
 		return item;
 	});

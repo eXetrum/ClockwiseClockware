@@ -12,11 +12,12 @@ import { getCities, createCity, deleteCityById } from '../api/cities';
 
 
 const ModalForm = ({
-    title,
-    formRef, formContent, 
+    formContent, 
     pending,
     // Call on submit and on validation
-    onSubmit, isFormValid,
+    onSubmit, isFormValid,    
+    title,
+    okText='Ok', cancelText='Cancel',
     ...props}) => {
     return (
         <Modal
@@ -24,7 +25,11 @@ const ModalForm = ({
             aria-labelledby="contained-modal-title-vcenter"
             centered
             animation={true}
+            backdrop="static"
+            keyboard={false}
         >
+            <>
+            <Form onSubmit={onSubmit} disabled={pending}>
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">{title}</Modal.Title>
             </Modal.Header>
@@ -32,9 +37,8 @@ const ModalForm = ({
                 <Container>
                     <Row className="align-items-center">
                         <Col>
-                            <Form ref={formRef} onSubmit={onSubmit} disabled={pending}>
+                            
                                 {formContent}
-                            </Form>
                         </Col>
                     </Row>
                 </Container>
@@ -43,24 +47,22 @@ const ModalForm = ({
                 <Container>
                     <Row className="align-items-center">
                         <Col xs>
-                            <Button variant="success" disabled={!isFormValid() || pending} onClick={() => {
+                            <Button variant="success" disabled={!isFormValid() || pending} type="submit" onClick={() => {
                                 console.log('success'); 
-                                formRef.current.dispatchEvent(
-                                    new Event("submit", { cancelable: true, bubbles: true })
-                                );
                             }}>
                             {pending && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                            Create
+                            {okText}
                             </Button>
                         </Col>
                         <Col md="auto">
                             <Button variant="secondary" onClick={props.onHide}>
-                            Cancel
+                            {cancelText}
                             </Button>
                         </Col>
                     </Row>
                 </Container>
             </Modal.Footer>
+            </Form></>
         </Modal>
     );
 };
