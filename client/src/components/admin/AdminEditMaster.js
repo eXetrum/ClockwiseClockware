@@ -7,86 +7,103 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import NotificationBox from '../NotificationBox';
+import ErrorServiceOffline from '../ErrorServiceOffline';
+import ErrorNotFound from '../ErrorNotFound';
+
 import { getCities } from '../../api/cities';
 import { getMasterById, updateMasterById } from '../../api/masters';
-
+import { useSnackbar } from 'notistack';
 
 const AdminEditMaster = () => {
     const {id} = useParams();
-    
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     // Initial
 	const [cities, setCities] = useState([]);
     const [originalMaster, setOriginalMaster] = useState(null);
     const [master, setMaster] = useState(null);
     const [pending, setPending] = useState(true);
-    const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
+
+    const fetchCities = async (abortController) => {
+        try {
+            const response = await getCities(abortController);
+            if(response && response.data && response.data.cities) {
+                const { cities } = response.data;
+                setCities(cities);
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const fetchMasterById = async (id, abortController) => {
+        try {
+            const response = await getMasterById(id, abortController);
+            if(response && response.data && response.data.master) {
+                let { master } = response.data;
+                setMaster(master);
+                setOriginalMaster(master);
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const doUpdateMasterById = async (id, master) => {
+        try {
+            const response = await updateMasterById(id, master);
+            if(response && (response.status == 200 || response.status == 204)) {
+                setMaster(master);
+                setOriginalMaster(master);
+                enqueueSnackbar(`Master updated`, { variant: 'success'});
+            }
+        } catch(e) {
+            setError(e);
+            if(e && e.response && e.response.status && e.response.status === 404) {
+                setMaster(null);
+                setOriginalMaster(null);
+            } else {
+                setMaster(originalMaster);
+            }
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+        } finally {
+            setPending(false);
+        }
+    };
 
 	// 'componentDidMount'
     useEffect(() => {
-        const fetchCities = async () => {
-            try {
-                const response = await getCities();
-                if(response && response.data && response.data.cities) {
-                    const { cities } = response.data;
-                    setCities(cities);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
+        const abortController = new AbortController();
         
         setPending(true);
-        fetchCities();
+        fetchCities(abortController);
+        
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, [id]);
 
     useEffect(() => {
-        const fetchMasterById = async (id) => {
-            try {
-                const response = await getMasterById(id);
-                if(response && response.data && response.data.master) {
-                    let { master } = response.data;
-                    setMaster(master);
-                    setOriginalMaster(master);
-                    console.log(master);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
-
+        const abortController = new AbortController();
         setPending(true);
-        fetchMasterById(id);
+        fetchMasterById(id, abortController);
+        
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, [id]);
 
 	// Callbacks
 	const handleSubmit = (e) => {
 		e.preventDefault()
         console.log('handleSubmit: ', master);
-
-        const doUpdateMasterById = async (id, master) => {
-            try {
-                const response = await updateMasterById(id, master);
-                if(response && response.data && response.data.master) {
-                    const { master } = response.data;
-                    setMaster(master);
-                    setInfo('success');
-                }
-            } catch(e) {
-                setError(e);
-                setMaster(originalMaster);
-            } finally {
-                setPending(false);
-            }
-        };
-
         setPending(true);
-        setInfo(null);
 		setError(null);
         doUpdateMasterById(id, master);		
 	};
@@ -114,6 +131,10 @@ const AdminEditMaster = () => {
 				</center>
                 <hr/>
                 {(!master && pending) && <center><Spinner animation="grow" /> </center>}
+
+                <ErrorServiceOffline error={error} pending={pending} />
+                <ErrorNotFound error={error} pending={pending} />
+
 				{master &&
                 <Row className="justify-content-md-center">
                 	<Col xs>
@@ -124,7 +145,6 @@ const AdminEditMaster = () => {
                                 value={master.name}
                                 onChange={(event) => {
 									setMaster((prevState) => ({...prevState, name: event.target.value }));
-                                    setInfo(null);
                                     setError(null);
                                 }}
                                 disabled={pending}
@@ -136,7 +156,6 @@ const AdminEditMaster = () => {
                                 value={master.email}
                                 onChange={(event) => {
 									setMaster((prevState) => ({...prevState, email: event.target.value }));
-                                    setInfo(null);
                                     setError(null);
                                 }}
                                 disabled={pending}
@@ -175,11 +194,7 @@ const AdminEditMaster = () => {
                 	</Col>
               	</Row>
                 }
-
-            {master && <hr />}
-            <NotificationBox info={info} error={error} pending={pending} />
-            {!master && <hr />}  
-            
+                <hr />
 			</Container>
 		</Container>
     );
