@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
-const { BodyParamsValidator, RouteParamsValidator } = require('../middleware/ParamsValidator');
 const { body, param, validationResult } = require('express-validator');
 const { getCities, createCity, deleteCityById, getCityById, updateCityById } = require('../models/cities');
 
@@ -105,14 +104,9 @@ const get = [
 const update = [
 	RouteProtector, 
 	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
-	BodyParamsValidator([
-		{
-			param_key: 'cityName',
-			required: true,
-			type: 'string',
-			validator_functions: [{ func: (param) => {return param.trim().length > 0}, errorText: 'Empty city name is not allowed' }]
-		}
-	]),
+	body('cityName').exists().withMessage('City name required')
+		.isString().withMessage('City name should be of type string')
+		.trim().escape().notEmpty().withMessage('Empty city name is not allowed'),
 	async (req, res) => {
 		
 		try {

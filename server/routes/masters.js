@@ -1,6 +1,5 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
-const { BodyParamsValidator, RouteParamsValidator } = require('../middleware/ParamsValidator');
 const { body, param, validationResult } = require('express-validator');
 const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
 
