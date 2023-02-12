@@ -1,37 +1,38 @@
-//import axiosInstance from "./axios.interceptor";
 import axios from "axios";
 
 // Watch types
-const getWatchTypes = () => { return axios.get(`/watch_types`); };
+const getWatchTypes = (abortController=null) => { 
+    return axios.get(`/watch_types`, { signal: abortController?.signal}); 
+};
 
-const getAvailableMasters = (cityId, watchTypeId, dateTime) => { 
+const getAvailableMasters = (cityId, watchTypeId, dateTime, abortController=null) => { 
     return axios.get(`/available_masters`, { 
         params: { 
             cityId: cityId, 
             watchTypeId: watchTypeId, 
             dateTime: dateTime,
-        } 
-    }); 
+        }
+    }, { signal: abortController?.signal}); 
 };
 
-const createOrder = (order) => {
-    return axios.post(`/orders`, { order });
+const createOrder = (order, abortController=null) => {
+    return axios.post(`/orders`, { order }, { signal: abortController?.signal});
 };
 
-const getOrders = () => {
-    return axios.get(`/orders`);
+const getOrders = (abortController=null) => {
+    return axios.get(`/orders`, { signal: abortController?.signal});
 };
 
-const deleteOrderById = (id) => {
-    return axios.delete(`/orders/${id}`);
+const deleteOrderById = (id, abortController=null) => {
+    return axios.delete(`/orders/${id}`, { signal: abortController?.signal});
 };
 
-const getOrderById = (id) => {
-    return axios.get(`/orders/${id}`);
+const getOrderById = (id, abortController=null) => {
+    return axios.get(`/orders/${id}`, { signal: abortController?.signal});
 };
 
-const updateOrderById = (id, order) => {
-    return axios.put(`/orders/${id}`, { order })
+const updateOrderById = (id, order, abortController=null) => {
+    return axios.put(`/orders/${id}`, { order }, { signal: abortController?.signal})
 };
 
 export {
