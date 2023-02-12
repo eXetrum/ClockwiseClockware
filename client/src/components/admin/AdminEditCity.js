@@ -4,10 +4,11 @@ import {
     Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner
 } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import { getCityById, updateCityById } from '../../api/cities';
 import Header from '../Header';
 import ErrorServiceOffline from '../ErrorServiceOffline';
 import ErrorNotFound from '../ErrorNotFound';
+
+import { getCityById, updateCityById } from '../../api/cities';
 import { useSnackbar } from 'notistack';
 
 const AdminEditCity = () => {
@@ -20,27 +21,55 @@ const AdminEditCity = () => {
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
 
+    const fetchCityById = async (id, abortController) => {
+        try {
+            const response = await getCityById(id, abortController)
+            if (response && response.data && response.data.city) {                    
+                const { city } = response.data;
+                setCity(city);
+                setOriginalCity(city);
+                setNewCityName(city.name);
+            }
+        } catch (e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const doUpdateCityById = async (id, newCityName) => {
+        try {
+            const response = await updateCityById(id, newCityName);
+            if (response && (response.status == 200 || response.status == 204)) {
+                setCity({...city, name: newCityName});
+                setOriginalCity({...city, name: newCityName});
+                enqueueSnackbar(`City updated`, { variant: 'success'});
+            }
+        } catch(e) {
+            setError(e);
+            if(e && e.response && e.response.status && e.response.status === 404) {
+                setCity(null);
+                setOriginalCity(null);
+            } else {
+                setCity(originalCity);
+                setNewCityName(originalCity.name);
+            }
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+        } finally {
+            setPending(false);
+        }
+    };
+
     // 'componentDidMount'
     useEffect(() => {
+        const abortController = new AbortController();
         console.log('"componentDidMount" getCityById');
-        const fetchCityById = async (id) => {
-            try {
-                const response = await getCityById(id)
-                if (response && response.data && response.data.city) {                    
-                    const { city } = response.data;
-                    setCity(city);
-                    setOriginalCity(city);
-                    setNewCityName(city.name);
-                }
-            } catch (e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        }
-        fetchCityById(id);
+        
+        setPending(true);
+        fetchCityById(id, abortController);
         
         return () => {
+            abortController.abort();
             closeSnackbar();
         };
     }, [id]);
@@ -50,29 +79,6 @@ const AdminEditCity = () => {
         e.preventDefault();
         setPending(true);
         setError(null);
-
-        const doUpdateCityById = async (id, newCityName) => {
-            try {
-                const response = await updateCityById(id, newCityName);
-                if (response && (response.status == 200 || response.status == 204)) {
-                    setCity({...city, name: newCityName});
-                    enqueueSnackbar(`City updated`, { variant: 'success'});
-                }
-            } catch(e) {
-                setError(e);
-                if(e && e.response && e.response.status && e.response.status === 404) {
-                    setCity(null);
-                    setOriginalCity(null);
-                } else {
-                    setCity(originalCity);
-                    setNewCityName(originalCity.name);
-                }
-                enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
-            } finally {
-                setPending(false);
-            }
-        }
-
         doUpdateCityById(id, newCityName);        
     }
 
