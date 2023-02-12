@@ -1,4 +1,3 @@
-const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
 const { getCities, createCity, deleteCityById, getCityById, updateCityById } = require('../models/cities');
