@@ -153,7 +153,7 @@ const update = [
 			console.log('[route] PUT /masters/:id result get: ', result);
 			
 			if(!master) {
-				res.status(404).json({message: 'Record Not Found'}).end();
+				res.status(404).json({detail: 'Master not found'}).end();
 			} else {
 				res.status(200).json({ master }).end();
 			}
