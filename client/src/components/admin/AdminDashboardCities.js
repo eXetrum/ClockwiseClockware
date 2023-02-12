@@ -21,12 +21,7 @@ const AdminDashboardCities = () => {
     const [newCityName, setNewCityName] = useState('');
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);    
-	const [showAddForm, setShowAddForm] = useState(false);    
-    const [showConfirmForm, setShowConfirmForm] = useState(false);
-    
-
-    const addCityFormRef = React.createRef();
-    const confirmFormRef = React.createRef();
+	const [showAddForm, setShowAddForm] = useState(false);
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -72,16 +67,16 @@ const AdminDashboardCities = () => {
     const doDeleteCityById = async (id) => {
         try {
             const response = await deleteCityById(id);
-            if (response && (response.status == 200 || response.status == 204)) {
-                const removedCity = cities.find(item => item.id == id);
-                setCities(cities.filter(item => item.id != id));
+            if (response && (response.status === 200 || response.status === 204)) {
+                const removedCity = cities.find(item => item.id === id);
+                setCities(cities.filter(item => item.id !== id));
                 enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success'});
             }
         } catch(e) {
             setError(e);
             // Looks like we trying to remove city which already removed or not exists at all
-            if(e && e.response && e.response.status == 404) {
-                setCities(cities.filter(item => item.id != id));
+            if(e && e.response && e.response.status === 404) {
+                setCities(cities.filter(item => item.id !== id));
             }
             
             console.log('doDeleteCityById error: ', e);
@@ -104,18 +99,10 @@ const AdminDashboardCities = () => {
         }
     }, []);
 
-	const handleSubmit = (e) => {
-		e.preventDefault();
-        console.log('handleSubmit');
-		resetBeforeApiCall();
-        doCreateCity(newCityName);
-	};
-
 	const handleRemove = async(cityId) => {
 		console.log('handleRemove');
-        //setShowConfirmForm(true);
         
-        const city = cities.find(item => item.id == cityId);
+        const city = cities.find(item => item.id === cityId);
 
         const result = await confirm(`Do you want to delete "${city.name}" city ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger'});
         if(!result) return;

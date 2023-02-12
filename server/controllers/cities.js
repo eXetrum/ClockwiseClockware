@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { BodyParamsValidator, RouteParamsValidator } = require('../middleware/ParamsValidator');
+const { body, param, validationResult } = require('express-validator');
 const { getCities, createCity, deleteCityById, getCityById, updateCityById } = require('../models/cities');
 
 // No route protector
@@ -15,16 +16,17 @@ const getAll = async (req, res) => {
 
 const create = [
 	RouteProtector, 
-	BodyParamsValidator([
-		{
-			param_key: 'cityName',
-			required: true,
-			type: 'string',
-			validator_functions: [{ func: (param) => {return param.trim().length > 0}, errorText: 'Empty city name is not allowed' }]
-		}
-	]), 
+	body('cityName').exists().withMessage('City name required')
+		.isString().withMessage('City name should be of type string')
+		.trim().escape().notEmpty().withMessage('Empty city name is not allowed'), 
 	async (req, res) => {		
 		try {
+			const errors = validationResult(req).array();
+			console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length) {
+				// Send first error back to the client
+				return res.status(400).json({ detail: errors[0].msg }).end();
+			} 
 			let { cityName } = req.body;
 			cityName = cityName.trim();
 			console.log('[route] POST /cities: ', cityName);
@@ -44,17 +46,16 @@ const create = [
 
 const remove = [
 	RouteProtector, 
-	RouteParamsValidator([
-		{
-			param_key: 'id',
-			required: true,
-			type: 'string',
-			validator_functions: [{func: (param) => {return param != null && !isNaN(param) && parseInt(param) >= 0 }, errorText: 'City not found'}]//'ID must be integer value' }]
-		}
-	]),
+	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
 	async (req, res) => {
 		
 		try {
+			const errors = validationResult(req).array();
+			console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length) {
+				// Send first error back to the client
+				return res.status(400).json({ detail: errors[0].msg }).end();
+			} 
 			const { id } = req.params;
 			console.log('[route] DELETE /cities/:id ', id);
 			let result = await deleteCityById(id);
@@ -78,17 +79,16 @@ const remove = [
 
 const get = [
 	RouteProtector, 
-	RouteParamsValidator([
-		{
-			param_key: 'id',
-			required: true,
-			type: 'string',
-			validator_functions: [{func: (param) => {return param != null && !isNaN(param) && parseInt(param) >= 0}, errorText: 'City not found'}]//'ID must be integer value'}]
-		}
-	]),
+	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
 	async (req, res) => {
 		
 		try {
+			const errors = validationResult(req).array();
+			console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length) {
+				// Send first error back to the client
+				return res.status(400).json({ detail: errors[0].msg }).end();
+			} 
 			const { id } = req.params;
 			console.log('[route] GET /cities/:id ', id);
 			let result = await getCityById(id);
@@ -104,14 +104,7 @@ const get = [
 
 const update = [
 	RouteProtector, 
-	RouteParamsValidator([
-		{
-			param_key: 'id',
-			required: true,
-			type: 'string',
-			validator_functions: [{func: (param) => {return param != null && !isNaN(param) && parseInt(param) >= 0}, errorText: 'City not found'}]//'ID must be integer value'}]
-		}
-	]),
+	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
 	BodyParamsValidator([
 		{
 			param_key: 'cityName',
@@ -123,6 +116,12 @@ const update = [
 	async (req, res) => {
 		
 		try {
+			const errors = validationResult(req).array();
+			console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length) {
+				// Send first error back to the client
+				return res.status(400).json({ detail: errors[0].msg }).end();
+			} 
 			const { id } = req.params;
 			let { cityName } = req.body;
 			cityName = cityName.trim();

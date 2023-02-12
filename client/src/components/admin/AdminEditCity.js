@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-    Form, FormGroup, FormControl, Container, Button, Spinner
+    Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner
 } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { getCityById, updateCityById } from '../../api/cities';
 import Header from '../Header';
-import NotificationBox from '../NotificationBox';
+import ErrorServiceOffline from '../ErrorServiceOffline';
+import ErrorNotFound from '../ErrorNotFound';
+import { useSnackbar } from 'notistack';
 
 const AdminEditCity = () => {
     const {id} = useParams();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     // Initial
     const [city, setCity] = useState(null);
+    const [originalCity, setOriginalCity] = useState(null);
 	const [newCityName, setNewCityName] = useState('');
     const [pending, setPending] = useState(true);
-    const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
 
     // 'componentDidMount'
@@ -26,6 +29,7 @@ const AdminEditCity = () => {
                 if (response && response.data && response.data.city) {                    
                     const { city } = response.data;
                     setCity(city);
+                    setOriginalCity(city);
                     setNewCityName(city.name);
                 }
             } catch (e) {
@@ -35,26 +39,35 @@ const AdminEditCity = () => {
             }
         }
         fetchCityById(id);
+        
+        return () => {
+            closeSnackbar();
+        };
     }, [id]);
 
 
     const handleSubmit = (e) => {
         e.preventDefault();
         setPending(true);
-        setInfo(null);
         setError(null);
 
         const doUpdateCityById = async (id, newCityName) => {
             try {
                 const response = await updateCityById(id, newCityName);
-                if(response && response.data && response.data.city) {
-                    const { city } = response.data;
-                    setCity(city);
-                    setNewCityName(city.name);
-                    setInfo('success');
+                if (response && (response.status == 200 || response.status == 204)) {
+                    setCity({...city, name: newCityName});
+                    enqueueSnackbar(`City updated`, { variant: 'success'});
                 }
             } catch(e) {
                 setError(e);
+                if(e && e.response && e.response.status && e.response.status === 404) {
+                    setCity(null);
+                    setOriginalCity(null);
+                } else {
+                    setCity(originalCity);
+                    setNewCityName(originalCity.name);
+                }
+                enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
             } finally {
                 setPending(false);
             }
@@ -73,7 +86,13 @@ const AdminEditCity = () => {
             </center>
             <hr/>
             {(!city && pending) && <center><Spinner animation="grow" /> </center>}
+            
+            <ErrorServiceOffline error={error} pending={pending} />
+            <ErrorNotFound error={error} pending={pending} />
+
             {city &&
+            <Row className="justify-content-md-center">
+            <Col md="auto">
             <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
                 <FormGroup>
                     <Form.Label>City:</Form.Label>{' '}
@@ -82,17 +101,16 @@ const AdminEditCity = () => {
                         value={newCityName}
                         onChange={(event) => {
                             setNewCityName(event.target.value);
-                            setInfo('');
-                            setError('');
+                            setError(null);
                         }}
                     />
                 </FormGroup>
                 <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
             </Form>
+            </Col>
+            </Row>
             }
-        {city && <hr />}
-        <NotificationBox info={info} error={error} pending={pending} />
-        {!city && <hr />}  
+            <hr />
         </Container>
     </Container>
     );

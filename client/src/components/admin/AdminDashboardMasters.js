@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import {
     Container, Row, Col, Form, FormGroup, FormControl, Button, Spinner
@@ -19,8 +19,6 @@ import { confirm } from 'react-bootstrap-confirmation';
 
 const AdminDashboardMasters = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    const multiselectRef = React.createRef();
 
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
@@ -73,21 +71,14 @@ const AdminDashboardMasters = () => {
             if(response && response.data && response.data.master) {
                 const { master } = response.data;
                 setMasters([...masters, master]);
-                console.log('tick1');
                 enqueueSnackbar(`Master "${master.name}" created`, { variant: 'success'});
-                console.log('tick2');
                 setNewMaster({
                     name: '',
                     email: '',
                     rating: 0,
                     cities: [],
                 });
-                console.log('tick3');
-                console.log(multiselectRef);
-                multiselectRef.current.resetSelectedValues();
-                console.log('tick4');
                 setShowAddForm(false);
-                console.log('tick5');
             }
         } catch(e) {
             console.log('ERROR: ', e);
@@ -141,8 +132,7 @@ const AdminDashboardMasters = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, []);
-    
+    }, []);    
 
     const handleRemove = async (masterId) => {
         console.log('handleRemove');
@@ -154,16 +144,6 @@ const AdminDashboardMasters = () => {
         resetBeforeApiCall();
         doDeleteMasterById(masterId);
     }
-
-    const onSelect = (selectedList, selectedItem)=> {
-        console.log('OnSelect: ', selectedList, selectedItem);
-        setNewMaster((prevState) => ({...prevState, cities: selectedList }));
-    };
-
-    const onRemove = (selectedList, removedItem) => {
-        console.log('OnRemove: ', selectedList, removedItem);
-        setNewMaster((prevState) => ({...prevState, cities: selectedList }));
-    };
 
     return (
     <Container>
@@ -194,7 +174,12 @@ const AdminDashboardMasters = () => {
             <ModalForm size="sm" show={showAddForm} title={'Add New Master'} okText={'Create'}
                 onHide={()=>{
                     console.log('cancel X'); 
-                    //setNewCityName(''); 
+                    setNewMaster({
+                        name: '',
+                        email: '',
+                        rating: 0,
+                        cities: [],
+                    });
                     setError(null);
                     setShowAddForm(false);
                 }}
@@ -247,23 +232,26 @@ const AdminDashboardMasters = () => {
                                 readonly={pending}
                             />
                         </FormGroup>
-
                         
                         <FormGroup className="ms-3">
                             <Form.Label>Master work cities:</Form.Label>
                             <Multiselect
                                 options={cities} // Options to display in the dropdown
                                 selectedValues={newMaster.cities} // Preselected value to persist in dropdown
-                                onSelect={onSelect} // Function will trigger on select event
-                                onRemove={onRemove} // Function will trigger on remove event
+                                onSelect={(selectedList, selectedItem) => {
+                                    console.log('OnSelect: ', selectedList, selectedItem);
+                                    setNewMaster((prevState) => ({...prevState, cities: selectedList }));
+                                }} // Function will trigger on select event
+                                onRemove={(selectedList, removedItem) => {
+                                    console.log('OnRemove: ', selectedList, removedItem);
+                                    setNewMaster((prevState) => ({...prevState, cities: selectedList }));
+                                }} // Function will trigger on remove event
                                 displayValue="name" // Property name to display in the dropdown options
-                                ref={multiselectRef}
                                 disable={pending}
                             />
                         </FormGroup>
                     </>
-                }
-                
+                }                
             />
         </Container>
     </Container>

@@ -54,23 +54,37 @@ const getMasters = async () => {
 
 const createMaster = async (master) => {
 	console.log('[db] createMaster: ', master);
-	let cities = [];
 	if(master.cities == null || master.cities == undefined) master.cities = [];
-	master.cities.forEach(item => cities.push(item.id));
+	master.cities = master.cities.map(item => item.id);
 	
-	let result = await execQuery(
-		`WITH new_master AS(
-			INSERT INTO masters (name, email, rating)
+	let result = await execQuery(`SELECT * from cities`);
+	let dbCities = result.rows.map(item => item.id);
+	console.log('[db] createMaster db cities: ', dbCities);
+	
+	// Remove non existing city ids
+	console.log('[db] createMaster master cities before filter: ', master.cities);;
+	master.cities = master.cities.filter(item => dbCities.indexOf(item) != -1);
+	if(master.cities.length == 0) {
+		result = await execQuery(
+		`INSERT INTO masters (name, email, rating)
 			VALUES ($1, $2, $3)
-			RETURNING id
-		)
-		INSERT INTO master_city_list (master_id, city_id)
-		VALUES(
-			(SELECT id FROM new_master),
-			unnest($4::integer[])
-		)
-		RETURNING *;
-	`, [master.name, master.email, master.rating, cities]);
+		RETURNING id;
+		`, [master.name, master.email, master.rating]);
+	} else {	
+		result = await execQuery(
+			`WITH new_master AS(
+				INSERT INTO masters (name, email, rating)
+				VALUES ($1, $2, $3)
+				RETURNING id
+			)
+			INSERT INTO master_city_list (master_id, city_id)
+			VALUES(
+				(SELECT id FROM new_master),
+				unnest($4::integer[])
+			)
+			RETURNING master_id as "id";
+		`, [master.name, master.email, master.rating, master.cities]);
+	}
 	console.log('[db] createMaster insertion result: ', result.rows);
 	result = await execQuery(
 	`SELECT id, name, email, rating, (
@@ -80,7 +94,8 @@ const createMaster = async (master) => {
 				INNER JOIN master_city_list MCL 
 				ON C.id = MCL.city_id AND MCL.master_id = M.id
 			) AS cities 
-	FROM masters M;`);
+	FROM masters M
+	WHERE M.id=($1);`, [result.rows[0].id]);
 	result.rows = result.rows.map(item => {
 		if(item.cities == null || item.cities == undefined) item.cities = [];
 		item.cities = item.cities.filter(city => city);
@@ -158,12 +173,19 @@ const updateMasterById = async (id, master) => {
 		FROM masters M WHERE id=$1;`, [id])
 	
 	let dbMaster = result.rows[0];
-	dbMasterCities = dbMaster.cities == null ? [] : dbMaster.cities.map(item => item.id);
+	dbMasterCities = dbMaster.cities == null ? [] : dbMaster.cities.filter(city => city).map(item => item.id);
 	remoteMasterCities = master.cities.map(item => item.id);
 	
+	result = await execQuery(`SELECT * from cities`);
+	let dbCities = result.rows.map(item => item.id);
+	
+	// Remove non existing city ids
+	remoteMasterCities = remoteMasterCities.filter(item => dbCities.indexOf(item) != -1);
+	
+	console.log('[db] updateMasterById, dbCities: ', dbCities);
 	console.log('[db] updateMasterById, dbMasterCities: ', dbMasterCities);
 	console.log('[db] updateMasterById, remoteMasterCities: ', remoteMasterCities);
-	
+	// Intersect
 	let toRemove = dbMasterCities.filter(item => remoteMasterCities.indexOf(item) == -1);
 	let toInsert = remoteMasterCities.filter(item => dbMasterCities.indexOf(item) == -1);
 
@@ -181,9 +203,21 @@ const updateMasterById = async (id, master) => {
 			(SELECT id FROM update_master),
 			unnest($5::integer[])
 		)`, [master.name, master.email, master.rating, id, toInsert]
-	);	
+	);
 	console.log('[db] updateMasterById result: ', result.rows);
-	return result.rows;
+	
+	
+	result = await getMasterById(id);
+		
+	result = result.map(item => {
+		if(item.cities == null || item.cities == undefined) item.cities = [];
+		item.cities = item.cities.filter(city => city);
+		if(item.orders == null || item.cities == undefined) item.orders = [];
+		item.orders = item.orders.filter(order => order);
+		return item;
+	});
+	
+	return result;
 };
 
 module.exports = { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById };
