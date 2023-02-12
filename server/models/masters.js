@@ -173,7 +173,10 @@ const updateMasterById = async (id, master) => {
 		FROM masters M WHERE id=$1;`, [id])
 	
 	let dbMaster = result.rows[0];
-	dbMasterCities = dbMaster.cities == null ? [] : dbMaster.cities.filter(city => city).map(item => item.id);
+	if(dbMaster == null || dbMaster == undefined) {
+		return [];
+	}
+	dbMasterCities = (dbMaster.cities == null || dbMaster.cities == undefined) ? [] : dbMaster.cities.filter(city => city).map(item => item.id);
 	remoteMasterCities = master.cities.map(item => item.id);
 	
 	result = await execQuery(`SELECT * from cities`);
