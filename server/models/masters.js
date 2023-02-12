@@ -55,6 +55,7 @@ const getMasters = async () => {
 const createMaster = async (master) => {
 	console.log('[db] createMaster: ', master);
 	let cities = [];
+	if(master.cities == null || master.cities == undefined) master.cities = [];
 	master.cities.forEach(item => cities.push(item.id));
 	
 	let result = await execQuery(

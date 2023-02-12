@@ -80,6 +80,7 @@ const RouteParamsValidator = (Params) => async (req, res, next) => {
 };
 
 const checkParamPresent = (reqParams, paramObj) => {
+	console.log('[checkParamPresent]: reqParams=', reqParams, ', paramObj=', paramObj);
     return (reqParams.includes(paramObj.param_key));
 };
 

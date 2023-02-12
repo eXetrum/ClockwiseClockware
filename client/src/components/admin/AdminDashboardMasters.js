@@ -73,17 +73,24 @@ const AdminDashboardMasters = () => {
             if(response && response.data && response.data.master) {
                 const { master } = response.data;
                 setMasters([...masters, master]);
+                console.log('tick1');
                 enqueueSnackbar(`Master "${master.name}" created`, { variant: 'success'});
+                console.log('tick2');
                 setNewMaster({
                     name: '',
                     email: '',
                     rating: 0,
                     cities: [],
                 });
+                console.log('tick3');
+                console.log(multiselectRef);
                 multiselectRef.current.resetSelectedValues();
+                console.log('tick4');
                 setShowAddForm(false);
+                console.log('tick5');
             }
         } catch(e) {
+            console.log('ERROR: ', e);
             setError(e);
             enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {

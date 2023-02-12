@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { BodyParamsValidator, RouteParamsValidator } = require('../middleware/ParamsValidator');
+const { body, validationResult } = require('express-validator');
 const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
 
 router.get('/api/masters', RouteProtector, async (req, res) => {
@@ -14,24 +15,46 @@ router.get('/api/masters', RouteProtector, async (req, res) => {
 
 router.post('/api/masters', 
 	RouteProtector, 
-	BodyParamsValidator([
-		{
-			param_key: 'master',
-			required: true,
-			type: 'object',
-			validator_functions: [{ func: (param) => {return param != null && param != undefined }, errorText: 'Master object required' }]
-		},
-
-	]), 
+	body('master').notEmpty().withMessage('Master object required'),
+	body('master.name').exists().withMessage('Master name required')
+		.isString().withMessage('Master name should be of type string')
+		.trim().escape().notEmpty().withMessage('Empty master name is not allowed'),
+	body('master.email').exists().withMessage('Master email required')
+		.isString().withMessage('Master email should be of type string')
+		.trim().escape().notEmpty().withMessage('Empty master email is not allowed')
+		.isEmail().withMessage('Master email is not correct'),
+	body('master.rating').exists().withMessage('Master rating required')
+		.isNumeric().withMessage('Master rating should be of numeric value')
+		.isInt({ min: 0, max: 5 }).withMessage('Master rating must be in range [0; 5]'),
+	body('master.cities').exists().withMessage('Master cities required')
+		.isArray().withMessage('Master cities should be an array'),
+	body('master.cities.*.id').exists().withMessage('Each object of cities array should contains id field')
+		.isNumeric().withMessage('Master cities array should contains "city" entries with id field of numeric type')
+		.isInt({min: 0 }).withMessage('Master cities array should contains "city" entries with positive numeric id field'),
+		
 	async (req, res) => {
-	try {
-		const { master } = req.body;
-		console.log('[route] POST /masters ', master);
-		let masters = await createMaster(master);
-		console.log('[route] POST /masters result: ', master);
-		res.status(200).json({master}).end();
-	} catch(e) { console.log(e); res.status(400).json(e).end(); }
-});
+		try {
+			const errors = validationResult(req).array();
+			console.log('ERRORS: ', errors);
+			if (errors && errors.length) {
+				// Send first error back to the client
+				return res.status(400).json({ detail: errors[0].msg }).end();
+			} 
+			
+			const { master } = req.body;
+			console.log('[route] POST /masters ', master);
+			let masters = await createMaster(master);
+			console.log('[route] POST /masters result: ', master);
+			res.status(201).json({master}).end();
+		} catch(e) { 
+			console.log(e); 
+			if(e.constraint == 'masters_email_key') {
+				return res.status(409).json({ detail: `Master with specified email already exists`}).end();
+			}
+			res.status(400).json(e).end(); 
+		}
+	}
+);
 
 router.delete('/api/masters/:id', RouteProtector, async (req, res) => {
 	try {
