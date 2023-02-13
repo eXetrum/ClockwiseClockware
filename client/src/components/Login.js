@@ -4,11 +4,15 @@ import {
 	Container, Row, Col, Form, Button, Alert
 } from 'react-bootstrap';
 import Header from './Header';
-import NotificationBox from './NotificationBox';
+import ErrorServiceOffline from './ErrorServiceOffline';
+import ErrorNotFound from './ErrorNotFound';
 import { isLoggedIn, login, setToken } from '../api/auth';
 
+import { useSnackbar } from 'notistack';
 
 const Login = () => {
+	const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
 	const navigate = useNavigate();
 	const location = useLocation();
 	const fromPage = location.state?.from?.pathname || '/';
@@ -16,7 +20,6 @@ const Login = () => {
 	const [user, setUser] = useState({email: '', password: ''});
 	const [pending, setPending] = useState(false);
 	const [redirect, setRedirect] = useState(isLoggedIn());
-	const [info, setInfo] = useState(null);
 	const [error, setError] = useState(null);
 
 	const doLogin = async (email, password) => {
@@ -27,10 +30,10 @@ const Login = () => {
 				setRedirect(true);
 			}
 		} catch(e) {
-			if(e && e.response && e.response.status === 401) {
-				setError('Incorrect login/password');
-			} else {
-				setError(e);
+			console.log("LOGIN ERROR: ", e);
+			setError(e);
+			if(e && e.response && e.response.data && e.response.data.detail) {
+				enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
 			}
 		} finally {
 			setPending(false);
@@ -42,8 +45,7 @@ const Login = () => {
 		const inputValue = event.target.value
 		
 		setUser((prev) => ({...prev, [inputField]: inputValue }));
-		
-		setInfo(null);
+
 		setError(null);
 	};
 
@@ -58,16 +60,15 @@ const Login = () => {
 				<hr/>
 				<Row className="justify-content-md-center">
 					<Col xs lg="4" md="auto">
-					<h1>Login page</h1>
-					<Form onSubmit={(event) => {
-						event.preventDefault();
-				
-						setPending(true);
-						setInfo(null);
-						setError(null);
-						
-						doLogin(user.email, user.password);
-					}}>
+						<h1>Login page</h1>
+						<Form onSubmit={(event) => {
+							event.preventDefault();
+					
+							setPending(true);
+							setError(null);
+							
+							doLogin(user.email, user.password);
+						}}>
 						<Form.Group className="mb-3">
 						<Form.Label>Email address</Form.Label>
 						<Form.Control type="email" placeholder="Enter email" 
@@ -92,8 +93,10 @@ const Login = () => {
 					</Form>
 					</Col>
 				</Row>
+				
 				<hr/>
-				<NotificationBox info={info} error={error} pending={pending} />
+				<ErrorServiceOffline error={error} pending={pending} />
+            	<ErrorNotFound error={error} pending={pending} />
 			</Container>
       	</Container>
 	);

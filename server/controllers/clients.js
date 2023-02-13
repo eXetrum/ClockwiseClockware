@@ -73,7 +73,7 @@ const update = [
 	body('client.name').exists().withMessage('Client name required')
 		.isString().withMessage('Client name should be of type string')
 		.trim().escape().notEmpty().withMessage('Empty client name is not allowed')
-		.isLength({ min: 3 }).withMessage('Client name must be at least 3 character long'),
+		.isLength({ min: 3 }).withMessage('Client name must be at least 3 characters long'),
 	body('client.email').exists().withMessage('Client email required')
 		.isString().withMessage('Client email should be of type string')
 		.trim().escape().notEmpty().withMessage('Empty client email is not allowed')

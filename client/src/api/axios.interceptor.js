@@ -33,6 +33,7 @@ const AxiosInterceptor = ({ children }) => {
     const resErrInterceptor = error => {
         console.log('[Front<=Back] AXIOS RESPONSE [ERROR] INTERCEPTOR: ', error);
         if(error?.response?.status === 401 && location.pathname !== '/login') {
+            console.log('Axios do redirect to login');
             return navigate('/login', {state: {from: location}} );
         }
         return Promise.reject(error);
