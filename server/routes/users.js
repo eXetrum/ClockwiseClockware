@@ -4,7 +4,7 @@ const { getUser } = require('../models/users');
 
 router.post('/api/register', (req, res) => {
 	// TODO: if any
-	req.end();
+	req.status(501).json({detail: 'Not Implemented'}).end();
 });
 
 router.post('/api/login', async (req, res) => {

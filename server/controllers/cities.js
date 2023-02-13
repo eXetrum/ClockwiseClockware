@@ -124,7 +124,8 @@ const update = [
 			if(Array.isArray(result) && result.length == 0) {
 				return res.status(404).json({ detail: 'City not found' }).end();
 			}
-			res.status(200).end();
+			const city = result[0];
+			res.status(200).json({city}).end();
 		} catch(e) { 
 			console.log(e); 
 			console.log('constraint: ', e.constraint);

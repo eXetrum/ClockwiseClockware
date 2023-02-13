@@ -1,73 +1,9 @@
 const router = require('express').Router();
-const { RouteProtector } = require('../middleware/RouteProtector');
-const { getClients, deleteClientById, getClientById, updateClientById } = require('../models/clients');
+const ClientController = require('../controllers/clients');
 
-router.get('/api/clients', RouteProtector, async (req, res) => {
-	try {
-		console.log('[route] GET /clients');
-		let clients = await getClients();
-		console.log('[route] GET /clients result: ', clients);
-		res.status(200).json({
-			clients
-		}).end();
-	} catch(e) { console.log(e); res.status(400).end(); }
-});
-
-router.delete('/api/clients/:id', RouteProtector, async (req, res) => {
-	try {
-		let { id } = req.params;
-		console.log('[route] DELETE /clients/:id ', id);
-		let result = await deleteClientById(id);
-		console.log('[route] DELETE /clients/:id del result: ', result);
-		const clients = await getClients();
-		console.log('[route] DELETE /clients/:id result clients array: ', clients);
-		res.status(200).json({
-			clients
-		}).end();
-	} catch(e) { 
-		console.log(e); 
-		console.log(e.constraint);
-		if(e.constraint == 'orders_client_id_fkey') {
-			return res.status(409).json({ detail: `Deletion restricted. At least one order contains reference to this client`}).end();
-		}
-		res.status(400).end();
-	}
-});
-
-router.get('/api/clients/:id', RouteProtector, async (req, res) => {
-	try {
-		const { id } = req.params;		
-		console.log('[route] GET /clients/:id ', id);
-		let result = await getClientById(id);
-		console.log('[route] GET /clients/:id result: ', result);
-		let client = result[0];
-		console.log('[route] GET /clients/:id result: ', client);
-		if(!client) {
-			res.status(404).json({'message': 'Record Not Found'}).end();
-		} else {
-			res.status(200).json({
-				client
-			}).end();
-		}
-	} catch(e) { console.log(e); res.status(400).end(); }
-});
-
-router.put('/api/clients/:id', RouteProtector, async (req, res) => {
-	try {
-		const { id } = req.params;
-		let { client } = req.body;
-		console.log('[route] PUT /clients/:id ', id, client);
-		let result = await updateClientById(id, client);
-		console.log('[route] PUT /clients/:id result: ', result);
-		result = await getClientById(id);
-		client = result[0];
-		console.log('[route] PUT /clients/:id result: ', client);
-		if(!client) {
-			res.status(404).json({message: 'Record Not Found'}).end();
-		} else {
-			res.status(200).json({client}).end();
-		}
-	} catch(e) { console.log(e); res.status(400).json(e).end(); }
-});
+router.get('/api/clients', ClientController.getAll);
+router.delete('/api/clients/:id', ClientController.remove);	
+router.get('/api/clients/:id', ClientController.get);	
+router.put('/api/clients/:id', ClientController.update);
 
 module.exports = router;

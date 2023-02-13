@@ -21,6 +21,11 @@ const AdminEditCity = () => {
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
 
+    const resetBeforeApiCall = () => {
+        setPending(true);
+        setError(null);
+    };
+
     const fetchCityById = async (id, abortController) => {
         try {
             const response = await getCityById(id, abortController)
@@ -65,7 +70,7 @@ const AdminEditCity = () => {
         const abortController = new AbortController();
         console.log('"componentDidMount" getCityById');
         
-        setPending(true);
+        resetBeforeApiCall();
         fetchCityById(id, abortController);
         
         return () => {
@@ -77,8 +82,7 @@ const AdminEditCity = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        setPending(true);
-        setError(null);
+        resetBeforeApiCall();
         doUpdateCityById(id, newCityName);        
     }
 
@@ -98,22 +102,22 @@ const AdminEditCity = () => {
 
             {city &&
             <Row className="justify-content-md-center">
-            <Col md="auto">
-            <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
-                <FormGroup>
-                    <Form.Label>City:</Form.Label>{' '}
-                    <FormControl type="text" name="city" 
-                        disabled={pending}
-                        value={newCityName}
-                        onChange={(event) => {
-                            setNewCityName(event.target.value);
-                            setError(null);
-                        }}
-                    />
-                </FormGroup>
-                <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
-            </Form>
-            </Col>
+                <Col md="auto">
+                    <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
+                        <FormGroup>
+                            <Form.Label>City:</Form.Label>{' '}
+                            <FormControl type="text" name="city" 
+                                disabled={pending}
+                                value={newCityName}
+                                onChange={(event) => {
+                                    setNewCityName(event.target.value);
+                                    setError(null);
+                                }}
+                            />
+                        </FormGroup>
+                        <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
+                    </Form>
+                </Col>
             </Row>
             }
             <hr />

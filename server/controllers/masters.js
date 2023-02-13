@@ -149,9 +149,7 @@ const update = [
 			console.log('[route] PUT /masters/:id ', id, master);
 			let result = await updateMasterById(id, master);
 			console.log('[route] PUT /masters/:id result update: ', result);
-			master = result[0];
-			console.log('[route] PUT /masters/:id result get: ', result);
-			
+			master = result[0];			
 			if(!master) {
 				res.status(404).json({detail: 'Master not found'}).end();
 			} else {

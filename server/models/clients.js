@@ -9,7 +9,7 @@ const getClients = async () => {
 
 const deleteClientById = async (id) => {
 	console.log('[db] deleteClientById ', id);
-	let result = await execQuery('DELETE FROM clients WHERE id=($1);', [id]);
+	let result = await execQuery('DELETE FROM clients WHERE id=($1) RETURNING *;', [id]);
 	console.log('[db] deleteClientById result: ', result.rows);
 	return result.rows;
 };
@@ -23,7 +23,7 @@ const getClientById = async (id) => {
 
 const updateClientById = async (id, client) => {
 	console.log('[db] updateClientById ', id, client);
-	let result = await execQuery('UPDATE clients SET name=$1, email=$2 WHERE id=($3);', [client.name, client.email, id]);
+	let result = await execQuery('UPDATE clients SET name=$1, email=$2 WHERE id=($3) RETURNING *;', [client.name, client.email, id]);
 	console.log('[db] updateClientById result: ', result.rows);
 	return result.rows;
 };

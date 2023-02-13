@@ -90,6 +90,7 @@ const AdminDashboardCities = () => {
     useEffect(() => {
         const abortController = new AbortController();
         console.log('"componentDidMount" getCityById');
+        resetBeforeApiCall();
 		fetchCities(abortController);
 
         return () => {
@@ -99,7 +100,7 @@ const AdminDashboardCities = () => {
         }
     }, []);
 
-	const handleRemove = async(cityId) => {
+	const handleRemove = async (cityId) => {
 		console.log('handleRemove');
         
         const city = cities.find(item => item.id === cityId);
