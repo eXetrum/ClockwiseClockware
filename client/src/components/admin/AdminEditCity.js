@@ -45,7 +45,7 @@ const AdminEditCity = () => {
     const doUpdateCityById = async (id, newCityName) => {
         try {
             const response = await updateCityById(id, newCityName);
-            if (response && (response.status == 200 || response.status == 204)) {
+            if (response && (response.status === 200 || response.status === 204)) {
                 setCity({...city, name: newCityName});
                 setOriginalCity({...city, name: newCityName});
                 enqueueSnackbar(`City updated`, { variant: 'success'});

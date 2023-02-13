@@ -11,11 +11,14 @@ const Home = () => {
 				<Row className="justify-content-md-center">
 					<Col md="auto">
 						<center>
-							<h1>Home page</h1>
+							<h1>Welcome to Clockwise Clockware</h1>
 						</center>
-						<Clock />
+						
 					</Col>
 				</Row>
+				<Row className="justify-content-md-center">
+					<Col md="auto"><Clock /></Col>
+				</Row>				
 			</Container>
 		</Container>
 	);

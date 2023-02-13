@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
@@ -8,24 +8,17 @@ import {
 } from 'react-bootstrap';
 
 const AdminClientsList = ({clients, onRemove=null}) => {
-    
-    // Initial
-	const [_clients, setClients] = useState(null);
-
-	// 'componentDidMount'
-    useEffect(() => { setClients(clients); }, [clients]);
-
 	// 'render'
     return (
         <>            
-            {_clients && _clients.length === 0 && 
+            {clients && clients.length === 0 && 
             <Row className="justify-content-md-center">
                 <Col md="auto">
                     <Alert>No records yet</Alert>
                 </Col>
             </Row>
             }
-            {_clients && _clients.length > 0 &&
+            {clients && clients.length > 0 &&
             <Table striped bordered responsive size="sm" className="mt-3">
                 <thead>
                     <tr>

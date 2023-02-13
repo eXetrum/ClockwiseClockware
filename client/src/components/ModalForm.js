@@ -1,15 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import {
-    Modal, Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner
+    Modal, Form, Container, Row, Col, Button, Spinner
 } from 'react-bootstrap';
-import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import Header from './Header';
-import AdminCitiesList from './admin/AdminCitiesList';
-//import ModalBox from './ModalBox';
-import NotificationBox from './NotificationBox';
-import { getCities, createCity, deleteCityById } from '../api/cities';
-
 
 const ModalForm = ({
     formContent, 
@@ -50,7 +42,7 @@ const ModalForm = ({
                             <Button variant="success" disabled={!isFormValid() || pending} type="submit" onClick={() => {
                                 console.log('success'); 
                             }}>
-                            {pending && <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                            {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                             {okText}
                             </Button>
                         </Col>

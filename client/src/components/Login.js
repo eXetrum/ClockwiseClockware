@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { 
-	Container, Row, Col, Form, Button, Alert
+	Container, Row, Col, Form, Button, Spinner
 } from 'react-bootstrap';
 import Header from './Header';
 import ErrorServiceOffline from './ErrorServiceOffline';
@@ -88,6 +88,7 @@ const Login = () => {
 						/>
 						</Form.Group>
 						<Button variant="primary" type="submit" disabled={!user.email || !user.password || pending}>
+						{pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
 						Login
 						</Button>                
 					</Form>

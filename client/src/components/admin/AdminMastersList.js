@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from 'react';
+import React from 'react';
 import { Link }  from 'react-router-dom';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
@@ -9,21 +9,16 @@ import {
 import StarRating from '../StarRating';
 
 const AdminMastersList = ({masters, onRemove=null}) => {
-    
-    // Initial
-	const [_masters, setMasters] = useState(null);
-    useEffect(() => { setMasters(masters); }, [masters]);
-
     return (
         <> 
-            {_masters && _masters.length === 0 && 
+            {masters && masters.length === 0 && 
             <Row className="justify-content-md-center">
                 <Col md="auto">
                     <Alert>No records yet</Alert>
                 </Col>
             </Row>
             }
-            {_masters && _masters.length > 0 &&
+            {masters && masters.length > 0 &&
             <Table striped bordered responsive size="sm" className="mt-3">
                 <thead>
                     <tr>
@@ -36,7 +31,7 @@ const AdminMastersList = ({masters, onRemove=null}) => {
                     </tr>
                 </thead>
                 <tbody>
-                {_masters.map(( master, index ) => {
+                {masters.map(( master, index ) => {
                     return (
                     <tr key={"master_id_" + index}>
                         <td className="text-center p-3 m-0">

@@ -12,13 +12,16 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import StarRating from './StarRating';
 import Header from './Header';
-import { getCities } from '../api/cities';
-import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
+import ErrorServiceOffline from './ErrorServiceOffline';
+import ErrorNotFound from './ErrorNotFound';
 import NotificationBox from './NotificationBox';
 
-
+import { getCities } from '../api/cities';
+import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
+import { useSnackbar } from 'notistack';
 
 const Order = () => {
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
     const roundMinutes = (date) => {
         let rounded = new Date(date);
