@@ -83,7 +83,19 @@ const install = async () => {
 			(1, 1),
 			(1, 2),
 			(2, 1),
-			(3, 2)
+			(3, 2);
+			
+		INSERT INTO clients (name, email) VALUES
+			('client1', 'client1@client1.com'),
+			('client2', 'client1@client2.com'),
+			('client3', 'client1@client3.com'),
+			('client4', 'client1@client4.com'),
+			('client5', 'client1@client5.com'),
+			('client6', 'client1@client6.com'),
+			('client7', 'client1@client7.com'),
+			('client8', 'client1@client8.com'),
+			('client9', 'client1@client9.com'),
+			('client10', 'client10@client10.com');
 		`
 	);
 };
