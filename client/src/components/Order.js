@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect  } from 'react';
 import { 
     Container, Row, Col, Form, FormGroup, FormControl, Button, Alert, Spinner, Card, Badge
 } from 'react-bootstrap';
@@ -13,19 +13,19 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import StarRating from './StarRating';
 import Header from './Header';
 import ErrorServiceOffline from './ErrorServiceOffline';
-import ErrorNotFound from './ErrorNotFound';
-import NotificationBox from './NotificationBox';
 
 import { getCities } from '../api/cities';
 import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
+
 import { useSnackbar } from 'notistack';
+import { confirm } from 'react-bootstrap-confirmation';
 
 const Order = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const roundMinutes = (date) => {
+    const toNearestHour = (date) => {
         let rounded = new Date(date);
-        rounded.setHours(date.getHours() + Math.ceil(date.getMinutes()/60));
+        rounded.setHours(rounded.getHours() + Math.ceil((rounded.getMinutes() + (rounded.getSeconds() / 60))/60));
         rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
         return rounded;
     };
@@ -35,7 +35,7 @@ const Order = () => {
         watchType: null,
         city: null,
         master: null,
-        dateTime: roundMinutes(new Date()).getTime(),
+        startDate: toNearestHour(new Date()).getTime(),
         cities: []
     })
     const [watchTypes, setWatchTypes] = useState(null);
@@ -43,74 +43,124 @@ const Order = () => {
     const [masters, setMasters] = useState(null);
     const [confirmation, setConfirmation] = useState(null);
     const [pending, setPending] = useState(true);
-    const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
 
-    useEffect( () => {
+    const resetBeforeApiCall = () => {
+        setPending(true);
+        setError(null);
+    };
 
-        const fetchWachTypes = async() => {
-            try {
-                const response = await getWatchTypes();
-                if(response && response.data && response.data.watchTypes) {
-                    const { watchTypes } = response.data;
-                    setWatchTypes(watchTypes);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
+    const fetchWachTypes = async(abortController) => {
+        try {
+            const response = await getWatchTypes(abortController);
+            if(response && response.data && response.data.watchTypes) {
+                const { watchTypes } = response.data;
+                setWatchTypes(watchTypes);
             }
-        };
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
 
-        fetchWachTypes();
+    const fetchCities = async(abortController) => {
+        try {
+            const response = await getCities(abortController);
+            if(response && response.data && response.data.cities) {
+                const { cities } = response.data;
+                setCities(cities);
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const fetchAvailableMasters = async (cityId, watchTypeId, dateTime) => {
+        try {
+            const response = await getAvailableMasters(
+                cityId, watchTypeId, dateTime
+            );
+
+            if(response && response.data && response.data.masters) {
+                const { masters } = response.data;
+                setMasters(masters);
+            }
+        } catch(e) {
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const doCreateOrder = async (order) => {
+        try {
+            const response = await createOrder(order);
+
+            console.log('Response: ', response.data);
+
+            if(response && response.data && response.data.info) {
+                const { info } = response.data;
+                console.log("info: ", info);
+                setConfirmation(info);
+                enqueueSnackbar(`Order placed`, { variant: 'success'});
+            }
+        } catch(e) {
+            setError(e);
+            if(e && e.response && e.response.data && e.response.data.detail) {
+                enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+            }
+        } finally {
+            setPending(false);
+        }
+    };
+
+    useEffect( () => {
+        const abortController = new AbortController();
+        resetBeforeApiCall();
+        fetchWachTypes(abortController);
+
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, []);
 
     useEffect( () => {
-        const fetchCities = async() => {
-            try {
-                const response = await getCities();
-                if(response && response.data && response.data.cities) {
-                    const { cities } = response.data;
-                    setCities(cities);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
+        const abortController = new AbortController();
+        resetBeforeApiCall();
+        fetchCities(abortController);
 
-        fetchCities();
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, []);
+
+    const setDefaultFormState = () => {
+        setOrder({
+            client : { name: '', email: '' },
+            watchType: null,
+            city: null,
+            master: null,
+            startDate: toNearestHour(new Date()).getTime(),
+            cities: []
+        });
+        setMasters(null);
+        setConfirmation(null);
+    };
 
 
     const handleSubmit = (e) => {
         e.preventDefault();
         console.log('handleSubmit', order);
 
-        const fetchMasters = async (cityId, watchTypeId, dateTime) => {
-            try {
-                const response = await getAvailableMasters(
-                    cityId, watchTypeId, dateTime
-                );
-    
-                if(response && response.data && response.data.masters) {
-                    const { masters } = response.data;
-                    setMasters(masters);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
-
-        setPending(true);
+        resetBeforeApiCall();
         setMasters(null);
-        setInfo(null);
-        setError(null);
 
-        fetchMasters(order.city.id, order.watchType.id, order.dateTime);
+        fetchAvailableMasters(order.city.id, order.watchType.id, toNearestHour(new Date(order.startDate)).getTime());
     };
 
     const onSelect = (selectedList, selectedItem)=> {
@@ -125,42 +175,32 @@ const Order = () => {
         setMasters(null);
     };
 
-    const pickUpMaster = (event, master) => {        
-        
-        if (!window.confirm("Choose this master?")) {
-            return;
-        }
+    const pickUpMaster = async (event, master) => {
+
+        const result = await confirm(`Do you want to choose "${master.email}" as your master and submit order?`, {title: 'Confirm', okText: 'Place Order', okButtonStyle: 'success'});
+        if(!result) return;
 
         order.master = master;
         setOrder((prev) => ({...prev, master: master}));
         console.log('pickup: ', order);
 
-        const doCreateOrder = async (order) => {
-            try {
-                const response = await createOrder(order);
-
-                console.log('Response: ', response.data);
-
-                if(response && response.data && response.data.info) {
-                    const { info } = response.data;
-                    //setMasters(masters);
-                    console.log("info: ", info);
-                    setConfirmation(info);
-                }
-            } catch(e) {
-                setError(e);
-            } finally {
-                setPending(false);
-            }
+        const orderToBackEnd = {
+            client: {
+                name: order.client.name,
+                email: order.client.email,
+            },
+            watchTypeId: order.watchType.id,
+            cityId: order.city.id,
+            masterId: master.id,
+            startDate: order.startDate
         };
 
-        
-        setPending(true);
-        setMasters(null);
-        setInfo(null);
-        setError(null);
+        console.log('pickup2: ', orderToBackEnd);
 
-        doCreateOrder(order);
+        resetBeforeApiCall();
+        setMasters(null);
+
+        doCreateOrder(orderToBackEnd);
     };
 
     const isFormValid = () => {
@@ -168,21 +208,24 @@ const Order = () => {
             && order.client.email 
             && order.watchType 
             && order.city
-            && order.dateTime > new Date().getTime()
             && !pending;
     };
 
 	return (
-		<Container>
+	<Container>
         <Header />
         <Container>              
             <center>
                 <h1>Order page</h1>
+                <hr />
             </center>
-            <hr/>
+
+            {(!cities && pending) && <center><Spinner animation="grow" /> </center>}
+            {(!watchTypes && pending) && <center><Spinner animation="grow" /> </center>}
+            <ErrorServiceOffline error={error} pending={pending} />
+            
             <Row className="justify-content-md-center">
-                <Col xs lg="4">
-                    {((!cities && pending) || (!watchTypes && pending)) && <center><Spinner animation="grow" /> </center>}
+                <Col xs lg="4">                    
                     {!confirmation && cities && watchTypes &&
                     <Form onSubmit={handleSubmit}>
                         <FormGroup className="mb-3">
@@ -199,7 +242,6 @@ const Order = () => {
                                         }
                                     }));
                                     setMasters(null);
-                                    setInfo(null);
                                     setError(null);
                                 }}
                             />
@@ -218,7 +260,6 @@ const Order = () => {
                                         }
                                     }));
                                     setMasters(null);
-                                    setInfo(null);
                                     setError(null);
                                 }}
                             />
@@ -228,6 +269,7 @@ const Order = () => {
                             {watchTypes && watchTypes.map(( item, index ) => {
                                 return (
                                     <Form.Check
+                                        disabled={pending}
                                         inline
                                         key={"watch_type_" + item.id}
                                         label={item.name}
@@ -240,9 +282,7 @@ const Order = () => {
                                                 watchType: item
                                             }));
                                             setMasters(null);
-                                            setInfo(null);
                                             setError(null);
-
                                         }}
                                     />
                                 )
@@ -259,23 +299,23 @@ const Order = () => {
                                 onSelect={onSelect} // Function will trigger on select event
                                 onRemove={onRemove} // Function will trigger on remove event
                                 displayValue="name" // Property name to display in the dropdown options
+                                disable={pending}
                             />
                         </FormGroup>
                         <FormGroup className="mb-3">                            
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DateTimePicker
+                                    disabled={pending}
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
-                                    value={new Date(order.dateTime)}
-                                    minDate={dayjs(order.dateTime)}
+                                    value={new Date(order.startDate)}
                                     views={['year', 'month', 'day', 'hours']}
                                     onChange={(newValue) => {
                                         setOrder( (prev) => ({
                                             ...prev,
-                                            dateTime: new Date(newValue).getTime()
+                                            startDate: new Date(newValue).getTime()
                                         }));
                                         setMasters(null);
-                                        setInfo(null);
                                         setError(null);
                                     }}
                                 />
@@ -283,25 +323,32 @@ const Order = () => {
                         </FormGroup>
                         <Button className="mb-3" type="submit" variant="success" 
                             disabled={!isFormValid()}>
+                            {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                             Search
                         </Button>
                     </Form>
                     }
 
                     {confirmation &&
+                    <Row className="justify-content-md-center">
+                        <Col md="auto">
                         <Alert variant={"info"}>
                             <p>Thank you ! Confirmation message was sent to your email. </p>
                             <p>Message ID: {confirmation.messageId}</p>
                         </Alert>
+                        </Col>
+                        <Col md="auto">
+                            <Button variant="primary" onClick={() => { setDefaultFormState(); }}>
+                                Create new order
+                            </Button>
+                        </Col>
+                    </Row>
                     }
                 </Col>
             </Row>
-        
-        {cities && <hr />}
-        <NotificationBox info={info} error={error} pending={pending} />
-        {!cities && <hr />}  
+            <hr />
 
-        {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
+        {(!masters && cities && watchTypes && pending) && <center><Spinner animation="grow" /> </center>}
         {masters &&
         <>
         <Row className="justify-content-md-center">

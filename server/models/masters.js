@@ -12,6 +12,7 @@ const getMasters = async () => {
 	FROM masters M;`);*/
 	
 	console.log('[db] getMasters');
+	//json_build_object('startDate', O.star_date, 'endDate', O.star_date + interval '1h' * W.repair_time) as "dateTime"
 	let result = await execQuery(
 	`SELECT M.id, M.name, M.email, M.rating, json_agg(C.*) as cities, 
 	(
@@ -23,7 +24,8 @@ const getMasters = async () => {
 				json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
 				json_build_object('id', C.id, 'name', C.name) as city,
 				json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
-				json_build_object('startDate', O.date_time, 'endDate', O.date_time + interval '1h' * W.repair_time) as "dateTime"
+				json_build_object('startDate', O.start_date, 'endDate', O.end_date) as "dateTime"
+				
 				FROM 
 					orders O
 					INNER JOIN watch_type W ON O.watch_type_id=W.id
@@ -31,7 +33,7 @@ const getMasters = async () => {
 					INNER JOIN masters M2 ON O.master_id=M2.id
 					INNER JOIN cities C ON O.city_id=C.id
 			WHERE O.master_id = M.id
-			ORDER BY O.date_time
+			ORDER BY O.start_date
 		) T
 		
 	) AS orders
@@ -135,7 +137,7 @@ const getMasterById = async (id) => {
 						json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
 						json_build_object('id', C.id, 'name', C.name) as city,
 						json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
-						json_build_object('startDate', O.date_time, 'endDate', O.date_time + interval '1h' * W.repair_time) as "dateTime"
+						json_build_object('startDate', O.start_date, 'endDate', O.end_date) as "dateTime"
 						FROM 
 							orders O
 							INNER JOIN watch_type W ON O.watch_type_id=W.id
@@ -143,7 +145,7 @@ const getMasterById = async (id) => {
 							INNER JOIN masters M ON O.master_id=M.id
 							INNER JOIN cities C ON O.city_id=C.id
 					WHERE O.master_id = ($1)
-					ORDER BY O.date_time
+					ORDER BY O.start_date
 				) T
 				
 			) AS orders

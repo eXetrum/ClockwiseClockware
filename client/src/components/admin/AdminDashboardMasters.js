@@ -37,9 +37,9 @@ const AdminDashboardMasters = () => {
         setError(null);
     };
 
-    const fetchMasters = async () => {
+    const fetchMasters = async (abortController) => {
         try {
-            const response = await getMasters();
+            const response = await getMasters(abortController);
             if(response && response.data && response.data.masters) {
                 const { masters } = response.data;
                 setMasters(masters);
@@ -165,7 +165,8 @@ const AdminDashboardMasters = () => {
                 </>}
             </center>
 
-            {((!cities || !masters) && pending) && <center><Spinner animation="grow" /> </center>}
+            {(!cities && pending) && <center><Spinner animation="grow" /> </center>}
+            {(!masters && pending) && <center><Spinner animation="grow" /> </center>}
             <ErrorServiceOffline error={error} pending={pending} />
             
             <AdminMastersList masters={masters} onRemove={handleRemove} />

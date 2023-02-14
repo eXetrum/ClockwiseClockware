@@ -43,6 +43,8 @@ const create = [
 			} 
 			
 			let { master } = req.body;
+			master.name = master.name.trim();
+			master.email = master.email.trim();
 			console.log('[route] POST /masters ', master);
 			let result = await createMaster(master);
 			console.log('[route] POST /masters result: ', result);
@@ -145,7 +147,8 @@ const update = [
 			} 
 			const { id } = req.params;
 			let { master } = req.body;
-			
+			master.name = master.name.trim();
+			master.email = master.email.trim();
 			console.log('[route] PUT /masters/:id ', id, master);
 			let result = await updateMasterById(id, master);
 			console.log('[route] PUT /masters/:id result update: ', result);

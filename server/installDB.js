@@ -13,26 +13,31 @@ const install = async () => {
 		DROP TABLE IF EXISTS cities;
 		DROP TABLE IF EXISTS watch_type;
 			
+		CREATE EXTENSION btree_gist;
+
 		CREATE TABLE cities (
 			id serial PRIMARY KEY,
 			name VARCHAR ( 255 ) UNIQUE NOT NULL
 		);
-		
+
 		CREATE TABLE watch_type (
 			id serial PRIMARY KEY,
 			name VARCHAR ( 255 ) NOT NULL,
 			repair_time INTEGER NOT NULL
 		);
+
 		CREATE TABLE clients (
 			id serial PRIMARY KEY,
 			email VARCHAR ( 255 ) UNIQUE NOT NULL,
 			name VARCHAR ( 255 ) NOT NULL			
 		);
+
 		CREATE TABLE admins (
 			id serial PRIMARY KEY,
 			email VARCHAR ( 255 ) UNIQUE NOT NULL,
 			password VARCHAR ( 255 ) NOT NULL
 		);
+
 		CREATE TABLE masters (
 			id serial PRIMARY KEY,
 			email VARCHAR ( 255 ) UNIQUE NOT NULL,
@@ -46,17 +51,25 @@ const install = async () => {
 			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE RESTRICT,
 			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE RESTRICT
 		);
+
 		CREATE TABLE orders (
 			id serial PRIMARY KEY,
 			client_id INT NOT NULL,
 			watch_type_id INT NOT NULL,
 			city_id INT NOT NULL,
 			master_id INT NOT NULL,
-			date_time timestamp  NOT NULL,
+			start_date timestamp NOT NULL,
+			end_date timestamp NOT NULL,
 			FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE RESTRICT,
 			FOREIGN KEY(watch_type_id) REFERENCES watch_type(id) ON DELETE RESTRICT,
 			FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE RESTRICT,
-			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE RESTRICT
+			FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE RESTRICT,
+			CONSTRAINT start_date_less_than_end_date CHECK (start_date < end_date),
+			CONSTRAINT overlapping_times EXCLUDE USING GIST (
+				master_id WITH =,
+				box(point(EXTRACT(EPOCH FROM start_date), 0), 
+					point(EXTRACT(EPOCH FROM end_date),   0)) WITH &&
+			)
 		);
 		INSERT INTO cities (name) VALUES ('Дніпро'), ('Ужгород');
 		INSERT INTO watch_type (name, repair_time) VALUES ('Маленький', 1), ('Середній', 2), ('Великий', 3);

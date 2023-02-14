@@ -11,15 +11,25 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
+
+import Header from '../Header';
+import StarRating from '../StarRating';
+import ErrorServiceOffline from '../ErrorServiceOffline';
+
 import { getWatchTypes, getOrderById, updateOrderById, getAvailableMasters } from '../../api/orders';
 import { getMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
-import Header from '../Header';
-import StarRating from '../StarRating';
+
+import { useSnackbar } from 'notistack';
+import { confirm } from 'react-bootstrap-confirmation';
+
 import NotificationBox from '../NotificationBox';
 
 const AdminEditOrder = () => {
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+
     const {id} = useParams();
+
     // Initial
     const multiselectRef = React.createRef();
     const [watchTypes, setWatchTypes] = useState(null);
@@ -34,9 +44,9 @@ const AdminEditOrder = () => {
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
 
-    const roundMinutes = (date) => {
+    const toNearestHour = (date) => {
         let rounded = new Date(date);
-        rounded.setHours(date.getHours() + Math.ceil(date.getMinutes()/60));
+        rounded.setHours(rounded.getHours() + Math.ceil((rounded.getMinutes() + (rounded.getSeconds() / 60))/60));
         rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
         return rounded;
     };
@@ -49,71 +59,130 @@ const AdminEditOrder = () => {
     const dateRangesOverlap = (start1, end1, start2, end2) => {
         const min = (a, b) => { return a < b ? a : b; }
         const max = (a, b) => { return a > b ? a : b; }
-        return max(start1, start2) < min(end1, end2);
+        return max(start1, start2) <= min(end1, end2);
     };
 
 
+    const fetchWachTypes = async(abortController) => {
+        try {
+            const response = await getWatchTypes(abortController);
+            if(response && response.data && response.data.watchTypes) {
+                const { watchTypes } = response.data;
+                setWatchTypes(watchTypes);
+            }
+        } catch(e) {
+            console.log('ERROR: ', e);
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const fetchCities = async(abortController) => {
+        try {
+            const response = await getCities(abortController);
+            if(response && response.data && response.data.cities) {
+                const { cities } = response.data;
+                setCities(cities);
+            }
+        } catch(e) {
+            console.log('ERROR: ', e);
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const fetchOrderById = async (id, abortController) => {
+        try {
+            const response = await getOrderById(id, abortController)
+            if (response && response.data && response.data.order) {
+                let { order } = response.data;
+                console.log('order: ', order);
+                order.cities = [order.city];
+                setOrder(order);
+                setOriginalOrder(order);
+                setLastAssignedCity(order.city);
+            }
+        } catch (e) {
+            console.log('ERROR: ', e);
+            setError(e);
+        } finally {
+            setPending(false);
+        }
+    };
+
+    const doUpdateOrderById = async (id, order) => {
+        try {
+            const orderToBackEnd = {
+                client: {
+                    name: order.client.name,
+                    email: order.client.email,
+                },
+                watchTypeId: order.watchType.id,
+                cityId: order.city.id,
+                masterId: order.master.id,
+                startDate: new Date(order.dateTime.startDate).getTime()
+            };
+            const response = await updateOrderById(id, orderToBackEnd);
+            if(response && (response.status == 200 || response.status == 204)) {
+                setOrder(order);
+                setOriginalOrder(order);
+                enqueueSnackbar(`Order updated`, { variant: 'success'});
+            }
+        } catch(e) {
+            setError(e);            
+            console.log('doDeleteOrderById error: ', e);
+            if(e && e.response && e.response.status && e.response.status === 404) {
+                setOrder(null);
+                setOriginalOrder(null);
+            } else {
+                setOrder(originalOrder);
+            }
+            enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+        } finally {
+            setPending(false);
+        }
+    };
+
     // 'Component Did Mount' watch types
     useEffect( () => {
-        const fetchWachTypes = async() => {
-            try {
-                const response = await getWatchTypes();
-                if(response && response.data && response.data.watchTypes) {
-                    const { watchTypes } = response.data;
-                    setWatchTypes(watchTypes);
-                }
-            } catch(e) {
-                console.log('ERROR: ', e);
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
+        const abortController = new AbortController();
+        console.log('"componentDidMount" fetchWachTypes()');
+        setPending(true);
+        fetchWachTypes(abortController);
 
-        fetchWachTypes();
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, []);
 
     // 'Component Did Mount' cities
     useEffect( () => {
-        const fetchCities = async() => {
-            try {
-                const response = await getCities();
-                if(response && response.data && response.data.cities) {
-                    const { cities } = response.data;
-                    setCities(cities);
-                }
-            } catch(e) {
-                console.log('ERROR: ', e);
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        };
+        const abortController = new AbortController();
+        console.log('"componentDidMount" fetchCities');
+        setPending(true);
 
-        fetchCities();
+        fetchCities(abortController);
+
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, []);
 
     useEffect(() => {
-        console.log('"componentDidMount" getOrderById');
-        const fetchOrderById = async (id) => {
-            try {
-                const response = await getOrderById(id)
-                if (response && response.data && response.data.order) {
-                    let { order } = response.data;
-                    console.log('order: ', order);
-                    order.cities = [order.city];
-                    setOrder(order);
-                    setOriginalOrder(order);
-                    setLastAssignedCity(order.city);
-                }
-            } catch (e) {
-                console.log('ERROR: ', e);
-                setError(e);
-            } finally {
-                setPending(false);
-            }
-        }
-        fetchOrderById(id);
+        const abortController = new AbortController();
+        console.log('"componentDidMount" fetchOrderById');
+        setPending(true);
+        
+        fetchOrderById(id, abortController);
+
+        return () => {
+            abortController.abort();
+            closeSnackbar();
+        };
     }, [id]);
 
 
@@ -121,39 +190,21 @@ const AdminEditOrder = () => {
     const submitForm = (e) => {
         e.preventDefault();
 
-        console.log(order);
-
+        console.log('submit: ', order);
         
 
-        const doUpdateOrderById = async (id, order) => {
-            try {
-                const response = await updateOrderById(id, {...order, dateTime: new Date(order.dateTime.startDate).getTime() });
-                if(response && response.data && response.data.order) {
-                    const { order } = response.data;
-                    setOrder(order);
-                    setOriginalOrder(order);
-                    setInfo('success');
-                }
-            } catch(e) {
-                setError(e);
-                setOrder(originalOrder);
-            } finally {
-                setPending(false);
-            }
-        }
-
-        doUpdateOrderById(id, order);
-
         setPending(true);
-        setOrder(null);        
+        //setOrder(null);        
         setInfo(null);
         setError(null);
+
+        doUpdateOrderById(id, order);
     }
 
-    const fetchAvailableMasters = async (cityId, watchTypeId, dateTime) => {
-        console.log('dateTime: ', dateTime);
+    const fetchAvailableMasters = async (cityId, watchTypeId, startDate) => {
+        console.log('startDate: ', startDate);
         try {
-            const response = await getAvailableMasters(cityId, watchTypeId, dateTime);
+            const response = await getAvailableMasters(cityId, watchTypeId, startDate);
             console.log(response.data);
             if(response && response.data && response.data.masters) {
                 let { masters } = response.data;
@@ -170,12 +221,6 @@ const AdminEditOrder = () => {
                 }
 
                 setMasters(masters);
-                /*if(masters.length > 0) {
-                    setOrder((prev) => ({
-                        ...prev,
-                        master: null
-                    }))
-                }*/
             }
         } catch(e) {
             console.log('ERROR: ', e);
@@ -393,7 +438,6 @@ const AdminEditOrder = () => {
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
                                     value={new Date(order.dateTime.startDate)}
-                                    minDate={dayjs(order.dateTime.startDate)}
                                     views={['year', 'month', 'day', 'hours']}
                                     onChange={(newValue) => {
                                         setMasters(null);
@@ -404,7 +448,7 @@ const AdminEditOrder = () => {
                                             ...prev,
                                             dateTime: {
                                                 ...prev.dateTime,
-                                                startDate: roundMinutes(new Date(newValue)).getTime()
+                                                startDate: toNearestHour(new Date(newValue)).getTime()
                                             } 
                                         }));                                        
                                     }}
