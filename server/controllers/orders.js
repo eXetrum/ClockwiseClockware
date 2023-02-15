@@ -38,7 +38,7 @@ const getFreeMasters = [
 			
 			
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
-			startDate = dateToNearestHour(startDate).getTime() / 1000;
+			startDate = dateToNearestHour(new Date(startDate)).getTime() / 1000;
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
 			
 			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);
@@ -70,8 +70,17 @@ const create = [
 		.not().isArray().withMessage('order.masterId should be of type int')
 		.isInt({min: 0}).withMessage('order.masterId should be of type int'),
 	body('order.startDate').exists().withMessage('order.startDate required')
-		.not().isArray().withMessage('order.startDate should be of type int')
-		.isInt({min: 0}).withMessage('order.startDate should be of type int'),
+		.isString().withMessage('order.startDate should be of type string(ex. new Date().toString())')
+		.trim().escape().notEmpty().withMessage('Empty order.startDate is not allowed')
+		.custom((value, { req }) => { 
+			const curDate = new Date();
+			const orderDate = new Date(value);
+			if(orderDate == 'Invalid date') { throw new Error('Invalid date'); }
+			if(orderDate < curDate) { throw new Error('Past date time is not allowed'); }
+			
+			// Indicates the success of this synchronous custom validator
+			return true;
+		}).withMessage('order.startDate should be of type int'),
 	
 	async (req, res) => {
 		try {
@@ -85,7 +94,7 @@ const create = [
 			let { order } = req.body;
 			console.log('[route] POST /orders ', order);
 			console.log('[route] POST /orders DATE: ', new Date(order.startDate));
-			const nearestDate = dateToNearestHour(order.startDate);
+			const nearestDate = dateToNearestHour(new Date(order.startDate));
 			console.log('[route] POST /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
@@ -262,7 +271,7 @@ const update = [
 			let { order } = req.body;
 			console.log('[route] PUT /orders/:id ', id, order);
 			console.log('[route] PUT /orders DATE: ', new Date(order.startDate));
-			const nearestDate = dateToNearestHour(order.startDate);
+			const nearestDate = dateToNearestHour(new Date(order.startDate));
 			console.log('[route] PUT /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
