@@ -43,8 +43,10 @@ const getFreeMasters = [
 			
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, timestamp);
 			const clientDateTime = new Date(timestamp);
-			const withRespectToClientTZ = new Date(clientDateTime.setTime(clientDateTime.getTime() - clientTimezone * 60 * 1000 ))
-			console.log('[route] GET /available_masters clientDateTime:  ', clientDateTime)
+			const now = new Date();
+			const withRespectToClientTZ = new Date(now.setTime(now.getTime() - clientTimezone * 60 * 1000 ))
+			console.log('[route] GET /available_masters clientDateTime:  ', clientDateTime);
+			console.log('[route] GET /available_masters backendDateTime: ', now);
 			console.log('[route] GET /available_masters backendDateTimTZ:', withRespectToClientTZ);
 			console.log('[route] GET /availWidth local timestamp: ', clientDateTime.getTime());
 			console.log('[route] GET /availWidth local timestamp: ', withRespectToClientTZ.getTime());
