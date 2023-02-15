@@ -10,7 +10,7 @@ const getAvailableMasters = (cityId, watchTypeId, timestamp, clientTimezone, abo
         params: { 
             cityId: cityId, 
             watchTypeId: watchTypeId, 
-            timestamp: startDateTimestamp,
+            timestamp: timestamp,
             clientTimezone: clientTimezone
         }
     }, { signal: abortController?.signal}); 
