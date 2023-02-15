@@ -189,8 +189,9 @@ const Order = () => {
             watchTypeId: order.watchType.id,
             cityId: order.city.id,
             masterId: master.id,
-            startDate: order.startDate.toGMTString()
+            startDate: new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
         };
+        //jsDate.setTime( jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000 );
         console.log('tostr: ', order.startDate.toString());
         console.log('GMT: ', order.startDate.toGMTString());
         console.log('ISO: ', order.startDate.toISOString());
