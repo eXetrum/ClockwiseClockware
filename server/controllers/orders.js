@@ -3,11 +3,9 @@ const { body, param, query, validationResult } = require('express-validator');
 const { sendEmail } = require('../middleware/NodeMailer');
 const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
 
-const toNearestHour = (date) => {
-	let rounded = new Date(date);
-	rounded.setHours(rounded.getHours() + Math.ceil((rounded.getMinutes() + (rounded.getSeconds() / 60))/60));
-	rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
-	return rounded;
+const dateToNearestHour = (date = new Date()) => {
+	const ms = 1000 * 60 * 60;
+	return new Date(Math.ceil(date.getTime() / ms) * ms);
 };
 
 ///////// Client part (No route protection)
@@ -40,7 +38,7 @@ const getFreeMasters = [
 			
 			
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
-			startDate = toNearestHour(startDate).getTime() / 1000;
+			startDate = dateToNearestHour(startDate).getTime() / 1000;
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
 			
 			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);
@@ -85,9 +83,13 @@ const create = [
 			}
 	
 			let { order } = req.body;
+			console.log('[route] POST /orders ', order);
+			console.log('[route] POST /orders DATE: ', new Date(order.startDate));
+			const nearestDate = dateToNearestHour(order.startDate);
+			console.log('[route] POST /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
-			order.startDate = toNearestHour(order.startDate).getTime() / 1000;
+			order.startDate = nearestDate.getTime() / 1000;
 			
 			console.log('[route] POST /orders ', order);
 			let result = await createOrder(order);
@@ -259,11 +261,12 @@ const update = [
 			const { id } = req.params;
 			let { order } = req.body;
 			console.log('[route] PUT /orders/:id ', id, order);
+			console.log('[route] PUT /orders DATE: ', new Date(order.startDate));
+			const nearestDate = dateToNearestHour(order.startDate);
+			console.log('[route] PUT /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
-			order.startDate = toNearestHour(order.startDate).getTime() / 1000;
-			console.log('[route] PUT /orders/:id after prepare: ', id, order);
-			
+			order.startDate = nearestDate.getTime() / 1000;			
 			let result = await updateOrderById(id, order);
 			console.log('[route] PUT /orders/:id update result: ', result);
 			order = result[0];

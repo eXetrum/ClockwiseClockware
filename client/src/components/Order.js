@@ -23,11 +23,16 @@ import { confirm } from 'react-bootstrap-confirmation';
 const Order = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const toNearestHour = (date) => {
+    /*const toNearestHour = (date) => {
         let rounded = new Date(date);
         rounded.setHours(rounded.getHours() + Math.ceil((rounded.getMinutes() + (rounded.getSeconds() / 60))/60));
         rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
         return rounded;
+    };*/
+
+    const dateToNearestHour = (date = new Date()) => {
+        const ms = 1000 * 60 * 60;
+        return new Date(Math.ceil(date.getTime() / ms) * ms);
     };
 
     const [order, setOrder] = useState({
@@ -35,7 +40,8 @@ const Order = () => {
         watchType: null,
         city: null,
         master: null,
-        startDate: toNearestHour(new Date()).getTime(),
+        curDate: dateToNearestHour(),
+        startDate: dateToNearestHour(),
         cities: []
     })
     const [watchTypes, setWatchTypes] = useState(null);
@@ -45,6 +51,20 @@ const Order = () => {
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
 
+    const setDefaultFormState = () => {
+        setOrder({
+            client : { name: '', email: '' },
+            watchType: null,
+            city: null,
+            master: null,
+            curDate: dateToNearestHour(),
+            startDate: dateToNearestHour(),
+            cities: []
+        });
+        setMasters(null);
+        setConfirmation(null);
+    };
+    
     const resetBeforeApiCall = () => {
         setPending(true);
         setError(null);
@@ -139,18 +159,7 @@ const Order = () => {
         };
     }, []);
 
-    const setDefaultFormState = () => {
-        setOrder({
-            client : { name: '', email: '' },
-            watchType: null,
-            city: null,
-            master: null,
-            startDate: toNearestHour(new Date()).getTime(),
-            cities: []
-        });
-        setMasters(null);
-        setConfirmation(null);
-    };
+    
 
 
     const handleSubmit = (e) => {
@@ -160,7 +169,7 @@ const Order = () => {
         resetBeforeApiCall();
         setMasters(null);
 
-        fetchAvailableMasters(order.city.id, order.watchType.id, toNearestHour(new Date(order.startDate)).getTime());
+        fetchAvailableMasters(order.city.id, order.watchType.id, order.startDate.getTime());
     };
 
     const onSelect = (selectedList, selectedItem)=> {
@@ -192,7 +201,7 @@ const Order = () => {
             watchTypeId: order.watchType.id,
             cityId: order.city.id,
             masterId: master.id,
-            startDate: order.startDate
+            startDate: order.startDate.getTime()
         };
 
         console.log('pickup2: ', orderToBackEnd);
@@ -208,6 +217,7 @@ const Order = () => {
             && order.client.email 
             && order.watchType 
             && order.city
+            && order.startDate >= order.curDate
             && !pending;
     };
 
@@ -231,44 +241,40 @@ const Order = () => {
                         <FormGroup className="mb-3">
                             <Form.Label>Name:</Form.Label>
                             <FormControl type="text" name="name" 
+                                required
+                                autoFocus={true}
                                 disabled={pending}
+                                isValid={order.client.name.length >= 3}
+                                isInvalid={order.client.name.length < 3}
                                 value={order.client.name}
                                 onChange={(event) => {
-                                    setOrder( (prev) => ({
-                                        ...prev,
-                                        client: {
-                                            ...prev.client,
-                                            name: event.target.value
-                                        }
-                                    }));
-                                    setMasters(null);
+                                    setOrder( (prev) => ({ ...prev, client: { ...prev.client, name: event.target.value } } ));
                                     setError(null);
                                 }}
                             />
+                            {order.client.name && <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>}
                         </FormGroup>
                         <FormGroup className="mb-3">
                             <Form.Label>Email:</Form.Label>
                             <FormControl type="email" name="email" 
+                                required
                                 disabled={pending}
+                                isValid={/\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)}
+                                isInvalid={!/\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)}
                                 value={order.client.email}
                                 onChange={(event) => {
-                                    setOrder( (prev) => ({
-                                        ...prev,
-                                        client: {
-                                            ...prev.client,
-                                            email: event.target.value
-                                        }
-                                    }));
-                                    setMasters(null);
+                                    setOrder( (prev) => ({ ...prev, client: { ...prev.client, email: event.target.value } } ));
                                     setError(null);
                                 }}
                             />
+                            {order.client.email && <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>}
                         </FormGroup>
                         <FormGroup className="mb-3">
                             <>
                             {watchTypes && watchTypes.map(( item, index ) => {
                                 return (
                                     <Form.Check
+                                        required
                                         disabled={pending}
                                         inline
                                         key={"watch_type_" + item.id}
@@ -277,10 +283,7 @@ const Order = () => {
                                         type="radio"
                                         onClick={(event) => {
                                             console.log('check: ', event);
-                                            setOrder( (prev) => ({
-                                                ...prev,
-                                                watchType: item
-                                            }));
+                                            setOrder( (prev) => ({...prev, watchType: item }));
                                             setMasters(null);
                                             setError(null);
                                         }}
@@ -293,13 +296,20 @@ const Order = () => {
                         </FormGroup>
                         <FormGroup className="mb-4">
                             <Multiselect
+                                disable={pending}
                                 selectionLimit={1}
                                 options={cities} // Options to display in the dropdown
                                 selectedValues={order.cities} // Preselected value to persist in dropdown
-                                onSelect={onSelect} // Function will trigger on select event
-                                onRemove={onRemove} // Function will trigger on remove event
-                                displayValue="name" // Property name to display in the dropdown options
-                                disable={pending}
+                                onSelect={(selectedList, selectedItem) => {
+                                    setOrder( (prev) => ({...prev, city: selectedItem }));
+                                    setMasters(null);
+                                }}
+                                onRemove={(selectedList, removedItem) => {
+                                    setOrder( (prev) => ({...prev, city: null }));
+                                    setMasters(null);
+                                }} // Function will trigger on remove event
+                                displayValue="name" // Property name to display in the dropdown options                                
+                                placeholder="City"
                             />
                         </FormGroup>
                         <FormGroup className="mb-3">                            
@@ -308,18 +318,34 @@ const Order = () => {
                                     disabled={pending}
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
-                                    value={new Date(order.startDate)}
+                                    minDate={dayjs(order.curDate)}
+                                    minTime={dayjs(order.curDate)}
+                                    disablePast={true}
+                                    value={order.startDate}
                                     views={['year', 'month', 'day', 'hours']}
+                                    ampm={false}
                                     onChange={(newValue) => {
-                                        setOrder( (prev) => ({
-                                            ...prev,
-                                            startDate: new Date(newValue).getTime()
-                                        }));
+                                        setOrder( (prev) => ({ ...prev, startDate: new Date(newValue) }));
                                         setMasters(null);
-                                        setError(null);
+                                        //setError(null);
+                                    }}
+                                    onError={(reason) => {
+                                        if(reason === 'invalidDate') {
+                                            setError({reason: reason, detail: reason});
+                                        } else if(reason === 'minTime') {
+                                            setError({reason: reason, detail: 'Time is past'});
+                                        } else if(reason === 'disablePast') {
+                                            setError('Unable to set past date');
+                                            setError({reason: reason, detail: 'Date is past'});
+                                        } else {
+                                            setError(null);
+                                        }
+                                        console.log('datetime: ', reason, typeof reason, reason == 'minTime');
+                                        console.log(order.curDate, order.startDate);
                                     }}
                                 />
                             </LocalizationProvider>
+                            {error && error.reason && ['invalidDate', 'minTime', 'disablePast'].includes(error.reason) && <strong style={{color: 'red'}}><br/>{error.detail}</strong>}
                         </FormGroup>
                         <Button className="mb-3" type="submit" variant="success" 
                             disabled={!isFormValid()}>
