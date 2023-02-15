@@ -28,7 +28,7 @@ const getFreeMasters = [
 	query('startDateTimestamp').exists().withMessage('"startDateTimestamp" required')
 		.isInt({min: 0}).toInt().withMessage('"startDateTimestamp" required should be of type int'),
 	query('startDateTimezone').exists().withMessage('"startDateTimezone" required')
-		.isInt({min: 0}).toInt().withMessage('"startDateTimezone" required should be of type int'),
+		.isInt().toInt().withMessage('"startDateTimezone" required should be of type int'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
