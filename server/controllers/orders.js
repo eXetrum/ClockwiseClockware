@@ -25,8 +25,10 @@ const getFreeMasters = [
 		.isInt({min: 0}).withMessage('"cityId" should be of type int'),
 	query('watchTypeId').exists().withMessage('"watchTypeId" required')
 		.isInt({min: 0}).withMessage('"watchTypeId" should be of type int'),
-	query('startDate').exists().withMessage('"startDate" required')
-		.isInt({min: 0}).toInt().withMessage('"startDate" required should be of type int'),
+	query('startDateTimestamp').exists().withMessage('"startDateTimestamp" required')
+		.isInt({min: 0}).toInt().withMessage('"startDateTimestamp" required should be of type int'),
+	query('startDateTimezone').exists().withMessage('"startDateTimezone" required')
+		.isInt({min: 0}).toInt().withMessage('"startDateTimezone" required should be of type int'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
@@ -36,17 +38,19 @@ const getFreeMasters = [
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			} 
 			
-			let { cityId, watchTypeId, startDate } = req.query;
+			let { cityId, watchTypeId, startDateTimestamp, startDateTimezone } = req.query;
 			
 			
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
-			const backEndDatetime = new Date(startDate);
-			const offset = new Date(backEndDatetime.setTime(backEndDatetime.getTime() - backEndDatetime.getTimezoneOffset() * 60 * 1000 ))
-			console.log('[route] GET /available_masters backendDateTime: ', backEndDatetime, offset);
-			console.log('[route] GET /availWidth local timestamp: ', offset.getTime());
+			const clientDateTime = new Date(startDate);
+			const withRespectToClientTZ = new Date(clientDateTime.setTime(clientDateTime.getTime() - startDateTimezone * 60 * 1000 ))
+			console.log('[route] GET /available_masters clientDateTime:  ', clientDateTime)
+			console.log('[route] GET /available_masters backendDateTimTZ:', withRespectToClientTZ);
+			console.log('[route] GET /availWidth local timestamp: ', clientDateTime.getTime());
+			console.log('[route] GET /availWidth local timestamp: ', withRespectToClientTZ.getTime());
 			
 			
-			startDate = dateToNearestHour(offset).getTime() / 1000;
+			startDate = dateToNearestHour(withRespectToClientTZ).getTime() / 1000;
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
 			
 			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);

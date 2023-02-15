@@ -189,7 +189,8 @@ const Order = () => {
             watchTypeId: order.watchType.id,
             cityId: order.city.id,
             masterId: master.id,
-            startDate: order.startDate.getTime()//new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
+            startDateTimestamp: order.startDate.getTime(),//new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
+            startDateTimezone: order.startDate.getTimezoneOffset()
         };
         //jsDate.setTime( jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000 );
         console.log('tostr: ', order.startDate.toString());
