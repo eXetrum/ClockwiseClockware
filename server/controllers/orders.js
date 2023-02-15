@@ -25,10 +25,10 @@ const getFreeMasters = [
 		.isInt({min: 0}).withMessage('"cityId" should be of type int'),
 	query('watchTypeId').exists().withMessage('"watchTypeId" required')
 		.isInt({min: 0}).withMessage('"watchTypeId" should be of type int'),
-	query('startDateTimestamp').exists().withMessage('"startDateTimestamp" required')
-		.isInt({min: 0}).toInt().withMessage('"startDateTimestamp" required should be of type int'),
-	query('startDateTimezone').exists().withMessage('"startDateTimezone" required')
-		.isInt().toInt().withMessage('"startDateTimezone" required should be of type int'),
+	query('timestamp').exists().withMessage('"timestamp" required')
+		.isInt({min: 0}).toInt().withMessage('"timestamp" required should be of type int'),
+	query('clientTimezone').exists().withMessage('"clientTimezone" required')
+		.isInt().toInt().withMessage('"clientTimezone" required should be of type int'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
@@ -38,22 +38,22 @@ const getFreeMasters = [
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			} 
 			
-			let { cityId, watchTypeId, startDateTimestamp, startDateTimezone } = req.query;
+			let { cityId, watchTypeId, timestamp, clientTimezone } = req.query;
 			
 			
-			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
-			const clientDateTime = new Date(startDate);
-			const withRespectToClientTZ = new Date(clientDateTime.setTime(clientDateTime.getTime() - startDateTimezone * 60 * 1000 ))
+			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, timestamp);
+			const clientDateTime = new Date(timestamp);
+			const withRespectToClientTZ = new Date(clientDateTime.setTime(clientDateTime.getTime() - clientTimezone * 60 * 1000 ))
 			console.log('[route] GET /available_masters clientDateTime:  ', clientDateTime)
 			console.log('[route] GET /available_masters backendDateTimTZ:', withRespectToClientTZ);
 			console.log('[route] GET /availWidth local timestamp: ', clientDateTime.getTime());
 			console.log('[route] GET /availWidth local timestamp: ', withRespectToClientTZ.getTime());
 			
 			
-			startDate = dateToNearestHour(withRespectToClientTZ).getTime() / 1000;
-			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
+			timestamp = dateToNearestHour(withRespectToClientTZ).getTime() / 1000;
+			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, timestamp);
 			
-			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);
+			let masters = await getAvailableMasters(cityId, watchTypeId, timestamp);
 			console.log('[route] GET /available_masters result: ', masters);
 			res.status(200).json({ masters }).end();
 		} catch(e) { console.log(e); res.status(400).end(); }

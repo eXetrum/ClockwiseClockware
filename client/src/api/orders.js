@@ -5,13 +5,13 @@ const getWatchTypes = (abortController=null) => {
     return axios.get(`/watch_types`, { signal: abortController?.signal}); 
 };
 
-const getAvailableMasters = (cityId, watchTypeId, startDateTimestamp, startDateTimezone, abortController=null) => { 
+const getAvailableMasters = (cityId, watchTypeId, timestamp, clientTimezone, abortController=null) => { 
     return axios.get(`/available_masters`, { 
         params: { 
             cityId: cityId, 
             watchTypeId: watchTypeId, 
-            startDateTimestamp: startDateTimestamp,
-            startDateTimezone: startDateTimezone
+            timestamp: startDateTimestamp,
+            clientTimezone: clientTimezone
         }
     }, { signal: abortController?.signal}); 
 };
