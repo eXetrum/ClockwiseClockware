@@ -98,10 +98,10 @@ const Order = () => {
         }
     };
 
-    const fetchAvailableMasters = async (cityId, watchTypeId, startDateTimestamp, startDateTimezone) => {
+    const fetchAvailableMasters = async (cityId, watchTypeId, startDate) => {
         try {
             const response = await getAvailableMasters(
-                cityId, watchTypeId, startDateTimestamp, startDateTimezone
+                cityId, watchTypeId, startDate
             );
 
             if(response && response.data && response.data.masters) {
@@ -169,7 +169,7 @@ const Order = () => {
         resetBeforeApiCall();
         setMasters(null);
 
-        fetchAvailableMasters(order.city.id, order.watchType.id, order.startDate.getTime(), order.startDate.getTimezoneOffset());
+        fetchAvailableMasters(order.city.id, order.watchType.id, order.startDate.getTime());//, order.startDate.getTimezoneOffset());
     };
 
     const pickUpMaster = async (event, master) => {
@@ -189,8 +189,8 @@ const Order = () => {
             watchTypeId: order.watchType.id,
             cityId: order.city.id,
             masterId: master.id,
-            timestamp: order.startDate.getTime(),//new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
-            clientTimezone: order.startDate.getTimezoneOffset()
+            startDate: order.startDate.getTime()//new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
+            //clientTimezone: order.startDate.getTimezoneOffset()
         };
         //jsDate.setTime( jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000 );
         console.log('tostr: ', order.startDate.toString());

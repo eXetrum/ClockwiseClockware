@@ -25,10 +25,17 @@ const getFreeMasters = [
 		.isInt({min: 0}).withMessage('"cityId" should be of type int'),
 	query('watchTypeId').exists().withMessage('"watchTypeId" required')
 		.isInt({min: 0}).withMessage('"watchTypeId" should be of type int'),
-	query('timestamp').exists().withMessage('"timestamp" required')
-		.isInt({min: 0}).toInt().withMessage('"timestamp" required should be of type int'),
-	query('clientTimezone').exists().withMessage('"clientTimezone" required')
-		.isInt().toInt().withMessage('"clientTimezone" required should be of type int'),
+	query('startDate').exists().withMessage('"startDate" required')
+		.isInt({min: 0}).toInt().withMessage('"startDate" should be of type int')
+		.custom((value, { req }) => { 
+			const curDate = Date.now();
+			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
+			if(value < curDate) { throw new Error('Past date time is not allowed'); }
+			
+			// Indicates the success of this synchronous custom validator
+			return true;
+		}),
+		
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
@@ -38,24 +45,19 @@ const getFreeMasters = [
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			} 
 			
-			let { cityId, watchTypeId, timestamp, clientTimezone } = req.query;
+			let { cityId, watchTypeId, startDate } = req.query;
 			
 			
-			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, timestamp);
-			const clientDateTime = new Date(timestamp);
-			const now = new Date();
-			const withRespectToClientTZ = new Date(now.setTime(now.getTime() - clientTimezone * 60 * 1000 ))
-			console.log('[route] GET /available_masters clientDateTime:  ', clientDateTime);
-			console.log('[route] GET /available_masters backendDateTime: ', now);
-			console.log('[route] GET /available_masters backendDateTimTZ:', withRespectToClientTZ);
-			console.log('[route] GET /availWidth local timestamp: ', clientDateTime.getTime());
-			console.log('[route] GET /availWidth local timestamp: ', withRespectToClientTZ.getTime());
+			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
+			const clientDateTime = new Date(startDate);
+			const backendDateTime = new Date();			
+			console.log('[route] GET /available_masters clientDateTime:', clientDateTime);
+			console.log('[route] GET /available_masters clientDateTime:', backendDateTime);			
 			
+			startDate = dateToNearestHour(clientDateTime).getTime() / 1000;
+			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
 			
-			timestamp = dateToNearestHour(withRespectToClientTZ).getTime() / 1000;
-			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, timestamp);
-			
-			let masters = await getAvailableMasters(cityId, watchTypeId, timestamp);
+			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);
 			console.log('[route] GET /available_masters result: ', masters);
 			res.status(200).json({ masters }).end();
 		} catch(e) { console.log(e); res.status(400).end(); }
@@ -83,18 +85,16 @@ const create = [
 	body('order.masterId').exists().withMessage('order.masterId required')
 		.not().isArray().withMessage('order.masterId should be of type int')
 		.isInt({min: 0}).withMessage('order.masterId should be of type int'),
-	body('order.startDate').exists().withMessage('order.startDate required'),
-		/*.isString().withMessage('order.startDate should be of type string(ex. new Date().toString())')
-		.trim().escape().notEmpty().withMessage('Empty order.startDate is not allowed')
+	body('order.startDate').exists().withMessage('"order.startDate" required')
+		.isInt({min: 0}).toInt().withMessage('"order.startDate" should be of type int')
 		.custom((value, { req }) => { 
-			const curDate = new Date();
-			const orderDate = new Date(value);
-			if(orderDate == 'Invalid date') { throw new Error('Invalid date'); }
-			if(orderDate < curDate) { throw new Error('Past date time is not allowed'); }
+			const curDate = Date.now();
+			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
+			if(value < curDate) { throw new Error('Past date time is not allowed'); }
 			
 			// Indicates the success of this synchronous custom validator
 			return true;
-		}).withMessage('order.startDate should be of type int'),*/
+		}),
 	
 	async (req, res) => {
 		try {
@@ -106,18 +106,20 @@ const create = [
 			}
 	
 			let { order } = req.body;
-			let d = moment(order.startDate);
-			console.log('=>>', d, typeof d);
-			//d.setTime(d.geTime() + d.getTimezoneOffset() * 60 * 1000);
 			console.log('[route] POST /orders ', order);
-			console.log('[route] POST /orders DATE: ', d);
+			
+			const clientDateTime = new Date(order.startDate);
+			const backendDateTime = new Date();
+			
+			console.log('[route] POST /orders clientDateTime: ', clientDateTime);
+			console.log('[route] POST /orders backendDateTime: ', backendDateTime);
 			//console.log('orig date str: ', d);
 			//console.log('local tostr: ', d.toString());
 			//console.log('local GMT: ', d.toGMTString());
 			//console.log('local ISO: ', d.toISOString());
 			//console.log('local UTC: ', d.toUTCString());
-			const nearestDate = dateToNearestHour(d);
-			console.log('[route] POST /orders NEAREST DATE: ', nearestDate);
+			const nearestDate = dateToNearestHour(clientDateTime);
+			console.log('[route] POST /orders nearestDate: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
 			order.startDate = nearestDate.getTime() / 1000;
