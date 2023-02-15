@@ -172,18 +172,6 @@ const Order = () => {
         fetchAvailableMasters(order.city.id, order.watchType.id, order.startDate.getTime());
     };
 
-    const onSelect = (selectedList, selectedItem)=> {
-        console.log('OnSelect: ', selectedList, selectedItem);
-        setOrder( (prev) => ({...prev, city: selectedItem }));
-        setMasters(null);
-    };
-
-    const onRemove = (selectedList, removedItem) => {
-        console.log('OnRemove: ', selectedList, removedItem);
-        setOrder( (prev) => ({...prev, city: null }));
-        setMasters(null);
-    };
-
     const pickUpMaster = async (event, master) => {
 
         const result = await confirm(`Do you want to choose "${master.email}" as your master and submit order?`, {title: 'Confirm', okText: 'Place Order', okButtonStyle: 'success'});
@@ -201,7 +189,7 @@ const Order = () => {
             watchTypeId: order.watchType.id,
             cityId: order.city.id,
             masterId: master.id,
-            startDate: order.startDate.getTime()
+            startDate: order.startDate.toString()
         };
 
         console.log('pickup2: ', orderToBackEnd);
