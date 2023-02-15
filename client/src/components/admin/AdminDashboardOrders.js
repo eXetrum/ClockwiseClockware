@@ -30,6 +30,7 @@ const AdminDashboardOrders = () => {
             const response = await getOrders(abortController);
             if(response && response.data && response.data.orders) {
                 const { orders } = response.data;
+                console.log(orders);
                 orders.map(item => {
                     item.dateTime.startDate = new Date(item.dateTime.startDate);
                     item.dateTime.endDate = new Date(item.dateTime.endDate);
