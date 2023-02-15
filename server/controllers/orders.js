@@ -5,9 +5,9 @@ const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderB
 
 const moment = require('moment');
 
-const dateToNearestHour = (date) => {
+const dateToNearestHour = (timestamp) => {
 	const ms = 1000 * 60 * 60;
-	return new Date(Math.ceil(date.getTime() / ms) * ms);
+	return Math.ceil(timestamp / ms) * ms;
 };
 
 ///////// Client part (No route protection)
@@ -52,9 +52,9 @@ const getFreeMasters = [
 			const clientDateTime = new Date(startDate);
 			const backendDateTime = new Date();			
 			console.log('[route] GET /available_masters clientDateTime:', clientDateTime);
-			console.log('[route] GET /available_masters clientDateTime:', backendDateTime);			
+			console.log('[route] GET /available_masters backendDateTime:', backendDateTime);			
 			
-			startDate = dateToNearestHour(clientDateTime).getTime() / 1000;
+			startDate = dateToNearestHour(startDate) / 1000;
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
 			
 			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);
@@ -118,11 +118,11 @@ const create = [
 			//console.log('local GMT: ', d.toGMTString());
 			//console.log('local ISO: ', d.toISOString());
 			//console.log('local UTC: ', d.toUTCString());
-			const nearestDate = dateToNearestHour(clientDateTime);
+			const nearestDate = dateToNearestHour(order.startDate) / 1000;
 			console.log('[route] POST /orders nearestDate: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
-			order.startDate = nearestDate.getTime() / 1000;
+			order.startDate = nearestDate;//nearestDate.getTime() / 1000;
 			
 			console.log('[route] POST /orders ', order);
 			let result = await createOrder(order);
