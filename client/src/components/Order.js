@@ -189,7 +189,7 @@ const Order = () => {
             watchTypeId: order.watchType.id,
             cityId: order.city.id,
             masterId: master.id,
-            startDate: order.startDate.toString()
+            startDate: order.startDate.toGMTString()
         };
 
         console.log('pickup2: ', orderToBackEnd);
