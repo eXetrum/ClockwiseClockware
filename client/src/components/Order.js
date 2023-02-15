@@ -110,6 +110,9 @@ const Order = () => {
             }
         } catch(e) {
             setError(e);
+            if(e && e.response && e.response.data && e.response.data.detail) {
+                enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+            }
         } finally {
             setPending(false);
         }
@@ -312,8 +315,7 @@ const Order = () => {
                                     disabled={pending}
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
-                                    minDate={dayjs(order.curDate)}
-                                    minTime={dayjs(order.curDate)}
+                                    minDateTime={dayjs(order.curDate)}
                                     disablePast={true}
                                     value={order.startDate}
                                     views={['year', 'month', 'day', 'hours']}

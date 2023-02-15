@@ -30,25 +30,9 @@ const AdminEditOrder = () => {
 
     const {id} = useParams();
 
-    // Initial
-    const multiselectRef = React.createRef();
-    const [watchTypes, setWatchTypes] = useState(null);
-    const [cities, setCities] = useState(null);
-    const [masters, setMasters] = useState(null);
-
-    const [originalOrder, setOriginalOrder] = useState(null);
-    const [order, setOrder] = useState(null);
-    const [lastAssignedCity, setLastAssignedCity] = useState(null);
-    const [showMasters, setShowMasters] = useState(false);
-    const [pending, setPending] = useState(true);
-    const [info, setInfo] = useState(null);
-    const [error, setError] = useState(null);
-
-    const toNearestHour = (date) => {
-        let rounded = new Date(date);
-        rounded.setHours(rounded.getHours() + Math.ceil((rounded.getMinutes() + (rounded.getSeconds() / 60))/60));
-        rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
-        return rounded;
+    const dateToNearestHour = (date = new Date()) => {
+        const ms = 1000 * 60 * 60;
+        return new Date(Math.ceil(date.getTime() / ms) * ms);
     };
 
     const addHours = (date, hours) => {
@@ -62,6 +46,21 @@ const AdminEditOrder = () => {
         return max(start1, start2) <= min(end1, end2);
     };
 
+    // Initial
+    const multiselectRef = React.createRef();
+    const [watchTypes, setWatchTypes] = useState(null);
+    const [cities, setCities] = useState(null);
+    const [masters, setMasters] = useState(null);
+
+    const [curDate, setCurDate] = useState(dateToNearestHour());
+
+    const [originalOrder, setOriginalOrder] = useState(null);
+    const [order, setOrder] = useState(null);
+    const [lastAssignedCity, setLastAssignedCity] = useState(null);
+    const [showMasters, setShowMasters] = useState(false);
+    const [pending, setPending] = useState(true);
+    const [info, setInfo] = useState(null);
+    const [error, setError] = useState(null);
 
     const fetchWachTypes = async(abortController) => {
         try {
@@ -363,7 +362,7 @@ const AdminEditOrder = () => {
                                     <Form.Label>Watch Type:</Form.Label>
                                 </Col>
                                 <Col>
-                            {watchTypes && watchTypes.map(( item, index ) => {
+                                {watchTypes && watchTypes.map(( item, index ) => {
                                 return (
                                     <Form.Check
                                         inline
@@ -435,25 +434,42 @@ const AdminEditOrder = () => {
                         <FormGroup className="mb-3">                            
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
                                 <DateTimePicker
+                                    disabled={pending}
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
-                                    value={new Date(order.dateTime.startDate)}
+                                    minDateTime={dayjs(curDate)}
+                                    disablePast={true}
+                                    value={order.dateTime.startDate}
                                     views={['year', 'month', 'day', 'hours']}
+                                    ampm={false}
                                     onChange={(newValue) => {
+                                        setOrder( (prev) => ({ ...prev, dateTime: {
+                                            ...prev.dateTime,
+                                            startDate: new Date(newValue)
+                                        }}));
                                         setMasters(null);
                                         setShowMasters(false);
                                         setInfo(null);
-                                        setError(null);
-                                        setOrder( (prev) => ({
-                                            ...prev,
-                                            dateTime: {
-                                                ...prev.dateTime,
-                                                startDate: toNearestHour(new Date(newValue)).getTime()
-                                            } 
-                                        }));                                        
+                                        //setError(null);
+                                    }}
+                                    onError={(reason) => {
+                                        if(reason === 'invalidDate') {
+                                            setError({reason: reason, detail: reason});
+                                        } else if(reason === 'minTime') {
+                                            setError({reason: reason, detail: 'Time is past'});
+                                        } else if(reason === 'disablePast') {
+                                            setError('Unable to set past date');
+                                            setError({reason: reason, detail: 'Date is past'});
+                                        } else {
+                                            setError(null);
+                                        }
+                                        console.log('datetime: ', reason, typeof reason, reason == 'minTime');
+                                        console.log(curDate, order.startDate);
                                     }}
                                 />
                             </LocalizationProvider>
+                            {error && error.reason && ['invalidDate', 'minTime', 'disablePast'].includes(error.reason) 
+                            && <strong style={{color: 'red'}}><br/>{error.detail}</strong>}
                         </FormGroup>
                         <hr />
                         {order.master &&

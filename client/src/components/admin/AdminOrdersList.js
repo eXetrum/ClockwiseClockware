@@ -65,6 +65,8 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                 {orders.map((order, index) => {
                     return (
                     <div key={"order_id_" + order.id}>
+                        
+                        <hr/>
                         <Row>
                             <Col className="text-center p-2 m-0 col-1">{ order.id }</Col>
                             
@@ -128,7 +130,6 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                                 </Row>
                             </Col>
                         </Row>
-                        <hr/>
                     </div>
                     );
                 })

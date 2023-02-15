@@ -1,9 +1,9 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, query, validationResult } = require('express-validator');
-const { sendEmail } = require('../middleware/NodeMailer');
+const { sendMail } = require('../middleware/NodeMailer');
 const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
-
-const moment = require('moment');
+const { getMasterById } = require('../models/masters');
+const { getCityById } = require('../models/cities');
 
 const dateToNearestHour = (timestamp) => {
 	const ms = 1000 * 60 * 60;
@@ -113,11 +113,7 @@ const create = [
 			
 			console.log('[route] POST /orders clientDateTime: ', clientDateTime);
 			console.log('[route] POST /orders backendDateTime: ', backendDateTime);
-			//console.log('orig date str: ', d);
-			//console.log('local tostr: ', d.toString());
-			//console.log('local GMT: ', d.toGMTString());
-			//console.log('local ISO: ', d.toISOString());
-			//console.log('local UTC: ', d.toUTCString());
+
 			const nearestDate = dateToNearestHour(order.startDate) / 1000;
 			console.log('[route] POST /orders nearestDate: ', nearestDate);
 			order.client.name = order.client.name.trim();
@@ -127,13 +123,21 @@ const create = [
 			console.log('[route] POST /orders ', order);
 			let result = await createOrder(order);
 			console.log('[route] POST /orders result: ', result);
-			//const masters = await getAvailableMasters(order.city.id, order.watchType.id, order.dateTime)
-			//console.log('[route] POST /orders result array of masters: ', masters);
 			
 			/*
 			let startDate = new Date(order.startDate);
 			let endDate = new Date(order.startDate);
 			endDate.setHours(endDate.getHours() + order.watchType.repairTime);
+			*/
+			
+			const watches = await getWatchTypes();
+			const watch = watches.find(item => item.id == order.watchTypeId); 
+			
+			result = await getMasterById(order.masterId);
+			const master = result[0];
+			
+			result = await getCityById(order.cityId);
+			const city = result[0];
 			
 			const params = {
 				from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
@@ -141,37 +145,52 @@ const create = [
 				subject: 'Your order details at ClockwiseClockware',
 				text: '',
 				html: `
-				<p>Mr(s) ${order.client.name} thank you for trusting us to do the repair work !</p><br/>
-				<p>Order details:</p>
-				<table>
-					<thead>
-						<tr>
-							<th>Master</th>
-							<th>City</th>
-							<th>Watch type</th>						
-							<th>Start Date</th>
-							<th>End Date</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td><b>${order.master.name}</b>, <i>${order.master.email}</i></td>
-							<td>${order.city.name}</td>
-							<td>${order.watchType.name}</td>						
-							<td>${startDate}</td>
-							<td>${endDate}</td>
-						</tr>
-					</tbody>
-				</table>`, // html body
+				<html>
+				<head></head>
+				<body>
+					<script>
+					windows.onload = {
+						const repairTime = ${watch.repairTime};
+						const startDate = new Date(${nearestDate});
+						let endDate = new Date(startDate);
+						endDate.setHours(endDate.getHours() + repairTime);
+						const startDateTD = document.getElementById('startDate');
+						const endDateTD = document.getElementById('endDate');
+						startDateTD.innerHTML = startDate.toString();
+						endDateTD.innerHTML = endDate.toString();
+					</script>
+					<p>Mr(s) ${order.client.name} thank you for trusting us to do the repair work !</p><br/>
+					<p>Order details:</p>
+					<table>
+						<thead>
+							<tr>
+								<th>Master</th>
+								<th>City</th>
+								<th>Watch type</th>						
+								<th>Start Date</th>
+								<th>End Date</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td><b>${master.name}</b>, <i>${master.email}</i></td>
+								<td>${city.name}</td>
+								<td>${watch.name}</td>						
+								<td id='startDate'>${new Date(nearestDate * 1000)}</td>
+								<td id='endDate'>${new Date((nearestDate + watch.repairTime * 3600) * 1000)}</td>
+							</tr>
+						</tbody>
+					</table>
+				</body>
+				</html>`, // html body
 			};
 			console.log(params);
-			*/
 			
-			//let info = await sendMail(params);
+			let info = await sendMail(params);
 
-			//console.log(info);
+			console.log(info);
 			// DUMMY DUE TESTS
-			const info = {messageId: 42};
+			//const info = {messageId: 42};
 
 			res.status(201).json({ info }).end();
 			
@@ -246,10 +265,14 @@ const get = [
 			let result = await getOrderById(id);
 			console.log('[route] GET /orders/:id result: ', result);
 			let order = result[0];
-			console.log('[route] GET /orders/:id result: ', order);
+			console.log('[route] GET /orders/:id result: ', order);			
 			if(!order) {
 				res.status(404).json({message: 'Record Not Found'}).end();
 			} else {
+				const curDate = Date.now();
+				if(new Date(order.dateTime.startDate).getTime() < curDate) { 
+					return res.status(403).json({ detail: 'Unable to get odrer with past date time'}).end();
+				}
 				res.status(200).json({ order }).end();
 			}
 		} catch(e) { console.log(e); res.status(400).end(); }
@@ -281,7 +304,15 @@ const update = [
 		.isInt({min: 0}).withMessage('order.masterId should be of type int'),
 	body('order.startDate').exists().withMessage('order.startDate required')
 		.not().isArray().withMessage('order.startDate should be of type int')
-		.isInt({min: 0}).withMessage('order.startDate should be of type int'),
+		.isInt({min: 0}).toInt().withMessage('order.startDate should be of type int')
+		.custom((value, { req }) => { 
+			const curDate = Date.now();
+			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
+			if(value < curDate) { throw new Error('Past date time is not allowed'); }
+			
+			// Indicates the success of this synchronous custom validator
+			return true;
+		}),
 
 	async (req, res) => {
 		try {
@@ -295,11 +326,11 @@ const update = [
 			let { order } = req.body;
 			console.log('[route] PUT /orders/:id ', id, order);
 			console.log('[route] PUT /orders DATE: ', new Date(order.startDate));
-			const nearestDate = dateToNearestHour(new Date(order.startDate));
+			const nearestDate = dateToNearestHour(order.startDate) / 1000;
 			console.log('[route] PUT /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
-			order.startDate = nearestDate.getTime() / 1000;			
+			order.startDate = nearestDate;
 			let result = await updateOrderById(id, order);
 			console.log('[route] PUT /orders/:id update result: ', result);
 			order = result[0];

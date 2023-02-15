@@ -147,7 +147,7 @@ const getOrderById = async (id) => {
 							json_build_object('id', CL2.id, 'name', CL2.name, 'email', CL2.email) AS client, 
 							json_build_object('id', C2.id, 'name', C2.name) as city,
 							json_build_object('id', W2.id, 'name', W2.name, 'repairTime', W2.repair_time) as "watchType",
-							json_build_object('startDate', O2.start_date, 'endDate', O2.start_date + interval '1h' * W2.repair_time) as "dateTime"
+							json_build_object('startDate', O2.start_date AT TIME ZONE 'UTC', 'endDate', O2.start_date AT TIME ZONE 'UTC' + interval '1h' * W2.repair_time) as "dateTime"
 							FROM 
 								orders O2
 								INNER JOIN watch_type W2 ON O2.watch_type_id=W2.id
@@ -162,7 +162,7 @@ const getOrderById = async (id) => {
 			) as master,
 			json_build_object('id', C.id, 'name', C.name) as city,
 			json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
-			json_build_object('startDate', O.start_date, 'endDate', O.start_date + interval '1h' * W.repair_time) as "dateTime"
+			json_build_object('startDate', O.start_date AT TIME ZONE 'UTC', 'endDate', O.start_date AT TIME ZONE 'UTC' + interval '1h' * W.repair_time) as "dateTime"
 			FROM 
 				orders O 
 				INNER JOIN watch_type W ON O.watch_type_id=W.id
@@ -201,7 +201,9 @@ const updateOrderById = async (id, order) => {
 	console.log('[db] updateOrderById repairTime=', repairTime);
 
 	let result = await execQuery(`
-		UPDATE orders SET watch_type_id=$1, city_id=$2, master_id=$3, start_date=to_timestamp($4), end_date=(to_timestamp($4) + interval '1h' * ($5))
+		UPDATE orders SET watch_type_id=$1, city_id=$2, master_id=$3, 
+			start_date=to_timestamp($4) AT TIME ZONE 'UTC', 
+			end_date=(to_timestamp($4) AT TIME ZONE 'UTC' + interval '1h' * ($5))
 		WHERE id=($6)
 		RETURNING *;
 	`, [order.watchTypeId, order.cityId, order.masterId, order.startDate, repairTime, id]);
