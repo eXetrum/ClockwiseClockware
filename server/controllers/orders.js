@@ -92,7 +92,8 @@ const create = [
 			}
 	
 			let { order } = req.body;
-			const d = new Date(order.startDate);
+			let d = new Date(order.startDate);
+			d.setTime(d.geTime() + order.startDate.getTimezoneOffset() * 60 * 1000);
 			console.log('[route] POST /orders ', order);
 			console.log('[route] POST /orders DATE: ', d);
 			console.log('orig date str: ', d);
@@ -100,7 +101,7 @@ const create = [
 			console.log('local GMT: ', d.toGMTString());
 			console.log('local ISO: ', d.toISOString());
 			console.log('local UTC: ', d.toUTCString());
-			const nearestDate = dateToNearestHour(new Date(order.startDate));
+			const nearestDate = dateToNearestHour(d);
 			console.log('[route] POST /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();

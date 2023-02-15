@@ -207,7 +207,7 @@ const Order = () => {
 
     const isFormValid = () => {
         return order.client.name.length >= 3 
-            && order.client.email 
+            && /\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)
             && order.watchType 
             && order.city
             && order.startDate >= order.curDate
