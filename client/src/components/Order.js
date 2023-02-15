@@ -191,6 +191,10 @@ const Order = () => {
             masterId: master.id,
             startDate: order.startDate.toGMTString()
         };
+        console.log('tostr: ', order.startDate.toString());
+        console.log('GMT: ', order.startDate.toGMTString());
+        console.log('ISO: ', order.startDate.toISOString());
+        console.log('UTC: ', order.startDate.toUTCString());
 
         console.log('pickup2: ', orderToBackEnd);
 

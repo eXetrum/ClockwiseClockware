@@ -92,8 +92,14 @@ const create = [
 			}
 	
 			let { order } = req.body;
+			const d = new Date(order.startDate);
 			console.log('[route] POST /orders ', order);
-			console.log('[route] POST /orders DATE: ', new Date(order.startDate));
+			console.log('[route] POST /orders DATE: ', d);
+			console.log('orig date str: ', d);
+			console.log('local tostr: ', d.toString());
+			console.log('local GMT: ', d.toGMTString());
+			console.log('local ISO: ', d.toISOString());
+			console.log('local UTC: ', d.toUTCString());
 			const nearestDate = dateToNearestHour(new Date(order.startDate));
 			console.log('[route] POST /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
