@@ -48,9 +48,9 @@ const getAvailableMasters = async (cityId, watchTypeId, startDate) => {
 				INNER JOIN orders O ON O.watch_type_id=W.id
 		) InnerSubQ
 		WHERE
-			InnerSubQ.start_date <= (to_timestamp(cast(($2) as bigint)) + interval '1h' * (SELECT repair_time FROM watch_type WHERE id=($3) LIMIT 1))
+			InnerSubQ.start_date <= (to_timestamp(cast(($2) as bigint)) AT TIME ZONE 'UTC' + interval '1h' * (SELECT repair_time FROM watch_type WHERE id=($3) LIMIT 1))
 			AND
-			InnerSubQ.end_date >= to_timestamp (cast(($2) as bigint))
+			InnerSubQ.end_date >= to_timestamp (cast(($2) as bigint)) AT TIME ZONE 'UTC'
 	)
 	ORDER BY M.rating DESC;
 	`, [cityId, startDate, watchTypeId]);
@@ -91,7 +91,7 @@ const createOrder = async (order) => {
 			RETURNING id
 		)
 		INSERT INTO orders (client_id, watch_type_id, city_id, master_id, start_date, end_date)
-		VALUES ((SELECT id FROM new_client), $3, $4, $5, to_timestamp($6), to_timestamp($6) + interval '1h' * ($7) )
+		VALUES ((SELECT id FROM new_client), $3, $4, $5, to_timestamp($6) AT TIME ZONE 'UTC', to_timestamp($6) AT TIME ZONE 'UTC' + interval '1h' * ($7) )
 	`, [order.client.name, order.client.email, order.watchTypeId, order.cityId, order.masterId, order.startDate, repairTime]);
 	
 	console.log('[db] createOrder result: ', result.rows);
@@ -106,7 +106,7 @@ const getOrders = async () => {
 			json_build_object('id', M.id, 'name', M.name, 'email', M.email, 'rating', M.rating) as master,
 			json_build_object('id', C.id, 'name', C.name) as city,
 			json_build_object('id', W.id, 'name', W.name, 'repairTime', W.repair_time) as "watchType",
-			json_build_object('startDate', O.start_date, 'endDate', O.end_date) as "dateTime"
+			json_build_object('startDate', O.start_date AT TIME ZONE 'UTC', 'endDate', O.end_date AT TIME ZONE 'UTC') as "dateTime"
 			FROM 
 				orders O
 				INNER JOIN watch_type W ON O.watch_type_id=W.id
