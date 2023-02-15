@@ -3,7 +3,9 @@ const { body, param, query, validationResult } = require('express-validator');
 const { sendEmail } = require('../middleware/NodeMailer');
 const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
 
-const dateToNearestHour = (date = new Date()) => {
+const moment = require('moment');
+
+const dateToNearestHour = (date) => {
 	const ms = 1000 * 60 * 60;
 	return new Date(Math.ceil(date.getTime() / ms) * ms);
 };
@@ -38,7 +40,13 @@ const getFreeMasters = [
 			
 			
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
-			startDate = dateToNearestHour(new Date(startDate)).getTime() / 1000;
+			const backEndDatetime = new Date(startDate);
+			const offset = new Date(backEndDatetime.setTime(backEndDatetime.getTime() - backEndDatetime.getTimezoneOffset() * 60 * 1000 ))
+			console.log('[route] GET /available_masters backendDateTime: ', backEndDatetime, offset);
+			console.log('[route] GET /availWidth local timestamp: ', offset.getTime());
+			
+			
+			startDate = dateToNearestHour(offset).getTime() / 1000;
 			console.log('[route] GET /available_masters query params: ', cityId, watchTypeId, startDate);
 			
 			let masters = await getAvailableMasters(cityId, watchTypeId, startDate);
@@ -69,8 +77,8 @@ const create = [
 	body('order.masterId').exists().withMessage('order.masterId required')
 		.not().isArray().withMessage('order.masterId should be of type int')
 		.isInt({min: 0}).withMessage('order.masterId should be of type int'),
-	body('order.startDate').exists().withMessage('order.startDate required')
-		.isString().withMessage('order.startDate should be of type string(ex. new Date().toString())')
+	body('order.startDate').exists().withMessage('order.startDate required'),
+		/*.isString().withMessage('order.startDate should be of type string(ex. new Date().toString())')
 		.trim().escape().notEmpty().withMessage('Empty order.startDate is not allowed')
 		.custom((value, { req }) => { 
 			const curDate = new Date();
@@ -80,7 +88,7 @@ const create = [
 			
 			// Indicates the success of this synchronous custom validator
 			return true;
-		}).withMessage('order.startDate should be of type int'),
+		}).withMessage('order.startDate should be of type int'),*/
 	
 	async (req, res) => {
 		try {
@@ -92,15 +100,16 @@ const create = [
 			}
 	
 			let { order } = req.body;
-			let d = new Date(order.startDate);
-			d.setTime(d.geTime() + order.startDate.getTimezoneOffset() * 60 * 1000);
+			let d = moment(order.startDate);
+			console.log('=>>', d, typeof d);
+			//d.setTime(d.geTime() + d.getTimezoneOffset() * 60 * 1000);
 			console.log('[route] POST /orders ', order);
 			console.log('[route] POST /orders DATE: ', d);
-			console.log('orig date str: ', d);
-			console.log('local tostr: ', d.toString());
-			console.log('local GMT: ', d.toGMTString());
-			console.log('local ISO: ', d.toISOString());
-			console.log('local UTC: ', d.toUTCString());
+			//console.log('orig date str: ', d);
+			//console.log('local tostr: ', d.toString());
+			//console.log('local GMT: ', d.toGMTString());
+			//console.log('local ISO: ', d.toISOString());
+			//console.log('local UTC: ', d.toUTCString());
 			const nearestDate = dateToNearestHour(d);
 			console.log('[route] POST /orders NEAREST DATE: ', nearestDate);
 			order.client.name = order.client.name.trim();
