@@ -48,9 +48,9 @@ const getAvailableMasters = async (cityId, watchTypeId, startDate) => {
 				INNER JOIN orders O ON O.watch_type_id=W.id
 		) InnerSubQ
 		WHERE
-			InnerSubQ.start_date <= (to_timestamp(cast(($2) as bigint)) AT TIME ZONE 'UTC' + interval '1h' * (SELECT repair_time FROM watch_type WHERE id=($3) LIMIT 1))
+			InnerSubQ.start_date < (to_timestamp(cast(($2) as bigint)) AT TIME ZONE 'UTC' + interval '1h' * (SELECT repair_time FROM watch_type WHERE id=($3) LIMIT 1))
 			AND
-			InnerSubQ.end_date >= to_timestamp (cast(($2) as bigint)) AT TIME ZONE 'UTC'
+			InnerSubQ.end_date > to_timestamp (cast(($2) as bigint)) AT TIME ZONE 'UTC'
 	)
 	ORDER BY M.rating DESC;
 	`, [cityId, startDate, watchTypeId]);
