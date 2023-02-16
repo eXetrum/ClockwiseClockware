@@ -43,7 +43,7 @@ const AdminEditOrder = () => {
     const dateRangesOverlap = (start1, end1, start2, end2) => {
         const min = (a, b) => { return a < b ? a : b; }
         const max = (a, b) => { return a > b ? a : b; }
-        return max(start1, start2) <= min(end1, end2);
+        return max(start1, start2) < min(end1, end2);
     };
 
     // Initial

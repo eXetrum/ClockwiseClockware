@@ -67,8 +67,8 @@ const install = async () => {
 			CONSTRAINT start_date_less_than_end_date CHECK (start_date < end_date),
 			CONSTRAINT overlapping_times EXCLUDE USING GIST (
 				master_id WITH =,
-				box(point(EXTRACT(EPOCH FROM start_date) - 1, 0), 
-					point(EXTRACT(EPOCH FROM end_date) + 1,   0)) WITH &&
+				box(point(EXTRACT(EPOCH FROM start_date) + 1, 0), 
+					point(EXTRACT(EPOCH FROM end_date) - 1,   0)) WITH &&
 			)
 		);
 		INSERT INTO cities (name) VALUES ('Дніпро'), ('Ужгород');
