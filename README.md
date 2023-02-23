@@ -1,6 +1,6 @@
 # Getting Started with ClockwiseClockware App
 #
-## git clone 
+### `git clone`
 ##
 
 # To start server (backend)
