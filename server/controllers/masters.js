@@ -1,14 +1,12 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
 //const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
-const { City } = require('../database/models');
+const { Master, City, MasterCityList } = require('../database/models');
 //const getMasters = () => { return null; }
 const createMaster = () => { return null; }
 const deleteMasterById = () => { return null; }
 const getMasterById = () => { return null; }
 const updateMasterById = () => { return null; }
-
-const { Master } = require('../database/models');
 
 
 const getAll = [
