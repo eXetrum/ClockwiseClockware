@@ -1,9 +1,16 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, query, validationResult } = require('express-validator');
 const { sendMail } = require('../middleware/NodeMailer');
-const { getWatchTypes, getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
+const { getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
 const { getMasterById } = require('../models/masters');
 const { getCityById } = require('../models/cities');
+
+const { Watches } = require('../database/models');
+
+const getWatchTypes = () => {
+	return null;
+};
+
 
 const dateToNearestHour = (timestamp) => {
 	const ms = 1000 * 60 * 60;
@@ -13,10 +20,11 @@ const dateToNearestHour = (timestamp) => {
 ///////// Client part (No route protection)
 const getWatches = async (req, res) => {
 	try {
-		console.log('[route] GET /watch_types');
-		let watchTypes = await getWatchTypes();
-		console.log('[route] GET /watch_types result: ', watchTypes);
-		res.status(200).json({ watchTypes }).end();
+		console.log('[route] GET /watches');
+		//let watchTypes = await getWatchTypes();
+		const watches = await Watches.findAll();
+		console.log('[route] GET /watches result: ', watches);
+		res.status(200).json({ watches }).end();
 	} catch(e) { console.log(e); res.status(400).end();}
 };
 
