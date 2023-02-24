@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Watch types
 const getWatchTypes = (abortController=null) => { 
-    return axios.get(`/watch_types`, { signal: abortController?.signal}); 
+    return axios.get(`/watches`, { signal: abortController?.signal}); 
 };
 
 const getAvailableMasters = (cityId, watchTypeId, startDate, abortController=null) => { 
