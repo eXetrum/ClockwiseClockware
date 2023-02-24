@@ -73,9 +73,9 @@ const Order = () => {
     const fetchWachTypes = async(abortController) => {
         try {
             const response = await getWatchTypes(abortController);
-            if(response && response.data && response.data.watchTypes) {
-                const { watchTypes } = response.data;
-                setWatchTypes(watchTypes);
+            if(response && response.data && response.data.watches) {
+                const { watches } = response.data;
+                setWatchTypes(watches);
             }
         } catch(e) {
             setError(e);
