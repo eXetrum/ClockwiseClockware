@@ -10,7 +10,12 @@ module.exports = (sequelize, DataTypes) => {
 		 * The `models/index` file will call this method automatically.
 		 */
 		static associate(models) {
-		  // define association here
+			// define association here
+			City.belongsToMany(models.Master, {
+				through: models.MasterCityList,
+				as: "masters",
+				foreignKey: "cityId",
+			});
 		}
 	}
 	City.init({
@@ -29,6 +34,7 @@ module.exports = (sequelize, DataTypes) => {
 		sequelize,
 		modelName: 'City',
 		tableName: 'cities',
+		associations: true
 	});
 	
 	//City.beforeCreate(city => city.id = uuid.v4());
