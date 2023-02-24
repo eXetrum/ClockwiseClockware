@@ -2,7 +2,7 @@ const router = require('express').Router();
 const OrderController = require('../controllers/orders');
 
 ///////// Client part (No route protection)
-router.get('/api/watch_types', OrderController.getWatches);
+router.get('/api/watches', OrderController.getWatches);
 router.get('/api/available_masters', OrderController.getFreeMasters);
 router.post('/api/orders', OrderController.create);
 

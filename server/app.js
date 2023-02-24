@@ -8,7 +8,7 @@ const app = express()
 
 const port = process.env.NODE_APP_PORT || 4200
 
-const users = require('./routes/users');
+const admins = require('./routes/admins');
 const cities = require('./routes/cities');
 const masters = require('./routes/masters');
 const orders = require('./routes/orders');
@@ -21,7 +21,7 @@ app.use(cors({
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(users); 
+app.use(admins); 
 app.use(cities);
 app.use(masters);
 app.use(orders);

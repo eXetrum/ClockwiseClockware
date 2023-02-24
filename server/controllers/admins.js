@@ -1,6 +1,6 @@
 const { generateAccessToken } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { getUser } = require('../models/users');
+const { getUser } = require('../models/admins');
 
 const create = async (req, res) => {
 	// TODO: 
