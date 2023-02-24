@@ -1,12 +1,12 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { getCities, createCity, deleteCityById, getCityById, updateCityById } = require('../models/cities');
+const { City } = require('../database/models');
 
 // No route protector
 const getAll = async (req, res) => {
 	try {
 		console.log('[route] GET /cities');
-		let cities = await getCities();
+		let cities = await City.findAll();
 		console.log('[route] GET /cities result: ', cities);
 		res.status(200).json({ cities }).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
@@ -28,13 +28,12 @@ const create = [
 			let { cityName } = req.body;
 			cityName = cityName.trim();
 			console.log('[route] POST /cities: ', cityName);
-			let result = await createCity(cityName);
-			let city = result[0];
-			console.log('[route] POST /cities: ', city);
+			const city = await City.create({ name: cityName });
+			console.log('[route] POST /cities result: ', city);
 			res.status(201).json({ city }).end();
 		} catch(e) { 
 			console.log(e);
-			if(e.constraint == 'cities_name_key') {
+			if(e && e.parent && e.parent.constraint && e.parent.constraint == 'cities_name_key') {
 				return res.status(409).json({ detail: `City already exists`}).end();
 			}
 			res.status(400).json(e).end(); 
@@ -44,7 +43,7 @@ const create = [
 
 const remove = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('City ID required'),
 	async (req, res) => {
 		
 		try {
@@ -56,15 +55,24 @@ const remove = [
 			} 
 			const { id } = req.params;
 			console.log('[route] DELETE /cities/:id ', id);
-			let result = await deleteCityById(id);
+			//let result = await deleteCityById(id);
+			const result = await City.destroy({ where: { id: id }})
 			console.log('[route] DELETE /cities del result: ', result);
-			if(Array.isArray(result) && result.length == 0) {
+			if(!result) {
 				return res.status(404).json({ detail: 'City not found' }).end();
 			}
 			res.status(204).end();
 		} catch(e) { 
 			console.log(e); 
-			console.log('constraint: ', e.constraint);
+			console.log('constraint: ', e.parent.constraint);
+			console.log('constraint2: ', e.parent);
+			console.log('constraint3: ', e.parent.code);
+			if(e && e.parent && e.parent.code && e.parent.code == '22P02') { // incorrect UUID string
+				return res.status(404).json({ detail: 'City not found' }).end();
+			}
+			
+			
+			// TODO: "not implemented"
 			if(e.constraint == 'master_city_list_city_id_fkey') {
 				return res.status(409).json({ detail: `Deletion restricted. At least one master contains reference to this city`}).end();
 			} else if(e.constraint == 'orders_city_id_fkey') {
@@ -77,7 +85,7 @@ const remove = [
 
 const get = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('City ID required'),
 	async (req, res) => {
 		
 		try {
@@ -89,20 +97,25 @@ const get = [
 			} 
 			const { id } = req.params;
 			console.log('[route] GET /cities/:id ', id);
-			let result = await getCityById(id);
-			console.log('[route] GET /cities/:id result: ', result);
-			if(Array.isArray(result) && result.length == 0) {
+			const city = await City.findOne({ where: { id: id }});
+			console.log('[route] GET /cities/:id result: ', city);
+			if(!city) {
 				return res.status(404).json({ detail: 'City not found' }).end();
 			}
-			let city = result[0];
 			res.status(200).json({ city }).end();
-		} catch(e) { console.log(e); res.status(400).end(); }
+		} catch(e) { 
+			console.log(e); 
+			if(e && e.parent && e.parent.code && e.parent.code == '22P02') { // incorrect UUID string
+				return res.status(404).json({ detail: 'City not found' }).end();
+			}
+			res.status(400).end(); 
+		}
 	}
 ];
 
 const update = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('City ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('City ID required'),
 	body('cityName').exists().withMessage('City name required')
 		.isString().withMessage('City name should be of type string')
 		.trim().escape().notEmpty().withMessage('Empty city name is not allowed'),
@@ -119,17 +132,20 @@ const update = [
 			let { cityName } = req.body;
 			cityName = cityName.trim();
 			console.log('[route] PUT /cities/:id ', id, cityName);
-			let result = await updateCityById(id, cityName);
-			console.log('[route] PUT /cities/:id result: ', result);
-			if(Array.isArray(result) && result.length == 0) {
+			const city = await City.update({ name: cityName }, { where: { id: id }});
+			console.log('[route] PUT /cities/:id result: ', city);
+			if(!city || Array.isArray(city) && city[0] == 0) {
 				return res.status(404).json({ detail: 'City not found' }).end();
 			}
-			const city = result[0];
-			res.status(200).json({city}).end();
+			res.status(200).end();
 		} catch(e) { 
 			console.log(e); 
-			console.log('constraint: ', e.constraint);
-			if(e.constraint == 'cities_name_key') {
+			console.log('constraint: ', e.parent.constraint);
+			if(e && e.parent && e.parent.code && e.parent.code == '22P02') { // incorrect UUID string
+				return res.status(404).json({ detail: 'City not found' }).end();
+			}
+			
+			if(e && e.parent && e.parent.constraint && e.parent.constraint == 'cities_name_key') {
 				return res.status(409).json({ detail: `City already exists`}).end();
 			}
 			res.status(400).end(); 
