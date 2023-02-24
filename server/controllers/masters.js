@@ -1,13 +1,25 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
+//const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
+const { City } = require('../database/models');
+//const getMasters = () => { return null; }
+const createMaster = () => { return null; }
+const deleteMasterById = () => { return null; }
+const getMasterById = () => { return null; }
+const updateMasterById = () => { return null; }
+
+const { Master } = require('../database/models');
+
 
 const getAll = [
 	RouteProtector, 
 	async (req, res) => {
 		try {
 			console.log('[route] GET /masters');
-			let masters = await getMasters();
+			//let masters = await getMasters();
+			let masters = await Master.findAll({
+				include: { model: City, as: 'cities', through: {attributes: []} }
+			});
 			console.log('[route] GET /masters result: ', masters);
 			res.status(200).json({ masters }).end();
 		} catch(e) { console.log(e); res.status(400).end(); }
