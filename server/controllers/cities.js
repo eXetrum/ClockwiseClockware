@@ -3,15 +3,17 @@ const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
 
 // No route protector
+// +
 const getAll = async (req, res) => {
 	try {
 		console.log('[route] GET /cities');
-		let cities = await City.findAll();
+		let cities = await City.findAll({ order: [['updatedAt', 'DESC']] });
 		console.log('[route] GET /cities result: ', cities);
 		res.status(200).json({ cities }).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 };
 
+// +
 const create = [
 	RouteProtector, 
 	body('cityName').exists().withMessage('cityName required')
@@ -32,10 +34,7 @@ const create = [
 			console.log('[route] POST /cities result: ', city);
 			res.status(201).json({ city }).end();
 		} catch(e) { 
-			console.log(e);
-			//if(e && e.parent && e.parent.constraint && e.parent.constraint == 'cities_name_key') {
-			//if(e && e.name && e.name == 'SequelizeUniqueConstraintError') {
-			//if(e instanceof UniqueConstraintError) {			
+			console.log(e);		
 			if(e && e.name == 'SequelizeUniqueConstraintError') {
 				return res.status(409).json({ detail: 'City already exists'}).end();
 			}
@@ -85,6 +84,7 @@ const remove = [
 	}
 ];
 
+// +
 const get = [
 	RouteProtector, 
 	param('id').exists().notEmpty().withMessage('City ID required'),
