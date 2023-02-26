@@ -70,7 +70,8 @@ const AdminDashboardMasters = () => {
             const response = await createMaster(master);
             if(response && response.data && response.data.master) {
                 const { master } = response.data;
-                setMasters([...masters, master]);
+                setMasters([master, ...masters]);
+                console.log('created master: ', master);
                 enqueueSnackbar(`Master "${master.name}" created`, { variant: 'success'});
                 setNewMaster({
                     name: '',
