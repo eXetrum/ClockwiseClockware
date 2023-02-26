@@ -9,7 +9,6 @@ const getAll = [
 	async (req, res) => {
 		try {
 			console.log('[route] GET /masters');
-			//let masters = await getMasters();
 			let masters = await Master.findAll({
 				include: { model: City, as: 'cities', through: {attributes: []} },
 				order: [['updatedAt', 'DESC']]
@@ -114,9 +113,9 @@ const remove = [
 			} 
 			
 			const { id } = req.params;
-			console.log('[route] DELETE /masters ', id);
+			console.log('[route] DELETE /masters/:id ', id);
 			let result = await Master.destroy({ where: { id: id } });
-			console.log('[route] DELETE /masters result: ', result);
+			console.log('[route] DELETE /masters/:id result: ', result);
 			if(result == 0) {
 				return res.status(404).json({ detail: 'Master not found' }).end();
 			}
