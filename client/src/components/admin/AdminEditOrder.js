@@ -14,7 +14,9 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 
 import Header from '../Header';
 import StarRating from '../StarRating';
+
 import ErrorServiceOffline from '../ErrorServiceOffline';
+import ErrorNotFound from '../ErrorNotFound';
 
 import { getCities } from '../../api/cities';
 import { getWatches } from '../../api/watches';
@@ -320,9 +322,9 @@ const AdminEditOrder = () => {
             </center>
             <hr/>
             {(!originalOrder && pending) && <center><Spinner animation="grow" /> </center>}
+
             {originalOrder  &&
-            <>
-            
+            <>            
             <Row className="justify-content-md-center">
                 <Col xs lg="6">
                     {((!cities || !watches || !order) && pending) && <center><Spinner animation="grow" /> </center>}
