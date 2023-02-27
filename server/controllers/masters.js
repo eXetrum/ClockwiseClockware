@@ -1,6 +1,6 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { Master, City, MasterCityList } = require('../database/models');
+const { Master, City, Order, MasterCityList } = require('../database/models');
 const db = require('../database/models/index');
 
 // +
@@ -10,7 +10,10 @@ const getAll = [
 		try {
 			console.log('[route] GET /masters');
 			let masters = await Master.findAll({
-				include: { model: City, as: 'cities', through: {attributes: []} },
+				include: [
+					{ model: City, as: 'cities', through: {attributes: []} },
+					{ model: Order, as: 'orders'},
+				],
 				order: [['updatedAt', 'DESC']]
 			});
 			console.log('[route] GET /masters result: ', masters);
@@ -132,7 +135,7 @@ const remove = [
 			if(e && e.name && e.name == 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
 				if(e.parent.constraint == 'master_city_list_masterId_fkey') {
 					return res.status(409).json({ detail: 'Deletion restricted. Master contains reference(s) to city/cities'}).end();
-				} else if(e.parent.constraint == 'orders_master_id_fkey') { // TODO: "not implemented"
+				} else if(e.parent.constraint == 'orders_masterId_fkey') {
 					return res.status(409).json({ detail: 'Deletion restricted. At least one order contains reference to this master'}).end();
 				}
 			}
