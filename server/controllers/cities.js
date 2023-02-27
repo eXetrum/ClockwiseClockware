@@ -75,7 +75,7 @@ const remove = [
 			if(e && e.name && e.name == 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
 				if(e.parent.constraint == 'master_city_list_cityId_fkey') {
 					return res.status(409).json({ detail: 'Deletion restricted. At least one master contains reference to this city'}).end();
-				} else if(e.parent.constraint == 'orders_city_id_fkey') { // TODO: "not implemented"
+				} else if(e.parent.constraint == 'orders_cityId_fkey') {
 					return res.status(409).json({ detail: 'Deletion restricted. At least one order contains reference to this city'}).end();
 				}
 			}
