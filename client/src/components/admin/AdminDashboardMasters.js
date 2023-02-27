@@ -43,6 +43,7 @@ const AdminDashboardMasters = () => {
             if(response && response.data && response.data.masters) {
                 const { masters } = response.data;
                 setMasters(masters);
+                console.log('fetchMasters: ', masters)
             }
         } catch(e) {
             setError(e);
