@@ -44,7 +44,7 @@ const AdminEditClient = () => {
         try {
             const response = await updateClientById(id, client);
             if(response && (response.status === 200 || response.status === 204)) {
-                const { client } = response.data;
+                //const { client } = response.data;
                 setClient(client);
                 setOriginalClient(client);
                 enqueueSnackbar(`Cleint updated`, { variant: 'success'});
