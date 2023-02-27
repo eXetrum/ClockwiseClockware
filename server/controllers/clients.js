@@ -1,17 +1,21 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { Client } = require('../database/models');
+const { Client, Order } = require('../database/models');
 
 // +
 const getAll = async (req, res) => {
 	try {
 		console.log('[route] GET /clients');
-		let clients = await Client.findAll({ order: [['updatedAt', 'DESC']] });
+		let clients = await Client.findAll({ 
+			include: { model: Order, as: 'orders'},
+			order: [['updatedAt', 'DESC']] 
+		});
 		console.log('[route] GET /clients result: ', clients);
 		res.status(200).json({ clients }).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 };
 
+// +
 const remove = [
 	RouteProtector, 
 	param('id').exists().notEmpty().withMessage('Client ID required'),
@@ -26,8 +30,9 @@ const remove = [
 			
 			const { id } = req.params;
 			console.log('[route] DELETE /clients/:id ', id);
+			
 			let result = await Client.destroy({ where: { id: id } });			
-			console.log('[route] DELETE /masters result: ', result);
+			console.log('[route] DELETE /clients/:id result: ', result);
 			if(result == 0) {
 				return res.status(404).json({ detail: '~Client not found~' }).end();
 			}
@@ -41,9 +46,8 @@ const remove = [
 				return res.status(404).json({ detail: 'Client not found' }).end();
 			}
 			
-			// TODO: "not implemented"
 			if(e && e.name && e.name == 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
-				if(e.parent.constraint == 'orders_client_id_fkey') { 
+				if(e.parent.constraint == 'orders_clientId_fkey') { 
 					return res.status(409).json({ detail: 'Deletion restricted. At least one order contains reference to this client'}).end();
 				}
 			}
@@ -90,7 +94,8 @@ const get = [
 // +
 const update = [
 	RouteProtector, 
-	param('id').exists().notEmpty().withMessage('Client ID required'),
+	param('id').exists().withMessage('Client ID required')
+		.isUUID().withMessage('Client ID should be of type string'),
 	body('client').notEmpty().withMessage('Client object required'),
 	body('client.name').exists().withMessage('Client name required')
 		.isString().withMessage('Client name should be of type string')
