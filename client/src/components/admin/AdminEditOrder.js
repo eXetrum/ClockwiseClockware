@@ -16,9 +16,10 @@ import Header from '../Header';
 import StarRating from '../StarRating';
 import ErrorServiceOffline from '../ErrorServiceOffline';
 
-import { getWatchTypes, getOrderById, updateOrderById, getAvailableMasters } from '../../api/orders';
-import { getMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
+import { getWatches } from '../../api/watches';
+import { getMasterById } from '../../api/masters';
+import { getOrderById, updateOrderById, getAvailableMasters } from '../../api/orders';
 
 import { useSnackbar } from 'notistack';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -48,7 +49,7 @@ const AdminEditOrder = () => {
 
     // Initial
     const multiselectRef = React.createRef();
-    const [watchTypes, setWatchTypes] = useState(null);
+    const [watches, setWatches] = useState(null);
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
 
@@ -64,10 +65,10 @@ const AdminEditOrder = () => {
 
     const fetchWachTypes = async(abortController) => {
         try {
-            const response = await getWatchTypes(abortController);
+            const response = await getWatches(abortController);
             if(response && response.data && response.data.watchTypes) {
-                const { watchTypes } = response.data;
-                setWatchTypes(watchTypes);
+                const { watches } = response.data;
+                setWatches(watches);
             }
         } catch(e) {
             console.log('ERROR: ', e);
@@ -231,9 +232,9 @@ const AdminEditOrder = () => {
 
     useEffect( () => {
         console.log('useEffect order: ', order);
-        if(!order || !order.city || !order.watchType || !order.dateTime.startDate) return;
+        if(!order || !order.city || !order.watch || !order.startDate) return;
 
-        fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
+        fetchAvailableMasters(order.city.id, order.watch.id, new Date(order.startDate).getTime());
     }, [order]);
     
     const onSelect = (selectedList, selectedItem)=> {
@@ -328,8 +329,8 @@ const AdminEditOrder = () => {
             
             <Row className="justify-content-md-center">
                 <Col xs lg="6">
-                    {((!cities || !watchTypes || !order) && pending) && <center><Spinner animation="grow" /> </center>}
-                    {order && cities && watchTypes &&
+                    {((!cities || !watches || !order) && pending) && <center><Spinner animation="grow" /> </center>}
+                    {order && cities && watches &&
                     <>
                     
                     <Form onSubmit={submitForm}>
@@ -362,7 +363,7 @@ const AdminEditOrder = () => {
                                     <Form.Label>Watch Type:</Form.Label>
                                 </Col>
                                 <Col>
-                                {watchTypes && watchTypes.map(( item, index ) => {
+                                {watches && watches.map(( item, index ) => {
                                 return (
                                     <Form.Check
                                         inline
