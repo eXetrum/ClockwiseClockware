@@ -15,20 +15,15 @@ import Header from './Header';
 import ErrorServiceOffline from './ErrorServiceOffline';
 
 import { getCities } from '../api/cities';
-import { getWatchTypes, getAvailableMasters, createOrder } from '../api/orders';
+import { getWatches } from '../api/watches';
+
+import { getAvailableMasters, createOrder } from '../api/orders';
 
 import { useSnackbar } from 'notistack';
 import { confirm } from 'react-bootstrap-confirmation';
 
 const Order = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-    /*const toNearestHour = (date) => {
-        let rounded = new Date(date);
-        rounded.setHours(rounded.getHours() + Math.ceil((rounded.getMinutes() + (rounded.getSeconds() / 60))/60));
-        rounded.setMinutes(0, 0, 0); // Resets also seconds and milliseconds
-        return rounded;
-    };*/
 
     const dateToNearestHour = (date = new Date()) => {
         const ms = 1000 * 60 * 60;
@@ -37,14 +32,15 @@ const Order = () => {
 
     const [order, setOrder] = useState({
         client : { name: '', email: '' },
-        watchType: null,
+        watch: null,
         city: null,
         master: null,
-        curDate: dateToNearestHour(),
         startDate: dateToNearestHour(),
         cities: []
     })
-    const [watchTypes, setWatchTypes] = useState(null);
+    
+    const [curDate, setCurDate] = useState(dateToNearestHour());
+    const [watches, setWatches] = useState(null);
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
     const [confirmation, setConfirmation] = useState(null);
@@ -54,13 +50,13 @@ const Order = () => {
     const setDefaultFormState = () => {
         setOrder({
             client : { name: '', email: '' },
-            watchType: null,
+            watch: null,
             city: null,
             master: null,
-            curDate: dateToNearestHour(),
             startDate: dateToNearestHour(),
             cities: []
         });
+        setCurDate(dateToNearestHour());
         setMasters(null);
         setConfirmation(null);
     };
@@ -70,12 +66,22 @@ const Order = () => {
         setError(null);
     };
 
+
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            setCurDate(new Date());
+        }, 5000);
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, []);
+
     const fetchWachTypes = async(abortController) => {
         try {
-            const response = await getWatchTypes(abortController);
+            const response = await getWatches(abortController);
             if(response && response.data && response.data.watches) {
                 const { watches } = response.data;
-                setWatchTypes(watches);
+                setWatches(watches);
             }
         } catch(e) {
             setError(e);
@@ -98,14 +104,15 @@ const Order = () => {
         }
     };
 
-    const fetchAvailableMasters = async (cityId, watchTypeId, startDate) => {
+    const fetchAvailableMasters = async (cityId, watchId, startDate) => {
         try {
             const response = await getAvailableMasters(
-                cityId, watchTypeId, startDate
+                cityId, watchId, startDate
             );
 
             if(response && response.data && response.data.masters) {
                 const { masters } = response.data;
+                console.log('Available masters: ', masters);
                 setMasters(masters);
             }
         } catch(e) {
@@ -172,7 +179,15 @@ const Order = () => {
         resetBeforeApiCall();
         setMasters(null);
 
-        fetchAvailableMasters(order.city.id, order.watchType.id, order.startDate.getTime());//, order.startDate.getTimezoneOffset());
+        console.log('tostr: ', order.startDate.toString());
+        console.log('GMT: ', order.startDate.toGMTString());
+        console.log('ISO: ', order.startDate.toISOString());
+        console.log('UTC: ', order.startDate.toUTCString());
+        console.log('toLocaleString: ', order.startDate.toLocaleString());
+        
+
+        fetchAvailableMasters(order.city.id, order.watch.id, order.startDate.getTime());//, order.startDate.getTimezoneOffset);//.toLocaleString());//dayjs(order.startDate.getTime()).format(DATETIME_FORMAT_STR)); //order.startDate.getTime());
+            //, order.startDate.getTimezoneOffset());
     };
 
     const pickUpMaster = async (event, master) => {
@@ -189,10 +204,15 @@ const Order = () => {
                 name: order.client.name,
                 email: order.client.email,
             },
-            watchTypeId: order.watchType.id,
+            watchId: order.watch.id,
             cityId: order.city.id,
             masterId: master.id,
-            startDate: order.startDate.getTime()//new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
+            //startDate: dayjs(order.startDate.getTime()).format(DATETIME_FORMAT_STR),
+            startDate: order.startDate.getTime(),
+            timezone: order.startDate.getTimezoneOffset(),
+
+
+            //new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
             //clientTimezone: order.startDate.getTimezoneOffset()
         };
         //jsDate.setTime( jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000 );
@@ -212,9 +232,9 @@ const Order = () => {
     const isFormValid = () => {
         return order.client.name.length >= 3 
             && /\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)
-            && order.watchType 
+            && order.watch 
             && order.city
-            && order.startDate >= order.curDate
+            && order.startDate >= curDate
             && !pending;
     };
 
@@ -228,12 +248,12 @@ const Order = () => {
             </center>
 
             {(!cities && pending) && <center><Spinner animation="grow" /> </center>}
-            {(!watchTypes && pending) && <center><Spinner animation="grow" /> </center>}
+            {(!watches && pending) && <center><Spinner animation="grow" /> </center>}
             <ErrorServiceOffline error={error} pending={pending} />
             
             <Row className="justify-content-md-center">
                 <Col xs lg="4">                    
-                    {!confirmation && cities && watchTypes &&
+                    {!confirmation && cities && watches &&
                     <Form onSubmit={handleSubmit}>
                         <FormGroup className="mb-3">
                             <Form.Label>Name:</Form.Label>
@@ -268,19 +288,19 @@ const Order = () => {
                         </FormGroup>
                         <FormGroup className="mb-3">
                             <>
-                            {watchTypes && watchTypes.map(( item, index ) => {
+                            {watches && watches.map(( item, index ) => {
                                 return (
                                     <Form.Check
                                         required
                                         disabled={pending}
                                         inline
-                                        key={"watch_type_" + item.id}
+                                        key={"watch_id_" + item.id}
                                         label={item.name}
-                                        name="watchType"
+                                        name="watch"
                                         type="radio"
                                         onClick={(event) => {
                                             console.log('check: ', event);
-                                            setOrder( (prev) => ({...prev, watchType: item }));
+                                            setOrder( (prev) => ({...prev, watch: item }));
                                             setMasters(null);
                                             setError(null);
                                         }}
@@ -315,7 +335,7 @@ const Order = () => {
                                     disabled={pending}
                                     renderInput={(props) => <TextField {...props} />}
                                     label="DateTimePicker"
-                                    minDateTime={dayjs(order.curDate)}
+                                    minDateTime={dayjs(curDate)}
                                     disablePast={true}
                                     value={order.startDate}
                                     views={['year', 'month', 'day', 'hours']}
@@ -337,7 +357,7 @@ const Order = () => {
                                             setError(null);
                                         }
                                         console.log('datetime: ', reason, typeof reason, reason == 'minTime');
-                                        console.log(order.curDate, order.startDate);
+                                        console.log(curDate, order.startDate);
                                     }}
                                 />
                             </LocalizationProvider>
@@ -356,7 +376,13 @@ const Order = () => {
                         <Col md="auto">
                         <Alert variant={"info"}>
                             <p>Thank you ! Confirmation message was sent to your email. </p>
-                            <p>Message ID: {confirmation.messageId}</p>
+                            <Container>
+                                {Object.keys(confirmation).map((key, index) => {
+                                    <p key={"confirmation_msg_index_" + index}>
+                                        {key.toString()}
+                                    </p>
+                                })}
+                            </Container>
                         </Alert>
                         </Col>
                         <Col md="auto">
@@ -370,7 +396,7 @@ const Order = () => {
             </Row>
             <hr />
 
-        {(!masters && cities && watchTypes && pending) && <center><Spinner animation="grow" /> </center>}
+        {(!masters && cities && watches && pending) && <center><Spinner animation="grow" /> </center>}
         {masters &&
         <>
         <Row className="justify-content-md-center">
@@ -396,7 +422,7 @@ const Order = () => {
             {masters && masters.length === 0 &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
-                    <Alert>No free masters available for specified city and date time</Alert>
+                    <Alert variant={"warning"}>There is no masters available at this moment which can handle your order</Alert>
                 </Col>
             </Row>
             }
