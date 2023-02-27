@@ -13,6 +13,7 @@ const cities = require('./routes/cities');
 const masters = require('./routes/masters');
 const orders = require('./routes/orders');
 const clients = require('./routes/clients');
+const watches = require('./routes/watches');
 
 
 app.use(morgan('dev'));
@@ -26,6 +27,7 @@ app.use(cities);
 app.use(masters);
 app.use(orders);
 app.use(clients);
+app.use(watches);
 
 app.listen(port, () => {
 	console.log(`Server App listening on port ${port}`)
