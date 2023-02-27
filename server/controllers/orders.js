@@ -390,14 +390,21 @@ const get = [
 					{ model: Client, as: 'client' }, 
 					{ model: Watches, as: 'watch' }, 
 					{ model: City, as: 'city' }, 
-					{ model: Master, as: 'master' }
+					{ 
+						model: Master, as: 'master',
+						include: [
+							{ model: Order, as: 'orders' },
+							{ model: City, as: 'cities' },
+						],
+					}
 				],
 				attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
 			});
-			console.log('[route] GET /orders/:id result: ', order.toJSON());
+			
 			if(!order) {
 				return res.status(404).json({detail: '~Order not found~'}).end();
 			}
+			console.log('[route] GET /orders/:id result: ', order.toJSON());
 			
 			const curDate = Date.now();
 			console.log('curDate backend: ', curDate);

@@ -63,10 +63,10 @@ const AdminEditOrder = () => {
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
 
-    const fetchWachTypes = async(abortController) => {
+    const fetchWaches = async(abortController) => {
         try {
             const response = await getWatches(abortController);
-            if(response && response.data && response.data.watchTypes) {
+            if(response && response.data && response.data.watches) {
                 const { watches } = response.data;
                 setWatches(watches);
             }
@@ -148,9 +148,9 @@ const AdminEditOrder = () => {
     // 'Component Did Mount' watch types
     useEffect( () => {
         const abortController = new AbortController();
-        console.log('"componentDidMount" fetchWachTypes()');
+        console.log('"componentDidMount" fetchWaches()');
         setPending(true);
-        fetchWachTypes(abortController);
+        fetchWaches(abortController);
 
         return () => {
             abortController.abort();
@@ -283,8 +283,8 @@ const AdminEditOrder = () => {
     };
 
     // master is not null, city is not null, watchType is not null, dateTime is not null
-    const masterCanHandleOrder = (master, orderId, city, watchType, dateTime) => {
-        console.log('test masterCanHandleOrder: ', master, orderId, city, watchType, dateTime);
+    const masterCanHandleOrder = (master, orderId, city, watch, dateTime) => {
+        console.log('test masterCanHandleOrder: ', master, orderId, city, watch, dateTime);
         
         // Master cant handle specified city
         if(master.cities.find(item => item.id == city.id) == null) {
@@ -297,15 +297,15 @@ const AdminEditOrder = () => {
         console.log('masterCanHandleOrder: ', schedule);
 
         let startDate = new Date(dateTime);
-        let endDate = addHours(new Date(dateTime), watchType.repairTime);
+        let endDate = addHours(new Date(dateTime), watch.repairTime);
         
         for(let i = 0; i < schedule.length; ++i) {
             const sch = schedule[i];
             // At least one order is overlaps with current thus master cant handle this order
-            if(dateRangesOverlap(startDate, endDate, new Date(sch.dateTime.startDate), new Date(sch.dateTime.endDate))) {
+            if(dateRangesOverlap(startDate, endDate, new Date(sch.startDate), new Date(sch.endDate))) {
                 console.log('NO CANT HANDLE due schedule: ');
                 console.log("Current order: ", order, startDate, endDate);
-                console.log("Order which overlaps with current: ", sch, sch.dateTime.startDate, sch.dateTime.endDate);
+                console.log("Order which overlaps with current: ", sch, sch.startDate, sch.endDate);
                 return false;
             }
         }
@@ -370,7 +370,7 @@ const AdminEditOrder = () => {
                                         key={"watch_type_" + item.id}
                                         label={item.name}
                                         name="watchType"
-                                        checked={order.watchType.id==item.id}
+                                        checked={order.watch.id==item.id}
                                         type="radio"
                                         /*onClick={(event) => {
                                             console.log('check: ', event);
@@ -384,17 +384,17 @@ const AdminEditOrder = () => {
 
                                         }}*/
                                         onChange={(event) => {
-                                            const prevWatchType = order.watchType;
+                                            const prevWatchType = order.watch;
                                             setMasters(null);
                                             setShowMasters(false);
                                             setInfo(null);
                                             setError(null);
-                                            if(order.master != null && order.city != null && order.dateTime.startDate != null) {
-                                                if(!masterCanHandleOrder(order.master, order.id, order.city, item, order.dateTime.startDate)) {
+                                            if(order.master != null && order.city != null && order.startDate != null) {
+                                                if(!masterCanHandleOrder(order.master, order.id, order.city, item, order.startDate)) {
                                                     if (!window.confirm("Current master cant handle this order due lack of time or specified watch type or specified city is not supported by master. \nDo you want to search new master?")) {
                                                         console.log('Revert to prev: ', order, prevWatchType);
                                                         
-                                                        setOrder( (prev) => ({...prev, watchType: prevWatchType}));
+                                                        setOrder( (prev) => ({...prev, watch: prevWatchType}));
                                                         return;
                                                     }
                                                     setShowMasters(true);
@@ -403,7 +403,7 @@ const AdminEditOrder = () => {
                                             }
                                             setOrder( (prev) => ({
                                                 ...prev,
-                                                watchType: item
+                                                watch: item
                                             }));
                                         }}
                                     />
@@ -440,7 +440,7 @@ const AdminEditOrder = () => {
                                     label="DateTimePicker"
                                     minDateTime={dayjs(curDate)}
                                     disablePast={true}
-                                    value={order.dateTime.startDate}
+                                    value={order.startDate}
                                     views={['year', 'month', 'day', 'hours']}
                                     ampm={false}
                                     onChange={(newValue) => {
@@ -516,7 +516,7 @@ const AdminEditOrder = () => {
                                         //fetchAvailableMasters(order.city.id, order.watchType.id, new Date(order.dateTime.startDate).getTime());
                                     }}
                                     variant="warning"
-                                    disabled={!order.watchType || !order.city || !order.dateTime.startDate}
+                                    disabled={!order.watch || !order.city || !order.startDate}
                                     >
                                         Find New Master
                                     </Button>
