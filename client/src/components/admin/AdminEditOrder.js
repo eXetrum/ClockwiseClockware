@@ -242,7 +242,7 @@ const AdminEditOrder = () => {
         if(order.master == null) {
             setOrder( (prev) => ({...prev, master: null, city: selectedItem, cities: [selectedItem] }));
             
-        } else if(!masterCanHandleOrder(order.master, order.id, selectedItem, order.watch, order.dateTime.startDate)) {
+        } else if(!masterCanHandleOrder(order.master, order.id, selectedItem, order.watch, order.startDate)) {
             if (!window.confirm("Current master is cant handle this order due lack of time or specified city is not supported by master. \n\
                 Do you want to search new master?")) {
                 console.log('Revert to prev city: ', order, lastAssignedCity);
