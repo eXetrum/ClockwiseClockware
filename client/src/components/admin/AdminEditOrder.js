@@ -115,14 +115,10 @@ const AdminEditOrder = () => {
     const doUpdateOrderById = async (id, order) => {
         try {
             const orderToBackEnd = {
-                client: {
-                    name: order.client.name,
-                    email: order.client.email,
-                },
-                watchTypeId: order.watchType.id,
+                watchId: order.watch.id,
                 cityId: order.city.id,
                 masterId: order.master.id,
-                startDate: new Date(order.dateTime.startDate).getTime()
+                startDate: new Date(order.startDate).getTime(),
             };
             const response = await updateOrderById(id, orderToBackEnd);
             if(response && (response.status == 200 || response.status == 204)) {
@@ -212,10 +208,10 @@ const AdminEditOrder = () => {
                 console.log('append result: ', order);
                 if(originalOrder != null && order != null
                     && masters.find(item => item.id == originalOrder.master.id) == null
-                    && order.city && order.watchType 
+                    && order.city && order.watch
                     
                     // But master actually can handle this order
-                    && masterCanHandleOrder(originalOrder.master, order.id, order.city, order.watchType, order.dateTime.startDate)) {
+                    && masterCanHandleOrder(originalOrder.master, order.id, order.city, order.watch, order.startDate)) {
                     
                     masters.push(originalOrder.master);
                 }
@@ -246,7 +242,7 @@ const AdminEditOrder = () => {
         if(order.master == null) {
             setOrder( (prev) => ({...prev, master: null, city: selectedItem, cities: [selectedItem] }));
             
-        } else if(!masterCanHandleOrder(order.master, order.id, selectedItem, order.watchType, order.dateTime.startDate)) {
+        } else if(!masterCanHandleOrder(order.master, order.id, selectedItem, order.watch, order.dateTime.startDate)) {
             if (!window.confirm("Current master is cant handle this order due lack of time or specified city is not supported by master. \n\
                 Do you want to search new master?")) {
                 console.log('Revert to prev city: ', order, lastAssignedCity);
@@ -277,8 +273,8 @@ const AdminEditOrder = () => {
         return order 
         && order.master
         && order.city
-        && order.watchType         
-        && order.dateTime
+        && order.watch
+        && order.startDate
         && !pending;
     };
 
@@ -444,10 +440,10 @@ const AdminEditOrder = () => {
                                     views={['year', 'month', 'day', 'hours']}
                                     ampm={false}
                                     onChange={(newValue) => {
-                                        setOrder( (prev) => ({ ...prev, dateTime: {
-                                            ...prev.dateTime,
+                                        setOrder( (prev) => ({ 
+                                            ...prev,
                                             startDate: new Date(newValue)
-                                        }}));
+                                        }));
                                         setMasters(null);
                                         setShowMasters(false);
                                         setInfo(null);
@@ -502,9 +498,9 @@ const AdminEditOrder = () => {
                                 <Col md={{ span: 8, offset: 8 }} >
                                     <Button className="mb-2" onClick={() => {
                                         console.log('#1changeMaster[1]: ', order);
-                                        if(!order.dateTime || !order.city || !order.watchType) return;
+                                        if(!order.startDate || !order.city || !order.watch) return;
 
-                                        console.log('#1changeMaster[2]:', order, new Date(order.dateTime.startDate));
+                                        console.log('#1changeMaster[2]:', order, new Date(order.startDate));
                                         setMasters(null);
                                         setShowMasters(true);
                                         setInfo(null);
@@ -541,7 +537,7 @@ const AdminEditOrder = () => {
                                 <Col md={{ span: 8, offset: 8 }} >
                                     <Button className="mb-2" onClick={() => {
                                         console.log('#2changeMaster[1]: ', order);
-                                        if(!order.dateTime || !order.city || !order.watchType) return;
+                                        if(!order.startDate || !order.city || !order.watch) return;
                                         console.log('#2changeMaster[2]: ', order);
                                         setMasters(null);
                                         setShowMasters(true);
@@ -553,7 +549,7 @@ const AdminEditOrder = () => {
                                         }))
                                     }}
                                     variant="warning"
-                                    disabled={!order.watchType || !order.city || !order.dateTime.startDate}>
+                                    disabled={!order.watch || !order.city || !order.startDate}>
                                         Find New Master
                                     </Button>
                                 </Col>

@@ -196,8 +196,8 @@ const create = [
 			});
 			
 			console.log('[route] POST /orders watch obj: ', watch.toJSON());
-			console.log('[route] POST /orders city obj: ', master.toJSON());
-			console.log('[route] POST /orders master obj: ', city.toJSON());
+			console.log('[route] POST /orders city obj: ', city.toJSON());
+			console.log('[route] POST /orders master obj: ', master.toJSON());
 			
 			// Ensure master can handle order for specified cityId
 			if(master.cities.find(city => city.id == order.cityId) == null) {
@@ -427,39 +427,28 @@ const get = [
 
 const update = [ 
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Order ID must be integer value'),
+	param('id').exists().withMessage('Order ID required')
+		.isString().withMessage('Order ID should be of type string'),
+	/////
 	body('order').exists().withMessage('order object required')
-		.isObject().withMessage('order object required'),
-	body('order.client').exists().withMessage('order.client object required')
-		.isObject().withMessage('order.client object required'),
-	body('order.client.name').exists().withMessage('order.client.name required')
-		.isString().withMessage('Client name should be of type string')
-		.trim().escape().isLength({min: 3}).withMessage('Empty client name is not allowed min len=3)'),
-	body('order.client.email').exists().withMessage('order.client.email required')
-		.isString().withMessage('Client email should be of type string')
-		.trim().escape().notEmpty().withMessage('Empty client email is not allowed')
-		.isEmail().withMessage('Client email is not correct'),
-	body('order.watchTypeId').exists().withMessage('order.watchTypeId required')
-		.not().isArray().withMessage('order.watchTypeId should be of type int')
-		.isInt({min: 0}).withMessage('order.watchTypeId should be of type int'),
+		.isObject().withMessage('order object required'),	
+	body('order.watchId').exists().withMessage('order.watchId required')
+		.isUUID	().withMessage('Incorrect watchId'),
 	body('order.cityId').exists().withMessage('order.cityId required')
-		.not().isArray().withMessage('order.cityId should be of type int')
-		.isInt({min: 0}).withMessage('order.cityId should be of type int'),
+		.isUUID().withMessage('Incorrect cityId'),
 	body('order.masterId').exists().withMessage('order.masterId required')
-		.not().isArray().withMessage('order.masterId should be of type int')
-		.isInt({min: 0}).withMessage('order.masterId should be of type int'),
+		.isUUID().withMessage('Incorrect masterId'),
 	body('order.startDate').exists().withMessage('order.startDate required')
-		.not().isArray().withMessage('order.startDate should be of type int')
 		.isInt({min: 0}).toInt().withMessage('order.startDate should be of type int')
 		.custom((value, { req }) => { 
 			const curDate = Date.now();
+			console.log('custom validator1: ', value);
 			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
 			if(value < curDate) { throw new Error('Past date time is not allowed'); }
 			
 			// Indicates the success of this synchronous custom validator
 			return true;
 		}),
-
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
@@ -468,33 +457,59 @@ const update = [
 				// Send first error back to the client
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			} 
+			
 			const { id } = req.params;
 			let { order } = req.body;
+			
 			console.log('[route] PUT /orders/:id ', id, order);
-			console.log('[route] PUT /orders DATE: ', new Date(order.startDate));
-			const nearestDate = dateToNearestHour(order.startDate) / 1000;
-			console.log('[route] PUT /orders NEAREST DATE: ', nearestDate);
-			order.client.name = order.client.name.trim();
-			order.client.email = order.client.email.trim();
-			order.startDate = nearestDate;
-			let result = await updateOrderById(id, order);
-			console.log('[route] PUT /orders/:id update result: ', result);
-			order = result[0];
-			console.log('[route] PUT /orders/:id result: ', order);
-			if(!order) {
-				res.status(404).json({message: 'Order not found'}).end();
-			} else {
-				res.status(200).json({ order }).end();
+
+			const watch = await Watches.findOne({ where: { id: order.watchId } });
+			if(!watch) { return res.status(400).json({ detail: 'Unknown watch type' }); }
+			
+			const city = await City.findOne({ where: { id: order.cityId } });
+			if(!city) { return res.status(400).json({ detail: 'Unknown city' }); }
+			
+			const master = await Master.findOne({ 
+				where: { id: order.masterId }, 
+				include: [
+					{ model: City, as: 'cities', through: {attributes: []} }, 
+				],
+			});
+			if(!master) { return res.status(400).json({ detail: 'Unknown master' }); }
+			
+			console.log('[route] PUT /orders/:id watch obj: ', watch.toJSON());
+			console.log('[route] PUT /orders/:id city obj: ', city.toJSON());
+			console.log('[route] PUT /orders/:id master obj: ', master.toJSON());
+			
+			
+			// Ensure master can handle order for specified cityId
+			if(master.cities.find(city => city.id == order.cityId) == null) {
+				return res.status(409).json({ detail: 'Master cant handle this order at specified city'});
 			}
+			
+			//////////////////////////////////////////////////////
+			order.startDate = dateToNearestHour(order.startDate);
+			//////////////////////////////////////////////////////			
+			const orderRepairTime = watch.repairTime;
+			const orderStartDate = order.startDate;
+			const orderEndDate = (order.startDate + orderRepairTime * 60 * 60 * 1000);
+			order.endDate = orderEndDate;
+			//////////////////////
+			
+			console.log('[route] PUT /orders/:id prepared order data: ', order);
+			
+			let [affectedRows, result] = await Order.update(order, { where: { id: id }, returning: true, limit: 1 });
+			
+			console.log('[route] PUT /clients/:id result: ', affectedRows, result);
+			
+			if(!affectedRows) {
+				return res.status(404).json({detail: '~Order not found~'}).end();
+			}
+			
+			res.status(204).end();
 		} catch(e) { 
 			console.log(e); 
-			if(e.constraint == 'unknown_watchTypeId') {
-				return res.status(409).json({ detail: 'Incorrect watchTypeId'});
-			} else if(e.constraint == 'orders_city_id_fkey') {
-				return res.status(409).json({ detail: 'Incorrect cityId'});
-			} else if(e.constraint == 'orders_master_id_fkey') {
-				return res.status(409).json({ detail: 'Incorrect masterId'});
-			} else if(e.constraint == 'overlapping_times') {
+			if(e.constraint == 'overlapping_times') {
 				return res.status(409).json({ detail: 'Master cant handle this order at specified datetime'});
 			}
 			res.status(400).end(); 
