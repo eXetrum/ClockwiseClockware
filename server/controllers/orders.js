@@ -431,7 +431,7 @@ const update = [
 		.isString().withMessage('Order ID should be of type string'),
 	/////
 	body('order').exists().withMessage('order object required')
-		.isObject().withMessage('order object required'),	
+		.isObject().withMessage('order object required'),
 	body('order.watchId').exists().withMessage('order.watchId required')
 		.isUUID	().withMessage('Incorrect watchId'),
 	body('order.cityId').exists().withMessage('order.cityId required')
