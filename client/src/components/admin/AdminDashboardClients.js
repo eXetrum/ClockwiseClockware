@@ -28,6 +28,7 @@ const AdminDashboardClients = () => {
             const response = await getClients(abortController);
             if(response && response.data && response.data.clients) {
                 const { clients } = response.data;
+                console.log('received clients: ', clients);
                 setClients(clients);
             }
         } catch(e) {
