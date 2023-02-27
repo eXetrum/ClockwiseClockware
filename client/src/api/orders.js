@@ -1,16 +1,11 @@
 import axios from "axios";
 
-// Watch types
-const getWatchTypes = (abortController=null) => { 
-    return axios.get(`/watches`, { signal: abortController?.signal}); 
-};
-
-const getAvailableMasters = (cityId, watchTypeId, startDate, abortController=null) => { 
+const getAvailableMasters = (cityId, watchId, startDate, abortController=null) => { 
     return axios.get(`/available_masters`, { 
         params: { 
             cityId: cityId, 
-            watchTypeId: watchTypeId, 
-            startDate: startDate
+            watchId: watchId, 
+            startDate: startDate,
         }
     }, { signal: abortController?.signal}); 
 };
@@ -36,7 +31,6 @@ const updateOrderById = (id, order, abortController=null) => {
 };
 
 export {
-    getWatchTypes,
     getAvailableMasters,
     createOrder,
     getOrders,
