@@ -13,8 +13,12 @@ module.exports = (sequelize, DataTypes) => {
 			// define association here
 			Master.belongsToMany(models.City, {
 				through: models.MasterCityList,
-				as: "cities",
-				foreignKey: "masterId",
+				as: 'cities',
+				foreignKey: 'masterId',
+			});
+			Master.hasMany(models.Order, {
+				foreignKey: 'masterId',
+				as: 'orders'
 			});
 		}
 	}
