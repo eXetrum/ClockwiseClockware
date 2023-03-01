@@ -1,24 +1,28 @@
 import React from 'react';
-import { Link }  from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
-
-import {
-    Row, Col, Table, Badge, Alert
-} from 'react-bootstrap';
 import StarRating from '../StarRating';
 
-const AdminMastersList = ({masters, onRemove=null}) => {
+const AdminMastersList = ({ masters, onRemove }) => {
+    
+    if(masters == null) return null;
+
+    if(masters.length === 0) {
+        return (
+            <Container>
+                <Row className="justify-content-md-center mt-3">
+                    <Col md="auto">
+                        <Alert>No records yet</Alert>
+                    </Col>
+                </Row>
+            </Container>
+        );
+    }
+
     return (
-        <> 
-            {masters && masters.length === 0 && 
-            <Row className="justify-content-md-center">
-                <Col md="auto">
-                    <Alert>No records yet</Alert>
-                </Col>
-            </Row>
-            }
-            {masters && masters.length > 0 &&
+        <Container>
             <Table striped bordered responsive size="sm" className="mt-3">
                 <thead>
                     <tr>
@@ -31,9 +35,8 @@ const AdminMastersList = ({masters, onRemove=null}) => {
                     </tr>
                 </thead>
                 <tbody>
-                {masters.map(( master, index ) => {
-                    return (
-                    <tr key={"master_id_" + index}>
+                {masters.map(master => 
+                    <tr key={master.id}>
                         <td className="text-center p-3 m-0">
                             {master.id}
                         </td>
@@ -43,11 +46,8 @@ const AdminMastersList = ({masters, onRemove=null}) => {
                         <td className="p-3 m-0">
                             {master.email}
                         </td>
-                        <td className="pt-2 m-0">
-                        {master.cities && master.cities.map((city, index2) => {
-                            return <Badge bg="info" className="p-2 m-1" key={index + "_" + index2}>{city.name}</Badge>
-                        })}
-
+                        <td className="text-center  pt-2 m-0">
+                            {master.cities.map(city => <Badge bg="info" className="p-2 m-1" key={city.id}>{city.name}</Badge>)}
                         </td>
                         <td className="text-center p-2 m-0">
                             <StarRating
@@ -63,16 +63,15 @@ const AdminMastersList = ({masters, onRemove=null}) => {
                         </td>
                         <td className="text-center p-3 m-0">
                             <Link to="#">
-                                <DeleteForeverIcon onClick={() => { if(onRemove != null) onRemove(master.id) }} />
+                                <DeleteForeverIcon onClick={ () => onRemove(master.id) } />
                             </Link>
                         </td>
                     </tr>
-                    );
-                })}
+                )}
                 </tbody>
             </Table>
-            }
-    </>);
+        </Container>
+    );
 };
 
 export default AdminMastersList;

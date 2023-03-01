@@ -1,52 +1,31 @@
-import React, { useState, useEffect} from 'react';
+import React from 'react';
 import { Link }  from 'react-router-dom';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
-
-import {
-    Row, Col, Table,  Alert, Badge
-} from 'react-bootstrap';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../StarRating';
 
-const AdminOrdersList = ({orders, onRemove=null}) => {
-    const formatDate = (date) => {
-        const padTo2Digits = (num) => { return num.toString().padStart(2, '0'); };
+const AdminOrdersList = ({ orders, onRemove }) => {
+    
+    if(orders == null) return null;
+
+    if(orders.length === 0) {
         return (
-            [
-            date.getFullYear(),
-            padTo2Digits(date.getMonth() + 1),
-            padTo2Digits(date.getDate()),
-            ].join('-') +
-            ' ' +
-            [
-            padTo2Digits(date.getHours()),
-            padTo2Digits(date.getMinutes()),
-            ].join(':')
+            <Container>
+                <Row className="justify-content-md-center mt-3">
+                    <Col md="auto">
+                        <Alert>No records yet</Alert>
+                    </Col>
+                </Row>
+            </Container>
         );
-    };
+    }
 
-    const [curDate, setCurDate] = useState(new Date());
-
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            setCurDate(new Date());
-        }, 5000);
-        return () => {
-            clearInterval(intervalId);
-        };
-    }, []);
+    const formatDate = (date) => date.toISOString().replace('T', ' ').replace(/:\d{2}\.\d+Z/, '');
 
     return (
-        <>
-            {orders && orders.length === 0 && 
-            <Row className="justify-content-md-center">
-                <Col md="auto">
-                    <Alert>No records yet</Alert>
-                </Col>
-            </Row>
-            }
-            {orders && orders.length > 0 && 
+        <Container>
             <Table striped bordered responsive size="sm" className="mt-3">
                 <thead>
                     <tr>
@@ -59,9 +38,8 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                     </tr>
                 </thead>
                 <tbody>
-                {orders.map((order, index) => {
-                    return (
-                    <tr key={"order_id_" + order.id} className="m-0">
+                {orders.map(order =>
+                    <tr key={order.id} className="m-0">
                         <td className="text-center p-2 m-0 col-1">{ order.id }</td>
                         <td className="text-center p-2 m-0">
                             <p>
@@ -84,7 +62,7 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                             <small className="text-muted">
                                 {order.master.email}
                             </small>
-                            <div className="text-center">
+                            <div className="text-center p-2 m-0">
                                 <StarRating value={order.master.rating} readonly={true} />
                             </div>
                         </td>
@@ -98,13 +76,14 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                         </td>
                         <td className="text-center p-2 m-0">
                             <small className="text-muted">
-                                { formatDate(new Date(order.endDate))} <br/> 
+                                { formatDate(new Date(order.endDate)) }
+                                <br/> 
                                 { formatDate(new Date(order.startDate)) }
                             </small>
                         </td>
 
                         <td className="text-center p-2 m-0">
-                            {curDate < new Date(order.startDate) &&
+                            {new Date() < new Date(order.startDate) &&
                             <Link to={"/admin/orders/" + order.id}>
                                 <EditIcon />
                             </Link>
@@ -112,17 +91,15 @@ const AdminOrdersList = ({orders, onRemove=null}) => {
                         </td>
                         <td className="text-center p-2 m-0">
                             <Link to="#">
-                                <DeleteForeverIcon onClick={() => { if(onRemove!=null) onRemove(order.id) }} />
+                                <DeleteForeverIcon onClick={ () => onRemove(order.id) } />
                             </Link>
                         </td>
                     </tr>
-                    );
-                })
-                }
+                )}
                 </tbody>
             </Table>
-            }
-    </>);
+        </Container>
+    );
 };
 
 export default AdminOrdersList;
