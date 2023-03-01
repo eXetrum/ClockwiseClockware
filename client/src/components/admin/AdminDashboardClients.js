@@ -1,22 +1,27 @@
-import React, { useState, useEffect} from 'react';
-import {
-    Container, Spinner
-} from 'react-bootstrap';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { Container, Row, Col, Form, FormGroup, FormControl } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
+import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Header from '../Header';
 import AdminClientsList from './AdminClientsList';
-import ErrorServiceOffline from '../ErrorServiceOffline';
-
+import ModalForm from '../ModalForm';
+import LoadingContainer from '../LoadingContainer';
+import ErrorContainer from '../ErrorContainer';
 import { deleteClientById, getClients } from '../../api/clients';
-
-import { useSnackbar } from 'notistack';
-import { confirm } from 'react-bootstrap-confirmation';
 
 const AdminDashboardClients = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-    // Initial
+
 	const [clients, setClients] = useState(null);
+    const [newClient, setNewClient] = useState({ name: '', email: '' });
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
+    const [showAddForm, setShowAddForm] = useState(false);
+
+    const isLoading = useMemo(() => clients === null && pending, [clients, pending]);
+    const isFormValid = useCallback(() => newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(newClient.email), [newClient]);
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -25,10 +30,9 @@ const AdminDashboardClients = () => {
 
     const fetchClients = async (abortController) => {
         try {
-            const response = await getClients(abortController);
-            if(response && response.data && response.data.clients) {
+            const response = await getClients({ abortController });
+            if(response?.data?.clients) {
                 const { clients } = response.data;
-                console.log('received clients: ', clients);
                 setClients(clients);
             }
         } catch(e) {
@@ -40,62 +44,109 @@ const AdminDashboardClients = () => {
 
     const doDeleteClientById = async (id) => {
         try {
-            const response = await deleteClientById(id);
-            if(response && (response.status === 200 || response.status === 204)) {
+            const response = await deleteClientById({ id });
+            if([200, 204].includes(response?.status)) {
                 const removedClient = clients.find(item => item.id === id);
                 setClients(clients.filter(item => item.id !== id));
                 enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success'});
             }
         } catch(e) {
+            console.log('doDeleteClientById: ', e);
             setError(e);
-            if(e && e.response && e.response.status === 404) {
+            if(e?.response?.status === 404) {
                 setClients(clients.filter(item => item.id !== id));
             }
-            
-            console.log('doDeleteClientById error: ', e);
             enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
             setPending(false);
         }
     };
 
-	// 'componentDidMount'
     useEffect(() => {
         const abortController = new AbortController();
 		resetBeforeApiCall();
         fetchClients(abortController);
-
         return () => {
             abortController.abort();
             closeSnackbar();
         }
     }, []);
 
-    const handleRemove = async (clientId) => {
-        console.log('handleRemove: ', clientId);
+    const onFormHide = () => {
+        setNewClient({ name: '', email: '' });
+        setError(null);
+        setShowAddForm(false);
+    };
 
+    const onFormSubmit = (event) => {
+        event.preventDefault();
+        // TODO
+
+        console.log(newClient);
+    };
+
+    const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
+    const onClientEmailChange = (event) => setNewClient((prev) => ({ ...prev, email: event.target.value }));
+
+    const onClientRemove = async (clientId) => {
         const client = clients.find(item => item.id === clientId);
-
         const result = await confirm(`Do you want to delete "${client.email}" client ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger'});
         if(!result) return;
         resetBeforeApiCall();
         doDeleteClientById(clientId);
     };
 
-	// 'render'
     return (
         <Container>
 			<Header />
 			<Container>            
-				<center>
-					<h1>Admin: Clients Dashboard</h1>
-				</center>
+				<center><h1>Admin: Clients Dashboard</h1></center>
                 <hr/>
-                {(!clients && pending) && <center><Spinner animation="grow" /></center>}
-                <ErrorServiceOffline error={error} pending={pending} />
 
-                <AdminClientsList clients={clients} onRemove={handleRemove} />
+                {clients && 
+                <>
+                    <Row className="justify-content-md-center">
+                        <Col md="auto">
+                            <Link to="#">
+                                <AddCircleOutlineOutlinedIcon onClick={ () => setShowAddForm(true) } />
+                            </Link>
+                        </Col>
+                    </Row>
+                    <hr />
+                </>}
+
+                <LoadingContainer condition={isLoading} />
+                <ErrorContainer error={error} />
+
+                <AdminClientsList clients={clients} onRemove={onClientRemove} />
                 <hr />
+
+                <ModalForm size="sm" show={showAddForm} title={'Add New Client'} okText={'Create'}
+                    onHide={onFormHide}
+                    onSubmit={onFormSubmit}
+                    pending={pending}                
+                    isFormValid={isFormValid}
+                    formContent={
+                        <>
+                            <FormGroup>
+                                <Form.Label>Client email:</Form.Label>
+                                <FormControl type="text" name="clientEmail" autoFocus
+                                    onChange={onClientEmailChange}
+                                    value={newClient.email}
+                                    disabled={pending}
+                                />
+                            </FormGroup>
+                            <FormGroup>
+                                <Form.Label>Client name:</Form.Label>
+                                <FormControl type="text" name="clientName"
+                                    onChange={onClientNameChange}
+                                    value={newClient.name}
+                                    disabled={pending}
+                                />
+                            </FormGroup>
+                        </>
+                    }                
+                />
 			</Container>
 		</Container>
     );
