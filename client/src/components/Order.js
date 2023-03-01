@@ -1,64 +1,71 @@
-import React, { useState, useEffect  } from 'react';
+import React, { useState, useEffect, useMemo, useCallback  } from 'react';
 import { 
     Container, Row, Col, Form, FormGroup, FormControl, Button, Alert, Spinner, Card, Badge
 } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import Multiselect from 'multiselect-react-dropdown';
-
 import dayjs from 'dayjs';
 import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-
 import StarRating from './StarRating';
 import Header from './Header';
-import ErrorServiceOffline from './ErrorServiceOffline';
-
+import ErrorContainer from './ErrorContainer';
 import { getCities } from '../api/cities';
 import { getWatches } from '../api/watches';
-
 import { getAvailableMasters, createOrder } from '../api/orders';
-
-import { useSnackbar } from 'notistack';
-import { confirm } from 'react-bootstrap-confirmation';
+import { dateToNearestHour } from '../utils/dateTime';
 
 const Order = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const dateToNearestHour = (date = new Date()) => {
-        const ms = 1000 * 60 * 60;
-        return new Date(Math.ceil(date.getTime() / ms) * ms);
-    };
-
-    const [order, setOrder] = useState({
+    const initEmptyOrder = () => { return {
         client : { name: '', email: '' },
         watch: null,
         city: null,
         master: null,
         startDate: dateToNearestHour(),
         cities: []
-    })
+    }};
+
+    const [order, setOrder] = useState(initEmptyOrder());
     
-    const [curDate, setCurDate] = useState(dateToNearestHour());
+    const [currentDate, setCurrentDate] = useState(dateToNearestHour());
     const [watches, setWatches] = useState(null);
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
-    const [confirmation, setConfirmation] = useState(null);
-    const [pending, setPending] = useState(true);
+    const [orderConfirmationMessage, setOrderConfirmationMessage] = useState(null);
+    const [pendingWatches, setPendingWatches] = useState(true);
+    const [pendingCities, setPendingCities] = useState(true);
+    const [dateTimeError, setDateTimeError] = useState(null);
+    const [pending, setPending] = useState(false);
     const [error, setError] = useState(null);
 
+    const isLoading = useMemo(() => (watches === null && pendingWatches || cities === null && pendingCities), [watches, cities, pendingWatches, pendingCities]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    
+    const isDateTimeError = useMemo(() => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason) , [dateTimeError]);
+    const isOrderConfirmationMessageReceived = useMemo(() => orderConfirmationMessage !== null, [orderConfirmationMessage]);
+
+    const isLoadingMasters = useMemo( () => masters === null && pending, [masters, pending]);
+    const isMasterListReady = useMemo( () => masters !== null && !pending, [masters, pending]);
+    const isAllMastersBussy = useMemo( () => masters?.length === 0, [masters]);
+
+    const isValidEmail = (email) => /\w{1,}@\w{1,}\.\w{2,}/ig.test(email);
+    const isValidName = (name) => name?.length >= 3;
+
+    const isFormValid = useCallback(() => isValidName(order?.client?.name) && isValidEmail(order?.client?.email) 
+        && order?.watch && order?.city 
+        && order?.startDate >= currentDate, [order]);
+
     const setDefaultFormState = () => {
-        setOrder({
-            client : { name: '', email: '' },
-            watch: null,
-            city: null,
-            master: null,
-            startDate: dateToNearestHour(),
-            cities: []
-        });
-        setCurDate(dateToNearestHour());
+        setOrder(initEmptyOrder());
+        setCurrentDate(dateToNearestHour());
         setMasters(null);
-        setConfirmation(null);
+        setOrderConfirmationMessage(null);
     };
     
     const resetBeforeApiCall = () => {
@@ -66,58 +73,46 @@ const Order = () => {
         setError(null);
     };
 
-
-    useEffect(() => {
-        const intervalId = setInterval(() => {
-            setCurDate(new Date());
-        }, 5000);
-        return () => {
-            clearInterval(intervalId);
-        };
-    }, []);
-
-    const fetchWachTypes = async(abortController) => {
+    const fetchWaches = async(abortController) => {
         try {
-            const response = await getWatches(abortController);
-            if(response && response.data && response.data.watches) {
+            const response = await getWatches({ abortController });
+            if(response?.data?.watches) {
                 const { watches } = response.data;
                 setWatches(watches);
             }
         } catch(e) {
             setError(e);
         } finally {
-            setPending(false);
+            setPendingWatches(false);
         }
     };
 
     const fetchCities = async(abortController) => {
         try {
-            const response = await getCities(abortController);
-            if(response && response.data && response.data.cities) {
+            const response = await getCities({ abortController });
+            if(response?.data?.cities) {
                 const { cities } = response.data;
                 setCities(cities);
             }
         } catch(e) {
             setError(e);
         } finally {
-            setPending(false);
+            setPendingCities(false);
         }
     };
 
     const fetchAvailableMasters = async (cityId, watchId, startDate) => {
         try {
-            const response = await getAvailableMasters(
-                cityId, watchId, startDate
-            );
-
-            if(response && response.data && response.data.masters) {
+            const response = await getAvailableMasters({ cityId, watchId, startDate });
+            if(response?.data?.masters) {
                 const { masters } = response.data;
-                console.log('Available masters: ', masters);
+                console.log()
                 setMasters(masters);
             }
         } catch(e) {
+            console.log('fetchAvailableMasters: ', e);
             setError(e);
-            if(e && e.response && e.response.data && e.response.data.detail) {
+            if(e?.response?.data?.detail) {
                 enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
             }
         } finally {
@@ -127,19 +122,17 @@ const Order = () => {
 
     const doCreateOrder = async (order) => {
         try {
-            const response = await createOrder(order);
-
-            console.log('Response: ', response.data);
-
-            if(response && response.data && response.data.info) {
-                const { info } = response.data;
-                console.log("info: ", info);
-                setConfirmation(info);
+            const response = await createOrder({ order });
+            if(response.data.confirmation) {
+                const { confirmation } = response.data;
+                console.log("info: ", confirmation);
+                setOrderConfirmationMessage(confirmation);
                 enqueueSnackbar(`Order placed`, { variant: 'success'});
             }
         } catch(e) {
+            console.log('doCreateOrder: ', e);
             setError(e);
-            if(e && e.response && e.response.data && e.response.data.detail) {
+            if(e?.response?.data?.detail) {
                 enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
             }
         } finally {
@@ -149,9 +142,7 @@ const Order = () => {
 
     useEffect( () => {
         const abortController = new AbortController();
-        resetBeforeApiCall();
-        fetchWachTypes(abortController);
-
+        fetchWaches(abortController);
         return () => {
             abortController.abort();
             closeSnackbar();
@@ -160,208 +151,143 @@ const Order = () => {
 
     useEffect( () => {
         const abortController = new AbortController();
-        resetBeforeApiCall();
         fetchCities(abortController);
-
         return () => {
             abortController.abort();
             closeSnackbar();
         };
     }, []);
 
-    
-
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log('handleSubmit', order);
+    const onFormSubmit = (event) => {
+        event.preventDefault(); 
 
         resetBeforeApiCall();
         setMasters(null);
 
-        console.log('tostr: ', order.startDate.toString());
-        console.log('GMT: ', order.startDate.toGMTString());
-        console.log('ISO: ', order.startDate.toISOString());
-        console.log('UTC: ', order.startDate.toUTCString());
-        console.log('toLocaleString: ', order.startDate.toLocaleString());
-        
-
-        fetchAvailableMasters(order.city.id, order.watch.id, order.startDate.getTime());//, order.startDate.getTimezoneOffset);//.toLocaleString());//dayjs(order.startDate.getTime()).format(DATETIME_FORMAT_STR)); //order.startDate.getTime());
-            //, order.startDate.getTimezoneOffset());
+        fetchAvailableMasters(order.city.id, order.watch.id, order.startDate.getTime());
+    };
+    
+    const onClientEmailChange = (event) => setOrder( (prev) => ({ ...prev, client: { ...prev.client, email: event.target.value }}));
+    const onClientNameChange  = (event) => setOrder( (prev) => ({ ...prev, client: { ...prev.client, name: event.target.value }}));
+    const onWatchTypeChange = (event, watch) => {
+        setOrder( (prev) => ({...prev, watch }));
+        setMasters(null);
+    };
+    const onOrderCitySelect = (selectedList, city) => {
+        setOrder( (prev) => ({...prev, city }));
+        setMasters(null);
+    };
+    const onOrderCityRemove = (selectedList, removedItem) => {
+        setOrder( (prev) => ({...prev, city: null }));
+        setMasters(null);
+    };
+    const onOrderDateChange = (newValue) => {
+        setOrder( (prev) => ({ ...prev, startDate: new Date(newValue) }));
+        setMasters(null);
+    };
+    const onOrderDateError = (reason) => {
+        console.log('onOrderDateError: ', reason, reason === 'minDate');
+        if(reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
+        if(reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
+        if(reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
+        if(reason === 'disablePast') return setDateTimeError({ reason, detail: 'Date is past' });
+        setDateTimeError(null);
     };
 
-    const pickUpMaster = async (event, master) => {
-
+    const onSelectMaster = async (event, master) => { 
         const result = await confirm(`Do you want to choose "${master.email}" as your master and submit order?`, {title: 'Confirm', okText: 'Place Order', okButtonStyle: 'success'});
         if(!result) return;
 
-        order.master = master;
         setOrder((prev) => ({...prev, master: master}));
-        console.log('pickup: ', order);
-
-        const orderToBackEnd = {
-            client: {
-                name: order.client.name,
-                email: order.client.email,
-            },
-            watchId: order.watch.id,
-            cityId: order.city.id,
-            masterId: master.id,
-            //startDate: dayjs(order.startDate.getTime()).format(DATETIME_FORMAT_STR),
-            startDate: order.startDate.getTime(),
-            timezone: order.startDate.getTimezoneOffset(),
-
-
-            //new Date(order.startDate.setTime(order.startDate.getTime() - order.startDate.getTimezoneOffset() * 60 * 1000 ))
-            //clientTimezone: order.startDate.getTimezoneOffset()
-        };
-        //jsDate.setTime( jsDate.getTime() + jsDate.getTimezoneOffset() * 60 * 1000 );
-        console.log('tostr: ', order.startDate.toString());
-        console.log('GMT: ', order.startDate.toGMTString());
-        console.log('ISO: ', order.startDate.toISOString());
-        console.log('UTC: ', order.startDate.toUTCString());
-
-        console.log('pickup2: ', orderToBackEnd);
 
         resetBeforeApiCall();
         setMasters(null);
 
-        doCreateOrder(orderToBackEnd);
+        doCreateOrder({
+            client: { ...order.client },
+            watchId: order.watch.id,
+            cityId: order.city.id,
+            masterId: master.id,
+            startDate: order.startDate.getTime(),
+            timezone: order.startDate.getTimezoneOffset(),
+        });
     };
 
-    const isFormValid = () => {
-        return order.client.name.length >= 3 
-            && /\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)
-            && order.watch 
-            && order.city
-            && order.startDate >= curDate
-            && !pending;
-    };
+    console.log('isOrderConfirmationMessageReceived=', isOrderConfirmationMessageReceived);
 
 	return (
 	<Container>
         <Header />
         <Container>              
-            <center>
-                <h1>Order page</h1>
-                <hr />
-            </center>
+            <center><h1>Order page</h1></center>
+            <hr />
 
-            {(!cities && pending) && <center><Spinner animation="grow" /> </center>}
-            {(!watches && pending) && <center><Spinner animation="grow" /> </center>}
-            <ErrorServiceOffline error={error} pending={pending} />
+            {isLoading && <center><Spinner animation="grow" /></center>}
             
+            {isError && <ErrorContainer error={error} />}
+            
+            {isComponentReady &&
+            <>
             <Row className="justify-content-md-center">
-                <Col xs lg="4">                    
-                    {!confirmation && cities && watches &&
-                    <Form onSubmit={handleSubmit}>
-                        <FormGroup className="mb-3">
-                            <Form.Label>Name:</Form.Label>
-                            <FormControl type="text" name="name" 
-                                required
-                                autoFocus={true}
-                                disabled={pending}
-                                isValid={order.client.name.length >= 3}
-                                isInvalid={order.client.name.length < 3}
-                                value={order.client.name}
-                                onChange={(event) => {
-                                    setOrder( (prev) => ({ ...prev, client: { ...prev.client, name: event.target.value } } ));
-                                    setError(null);
-                                }}
-                            />
-                            {order.client.name && <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>}
-                        </FormGroup>
+                <Col xs lg="5">                    
+                    {!isOrderConfirmationMessageReceived &&
+                    <Form onSubmit={onFormSubmit}>
                         <FormGroup className="mb-3">
                             <Form.Label>Email:</Form.Label>
-                            <FormControl type="email" name="email" 
-                                required
-                                disabled={pending}
-                                isValid={/\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)}
-                                isInvalid={!/\w{1,}@\w{1,}\.\w{2,}/ig.test(order.client.email)}
+                            <FormControl type="email" name="email" required autoFocus
+                                onChange={onClientEmailChange}
                                 value={order.client.email}
-                                onChange={(event) => {
-                                    setOrder( (prev) => ({ ...prev, client: { ...prev.client, email: event.target.value } } ));
-                                    setError(null);
-                                }}
+                                isValid={isValidEmail(order.client.email)}
+                                isInvalid={!isValidEmail(order.client.email)}
+                                disabled={pending}
                             />
                             {order.client.email && <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>}
                         </FormGroup>
                         <FormGroup className="mb-3">
+                            <Form.Label>Name:</Form.Label>
+                            <FormControl type="text" name="name" required
+                                onChange={onClientNameChange}
+                                value={order.client.name}
+                                isValid={isValidName(order.client.name)}
+                                isInvalid={!isValidName(order.client.name)}
+                                disabled={pending}
+                            />
+                            {order.client.name && <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>}
+                        </FormGroup>                        
+                        <FormGroup className="mb-3">
                             <>
-                            {watches && watches.map(( item, index ) => {
-                                return (
-                                    <Form.Check
-                                        required
-                                        disabled={pending}
-                                        inline
-                                        key={"watch_id_" + item.id}
-                                        label={item.name}
-                                        name="watch"
-                                        type="radio"
-                                        onClick={(event) => {
-                                            console.log('check: ', event);
-                                            setOrder( (prev) => ({...prev, watch: item }));
-                                            setMasters(null);
-                                            setError(null);
-                                        }}
-                                    />
-                                )
-                            })
-                            }
-                            </>
-                        
+                            {watches.map(watch =>
+                                <Form.Check key={watch.id} type="radio" name="watch" label={watch.name} inline required
+                                    onClick={(event) => onWatchTypeChange(event, watch)}
+                                    disabled={pending}
+                                />
+                            )}
+                            </>                        
                         </FormGroup>
                         <FormGroup className="mb-4">
-                            <Multiselect
-                                disable={pending}
+                            <Multiselect placeholder="City" displayValue="name"
+                                onSelect={onOrderCitySelect} 
+                                onRemove={onOrderCityRemove}
+                                options={cities}
+                                selectedValues={order.cities}
                                 selectionLimit={1}
-                                options={cities} // Options to display in the dropdown
-                                selectedValues={order.cities} // Preselected value to persist in dropdown
-                                onSelect={(selectedList, selectedItem) => {
-                                    setOrder( (prev) => ({...prev, city: selectedItem }));
-                                    setMasters(null);
-                                }}
-                                onRemove={(selectedList, removedItem) => {
-                                    setOrder( (prev) => ({...prev, city: null }));
-                                    setMasters(null);
-                                }} // Function will trigger on remove event
-                                displayValue="name" // Property name to display in the dropdown options                                
-                                placeholder="City"
+                                disable={pending}
                             />
                         </FormGroup>
                         <FormGroup className="mb-3">                            
                             <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                <DateTimePicker
-                                    disabled={pending}
-                                    renderInput={(props) => <TextField {...props} />}
-                                    label="DateTimePicker"
-                                    minDateTime={dayjs(curDate)}
-                                    disablePast={true}
-                                    value={order.startDate}
+                                <DateTimePicker label="DateTimePicker" renderInput={(props) => <TextField {...props} />}
                                     views={['year', 'month', 'day', 'hours']}
+                                    onChange={onOrderDateChange}
+                                    onError={onOrderDateError}
                                     ampm={false}
-                                    onChange={(newValue) => {
-                                        setOrder( (prev) => ({ ...prev, startDate: new Date(newValue) }));
-                                        setMasters(null);
-                                        //setError(null);
-                                    }}
-                                    onError={(reason) => {
-                                        if(reason === 'invalidDate') {
-                                            setError({reason: reason, detail: reason});
-                                        } else if(reason === 'minTime') {
-                                            setError({reason: reason, detail: 'Time is past'});
-                                        } else if(reason === 'disablePast') {
-                                            setError('Unable to set past date');
-                                            setError({reason: reason, detail: 'Date is past'});
-                                        } else {
-                                            setError(null);
-                                        }
-                                        console.log('datetime: ', reason, typeof reason, reason == 'minTime');
-                                        console.log(curDate, order.startDate);
-                                    }}
+                                    disablePast={true}
+                                    minDateTime={dayjs(currentDate)}                                    
+                                    value={order.startDate}
+                                    disabled={pending}
                                 />
                             </LocalizationProvider>
-                            {error && error.reason && ['invalidDate', 'minTime', 'disablePast'].includes(error.reason) && <strong style={{color: 'red'}}><br/>{error.detail}</strong>}
+                            {isDateTimeError && <strong style={{color: 'red'}}><br/>{ dateTimeError.detail }</strong>}
                         </FormGroup>
                         <Button className="mb-3" type="submit" variant="success" 
                             disabled={!isFormValid()}>
@@ -371,14 +297,14 @@ const Order = () => {
                     </Form>
                     }
 
-                    {confirmation &&
+                    {isOrderConfirmationMessageReceived &&
                     <Row className="justify-content-md-center">
                         <Col md="auto">
                         <Alert variant={"info"}>
                             <p>Thank you ! Confirmation message was sent to your email. </p>
                             <Container>
-                                {Object.keys(confirmation).map((key, index) => {
-                                    <p key={"confirmation_msg_index_" + index}>
+                                {Object.keys(orderConfirmationMessage).map((key, index) => {
+                                    <p key={index}>
                                         {key.toString()}
                                     </p>
                                 })}
@@ -386,49 +312,45 @@ const Order = () => {
                         </Alert>
                         </Col>
                         <Col md="auto">
-                            <Button variant="primary" onClick={() => { setDefaultFormState(); }}>
+                            <Button variant="primary" onClick={setDefaultFormState} >
                                 Create new order
                             </Button>
                         </Col>
-                    </Row>
-                    }
+                    </Row>}
                 </Col>
             </Row>
+            
             <hr />
+            {isLoadingMasters && <center><Spinner animation="grow" /> </center>}
+            {isMasterListReady &&
+            <>
+                <Row className="justify-content-md-center">
+                    {isAllMastersBussy &&
+                    <Row className="justify-content-md-center">
+                        <Col md="auto">
+                            <Alert variant={"warning"}>There is no masters available at this moment which can handle your order</Alert>
+                        </Col>
+                    </Row>}
 
-        {(!masters && cities && watches && pending) && <center><Spinner animation="grow" /> </center>}
-        {masters &&
-        <>
-        <Row className="justify-content-md-center">
-            {masters.map((master, index) => {
-                return (
-                    <Col key={"master_id_" + master.id} md="auto" onClick={(event) => { pickUpMaster(event, master); }}>
-                        <Card className="mb-3" style={{ width: '18rem' }}>
-                            <Card.Body>
-                                <Card.Title>{master.name}</Card.Title>
-                                <Card.Subtitle className="mb-2 text-muted">{master.email}</Card.Subtitle>
-                                <StarRating value={master.rating} readonly={true}/>
-                                <Card.Text>
-                                    {master.cities.map((city, index) => {
-                                        return <Badge bg="info" className="p-2 m-1" key={"master_city_id_" + city.id + "_index_" + index}>{city.name}</Badge>
-                                    })}
-                                </Card.Text>
-                            </Card.Body>
-                        </Card>
-                    </Col>
-                );
-            })
-            }
-            {masters && masters.length === 0 &&
-            <Row className="justify-content-md-center">
-                <Col md="auto">
-                    <Alert variant={"warning"}>There is no masters available at this moment which can handle your order</Alert>
-                </Col>
-            </Row>
-            }
-        </Row>
-        <hr/>
+                    {masters.map(master =>
+                        <Col key={master.id} md="auto" onClick={(e) => onSelectMaster(e, master)} >
+                            <Card className="mb-3" style={{ width: '18rem' }}>
+                                <Card.Body>
+                                    <Card.Title>{master.name}</Card.Title>
+                                    <Card.Subtitle className="mb-2 text-muted">{master.email}</Card.Subtitle>
+                                    <StarRating value={master.rating} readonly={true}/>
+                                    <Card.Text>
+                                        {master.cities.map(city => <Badge bg="info" className="p-2 m-1" key={city.id}>{city.name}</Badge>)}
+                                    </Card.Text>
+                                </Card.Body>
+                            </Card>
+                        </Col>
+                    )}
+                </Row>            
+                <hr />
+            </>}            
         </>}
+        
         </Container>
     </Container>
 	);
