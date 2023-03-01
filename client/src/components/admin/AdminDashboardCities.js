@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import {
-    Form, FormGroup, FormControl, Container, Row, Col, Spinner,
-} from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Spinner } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import Header from '../Header';
 import AdminCitiesList from './AdminCitiesList';
 import ModalForm from '../ModalForm';
-import ErrorServiceOffline from '../ErrorServiceOffline';
-
+import LoadingContainer from '../LoadingContainer';
+import ErrorContainer from '../ErrorContainer';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
-
-import { useSnackbar } from 'notistack';
-import { confirm } from 'react-bootstrap-confirmation';
 
 const AdminDashboardCities = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -23,6 +20,8 @@ const AdminDashboardCities = () => {
     const [error, setError] = useState(null);    
 	const [showAddForm, setShowAddForm] = useState(false);
 
+    const isLoading = useMemo(() => cities === null && pending, [cities, pending]);
+
     const resetBeforeApiCall = () => {
         setPending(true);
         setError(null);
@@ -30,8 +29,8 @@ const AdminDashboardCities = () => {
 
     const fetchCities = async (abortController) => {
         try {
-            const response = await getCities(abortController);
-            if (response && response.data && response.data.cities) {                    
+            const response = await getCities({ abortController });
+            if (response?.data?.cities) {
                 const { cities } = response.data;
                 setCities(cities);
             }
@@ -44,21 +43,18 @@ const AdminDashboardCities = () => {
 
     const doCreateCity = async (cityName) => {
         try {
-            const response = await createCity(cityName);
-            console.log(response);
-            if (response && response && response.data && response.data.city) {                    
+            const response = await createCity({ cityName });
+            if (response?.data?.city) {
                 const { city } = response.data;
-                setCities([...cities, city]);
-                
-                enqueueSnackbar(`City "${city.name}" created`, { variant: 'success'});
+                setCities([city, ...cities]);
                 setNewCityName('');
                 setShowAddForm(false);
+                enqueueSnackbar(`City "${city.name}" created`, { variant: 'success' });
             }
         } catch(e) {
+            console.log('doCreateCity error: ', e);
             setError(e);
             enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
-            console.log("Error: ", e);
-
         } finally {
             setPending(false);
         }
@@ -66,27 +62,25 @@ const AdminDashboardCities = () => {
 
     const doDeleteCityById = async (id) => {
         try {
-            const response = await deleteCityById(id);
-            if (response && (response.status === 200 || response.status === 204)) {
+            const response = await deleteCityById({ id });
+            if ([200, 204].includes(response?.status)) {
                 const removedCity = cities.find(item => item.id === id);
                 setCities(cities.filter(item => item.id !== id));
-                enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success'});
+                enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success' });
             }
         } catch(e) {
+            console.log('doDeleteCityById error: ', e);
             setError(e);
             // Looks like we trying to remove city which already removed or not exists at all
-            if(e && e.response && e.response.status === 404) {
+            if(e?.response?.status === 404) {
                 setCities(cities.filter(item => item.id !== id));
             }
-            
-            console.log('doDeleteCityById error: ', e);
             enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
             setPending(false);
         }
     };
 
-    // 'componentDidMount'
     useEffect(() => {
         const abortController = new AbortController();
         console.log('"componentDidMount" getCityById');
@@ -105,38 +99,37 @@ const AdminDashboardCities = () => {
         
         const city = cities.find(item => item.id === cityId);
 
-        const result = await confirm(`Do you want to delete "${city.name}" city ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger'});
+        const result = await confirm(`Do you want to delete "${city.name}" city ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger' });
         if(!result) return;
+
         resetBeforeApiCall();
         doDeleteCityById(cityId);
 	};
 
     return (
-	<Container>
+    <Container>
 		<Header />
 		<Container>              
-			<center>
-				<h1>Admin: Cities Dashboard</h1>
-                <hr />
-                {cities &&
-                <>
+			<center><h1>Admin: Cities Dashboard</h1></center>
+            <hr />
+
+            {cities &&
+            <>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
                         <Link to="#">
-                            <AddCircleOutlineOutlinedIcon onClick={() => { setShowAddForm(true); }} />
+                            <AddCircleOutlineOutlinedIcon onClick={ () => setShowAddForm(true) } />
                         </Link>
                     </Col>
                 </Row>
                 <hr />
-                </>}
-			</center>
-			
-			{(!cities && pending) && <center><Spinner animation="grow" /> </center>}
-            <ErrorServiceOffline error={error} pending={pending} />
+            </>}
+
+            <LoadingContainer condition={isLoading} />
+            <ErrorContainer error={error} />
 
             <AdminCitiesList cities={cities} onRemove={handleRemove} />
             <hr />
-            
 
             <ModalForm size="sm" show={showAddForm} title={'Add New City'} okText={'Create'}
                 onHide={()=>{
