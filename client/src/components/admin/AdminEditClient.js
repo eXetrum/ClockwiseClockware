@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Header from '../Header';
-import LoadingContainer from '../LoadingContainer';
 import ErrorContainer from '../ErrorContainer';
 import { getClientById, updateClientById } from '../../api/clients';
 
@@ -18,6 +17,9 @@ const AdminEditClient = () => {
     const [error, setError] = useState(null);
 
     const isLoading = useMemo( () => client === null && pending, [client, pending]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+
     const isFormValid = useCallback( () => client && client?.name?.length >= 3 && /\w{1,}@\w{1,}\.\w{2,}/ig.test(client?.email), [client]);
 
     const resetBeforeApiCall = () => {
@@ -92,10 +94,11 @@ const AdminEditClient = () => {
             </center>
             <hr/>
 
-            <LoadingContainer condition={isLoading} />
-            <ErrorContainer error={error} />
+            {isLoading && <center><Spinner animation="grow" /></center>}
+            
+            {isError && <ErrorContainer error={error} />}
 
-            {client  &&
+            {isComponentReady &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
                     <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
@@ -118,9 +121,9 @@ const AdminEditClient = () => {
                         <Button className="ms-2" type="submit" variant="success" disabled={!isFormValid()}>Save</Button>
                     </Form>
                 </Col>
-            </Row>
-            }
+            </Row>}
             <hr />
+            
         </Container>
     </Container>
     );

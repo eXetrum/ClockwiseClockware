@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import LoadingContainer from '../LoadingContainer';
 import ErrorContainer from '../ErrorContainer';
 import { getCities } from '../../api/cities';
 import { getMasterById, updateMasterById } from '../../api/masters';
@@ -21,8 +20,10 @@ const AdminEditMaster = () => {
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
 
-    const isLoading = useMemo( () => (cities === null || master === null) && pending, [cities, master, pending]);
-    const isFormReady = useMemo( () => cities && master, [cities, master]);
+    const isLoading = useMemo(() => (cities === null || master === null) && error === null, [cities, master, error]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+
     const isFormValid = useCallback( () => master && master.name && /\w{1,}@\w{1,}\.\w{2,}/ig.test(master.email), [master]);
 
     const fetchCities = async (abortController) => {
@@ -110,21 +111,22 @@ const AdminEditMaster = () => {
     const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
 
     return (
-        <Container>
-			<Header />
-			<Container>            
-				<center>
-					<h1>Admin: Edit Master</h1>
-                    <Link to={"/admin/masters"} ><ArrowLeftIcon/>Back</Link>
-				</center>
-                <hr/>
+    <Container>
+        <Header />
+        <Container>            
+            <center>
+                <h1>Admin: Edit Master</h1>
+                <Link to={"/admin/masters"} ><ArrowLeftIcon/>Back</Link>
+            </center>
+            <hr/>
 
-                <LoadingContainer condition={isLoading} />
-                <ErrorContainer error={error} />
+            {isLoading && <center><Spinner animation="grow" /></center>}
+            
+            {isError && <ErrorContainer error={error} />}
 
-				{isFormReady &&
+            {isComponentReady &&
                 <Row className="justify-content-md-center">
-                	<Col xs>
+                    <Col xs>
                     <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                         <FormGroup>
                             <Form.Label>Master email:</Form.Label>
@@ -167,12 +169,11 @@ const AdminEditMaster = () => {
 
                         <Button type="submit" className="ms-2 btn btn-success" disabled={!isFormValid()} >Save</Button>
                     </Form>
-                	</Col>
-              	</Row>
-                }
-                <hr />
-			</Container>
-		</Container>
+                    </Col>
+                </Row>}
+            <hr />
+        </Container>
+    </Container>
     );
 };
 

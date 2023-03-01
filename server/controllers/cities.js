@@ -5,6 +5,9 @@ const { City } = require('../database/models');
 // No route protector
 // +
 const getAll = async (req, res) => {
+	const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
+	await delay(3000);
+	//return res.status(404).end();
 	try {
 		console.log('[route] GET /cities');
 		let cities = await City.findAll({ order: [['updatedAt', 'DESC']] });

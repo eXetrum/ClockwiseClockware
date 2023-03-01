@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { useSnackbar } from 'notistack';
 import Header from '../Header';
-import LoadingContainer from '../LoadingContainer';
 import ErrorContainer from '../ErrorContainer';
 import { getCityById, updateCityById } from '../../api/cities';
 
@@ -19,6 +18,8 @@ const AdminEditCity = () => {
     const [error, setError] = useState(null);
 
     const isLoading = useMemo(() => city === null && pending, [city, pending]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -96,10 +97,11 @@ const AdminEditCity = () => {
             </center>
             <hr/>
 
-            <LoadingContainer condition={isLoading} />
-            <ErrorContainer error={error} />
+            {isLoading && <center><Spinner animation="grow" /></center>}
 
-            {city &&
+            {isError && <ErrorContainer error={error} />}
+
+            {isComponentReady &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
                     <Form inline="true" className="d-flex align-items-end" onSubmit={ onFormSubmit }>
@@ -114,9 +116,9 @@ const AdminEditCity = () => {
                         <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
                     </Form>
                 </Col>
-            </Row>
-            }
+            </Row>}
             <hr />
+
         </Container>
     </Container>
     );
