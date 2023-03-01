@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Form, FormGroup, FormControl, Container, Row, Col, Spinner } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
@@ -21,6 +21,7 @@ const AdminDashboardCities = () => {
 	const [showAddForm, setShowAddForm] = useState(false);
 
     const isLoading = useMemo(() => cities === null && pending, [cities, pending]);
+    const isFormValid = useCallback( () => newCityName, [newCityName]);    
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -144,17 +145,16 @@ const AdminDashboardCities = () => {
 
             <ModalForm size="sm" show={showAddForm} title={'Add New City'} okText={'Create'}
                 onHide={onFormHide}
-                pending={pending}
-                // Call on submit and on validation
                 onSubmit={onFormSubmit}
-                isFormValid={() => newCityName}
+                pending={pending}                
+                isFormValid={isFormValid}
                 formContent={
                     <FormGroup>
                         <Form.Label>City:</Form.Label>
-                        <FormControl type="text" name="city" disabled={pending}
-                            autoFocus
-                            value={newCityName}
+                        <FormControl type="text" name="city" autoFocus
                             onChange={onCityNameChange}
+                            value={newCityName}
+                            disabled={pending}
                         />
                     </FormGroup>
                 }                
