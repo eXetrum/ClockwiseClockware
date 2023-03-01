@@ -281,11 +281,9 @@ const create = [
 			
 			//let info = await sendMail(params);
 			// DUMMY DUE TESTS
-			const info = {messageId: params};
-			console.log(info);
-			res.status(201).json({ info }).end();
-			//res.status(201).json({ info: JSON.stringify(info) }).end();
-			
+			const confirmation = {messageId: params};
+			console.log(confirmation);
+			res.status(201).json({ confirmation }).end();			
 		} catch(e) { 
 			console.log(e); 
 			console.log(e.constraint);
