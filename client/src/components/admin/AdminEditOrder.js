@@ -1,55 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-    Form, FormGroup, FormControl, Container, Row, Col, Card, Badge, Alert, Button, Spinner
-} from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Card, Badge, Alert, Button, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
+import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
 import dayjs from 'dayjs';
 import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-
-import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-
 import Header from '../Header';
 import StarRating from '../StarRating';
-
-import ErrorServiceOffline from '../ErrorServiceOffline';
-import ErrorNotFound from '../ErrorNotFound';
-
+import ErrorContainer from '../ErrorContainer';
 import { getCities } from '../../api/cities';
 import { getWatches } from '../../api/watches';
-import { getMasterById } from '../../api/masters';
 import { getOrderById, updateOrderById, getAvailableMasters } from '../../api/orders';
-
-import { useSnackbar } from 'notistack';
-import { confirm } from 'react-bootstrap-confirmation';
-
-import NotificationBox from '../NotificationBox';
+import { dateToNearestHour, addHours, dateRangesOverlap } from '../../utils/dateTime';
 
 const AdminEditOrder = () => {
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-    const {id} = useParams();
+    const { id } = useParams();
 
-    const dateToNearestHour = (date = new Date()) => {
-        const ms = 1000 * 60 * 60;
-        return new Date(Math.ceil(date.getTime() / ms) * ms);
-    };
-
-    const addHours = (date, hours) => {
-        date.setHours(date.getHours() + hours);
-        return date;
-    };
-
-    const dateRangesOverlap = (start1, end1, start2, end2) => {
-        const min = (a, b) => { return a < b ? a : b; }
-        const max = (a, b) => { return a > b ? a : b; }
-        return max(start1, start2) < min(end1, end2);
-    };
-
-    // Initial
     const multiselectRef = React.createRef();
     const [watches, setWatches] = useState(null);
     const [cities, setCities] = useState(null);
@@ -64,6 +37,10 @@ const AdminEditOrder = () => {
     const [pending, setPending] = useState(true);
     const [info, setInfo] = useState(null);
     const [error, setError] = useState(null);
+
+    //const isLoading = useMemo(() => (cities === null || master === null) && error === null, [cities, master, error]);
+    //const isError = useMemo(() => error !== null, [error]);
+    //const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
 
     const fetchWaches = async(abortController) => {
         try {
@@ -321,6 +298,9 @@ const AdminEditOrder = () => {
                 <Link to={"/admin/orders"} ><ArrowLeftIcon/>Back</Link>
             </center>
             <hr/>
+
+
+
             {(!originalOrder && pending) && <center><Spinner animation="grow" /> </center>}
 
             {originalOrder  &&
@@ -631,10 +611,6 @@ const AdminEditOrder = () => {
             </div>}
             </>
             }
-            
-        {order && <hr />}
-        <NotificationBox info={info} error={error} pending={pending} />
-        {!order && <hr />}          
         </Container>
     </Container>
     );
