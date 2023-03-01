@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const getAvailableMasters = ({ abortController=null, ...params }) => axios.get(`/available_masters`, { ...params }, { signal: abortController?.signal });
+const getAvailableMasters = ({ abortController=null, ...params }) => axios.get(`/available_masters`, { params: { ...params } }, { signal: abortController?.signal });
 
 const createOrder = ({ abortController=null, ...params }) => axios.post(`/orders`, { ...params }, { signal: abortController?.signal });
 
