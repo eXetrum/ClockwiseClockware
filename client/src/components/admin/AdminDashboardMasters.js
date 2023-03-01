@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Form, FormGroup, FormControl } from 'react-bootstrap';
+import { Container, Row, Col, Form, FormGroup, FormControl, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
@@ -9,7 +9,6 @@ import StarRating from '../StarRating';
 import Header from '../Header';
 import AdminMastersList from './AdminMastersList';
 import ModalForm from '../ModalForm';
-import LoadingContainer from '../LoadingContainer';
 import ErrorContainer from '../ErrorContainer';
 import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
@@ -24,7 +23,10 @@ const AdminDashboardMasters = () => {
     const [error, setError] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     
-    const isLoading = useMemo(() => (cities === null || masters === null) && pending, [cities, masters, pending]);
+    const isLoading = useMemo(() => (cities === null || masters === null) && error === null, [cities, masters, error]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+
     const isFormValid = useCallback(() => newMaster && newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(newMaster.email), [newMaster]);
 
     const resetBeforeApiCall = () => {
@@ -115,7 +117,7 @@ const AdminDashboardMasters = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, []);    
+    }, []);
 
     const onFormHide = () => {
         setNewMaster({ name: '', email: '', rating: 0, cities: [] });
@@ -129,8 +131,8 @@ const AdminDashboardMasters = () => {
         doCreateMaster(newMaster);
     };
 
-    const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));
     const onMasterEmailChange = (event) => setNewMaster((prev) => ({ ...prev, email: event.target.value }));
+    const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));    
     const onMasterRatingChange = (value) => setNewMaster((prev) => ({ ...prev, rating: value }));
     const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster((prevState) => ({...prevState, cities: selectedList }));
     const onMasterCityRemove = (selectedList, removedItem) => setNewMaster((prevState) => ({...prevState, cities: selectedList }));
@@ -152,7 +154,11 @@ const AdminDashboardMasters = () => {
             <center><h1>Admin: Masters Dashboard</h1></center>
             <hr />
             
-            {cities && 
+            {isLoading && <center><Spinner animation="grow" /></center>}
+            
+            {isError && <ErrorContainer error={error} />}
+            
+            {isComponentReady &&
             <>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
@@ -162,12 +168,8 @@ const AdminDashboardMasters = () => {
                     </Col>
                 </Row>
                 <hr />
+                <AdminMastersList masters={masters} onRemove={onMasterRemove} />
             </>}
-            
-            <LoadingContainer condition={isLoading} />
-            <ErrorContainer error={error} />
-            
-            <AdminMastersList masters={masters} onRemove={onMasterRemove} />
             <hr />
 
             <ModalForm size="sm" show={showAddForm} title={'Add New Master'} okText={'Create'}

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Form, FormGroup, FormControl } from 'react-bootstrap';
+import { Container, Row, Col, Form, FormGroup, FormControl, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Header from '../Header';
 import AdminClientsList from './AdminClientsList';
 import ModalForm from '../ModalForm';
-import LoadingContainer from '../LoadingContainer';
 import ErrorContainer from '../ErrorContainer';
 import { deleteClientById, getClients } from '../../api/clients';
 
@@ -21,6 +20,9 @@ const AdminDashboardClients = () => {
     const [showAddForm, setShowAddForm] = useState(false);
 
     const isLoading = useMemo(() => clients === null && pending, [clients, pending]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+
     const isFormValid = useCallback(() => newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(newClient.email), [newClient]);
 
     const resetBeforeApiCall = () => {
@@ -81,7 +83,6 @@ const AdminDashboardClients = () => {
     const onFormSubmit = (event) => {
         event.preventDefault();
         // TODO
-
         console.log(newClient);
     };
 
@@ -103,7 +104,11 @@ const AdminDashboardClients = () => {
 				<center><h1>Admin: Clients Dashboard</h1></center>
                 <hr/>
 
-                {clients && 
+                {isLoading && <center><Spinner animation="grow" /></center>}
+            
+                {isError && <ErrorContainer error={error} />}
+
+                {isComponentReady &&
                 <>
                     <Row className="justify-content-md-center">
                         <Col md="auto">
@@ -113,12 +118,8 @@ const AdminDashboardClients = () => {
                         </Col>
                     </Row>
                     <hr />
+                    <AdminClientsList clients={clients} onRemove={onClientRemove} />                    
                 </>}
-
-                <LoadingContainer condition={isLoading} />
-                <ErrorContainer error={error} />
-
-                <AdminClientsList clients={clients} onRemove={onClientRemove} />
                 <hr />
 
                 <ModalForm size="sm" show={showAddForm} title={'Add New Client'} okText={'Create'}

@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Spinner } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import Header from '../Header';
 import AdminCitiesList from './AdminCitiesList';
 import ModalForm from '../ModalForm';
-import LoadingContainer from '../LoadingContainer';
 import ErrorContainer from '../ErrorContainer';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
 
@@ -21,6 +20,9 @@ const AdminDashboardCities = () => {
 	const [showAddForm, setShowAddForm] = useState(false);
 
     const isLoading = useMemo(() => cities === null && pending, [cities, pending]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+
     const isFormValid = useCallback( () => newCityName, [newCityName]);    
 
     const resetBeforeApiCall = () => {
@@ -125,7 +127,11 @@ const AdminDashboardCities = () => {
 			<center><h1>Admin: Cities Dashboard</h1></center>
             <hr />
 
-            {cities &&
+            {isLoading && <center><Spinner animation="grow" /></center>}
+            
+            {isError && <ErrorContainer error={error} />}
+
+            {isComponentReady &&
             <>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
@@ -135,12 +141,8 @@ const AdminDashboardCities = () => {
                     </Col>
                 </Row>
                 <hr />
+                <AdminCitiesList cities={cities} onRemove={onCityRemove} />
             </>}
-
-            <LoadingContainer condition={isLoading} />
-            <ErrorContainer error={error} />
-
-            <AdminCitiesList cities={cities} onRemove={onCityRemove} />
             <hr />
 
             <ModalForm size="sm" show={showAddForm} title={'Add New City'} okText={'Create'}
