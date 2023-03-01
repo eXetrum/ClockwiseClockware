@@ -3,9 +3,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getCurrentUser } from './auth';
 
-//throw new axios.Cancel('Operation canceled by the user.');
-
-
 const AxiosInterceptor = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -56,5 +53,4 @@ const AxiosInterceptor = ({ children }) => {
     return isSet && children;
 };
 
-//export default axiosInstance;
 export { AxiosInterceptor }

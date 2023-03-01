@@ -1,10 +1,5 @@
 import axios from "axios";
 
-// Watch types
-const getWatches = (abortController=null) => { 
-    return axios.get(`/watches`, { signal: abortController?.signal}); 
-};
+const getWatches = ({ abortController=null }) => axios.get(`/watches`, { signal: abortController?.signal }); 
 
-export {
-    getWatches,
-};
+export { getWatches };
