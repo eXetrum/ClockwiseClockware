@@ -27,8 +27,8 @@ const AdminMastersList = ({ masters, onRemove }) => {
                 <thead>
                     <tr>
                         <th className="text-center p-3 m-0">id</th>
-                        <th className="text-center p-3 m-0">name</th>
                         <th className="text-center p-3 m-0">email</th>
+                        <th className="text-center p-3 m-0">name</th>                        
                         <th className="text-center p-3 m-0">cities</th>
                         <th className="text-center p-3 m-0">rating</th>
                         <th colSpan="2" className="text-center p-3 m-0"></th>
@@ -41,10 +41,10 @@ const AdminMastersList = ({ masters, onRemove }) => {
                             {master.id}
                         </td>
                         <td className="p-3 m-0">
-                            {master.name}
+                            {master.email}
                         </td>
                         <td className="p-3 m-0">
-                            {master.email}
+                            {master.name}
                         </td>
                         <td className="text-center  pt-2 m-0">
                             {master.cities.map(city => <Badge bg="info" className="p-2 m-1" key={city.id}>{city.name}</Badge>)}
