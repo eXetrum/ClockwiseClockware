@@ -1,33 +1,34 @@
-import React, { useState, useEffect} from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-    Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner
-} from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Button } from 'react-bootstrap';
+import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
 import StarRating from '../StarRating';
 import Header from '../Header';
-import ErrorServiceOffline from '../ErrorServiceOffline';
-import ErrorNotFound from '../ErrorNotFound';
-
+import LoadingContainer from '../LoadingContainer';
+import ErrorContainer from '../ErrorContainer';
 import { getCities } from '../../api/cities';
 import { getMasterById, updateMasterById } from '../../api/masters';
-import { useSnackbar } from 'notistack';
 
 const AdminEditMaster = () => {
-    const {id} = useParams();
+    const { id } = useParams();
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-    // Initial
-	const [cities, setCities] = useState([]);
+
+	const [cities, setCities] = useState(null);
     const [originalMaster, setOriginalMaster] = useState(null);
     const [master, setMaster] = useState(null);
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
 
+    const isLoading = useMemo( () => (cities === null || master === null) && pending, [cities, master, pending]);
+    const isFormReady = useMemo( () => cities && master, [cities, master]);
+    const isFormValid = useCallback( () => master && master.name && master.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(master.email), [master]);
+
     const fetchCities = async (abortController) => {
         try {
-            const response = await getCities(abortController);
-            if(response && response.data && response.data.cities) {
+            const response = await getCities({ abortController });
+            if(response?.data?.cities) {
                 const { cities } = response.data;
                 setCities(cities);
             }
@@ -40,9 +41,9 @@ const AdminEditMaster = () => {
 
     const fetchMasterById = async (id, abortController) => {
         try {
-            const response = await getMasterById(id, abortController);
-            if(response && response.data && response.data.master) {
-                let { master } = response.data;
+            const response = await getMasterById({ id, abortController });
+            if(response?.data?.master) {
+                const { master } = response.data;
                 setMaster(master);
                 setOriginalMaster(master);
             }
@@ -55,15 +56,15 @@ const AdminEditMaster = () => {
 
     const doUpdateMasterById = async (id, master) => {
         try {
-            const response = await updateMasterById(id, master);
-            if(response && (response.status == 200 || response.status == 204)) {
+            const response = await updateMasterById({ id, master });
+            if([200, 204].includes(response?.status)) {
                 setMaster(master);
                 setOriginalMaster(master);
                 enqueueSnackbar(`Master updated`, { variant: 'success'});
             }
         } catch(e) {
             setError(e);
-            if(e && e.response && e.response.status && e.response.status === 404) {
+            if(e?.response?.status === 404) {
                 setMaster(null);
                 setOriginalMaster(null);
             } else {
@@ -75,13 +76,10 @@ const AdminEditMaster = () => {
         }
     };
 
-	// 'componentDidMount'
     useEffect(() => {
-        const abortController = new AbortController();
-        
+        const abortController = new AbortController();        
         setPending(true);
-        fetchCities(abortController);
-        
+        fetchCities(abortController);        
         return () => {
             abortController.abort();
             closeSnackbar();
@@ -91,36 +89,26 @@ const AdminEditMaster = () => {
     useEffect(() => {
         const abortController = new AbortController();
         setPending(true);
-        fetchMasterById(id, abortController);
-        
+        fetchMasterById(id, abortController);        
         return () => {
             abortController.abort();
             closeSnackbar();
         };
     }, [id]);
 
-	// Callbacks
-	const handleSubmit = (e) => {
-		e.preventDefault()
-        console.log('handleSubmit: ', master);
+    const onFormSubmit = (event) => {
+        event.preventDefault()
         setPending(true);
 		setError(null);
         doUpdateMasterById(id, master);		
-	};
-
-    const validateNewMasterForm = () => { return !master.name || !master.email; }// || !master.cities.length; };
-
-    const onSelect = (selectedList, selectedItem)=> {
-        console.log('OnSelect: ', selectedList, selectedItem);
-        setMaster((prevState) => ({...prevState, cities: selectedList }));
     };
 
-    const onRemove = (selectedList, removedItem) => {
-        console.log('OnRemove: ', selectedList, removedItem);
-        setMaster((prevState) => ({...prevState, cities: selectedList }));
-    };
+    const onMasterNameChange = (event) => setMaster((prevState) => ({...prevState, name: event.target.value }));
+    const onMasterEmailChange = (event) => setMaster((prevState) => ({...prevState, email: event.target.value }));
+    const onMasterRatingChange = (value) => setMaster((prevState) => ({...prevState, rating: value }));
+    const onMasterCitySelect = (selectedList, selectedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
+    const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
 
-	// 'render'
     return (
         <Container>
 			<Header />
@@ -130,66 +118,54 @@ const AdminEditMaster = () => {
                     <Link to={"/admin/masters"} ><ArrowLeftIcon/>Back</Link>
 				</center>
                 <hr/>
-                {(!master && pending) && <center><Spinner animation="grow" /> </center>}
 
-                <ErrorServiceOffline error={error} pending={pending} />
-                <ErrorNotFound error={error} pending={pending} />
+                <LoadingContainer condition={isLoading} />
+                <ErrorContainer error={error} />
 
-				{master &&
+				{isFormReady &&
                 <Row className="justify-content-md-center">
                 	<Col xs>
-                    <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
+                    <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                         <FormGroup>
                             <Form.Label>Master name:</Form.Label>
                             <FormControl type="text" name="masterName" 
-                                value={master.name}
-                                onChange={(event) => {
-									setMaster((prevState) => ({...prevState, name: event.target.value }));
-                                    setError(null);
-                                }}
+                                onChange={onMasterNameChange}
+                                value={master.name}                                
                                 disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup>
                             <Form.Label>Master email:</Form.Label>
                             <FormControl type="email" name="masterEmail" 
-                                value={master.email}
-                                onChange={(event) => {
-									setMaster((prevState) => ({...prevState, email: event.target.value }));
-                                    setError(null);
-                                }}
+                                onChange={onMasterEmailChange}
+                                value={master.email}                                
                                 disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup className="ms-3">
                             <Form.Label>Rating:</Form.Label>
                             <StarRating
-                                total={5}
+                                onRatingChange={onMasterRatingChange}
+                                onRatingReset={onMasterRatingChange}
                                 value={master.rating}
-                                onRatingChange={(value) => {
-                                    console.log('onRatingChange: ', value);
-									setMaster((prevState) => ({...prevState, rating: value }));
-                                }}
-                                onRatingReset={(value) => {
-                                    console.log('onRatingReset: ', value);
-									setMaster((prevState) => ({...prevState, rating: value }));
-                                }} 
+                                total={5}
                                 readonly={pending}
                             />
                         </FormGroup>                        
                         <FormGroup className="ms-3">
                             <Form.Label>Master work cities:</Form.Label>
                             <Multiselect
-                                options={cities} // Options to display in the dropdown
-                                selectedValues={master.cities} // Preselected value to persist in dropdown
-                                onSelect={onSelect} // Function will trigger on select event
-                                onRemove={onRemove} // Function will trigger on remove event
-                                displayValue="name" // Property name to display in the dropdown options
+                                onSelect={onMasterCitySelect}
+                                onRemove={onMasterCityRemove}
+                                options={cities}
+                                selectedValues={master.cities}
+                                displayValue="name"
+                                disable={pending}
                             />
                             
                         </FormGroup>
 
-                        <Button type="submit" className="ms-2 btn btn-success" disabled={validateNewMasterForm()} >Save</Button>
+                        <Button type="submit" className="ms-2 btn btn-success" disabled={!isFormValid()} >Save</Button>
                     </Form>
                 	</Col>
               	</Row>
