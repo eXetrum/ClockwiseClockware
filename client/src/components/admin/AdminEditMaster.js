@@ -23,7 +23,7 @@ const AdminEditMaster = () => {
 
     const isLoading = useMemo( () => (cities === null || master === null) && pending, [cities, master, pending]);
     const isFormReady = useMemo( () => cities && master, [cities, master]);
-    const isFormValid = useCallback( () => master && master.name && master.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(master.email), [master]);
+    const isFormValid = useCallback( () => master && master.name && /\w{1,}@\w{1,}\.\w{2,}/ig.test(master.email), [master]);
 
     const fetchCities = async (abortController) => {
         try {
@@ -103,8 +103,8 @@ const AdminEditMaster = () => {
         doUpdateMasterById(id, master);		
     };
 
-    const onMasterNameChange = (event) => setMaster((prevState) => ({...prevState, name: event.target.value }));
     const onMasterEmailChange = (event) => setMaster((prevState) => ({...prevState, email: event.target.value }));
+    const onMasterNameChange = (event) => setMaster((prevState) => ({...prevState, name: event.target.value }));    
     const onMasterRatingChange = (value) => setMaster((prevState) => ({...prevState, rating: value }));
     const onMasterCitySelect = (selectedList, selectedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
     const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
@@ -127,18 +127,18 @@ const AdminEditMaster = () => {
                 	<Col xs>
                     <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                         <FormGroup>
-                            <Form.Label>Master name:</Form.Label>
-                            <FormControl type="text" name="masterName" 
-                                onChange={onMasterNameChange}
-                                value={master.name}                                
-                                disabled={pending}
-                            />
-                        </FormGroup>
-                        <FormGroup>
                             <Form.Label>Master email:</Form.Label>
                             <FormControl type="email" name="masterEmail" 
                                 onChange={onMasterEmailChange}
                                 value={master.email}                                
+                                disabled={pending}
+                            />
+                        </FormGroup>
+                        <FormGroup>
+                            <Form.Label>Master name:</Form.Label>
+                            <FormControl type="text" name="masterName" 
+                                onChange={onMasterNameChange}
+                                value={master.name}                                
                                 disabled={pending}
                             />
                         </FormGroup>

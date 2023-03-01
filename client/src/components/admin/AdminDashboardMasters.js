@@ -177,19 +177,19 @@ const AdminDashboardMasters = () => {
                 pending={pending}                
                 formContent={
                     <>
-                    <FormGroup>
-                            <Form.Label>Master name:</Form.Label>
-                            <FormControl type="text" name="masterName" autoFocus required
-                                onChange={onMasterNameChange}
-                                value={newMaster.name}                                
+                        <FormGroup>
+                            <Form.Label>Master email:</Form.Label>
+                            <FormControl type="email" name="masterEmail" autoFocus required
+                                onChange={onMasterEmailChange}
+                                value={newMaster.email}                                
                                 disabled={pending}
                             />
                         </FormGroup>
                         <FormGroup>
-                            <Form.Label>Master email:</Form.Label>
-                            <FormControl type="email" name="masterEmail" required
-                                onChange={onMasterEmailChange}
-                                value={newMaster.email}                                
+                            <Form.Label>Master name:</Form.Label>
+                            <FormControl type="text" name="masterName" required
+                                onChange={onMasterNameChange}
+                                value={newMaster.name}                                
                                 disabled={pending}
                             />
                         </FormGroup>
