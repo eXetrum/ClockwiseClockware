@@ -65,12 +65,9 @@ const AdminEditCity = () => {
     };
 
     useEffect(() => {
-        const abortController = new AbortController();
-        console.log('"componentDidMount" getCityById');
-        
+        const abortController = new AbortController();        
         resetBeforeApiCall();
-        fetchCityById(id, abortController);
-        
+        fetchCityById(id, abortController);        
         return () => {
             abortController.abort();
             closeSnackbar();
@@ -78,11 +75,16 @@ const AdminEditCity = () => {
     }, [id]);
 
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const onCityNameChange = (event) => {
+        setNewCityName(event.target.value);
+        setError(null);
+    };
+
+    const onFormSubmit = (event) => {
+        event.preventDefault();
         resetBeforeApiCall();
         doUpdateCityById(id, newCityName);        
-    }
+    };
 
     return (
     <Container>
@@ -100,16 +102,13 @@ const AdminEditCity = () => {
             {city &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
-                    <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
+                    <Form inline="true" className="d-flex align-items-end" onSubmit={ onFormSubmit }>
                         <FormGroup>
-                            <Form.Label>City:</Form.Label>{' '}
+                            <Form.Label>City:</Form.Label>
                             <FormControl type="text" name="city" 
                                 disabled={pending}
                                 value={newCityName}
-                                onChange={(event) => {
-                                    setNewCityName(event.target.value);
-                                    setError(null);
-                                }}
+                                onChange={onCityNameChange}
                             />
                         </FormGroup>
                         <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>

@@ -71,7 +71,6 @@ const AdminDashboardCities = () => {
         } catch(e) {
             console.log('doDeleteCityById error: ', e);
             setError(e);
-            // Looks like we trying to remove city which already removed or not exists at all
             if(e?.response?.status === 404) {
                 setCities(cities.filter(item => item.id !== id));
             }
@@ -82,21 +81,33 @@ const AdminDashboardCities = () => {
     };
 
     useEffect(() => {
-        const abortController = new AbortController();
-        console.log('"componentDidMount" getCityById');
+        const abortController = new AbortController();        
         resetBeforeApiCall();
 		fetchCities(abortController);
-
         return () => {
-            console.log('[AdminDashboardCities] ABORT FETCH');
             abortController.abort();
             closeSnackbar();
         }
     }, []);
 
-	const handleRemove = async (cityId) => {
-		console.log('handleRemove');
-        
+    const onFormHide = () => {
+        setNewCityName(''); 
+        setError(null);
+        setShowAddForm(false);
+    };
+
+    const onFormSubmit = (event) => {
+        event.preventDefault();
+        resetBeforeApiCall();
+        doCreateCity(newCityName);
+    };
+
+    const onCityNameChange = (event) => { 
+        setNewCityName(event.target.value); 
+        setError(null);
+    };
+
+	const onCityRemove = async (cityId) => {        
         const city = cities.find(item => item.id === cityId);
 
         const result = await confirm(`Do you want to delete "${city.name}" city ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger' });
@@ -128,24 +139,14 @@ const AdminDashboardCities = () => {
             <LoadingContainer condition={isLoading} />
             <ErrorContainer error={error} />
 
-            <AdminCitiesList cities={cities} onRemove={handleRemove} />
+            <AdminCitiesList cities={cities} onRemove={onCityRemove} />
             <hr />
 
             <ModalForm size="sm" show={showAddForm} title={'Add New City'} okText={'Create'}
-                onHide={()=>{
-                    console.log('cancel X'); 
-                    setNewCityName(''); 
-                    setError(null);
-                    setShowAddForm(false);
-                }}
+                onHide={onFormHide}
                 pending={pending}
                 // Call on submit and on validation
-                onSubmit={(event) => {
-                    event.preventDefault();
-                    console.log('handleSubmit');
-                    resetBeforeApiCall();
-                    doCreateCity(newCityName);
-                }}
+                onSubmit={onFormSubmit}
                 isFormValid={() => newCityName}
                 formContent={
                     <FormGroup>
@@ -153,10 +154,7 @@ const AdminDashboardCities = () => {
                         <FormControl type="text" name="city" disabled={pending}
                             autoFocus
                             value={newCityName}
-                            onChange={(event) => { 
-                                setNewCityName(event.target.value); 
-                                setError(null);
-                            }}
+                            onChange={onCityNameChange}
                         />
                     </FormGroup>
                 }                
