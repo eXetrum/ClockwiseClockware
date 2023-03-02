@@ -16,7 +16,7 @@ const AdminDashboardOrders = () => {
 
     const isLoading = useMemo(() => orders === null && pending, [orders, pending]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => orders !== null, [orders]);
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -27,7 +27,7 @@ const AdminDashboardOrders = () => {
         try {
             const response = await getOrders({ abortController });
             if(response?.data?.orders) {
-                const { orders } = response.data; 
+                const { orders } = response.data;
                 setOrders(orders);
             }
         } catch(e) {

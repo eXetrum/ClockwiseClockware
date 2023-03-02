@@ -42,7 +42,7 @@ const Order = () => {
 
     const isLoading = useMemo(() => (watches === null || cities === null) && pending, [watches, cities, pending]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => watches !== null && cities !== null , [watches, cities]);
     
     const isDateTimeError = useMemo(() => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason) , [dateTimeError]);
     const isOrderConfirmationMessageReceived = useMemo(() => orderConfirmationMessage !== null, [orderConfirmationMessage]);
@@ -281,7 +281,8 @@ const Order = () => {
                         <Alert variant={"info"}>
                             <p>Thank you ! Confirmation message was sent to your email. </p>
                             <Container>
-                                {Object.keys(orderConfirmationMessage).map((key, index) => <p key={index}>{key.toString()}</p>)}
+                                {Object.keys(orderConfirmationMessage).map((key, index) => 
+                                <p key={index}>{key.toString()}:{orderConfirmationMessage[key].toString()}</p>)}
                             </Container>
                         </Alert>
                         </Col>

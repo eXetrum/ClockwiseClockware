@@ -22,7 +22,7 @@ const AdminEditMaster = () => {
 
     const isLoading = useMemo(() => (cities === null || master === null) && error === null, [cities, master, error]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => cities !== null && master !== null, [cities, master]);
 
     const isFormValid = useCallback( () => master && master.name && /\w{1,}@\w{1,}\.\w{2,}/ig.test(master.email), [master]);
 
@@ -85,7 +85,7 @@ const AdminEditMaster = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, [id]);
+    }, [id, closeSnackbar]);
 
     useEffect(() => {
         const abortController = new AbortController();
@@ -95,7 +95,7 @@ const AdminEditMaster = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, [id]);
+    }, [id, closeSnackbar]);
 
     const onFormSubmit = (event) => {
         event.preventDefault()

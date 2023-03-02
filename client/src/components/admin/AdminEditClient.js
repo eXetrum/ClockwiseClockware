@@ -18,7 +18,7 @@ const AdminEditClient = () => {
 
     const isLoading = useMemo( () => client === null && pending, [client, pending]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => client !== null, [client]);
 
     const isFormValid = useCallback( () => client && client?.name?.length >= 3 && /\w{1,}@\w{1,}\.\w{2,}/ig.test(client?.email), [client]);
 
@@ -72,7 +72,7 @@ const AdminEditClient = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, [id]);
+    }, [id, closeSnackbar]);
 
 
     const onFormSubmit = (event) => {

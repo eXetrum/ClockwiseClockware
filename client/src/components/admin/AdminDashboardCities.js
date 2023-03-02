@@ -21,7 +21,7 @@ const AdminDashboardCities = () => {
 
     const isLoading = useMemo(() => cities === null && pending, [cities, pending]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => cities !== null, [cities]);
 
     const isFormValid = useCallback( () => newCityName, [newCityName]);    
 

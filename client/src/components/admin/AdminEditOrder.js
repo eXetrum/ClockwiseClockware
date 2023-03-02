@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Form, FormGroup, FormControl, Container, Row, Col, Card, Badge, Alert, Button, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -26,7 +26,7 @@ const AdminEditOrder = () => {
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
 
-    const [currentDate, setCurrentDate] = useState(dateToNearestHour());
+    const [currentDate, setCurrentDate] = useState(null);
     const [originalOrder, setOriginalOrder] = useState(null);
     const [selectedCities, setSelectedCities] = useState(null);
 
@@ -48,7 +48,7 @@ const AdminEditOrder = () => {
     const isLoading = useMemo(() => (watches === null || cities === null || originalOrder === null) && pendingInitial, [watches, cities, originalOrder, pendingInitial]);
     const isError = useMemo(() => error !== null, [error]);
     const isDateTimeError = useMemo(() => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason) , [dateTimeError]);
-    const isFormReady = useMemo( () => !isLoading && !isError, [isLoading, isError]);    
+    const isFormReady = useMemo( () => watches !== null && cities !== null && originalOrder !== null, [watches, cities, originalOrder]);
     
     const isOriginalOrderAssigned = useMemo(() => originalOrder !== null, [originalOrder]);
     const isClientAssigned = useMemo(() => client !== null, [client]);
@@ -85,12 +85,13 @@ const AdminEditOrder = () => {
     const ensureMasterCanHandleOrder = ({ orderId, watch, city, master, startDate }) => {
         // Master cant handle selected city
         if(!ensureMasterCanServeCity(master, city)) return false;
+
         const schedule = master.orders.filter(item => item.id !== orderId);
-        let endDate = addHours(startDate, watch.repairTime);
-        return !ensureMasterSchedule(schedule, startDate, endDate);
+
+        return !ensureMasterSchedule(schedule, startDate, addHours(startDate, watch.repairTime));
     };
 
-    const fetchInitialData = async(id, abortController) => {
+    const fetchInitialData = useCallback(async(id, abortController) => {
         try {
             let response = await getWatches({ abortController });
             setWatches(response?.data?.watches ?? null);
@@ -108,7 +109,7 @@ const AdminEditOrder = () => {
         } finally {
             setPendingInitial(false);
         }
-    };
+    }, []);
 
     const fetchAvailableMasters = async ({ city, watch, startDate }) => {
         try {
@@ -158,13 +159,14 @@ const AdminEditOrder = () => {
     };
 
     useEffect( () => {
+        setCurrentDate(dateToNearestHour());
         const abortController = new AbortController();
         fetchInitialData(id, abortController);
         return () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, [id, closeSnackbar]);
+    }, [id, closeSnackbar, fetchInitialData]);
 
     const onFormSubmit = (event) => {
         event.preventDefault();
@@ -205,7 +207,7 @@ const AdminEditOrder = () => {
     };
 
     const onWatchTypeChange = async (event, newWatch) => {
-        if(!isMasterAssigned || ensureMasterCanHandleOrder({ id, master, city, watch: newWatch, startDate })) {
+        if(!isMasterAssigned || ensureMasterCanHandleOrder({ orderId: id, master, city, watch: newWatch, startDate })) {
             setWatch(newWatch);
             setMasters(null);
             return;

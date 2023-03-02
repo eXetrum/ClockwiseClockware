@@ -22,7 +22,21 @@ const AdminOrdersList = ({ orders, onRemove }) => {
         );
     }
 
-    const formatDate = (date) => date.toISOString().replace('T', ' ').replace(/:\d{2}\.\d+Z/, '');
+      
+    function formatDate(date) {
+        const pad = (num) => num.toString().padStart(2, '0');
+        return (
+            [
+                date.getFullYear(),
+                pad(date.getMonth() + 1),
+                pad(date.getDate()),
+            ].join('-') + ' ' +
+            [
+                pad(date.getHours()),
+                pad(date.getMinutes()),
+            ].join(':')
+        );
+    };
 
     return (
         <Container>

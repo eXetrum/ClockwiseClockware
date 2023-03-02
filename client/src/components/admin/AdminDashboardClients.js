@@ -21,7 +21,7 @@ const AdminDashboardClients = () => {
 
     const isLoading = useMemo(() => clients === null && pending, [clients, pending]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => clients !== null, [clients]);
 
     const isFormValid = useCallback(() => newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(newClient.email), [newClient]);
 

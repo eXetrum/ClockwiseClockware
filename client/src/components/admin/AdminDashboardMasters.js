@@ -28,8 +28,8 @@ const AdminDashboardMasters = () => {
     const isCitiesLoading = useMemo(() => cities === null && pendingCities, [cities, pendingCities]);
     const isMastersLoading = useMemo(() => masters === null && pendingMasters, [masters, pendingMasters]);
     const isError = useMemo(() => error !== null, [error]);
-    const isAddFormReady = useMemo(() => !isCitiesLoading && !isError, [isCitiesLoading, isError]);
-    const isMasterListReady = useMemo(() => !isMastersLoading && !isError, [isMastersLoading, isError]);
+    const isAddFormReady = useMemo(() => cities !== null, [cities]);
+    const isMasterListReady = useMemo(() => masters !== null, [masters]);
 
     const isFormValid = useCallback(() => newMaster && newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/ig.test(newMaster.email), [newMaster]);
 
@@ -158,6 +158,7 @@ const AdminDashboardMasters = () => {
             
             {isCitiesLoading && <center><Spinner animation="grow" /></center>}            
             {isError && <ErrorContainer error={error} />}
+            
             {isAddFormReady &&
             <>
                 <Row className="justify-content-md-center">

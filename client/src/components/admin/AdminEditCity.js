@@ -19,7 +19,7 @@ const AdminEditCity = () => {
 
     const isLoading = useMemo(() => city === null && pending, [city, pending]);
     const isError = useMemo(() => error !== null, [error]);
-    const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
+    const isComponentReady = useMemo(() => city !== null, [city]);
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -73,7 +73,7 @@ const AdminEditCity = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, [id]);
+    }, [id, closeSnackbar]);
 
 
     const onCityNameChange = (event) => {

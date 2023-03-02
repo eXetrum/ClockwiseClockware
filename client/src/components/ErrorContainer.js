@@ -3,6 +3,7 @@ import { Row, Col, Alert } from 'react-bootstrap';
 import CloudOffIcon from '@mui/icons-material/CloudOff';
 import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
+import SyncProblemIcon from '@mui/icons-material/SyncProblem';
 
 const ErrorContainer = ({ error=null }) => {
     if(error == null) return null;
@@ -11,6 +12,7 @@ const ErrorContainer = ({ error=null }) => {
         if(error?.code === 'ERR_NETWORK') return <CloudOffIcon fontSize="large" />
         if(error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 403) return <BlockOutlinedIcon fontSize="large" />
         if(error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 404) return <ErrorOutlineOutlinedIcon fontSize="large" />
+        if(error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 400) return <SyncProblemIcon fontSize="large" />
         return null;
     };
 
