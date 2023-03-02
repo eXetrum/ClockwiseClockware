@@ -1,33 +1,23 @@
 require('dotenv').config();
 
-const express = require('express')
+const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
 const app = express()
-
 const port = process.env.NODE_APP_PORT || 4200
 
-const admins = require('./routes/admins');
-const cities = require('./routes/cities');
-const masters = require('./routes/masters');
-const orders = require('./routes/orders');
-const clients = require('./routes/clients');
-const watches = require('./routes/watches');
-
-
 app.use(morgan('dev'));
-app.use(cors({ 
-    origin: '*'
-}));
+app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(admins); 
-app.use(cities);
-app.use(masters);
-app.use(orders);
-app.use(clients);
-app.use(watches);
+
+app.use('/api', require('./routes/admins'));
+app.use('/api', require('./routes/cities'));
+app.use('/api', require('./routes/watches'));
+app.use('/api', require('./routes/masters'));
+app.use('/api', require('./routes/clients'));
+app.use('/api', require('./routes/orders'));
 
 app.listen(port, () => {
 	console.log(`Server App listening on port ${port}`)
