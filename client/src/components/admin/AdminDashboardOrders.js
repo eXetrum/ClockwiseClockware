@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
@@ -41,15 +41,14 @@ const AdminDashboardOrders = () => {
         try {
             const response = await deleteOrderById({ id });
             if ([200, 204].includes(response?.status)) {
-                const removedOrder = orders.find(item => item.id == id);            
-                setOrders(orders.filter(item => item.id != id));
+                const removedOrder = orders.find(item => item.id === id);            
+                setOrders(orders.filter(item => item.id !== id));
                 enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success'});
             }
         } catch(e) {
-            console.log('doDeleteOrderById: ', e);
             setError(e);
-            if(e?.response?.status == 404) {
-                setOrders(orders.filter(item => item.id != id));
+            if(e?.response?.status === 404) {
+                setOrders(orders.filter(item => item.id !== id));
             }
             enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
@@ -65,10 +64,10 @@ const AdminDashboardOrders = () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, []);
+    }, [closeSnackbar]);
 
     const onOrderRemove = async(orderId) => {
-        const order = orders.find(item => item.id == orderId);
+        const order = orders.find(item => item.id === orderId);
 
         const result = await confirm(`Do you want to delete order with id=${order.id} ?`, {title: 'Confirm', okText: 'Delete', okButtonStyle: 'danger'});
         if(!result) return;

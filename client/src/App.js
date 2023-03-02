@@ -24,21 +24,13 @@ import AdminDashboardOrders from './components/admin/AdminDashboardOrders';
 import AdminEditOrder from './components/admin/AdminEditOrder';
 
 import { SnackbarProvider } from 'notistack';
-
-
 import { AxiosInterceptor } from './api/axios.interceptor';
 
-
-
 const App = () => {
-	
-	
-	// Set default headers to common_axios ( as Instance )
-	//axiosInstance.defaults.headers.common['Authorization'] = null;
-	
+	const snackbarAutoHideTimeout = 6000;
 
 	return (
-	<SnackbarProvider maxSnack={5} autoHideDuration={6000} >
+	<SnackbarProvider maxSnack={5} autoHideDuration={snackbarAutoHideTimeout} >
 		<BrowserRouter>
 			<AxiosInterceptor>
 				<Routes>

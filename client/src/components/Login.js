@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
@@ -19,9 +19,12 @@ const Login = () => {
 
     const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/ig.test(user?.email) && user.password, [user]);
 
-	const doLogin = async (email, password) => {
+	let abortController = null;
+
+	const doLogin = async (email, password, abortController) => {
+		console.log('doLogin params: ', email, password, abortController);
 		try {
-			const response = await login(email, password);
+			const response = await login(email, password, abortController);
 			if(response?.data?.accessToken) {
 				const { accessToken } = response.data;
 				setToken(accessToken);
@@ -53,12 +56,19 @@ const Login = () => {
 		setPending(true);
 		setError(null);
 		
-		doLogin({ ...user });
+		abortController = new AbortController();
+		doLogin({ ...user, abortController });
 	};
 
-	if(redirect) {
-		return (<Navigate to={fromPage} />);
-	}
+	useEffect( () => {
+		return () => {
+			abortController?.abort();
+			closeSnackbar();
+		}
+	}, [abortController, closeSnackbar]);
+
+	
+	if(redirect) return (<Navigate to={fromPage} />);
 
 	return (
 		<Container>

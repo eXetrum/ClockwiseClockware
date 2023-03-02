@@ -53,7 +53,6 @@ const AdminDashboardClients = () => {
                 enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success'});
             }
         } catch(e) {
-            console.log('doDeleteClientById: ', e);
             setError(e);
             if(e?.response?.status === 404) {
                 setClients(clients.filter(item => item.id !== id));
@@ -72,7 +71,7 @@ const AdminDashboardClients = () => {
             abortController.abort();
             closeSnackbar();
         }
-    }, []);
+    }, [closeSnackbar]);
 
     const onFormHide = () => {
         setNewClient({ name: '', email: '' });
@@ -83,7 +82,6 @@ const AdminDashboardClients = () => {
     const onFormSubmit = (event) => {
         event.preventDefault();
         // TODO
-        console.log(newClient);
     };
 
     const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));

@@ -30,20 +30,17 @@ const Order = () => {
         cities: []
     }};
 
-    const [order, setOrder] = useState(initEmptyOrder());
-    
+    const [order, setOrder] = useState(initEmptyOrder());    
     const [currentDate, setCurrentDate] = useState(dateToNearestHour());
     const [watches, setWatches] = useState(null);
     const [cities, setCities] = useState(null);
     const [masters, setMasters] = useState(null);
     const [orderConfirmationMessage, setOrderConfirmationMessage] = useState(null);
-    const [pendingWatches, setPendingWatches] = useState(true);
-    const [pendingCities, setPendingCities] = useState(true);
     const [dateTimeError, setDateTimeError] = useState(null);
-    const [pending, setPending] = useState(false);
+    const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
 
-    const isLoading = useMemo(() => (watches === null && pendingWatches || cities === null && pendingCities), [watches, cities, pendingWatches, pendingCities]);
+    const isLoading = useMemo(() => (watches === null || cities === null) && pending, [watches, cities, pending]);
     const isError = useMemo(() => error !== null, [error]);
     const isComponentReady = useMemo(() => !isLoading && !isError, [isLoading, isError]);
     
@@ -59,7 +56,7 @@ const Order = () => {
 
     const isFormValid = useCallback(() => isValidName(order?.client?.name) && isValidEmail(order?.client?.email) 
         && order?.watch && order?.city 
-        && order?.startDate >= currentDate, [order]);
+        && order?.startDate >= currentDate, [order, currentDate]);
 
     const setDefaultFormState = () => {
         setOrder(initEmptyOrder());
@@ -73,23 +70,15 @@ const Order = () => {
         setError(null);
     };
 
-    const fetchWaches = async(abortController) => {
-        try {
-            const response = await getWatches({ abortController });
+    const fetchInitialData = async (abortController) => {
+        try {            
+            let response = await getWatches({ abortController });
             if(response?.data?.watches) {
                 const { watches } = response.data;
                 setWatches(watches);
             }
-        } catch(e) {
-            setError(e);
-        } finally {
-            setPendingWatches(false);
-        }
-    };
 
-    const fetchCities = async(abortController) => {
-        try {
-            const response = await getCities({ abortController });
+            response = await getCities({ abortController });
             if(response?.data?.cities) {
                 const { cities } = response.data;
                 setCities(cities);
@@ -97,7 +86,7 @@ const Order = () => {
         } catch(e) {
             setError(e);
         } finally {
-            setPendingCities(false);
+            setPending(false);
         }
     };
 
@@ -142,21 +131,12 @@ const Order = () => {
 
     useEffect( () => {
         const abortController = new AbortController();
-        fetchWaches(abortController);
+        fetchInitialData(abortController);
         return () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, []);
-
-    useEffect( () => {
-        const abortController = new AbortController();
-        fetchCities(abortController);
-        return () => {
-            abortController.abort();
-            closeSnackbar();
-        };
-    }, []);
+    }, [closeSnackbar]);
 
     const onFormSubmit = (event) => {
         event.preventDefault(); 
@@ -212,8 +192,6 @@ const Order = () => {
             timezone: order.startDate.getTimezoneOffset(),
         });
     };
-
-    console.log('isOrderConfirmationMessageReceived=', isOrderConfirmationMessageReceived);
 
 	return (
 	<Container>
@@ -303,11 +281,7 @@ const Order = () => {
                         <Alert variant={"info"}>
                             <p>Thank you ! Confirmation message was sent to your email. </p>
                             <Container>
-                                {Object.keys(orderConfirmationMessage).map((key, index) => {
-                                    <p key={index}>
-                                        {key.toString()}
-                                    </p>
-                                })}
+                                {Object.keys(orderConfirmationMessage).map((key, index) => <p key={index}>{key.toString()}</p>)}
                             </Container>
                         </Alert>
                         </Col>
@@ -320,11 +294,12 @@ const Order = () => {
                 </Col>
             </Row>
             
-            <hr />
+            
             {isLoadingMasters && <center><Spinner animation="grow" /> </center>}
             {isMasterListReady &&
             <>
                 <Row className="justify-content-md-center">
+                <hr />
                     {isAllMastersBussy &&
                     <Row className="justify-content-md-center">
                         <Col md="auto">
@@ -346,11 +321,10 @@ const Order = () => {
                             </Card>
                         </Col>
                     )}
-                </Row>            
-                <hr />
+                </Row>
             </>}            
         </>}
-        
+        <hr />
         </Container>
     </Container>
 	);

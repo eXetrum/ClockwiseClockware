@@ -5,8 +5,9 @@ const dateToNearestHour = (date = new Date()) => {
 };
 
 const addHours = (date, hours) => {
-    date.setHours(date.getHours() + hours);
-    return date;
+    const newDate = new Date(date.getTime());
+    newDate.setHours(newDate.getHours() + hours);
+    return newDate;
 };
 
 const dateRangesOverlap = (start1, end1, start2, end2) => {

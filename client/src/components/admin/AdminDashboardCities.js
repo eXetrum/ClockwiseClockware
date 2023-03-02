@@ -55,7 +55,6 @@ const AdminDashboardCities = () => {
                 enqueueSnackbar(`City "${city.name}" created`, { variant: 'success' });
             }
         } catch(e) {
-            console.log('doCreateCity error: ', e);
             setError(e);
             enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
         } finally {
@@ -72,7 +71,6 @@ const AdminDashboardCities = () => {
                 enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success' });
             }
         } catch(e) {
-            console.log('doDeleteCityById error: ', e);
             setError(e);
             if(e?.response?.status === 404) {
                 setCities(cities.filter(item => item.id !== id));
@@ -91,7 +89,7 @@ const AdminDashboardCities = () => {
             abortController.abort();
             closeSnackbar();
         }
-    }, []);
+    }, [closeSnackbar]);
 
     const onFormHide = () => {
         setNewCityName(''); 
