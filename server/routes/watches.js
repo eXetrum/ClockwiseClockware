@@ -1,6 +1,6 @@
 const router = require('express').Router();
 const WatchController = require('../controllers/watches');
 
-router.get('/api/watches', WatchController.get);
+router.get('/watches', WatchController.get);
 
 module.exports = router;
