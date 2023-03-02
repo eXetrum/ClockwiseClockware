@@ -6,85 +6,49 @@ const { Op, Sequelize } = require('sequelize');
 const db = require('../database/models/index');
 const { Order, Client, Watches, City, Master, MasterCityList } = require('../database/models');
 
-//const { getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById } = require('../models/orders');
-//const { getMasterById } = require('../models/masters');
-//const { getCityById } = require('../models/cities');
 
+const MS_PER_HOUR = 60 * 60 * 1000;
 
+const dateToNearestHour = (timestamp) => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
 
-
-/*const getWatchTypes = () => {
-	return null;
-};*/
-
-
-const dateToNearestHour = (timestamp) => {
-	const ms = 1000 * 60 * 60;
-	return Math.ceil(timestamp / ms) * ms;
-};
-
-// +
 const getFreeMasters = [
 	query('cityId').exists().withMessage('cityId required')
-		.isUUID().withMessage('cityId should be of type string')
-		.custom(async (cityId, { req }) => {
-			const city = await City.findOne({ where : { id: cityId } });
-			if(city == null) { throw new Error('Unknown city'); }
-		}),
+		.isUUID().withMessage('cityId should be of type string'),
 	query('watchId').exists().withMessage('watchId required')
-		.isUUID().withMessage('watchId should be of type string')
-		.custom(async (watchId, { req }) => {
-			const watch = await Watches.findOne({ where : { id: watchId } });
-			if(watch == null) { throw new Error('Unknown watch type'); }
-		}),
+		.isUUID().withMessage('watchId should be of type string'),
 	query('startDate').exists().withMessage('startDate required')
 		.isInt({min: 0}).toInt().withMessage('startDate should be of type int')
 		.custom((value, { req }) => { 
 			const curDate = Date.now();
-			console.log('custom validator1: ', value);
 			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
 			if(value < curDate) { throw new Error('Past date time is not allowed'); }
-			
-			// Indicates the success of this synchronous custom validator
 			return true;
 		}),
 		
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
 			if (errors && errors.length) {
-				// Send first error back to the client
+				console.log('Validation ERRORS: ', errors);
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			} 
 			
 			let { cityId, watchId, startDate } = req.query;
 			
+			const city = await City.findOne({ where: { id: cityId } });
+			if(!city) return res.status(400).json({ detail: 'Unknown city' }).end();
 			
-			console.log('[route] GET /available_masters query params: ', cityId, watchId, startDate);
-			const clientDateTime = moment.unix(startDate / 1000);
-			const backendDateTime = moment.now();
-			console.log('[route] GET /available_masters clientDateTime:', clientDateTime);
-			console.log('[route] GET /available_masters backendDateTime:', backendDateTime);			
+			const watch = await Watches.findOne({ where: { id: watchId } });
+			if(!watch) return res.status(400).json({ detail: 'Unknown watch type' }).end();
 			
 			//////////////////////////////////////////////////////
 			startDate = dateToNearestHour(startDate);
-			//////////////////////////////////////////////////////
-			
-			console.log('[route] GET /available_masters query params: ', cityId, watchId, startDate);
-			
-			const watch = await Watches.findOne({ where : { id: watchId } });
-			
-			console.log('[route] GET /available_masters watch type: ', watch.toJSON());
 			const orderRepairTime = watch.repairTime;
 			const orderStartDate = startDate;
-			const orderEndDate = (startDate + orderRepairTime * 60 * 60 * 1000);
-			
-			console.log('[route] GET /available_masters startDate: ', orderStartDate, ', endDate: ', orderEndDate);
-			console.log('[route] GET /available_masters startDate: ', moment.unix(orderStartDate).utc(), ', endDate: ', moment.unix(orderEndDate).utc());
-			
+			const orderEndDate = (startDate + orderRepairTime * MS_PER_HOUR);
+
 			let bussyMasters = await Order.findAll({
-				raw:true,
+				raw: true,
 				attributes: ['masterId'],
 				group: ['masterId'],
 				where: {
@@ -94,16 +58,8 @@ const getFreeMasters = [
 			});
 			bussyMasters = bussyMasters.map(item => item.masterId);
 			
-			console.log('[route] GET /available_masters bussyMasters: ', bussyMasters);
-			
 			let masters = await Master.findAll({ 
-				where: {
-					id: {
-						[Op.notIn]: bussyMasters,
-					},					
-					/*'$orders."startDate"$': { [Op.lt]: orderEndDate },
-					'$orders."endDate"$': { [Op.gt]: orderStartDate },*/
-				},
+				where: { id: { [Op.notIn]: bussyMasters } },
 				include: [
 					{ model: City, as: 'cities', through: {attributes: []}, where: {id: cityId} },
 					{ 
@@ -119,7 +75,6 @@ const getFreeMasters = [
 				order: [['rating', 'DESC'], ['updatedAt', 'DESC']]				
 			});
 			
-			console.log('[route] GET /available_masters result: ', masters);
 			res.status(200).json({ masters }).end();
 		} catch(e) { 
 			console.log(e); 
@@ -141,32 +96,17 @@ const create = [
 		.trim().escape().notEmpty().withMessage('Empty client email is not allowed')
 		.isEmail().withMessage('Client email is not correct'),
 	body('order.watchId').exists().withMessage('order.watchId required')
-		.isUUID	().withMessage('watchId should be of type string')
-		.custom(async (watchId, { req }) => {
-			const watch = await Watches.findOne({ where : { id: watchId } });
-			if(watch == null) { throw new Error('Unknown watch type'); }
-		}),
+		.isUUID	().withMessage('watchId should be of type string'),
 	body('order.cityId').exists().withMessage('order.cityId required')
-		.isUUID().withMessage('cityId should be of type string')
-		.custom(async (cityId, { req }) => {
-			const city = await City.findOne({ where : { id: cityId } });
-			if(city == null) { throw new Error('Unknown city'); }
-		}),
+		.isUUID().withMessage('cityId should be of type string'),
 	body('order.masterId').exists().withMessage('order.masterId required')
-		.isUUID().withMessage('masterId should be of type string')
-		.custom(async (masterId, { req }) => {
-			const master = await Master.findOne({ where : { id: masterId } });
-			if(master == null) { throw new Error('Unknown master'); }
-		}),
+		.isUUID().withMessage('masterId should be of type string'),
 	body('order.startDate').exists().withMessage('order.startDate required')
 		.isInt({min: 0}).toInt().withMessage('order.startDate should be of type int')
 		.custom((value, { req }) => { 
 			const curDate = Date.now();
-			console.log('custom validator1: ', value);
 			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
 			if(value < curDate) { throw new Error('Past date time is not allowed'); }
-			
-			// Indicates the success of this synchronous custom validator
 			return true;
 		}),
 	body('order.timezone').exists().withMessage('order.timezone required')
@@ -177,142 +117,69 @@ const create = [
 		let transaction = null;
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
 			if (errors && errors.length) {
-				// Send first error back to the client
+				console.log('Validation ERRORS: ', errors);
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			}
 	
 			let { order } = req.body;
-			console.log('[route] POST /orders ', order);
 			
 			const watch = await Watches.findOne({ where: { id: order.watchId } });
+			if(!watch) return res.status(409).json({ detail: 'Unknown watch type'});
+			
 			const city = await City.findOne({ where: { id: order.cityId } });
+			if(!city) return res.status(409).json({ detail: 'Unknown city'});
+			
 			const master = await Master.findOne({ 
 				where: { id: order.masterId }, 
-				include: [
-					{ model: City, as: 'cities', through: {attributes: []} }, 
-				],
+				include: [ { model: City, as: 'cities', through: {attributes: []} } ]
 			});
-			
-			console.log('[route] POST /orders watch obj: ', watch.toJSON());
-			console.log('[route] POST /orders city obj: ', city.toJSON());
-			console.log('[route] POST /orders master obj: ', master.toJSON());
+			if(!master) return res.status(409).json({ detail: 'Unknown master'});
 			
 			// Ensure master can handle order for specified cityId
-			if(master.cities.find(city => city.id == order.cityId) == null) {
+			if(master.cities.find(city => city.id == order.cityId) == null)
 				return res.status(409).json({ detail: 'Master cant handle this order at specified city'});
-			}
-			
 			//////////////////////////////////////////////////////
 			order.startDate = dateToNearestHour(order.startDate);
-			//////////////////////////////////////////////////////
 			order.client.name = order.client.name.trim();
 			order.client.email = order.client.email.trim();
+			order.endDate = (order.startDate + watch.repairTime * MS_PER_HOUR);
 			
-			const orderRepairTime = watch.repairTime;
-			const orderStartDate = order.startDate;
-			const orderEndDate = (order.startDate + orderRepairTime * 60 * 60 * 1000);
-			order.endDate = orderEndDate;
-			//////////////////////
-			//////////////////////
-	
-			const clientDateTime = moment.unix((order.startDate + 60 * 60 * 1000 * order.timezone) / 1000);
-			const backendDateTime = moment.now();
+			const clientDateTimeStart = moment.unix((order.startDate + order.timezone * MS_PER_HOUR) / 1000);
+			const clientDateTimeEnd = moment.unix((order.startDate + order.timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
 			
-			console.log('[route] POST /orders clientDateTime: ', clientDateTime);
-			console.log('[route] POST /orders backendDateTime: ', backendDateTime);
-			console.log('[route] POST /orders prepared order data: ', order);
-			
-			/////////////////////////////////////////////////////////////
-			transaction = await db.sequelize.transaction();
-			
+			transaction = await db.sequelize.transaction();			
 			let client = await Client.findOne({ where: { email: order.client.email } });
 			if(client == null) {
 				client = await Client.create(order.client);
 			} else {
 				await Client.update({ name: order.client.name }, { where: { email: order.client.email } });
 			}
-			order.clientId = client.id;			
-			console.log('[route] POST /orders createOrUpdateClient result: ', client);
-			
+			order.clientId = client.id;
 			let result = await Order.create(order);
-			console.log('[route] POST /orders createOrder result: ', result);
-			
 			await transaction.commit();
-			/////////////////////////////////////////////////////////////
 			
-			const params = {
-				from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
-				to: order.client.email,
-				subject: 'Your order details at ClockwiseClockware',
-				text: '',
-				html: `
-				<html>
-				<head></head>
-				<body>
-					<p>Mr(s) ${order.client.name} thank you for trusting us to do the repair work !</p><br/>
-					<p>Order details:</p>
-					<p>Order ID=${result.id}</p>
-					<table>
-						<thead>
-							<tr>
-								<th>Master</th>
-								<th>City</th>
-								<th>Watch type</th>						
-								<th>Start Date</th>
-								<th>End Date</th>
-							</tr>
-						</thead>
-						<tbody>
-							<tr>
-								<td><b>${master.name}</b>, <i>${master.email}</i></td>
-								<td>${city.name}</td>
-								<td>${watch.name}</td>						
-								<td>${clientDateTime}</td>
-								<td>${clientDateTime}</td>
-							</tr>
-						</tbody>
-					</table>
-				</body>
-				</html>`, // html body
-			};
-			console.log(params);
+			// orderId, client, master, watch, city, startDate, endDate
+			let confirmation = await sendMail(result.id, order.client, master, watch, city, clientDateTimeStart, clientDateTimeEnd);
 			
-			//let info = await sendMail(params);
-			// DUMMY DUE TESTS
-			const confirmation = {messageId: params};
-			console.log(confirmation);
 			res.status(201).json({ confirmation }).end();			
 		} catch(e) { 
 			console.log(e); 
 			console.log(e.constraint);
 			if(transaction) { transaction.rollback(); }
 			
-			
-			if(e.constraint == 'unknown_watchTypeId') {
-				return res.status(409).json({ detail: 'Incorrect watchTypeId'});
-			} else if(e.constraint == 'orders_city_id_fkey') {
-				return res.status(409).json({ detail: 'Incorrect cityId'});
-			} else if(e.constraint == 'orders_master_id_fkey') {
-				return res.status(409).json({ detail: 'Incorrect masterId'});
-			} else if(e.constraint == 'overlapping_times') {
+			if(e.constraint == 'overlapping_times')
 				return res.status(409).json({ detail: 'Master cant handle this order at specified datetime'});
-			}
 			
 			res.status(400).end(); 
 		}
 	}
 ];
 
-///////// Admin part (WITH route protection)
-// +
 const getAll = [
 	RouteProtector, 
 	async (req, res) => {
-		try {
-			console.log('[route] GET /orders');
-			
+		try {			
 			let orders = await Order.findAll({
 				include: [
 					{ model: Client, as: 'client' }, 
@@ -323,14 +190,11 @@ const getAll = [
 				attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
 				order: [['masterId'], ['startDate', 'DESC'], ['updatedAt', 'DESC']] 
 			});
-			
-			console.log('[route] GET /orders result: ', orders);
 			res.status(200).json({ orders }).end();
 		} catch(e) { console.log(e); res.status(400).json(e).end(); }
 	}
 ];
 
-// +
 const remove = [
 	RouteProtector, 
 	param('id').exists().withMessage('Order ID required')
@@ -338,34 +202,29 @@ const remove = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
 			if (errors && errors.length) {
-				// Send first error back to the client
+				console.log('Validation ERRORS: ', errors);
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			}
 			
 			const { id } = req.params;
-			console.log('[route] DELETE /orders/:id ', id);
-			
+
 			let result = await Order.destroy({ where: { id: id } });
-			console.log('[route] DELETE /orders/:id result: ', result);
-			if(result == 0) {
+			if(result == 0)
 				return res.status(404).json({ detail: '~Order not found~' }).end();
-			}
+				
 			res.status(204).end();
 		} catch(e) { 
 			console.log(e); 
 			// Incorrect UUID ID string
-			if(e && e.name && e.name == 'SequelizeDatabaseError' 
-				&& e.parent && e.parent.routine && e.parent.routine == 'string_to_uuid') {
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
 				return res.status(404).json({ detail: 'Order not found' }).end();
-			}
+			
 			res.status(400).json(e).end(); 
 		}
 	}
 ];
 
-// +
 const get = [
 	RouteProtector, 
 	param('id').exists().withMessage('Order ID required')
@@ -373,14 +232,12 @@ const get = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
 			if (errors && errors.length) {
-				// Send first error back to the client
+				console.log('Validation ERRORS: ', errors);
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			}
 			
 			const { id } = req.params;
-			console.log('[route] GET /orders/:id ', id);
 			
 			let order = await Order.findOne({
 				where: { id: id },
@@ -396,28 +253,23 @@ const get = [
 						],
 					}
 				],
-				attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
+				//attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
 			});
 			
-			if(!order) {
+			if(!order)
 				return res.status(404).json({detail: '~Order not found~'}).end();
-			}
-			console.log('[route] GET /orders/:id result: ', order.toJSON());
 			
 			const curDate = Date.now();
-			console.log('curDate backend: ', curDate);
-			console.log('curDate client: ', new Date(order.startDate).getTime());
-			if(new Date(order.startDate).getTime() < curDate) { 
+			if(new Date(order.startDate).getTime() < curDate) 
 				return res.status(403).json({ detail: 'Unable to get order with datetime that is already past'}).end();
-			}
+			
 			res.status(200).json({ order }).end();
 		} catch(e) { 
 			console.log(e); 
 			// Incorrect UUID ID string
-			if(e && e.name && e.name == 'SequelizeDatabaseError' 
-				&& e.parent && e.parent.routine && e.parent.routine == 'string_to_uuid') {
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
 				return res.status(404).json({ detail: 'Order not found' }).end();
-			}
+				
 			res.status(400).end(); 
 		}
 	}
@@ -427,7 +279,6 @@ const update = [
 	RouteProtector, 
 	param('id').exists().withMessage('Order ID required')
 		.isString().withMessage('Order ID should be of type string'),
-	/////
 	body('order').exists().withMessage('order object required')
 		.isObject().withMessage('order object required'),
 	body('order.watchId').exists().withMessage('order.watchId required')
@@ -440,76 +291,51 @@ const update = [
 		.isInt({min: 0}).toInt().withMessage('order.startDate should be of type int')
 		.custom((value, { req }) => { 
 			const curDate = Date.now();
-			console.log('custom validator1: ', value);
 			if(new Date(value) == 'Invalid date') { throw new Error('Invalid timestamp'); }
 			if(value < curDate) { throw new Error('Past date time is not allowed'); }
-			
-			// Indicates the success of this synchronous custom validator
 			return true;
 		}),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
 			if (errors && errors.length) {
-				// Send first error back to the client
+				console.log('Validation ERRORS: ', errors);
 				return res.status(400).json({ detail: errors[0].msg }).end();
 			} 
 			
 			const { id } = req.params;
 			let { order } = req.body;
-			
-			console.log('[route] PUT /orders/:id ', id, order);
 
 			const watch = await Watches.findOne({ where: { id: order.watchId } });
-			if(!watch) { return res.status(400).json({ detail: 'Unknown watch type' }); }
+			if(!watch) { return res.status(409).json({ detail: 'Unknown watch type' }); }
 			
 			const city = await City.findOne({ where: { id: order.cityId } });
-			if(!city) { return res.status(400).json({ detail: 'Unknown city' }); }
+			if(!city) { return res.status(409).json({ detail: 'Unknown city' }); }
 			
 			const master = await Master.findOne({ 
 				where: { id: order.masterId }, 
-				include: [
-					{ model: City, as: 'cities', through: {attributes: []} }, 
-				],
+				include: [ { model: City, as: 'cities', through: {attributes: []} } ],
 			});
-			if(!master) { return res.status(400).json({ detail: 'Unknown master' }); }
-			
-			console.log('[route] PUT /orders/:id watch obj: ', watch.toJSON());
-			console.log('[route] PUT /orders/:id city obj: ', city.toJSON());
-			console.log('[route] PUT /orders/:id master obj: ', master.toJSON());
-			
+			if(!master) { return res.status(409).json({ detail: 'Unknown master' }); }			
 			
 			// Ensure master can handle order for specified cityId
-			if(master.cities.find(city => city.id == order.cityId) == null) {
+			if(master.cities.find(city => city.id == order.cityId) == null)
 				return res.status(409).json({ detail: 'Master cant handle this order at specified city'});
-			}
-			
 			//////////////////////////////////////////////////////
+			
 			order.startDate = dateToNearestHour(order.startDate);
-			//////////////////////////////////////////////////////			
-			const orderRepairTime = watch.repairTime;
-			const orderStartDate = order.startDate;
-			const orderEndDate = (order.startDate + orderRepairTime * 60 * 60 * 1000);
-			order.endDate = orderEndDate;
-			//////////////////////
+			order.endDate = (order.startDate + watch.repairTime * MS_PER_HOUR);
 			
-			console.log('[route] PUT /orders/:id prepared order data: ', order);
-			
-			let [affectedRows, result] = await Order.update(order, { where: { id: id }, returning: true, limit: 1 });
-			
-			console.log('[route] PUT /clients/:id result: ', affectedRows, result);
-			
-			if(!affectedRows) {
+			let [affectedRows, result] = await Order.update(order, { where: { id: id }, returning: true, limit: 1 });			
+			if(!affectedRows)
 				return res.status(404).json({detail: '~Order not found~'}).end();
-			}
 			
 			res.status(204).end();
 		} catch(e) { 
 			console.log(e); 
-			if(e.constraint == 'overlapping_times') {
+			if(e.constraint == 'overlapping_times')
 				return res.status(409).json({ detail: 'Master cant handle this order at specified datetime'});
-			}
+
 			res.status(400).end(); 
 		}
 	}
