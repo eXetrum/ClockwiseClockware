@@ -49,7 +49,7 @@ const sendMail = async(orderId, client, master, watch, city, startDate, endDate)
 		
 		let result = await transporter.sendMail(params);
 		if(result != null) {
-			//'messageId', 'messageTime'
+			// Keep: 'messageId', 'messageTime', and remove rest
 			['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach(prop => delete result[prop]);
 		}
 		return result;
