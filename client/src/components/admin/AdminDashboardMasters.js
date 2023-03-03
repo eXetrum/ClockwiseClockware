@@ -21,7 +21,7 @@ const AdminDashboardMasters = () => {
     const [masters, setMasters] = useState(null);
     const [pendingMasters, setPendingMasters] = useState(true);
     const [newMaster, setNewMaster] = useState({ name: '', email: '', rating: 0, cities: [] });
-    const [pending, setPending] = useState(true);
+    const [pending, setPending] = useState(false);
     const [error, setError] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     
