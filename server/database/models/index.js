@@ -10,6 +10,7 @@ const config = require(__dirname + './../config/config.js')[env];
 const db = {};
 
 console.log('sequelize index, env: ', env);
+console.log('sequelize index, cfg: ', config);
 let sequelize;
 if (config.use_env_variable) {
 	console.log('use_env_variable:true');
