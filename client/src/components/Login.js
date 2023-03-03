@@ -94,7 +94,7 @@ const Login = () => {
 								disabled={pending}
 							/>
 							</Form.Group>
-							<Button variant="primary" type="submit" disabled={!isFormValid()}>
+							<Button variant="primary" type="submit" disabled={!isFormValid() || pending}>
 							{pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
 							Login
 							</Button>                
