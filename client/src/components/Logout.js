@@ -13,16 +13,13 @@ const LogOut = () => {
 		setRedirect(true);	
 	}, []);
 
+	if(redirect) return <Navigate to="/" />
 
 	return (
-		<>
-    	{redirect &&  <Navigate to="/" />}
-		{!redirect &&
 		<Container>
 			<Header />
 			<p>Logout...</p>
-		</Container>}
-		</>
+		</Container>
 	);
 };
 
