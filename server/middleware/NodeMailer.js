@@ -9,9 +9,49 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const sendMail = async(params) => {
+const sendMail = async(orderId, client, master, watch, city, startDate, endDate) => {
 	try {
-		const result = await transporter.sendMail(params);
+		const params = {
+			from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
+			to: client.email,
+			subject: 'Your order details at ClockwiseClockware',
+			text: '',
+			html: `
+			<html>
+			<head></head>
+			<body>
+				<p>Mr(s) ${client.name} thank you for trusting us to do the repair work !</p><br/>
+				<p>Order details:</p>
+				<p>Order ID=${orderId}</p>
+				<table>
+					<thead>
+						<tr>
+							<th>Master</th>
+							<th>City</th>
+							<th>Watch type</th>						
+							<th>Start Date</th>
+							<th>End Date</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td><b>${master.name}</b>, <i>${master.email}</i></td>
+							<td>${city.name}</td>
+							<td>${watch.name}</td>						
+							<td>${startDate}</td>
+							<td>${endDate}</td>
+						</tr>
+					</tbody>
+				</table>
+			</body>
+			</html>`,
+		};
+		
+		let result = await transporter.sendMail(params);
+		if(result != null) {
+			// Keep: 'messageId', 'messageTime', and remove rest
+			['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach(prop => delete result[prop]);
+		}
 		return result;
 	} catch(e) {
 		return e;

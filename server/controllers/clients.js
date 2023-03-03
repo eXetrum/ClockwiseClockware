@@ -1,41 +1,45 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { getClients, deleteClientById, getClientById, updateClientById } = require('../models/clients');
+const { Client, Order } = require('../database/models');
 
 const getAll = async (req, res) => {
 	try {
-		console.log('[route] GET /clients');
-		let clients = await getClients();
-		console.log('[route] GET /clients result: ', clients);
+		let clients = await Client.findAll({ 
+			include: { model: Order, as: 'orders'},
+			order: [['updatedAt', 'DESC']] 
+		});
 		res.status(200).json({ clients }).end();
 	} catch(e) { console.log(e); res.status(400).end(); }
 };
 
 const remove = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Client ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('Client ID required'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
-			const { id } = req.params;
-			console.log('[route] DELETE /clients/:id ', id);
-			let result = await deleteClientById(id);
-			console.log('[route] DELETE /clients/:id result: ', result);
-			if(Array.isArray(result) && result.length == 0) {
-				return res.status(404).json({ detail: 'Client not found' }).end();
-			}
+			
+			const { id } = req.params;			
+			let result = await Client.destroy({ where: { id: id } });			
+
+			if(result == 0)
+				return res.status(404).json({ detail: '~Client not found~' }).end();
+				
 			res.status(204).end();
 		} catch(e) { 
 			console.log(e); 
-			console.log(e.constraint);
-			if(e.constraint == 'orders_client_id_fkey') {
-				return res.status(409).json({ detail: `Deletion restricted. At least one order contains reference to this client`}).end();
+			
+			// Incorrect UUID ID string
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
+				return res.status(404).json({ detail: 'Client not found' }).end();
+			
+			if(e.name == 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
+				if(e.parent.constraint == 'orders_clientId_fkey')
+					return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)'}).end();
 			}
+			
 			res.status(400).end();
 		}
 	}
@@ -43,32 +47,35 @@ const remove = [
 
 const get = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Client ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('Client ID required'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			}
-			const { id } = req.params;		
-			console.log('[route] GET /clients/:id ', id);
-			let result = await getClientById(id);
-			console.log('[route] GET /clients/:id result: ', result);
-			let client = result[0];
-			if(!client) {
-				res.status(404).json({detail: 'Client not found'}).end();
-			} else {
-				res.status(200).json({ client }).end();
-			}
-		} catch(e) { console.log(e); res.status(400).end(); }
+			
+			const { id } = req.params;			
+			const client = await Client.findOne({ where: { id: id } });
+			
+			if(!client)
+				return res.status(404).json({detail: '~Client not found~'}).end();
+			
+			res.status(200).json({ client }).end();
+		} catch(e) { 
+			console.log(e); 
+			// Incorrect UUID ID string
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
+				return res.status(404).json({ detail: 'Client not found' }).end();
+			
+			res.status(400).end(); 
+		}
 	}
 ];
 
 const update = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Client ID must be integer value'),
+	param('id').exists().withMessage('Client ID required')
+		.isUUID().withMessage('Client ID should be of type string'),
 	body('client').notEmpty().withMessage('Client object required'),
 	body('client.name').exists().withMessage('Client name required')
 		.isString().withMessage('Client name should be of type string')
@@ -81,28 +88,32 @@ const update = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			}
+			
 			const { id } = req.params;
 			let { client } = req.body;
-			console.log('[route] PUT /clients/:id ', id, client);
-			let result = await updateClientById(id, client);
-			console.log('[route] PUT /clients/:id result: ', result);
-			client = result[0];			
-			if(!client) {
-				res.status(404).json({detail: 'Client not found'}).end();
-			} else {
-				res.status(200).json({ client }).end();
-			}
+			
+			// Prepare data
+			client.name = client.name.trim();
+			client.email = client.email.trim();
+			
+			let [affectedRows, result] = await Client.update(client, { where: { id: id }, returning: true, limit: 1 });
+			
+			if(!affectedRows)
+				return res.status(404).json({detail: '~Client not found~'}).end();
+			
+			res.status(204).end();
 		} catch(e) { 
 			console.log(e); 
-			console.log('constraint: ', e.constraint);
-			if(e.constraint == 'clients_email_key') {
-				return res.status(409).json({ detail: `Client with specified email already exists`}).end();
-			}
+			
+			// Incorrect UUID ID string
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
+				return res.status(404).json({ detail: 'Client not found' }).end();
+			
+			if(e.name == 'SequelizeUniqueConstraintError')
+				return res.status(409).json({ detail: 'Client with specified email already exists'}).end();
+
 			res.status(400).json(e).end(); 
 		}
 	}

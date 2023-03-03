@@ -1,14 +1,19 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } = require('../models/masters');
+const { Master, City, Order, MasterCityList } = require('../database/models');
+const db = require('../database/models/index');
 
 const getAll = [
 	RouteProtector, 
 	async (req, res) => {
 		try {
-			console.log('[route] GET /masters');
-			let masters = await getMasters();
-			console.log('[route] GET /masters result: ', masters);
+			let masters = await Master.findAll({
+				include: [
+					{ model: City, as: 'cities', through: {attributes: []} },
+					{ model: Order, as: 'orders'},
+				],
+				order: [['updatedAt', 'DESC']]
+			});
 			res.status(200).json({ masters }).end();
 		} catch(e) { console.log(e); res.status(400).end(); }
 	}
@@ -30,31 +35,51 @@ const create = [
 	body('master.cities').exists().withMessage('Master cities required')
 		.isArray().withMessage('Master cities should be an array'),
 	body('master.cities.*.id').exists().withMessage('Each object of cities array should contains id field')
-		.isNumeric().withMessage('Master cities array should contains "city" entries with id field of numeric type')
-		.isInt({min: 0 }).withMessage('Master cities array should contains "city" entries with positive numeric id field'),
-		
+		.isString().withMessage('city id should be of type string'),		
+	
 	async (req, res) => {
+		
+		let transaction = null;		
 		try {
-			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			const errors = validationResult(req).array();			
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			let { master } = req.body;
+			
+			// Prepare data
 			master.name = master.name.trim();
 			master.email = master.email.trim();
-			console.log('[route] POST /masters ', master);
-			let result = await createMaster(master);
-			console.log('[route] POST /masters result: ', result);
-			master = result[0];
+			
+			let dbCities = await City.findAll();
+			const dbCityIds = dbCities.map(city => city.id);
+			
+			master.cities = master.cities.map(city => city.id);
+			// filter out id's which does not exists in the database
+			master.cities = master.cities.filter(cityId => dbCityIds.indexOf(cityId) != -1);
+			
+			// Collect city 'model' objects
+			let masterCities = [];
+			master.cities.forEach(cityId => {
+				const dbCityObj = dbCities.find(city => city.id == cityId);
+				if(dbCityObj) masterCities.push(dbCityObj);
+			});
+			
+			transaction = await db.sequelize.transaction();
+			let result = await Master.create(master, { transaction });			
+			await result.setCities(masterCities, { transaction });			
+			await transaction.commit();
+			
+			master = result.toJSON();
+			master.cities = await result.getCities();
 			res.status(201).json({master}).end();
 		} catch(e) { 
-			console.log(e); 
-			if(e.constraint == 'masters_email_key') {
-				return res.status(409).json({ detail: `Master with specified email already exists`}).end();
-			}
+			console.log(e);			
+			if(transaction) { await transaction.rollback(); }
+			
+			if(e.name == 'SequelizeUniqueConstraintError') 
+				return res.status(409).json({ detail: 'Master with specified email already exists'}).end();			
+			
 			res.status(400).json(e).end(); 
 		}
 	}
@@ -62,32 +87,32 @@ const create = [
 
 const remove = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Master ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('Master ID required'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
-			console.log('[route] DELETE /masters ', id);
-			let result = await deleteMasterById(id);
-			console.log('[route] DELETE /masters result: ', result);
-			if(Array.isArray(result) && result.length == 0) {
+			let result = await Master.destroy({ where: { id: id } });
+			if(result === 0)
 				return res.status(404).json({ detail: 'Master not found' }).end();
-			}
 			res.status(204).end();
 		} catch(e) { 
-			console.log(e); 
-			console.log(e.constraint);
-			if(e.constraint == 'master_city_list_master_id_fkey') {
-				return res.status(409).json({ detail: `Deletion restricted. Master contains reference(s) to city/cities`}).end();
-			} else if(e.constraint == 'orders_master_id_fkey') {
-				return res.status(409).json({ detail: `Deletion restricted. At least one order contains reference to this master`}).end();
+			console.log(e);
+			
+			// Incorrect UUID ID string
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
+				return res.status(404).json({ detail: 'Master not found' }).end();
+			
+			if(e.name == 'SequelizeForeignKeyConstraintError' && e.parent) {
+				if(e.parent.constraint == 'master_city_list_masterId_fkey') 
+					return res.status(409).json({ detail: 'Deletion restricted. Master contains reference(s) to city/cities'}).end();
+				if(e.parent.constraint == 'orders_masterId_fkey') 
+					return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)'}).end();
 			}
+			
 			res.status(400).end(); 
 		}
 	}
@@ -95,32 +120,36 @@ const remove = [
 
 const get = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Master ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('Master ID required'),
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
+			
 			const { id } = req.params;
-			console.log('[route] GET /masters/:id ', id);
-			let result = await getMasterById(id);
-			console.log('[route] GET /masters/:id result: ', result);
-			let master = result[0];
-			if(!master) {
-				res.status(404).json({detail: 'Master not found'}).end();
-			} else {
-				res.status(200).json({ master }).end();
-			}
-		} catch(e) { console.log(e); res.status(400).end(); }
+			const master = await Master.findOne({ 
+				where: { id: id }, 
+				include: { model: City, as: 'cities', through: {attributes: []} }
+			});
+			
+			if(!master)
+				return res.status(404).json({detail: 'Master not found'}).end();
+			res.status(200).json({ master }).end();
+		} catch(e) { 
+			console.log(e); 
+			// Incorrect UUID ID string
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
+				return res.status(404).json({ detail: 'Master not found' }).end();
+			
+			res.status(400).end(); 
+		}
 	}
 ];
 
 const update = [
 	RouteProtector, 
-	param('id').exists().notEmpty().isInt().toInt().withMessage('Master ID must be integer value'),
+	param('id').exists().notEmpty().withMessage('Master ID required'),
 	body('master').notEmpty().withMessage('Master object required'),
 	body('master.name').exists().withMessage('Master name required')
 		.isString().withMessage('Master name should be of type string')
@@ -135,34 +164,58 @@ const update = [
 	body('master.cities').exists().withMessage('Master cities required')
 		.isArray().withMessage('Master cities should be an array'),
 	body('master.cities.*.id').exists().withMessage('Each object of cities array should contains id field')
-		.isNumeric().withMessage('Master cities array should contains "city" entries with id field of numeric type')
-		.isInt({min: 0 }).withMessage('Master cities array should contains "city" entries with positive numeric id field'),
+		.isString().withMessage('city id should be of type string'),
 	async (req, res) => {
+		
+		let transaction = null;
 		try {
 			const errors = validationResult(req).array();
-			console.log('Validation ERRORS: ', errors);
-			if (errors && errors.length) {
-				// Send first error back to the client
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
+			
 			const { id } = req.params;
 			let { master } = req.body;
+			
+			// Prepare data
 			master.name = master.name.trim();
 			master.email = master.email.trim();
-			console.log('[route] PUT /masters/:id ', id, master);
-			let result = await updateMasterById(id, master);
-			console.log('[route] PUT /masters/:id result update: ', result);
-			master = result[0];			
-			if(!master) {
-				res.status(404).json({detail: 'Master not found'}).end();
-			} else {
-				res.status(200).json({ master }).end();
-			}
+
+			let dbCities = await City.findAll();
+			const dbCityIds = dbCities.map(city => city.id);			
+			// master.cities contains id's now
+			master.cities = master.cities.map(city => city.id);
+			// filter out id's which does not exists in the database, at this moment
+			master.cities = master.cities.filter(cityId => dbCityIds.indexOf(cityId) != -1);
+			
+			// Collect city 'model' objects
+			let masterCities = [];
+			master.cities.forEach(cityId => {
+				const dbCityObj = dbCities.find(city => city.id == cityId);
+				if(dbCityObj) masterCities.push(dbCityObj);
+			});
+			
+			transaction = await db.sequelize.transaction();
+			let [affectedRows, result] = await Master.update(master, { where: { id: id }, returning: true, limit: 1 });
+			
+			if(!affectedRows)
+				return res.status(404).json({detail: '~Master not found~'}).end();
+			
+			result = result[0];			
+			await result.setCities(masterCities, { transaction });			
+			await transaction.commit();
+			
+			res.status(204).end();
 		} catch(e) { 
-			console.log(e); 
-			if(e.constraint == 'masters_email_key') {
-				return res.status(409).json({ detail: `Master with specified email already exists`}).end();
-			}
+			console.log(e);
+			if(transaction) { await transaction.rollback(); }
+			
+			// Incorrect UUID ID string
+			if(e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid')
+				return res.status(404).json({ detail: 'Master not found' }).end();
+			
+			if(e.name == 'SequelizeUniqueConstraintError')
+				return res.status(409).json({ detail: 'Master with specified email already exists'}).end();
+			
 			res.status(400).json(e).end(); 
 		}
 	}

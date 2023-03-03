@@ -1,6 +1,6 @@
 const { generateAccessToken } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { getUser } = require('../models/users');
+const { Admin } = require('../database/models');
 
 const create = async (req, res) => {
 	// TODO: 
@@ -19,12 +19,9 @@ const login = [
 		try {
 			// Get user input
 			const { email, password } = req.body;
-			console.log('[route] POST /login', email, password);
-			let user = await getUser(email, password);
-			console.log('[route] POST /login, user: ', user);
-			if(!user) {
-				return res.status(401).json({detail: 'Incorrect user/password pair'}).end();
-			}
+			let user = await Admin.findOne({ email, password, raw: true });
+			
+			if(!user) return res.status(401).json({detail: 'Incorrect user/password pair'}).end();		
 			
 			token = generateAccessToken(user);
 			res.status(200).json({ accessToken: token }).end();

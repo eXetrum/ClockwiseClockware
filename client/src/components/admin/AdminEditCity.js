@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import {
-    Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner
-} from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import Header from '../Header';
-import ErrorServiceOffline from '../ErrorServiceOffline';
-import ErrorNotFound from '../ErrorNotFound';
-
-import { getCityById, updateCityById } from '../../api/cities';
 import { useSnackbar } from 'notistack';
+import Header from '../Header';
+import ErrorContainer from '../ErrorContainer';
+import { getCityById, updateCityById } from '../../api/cities';
 
 const AdminEditCity = () => {
-    const {id} = useParams();
+    const { id } = useParams();
     const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-    // Initial
+
     const [city, setCity] = useState(null);
     const [originalCity, setOriginalCity] = useState(null);
 	const [newCityName, setNewCityName] = useState('');
     const [pending, setPending] = useState(true);
     const [error, setError] = useState(null);
+
+    const isLoading = useMemo(() => city === null && pending, [city, pending]);
+    const isError = useMemo(() => error !== null, [error]);
+    const isComponentReady = useMemo(() => city !== null, [city]);
 
     const resetBeforeApiCall = () => {
         setPending(true);
@@ -28,8 +28,8 @@ const AdminEditCity = () => {
 
     const fetchCityById = async (id, abortController) => {
         try {
-            const response = await getCityById(id, abortController)
-            if (response && response.data && response.data.city) {                    
+            const response = await getCityById({ id, abortController })
+            if (response?.data?.city) {
                 const { city } = response.data;
                 setCity(city);
                 setOriginalCity(city);
@@ -42,17 +42,17 @@ const AdminEditCity = () => {
         }
     };
 
-    const doUpdateCityById = async (id, newCityName) => {
+    const doUpdateCityById = async (id, cityName) => {
         try {
-            const response = await updateCityById(id, newCityName);
-            if (response && (response.status === 200 || response.status === 204)) {
-                setCity({...city, name: newCityName});
-                setOriginalCity({...city, name: newCityName});
-                enqueueSnackbar(`City updated`, { variant: 'success'});
+            const response = await updateCityById({ id, cityName });
+            if ([200, 204].includes(response?.status)) {
+                setCity({ ...city, name: cityName });
+                setOriginalCity({ ...city, name: cityName });
+                enqueueSnackbar(`City updated`, { variant: 'success' });
             }
         } catch(e) {
             setError(e);
-            if(e && e.response && e.response.status && e.response.status === 404) {
+            if(e?.response?.status === 404) {
                 setCity(null);
                 setOriginalCity(null);
             } else {
@@ -65,26 +65,27 @@ const AdminEditCity = () => {
         }
     };
 
-    // 'componentDidMount'
     useEffect(() => {
-        const abortController = new AbortController();
-        console.log('"componentDidMount" getCityById');
-        
+        const abortController = new AbortController();        
         resetBeforeApiCall();
-        fetchCityById(id, abortController);
-        
+        fetchCityById(id, abortController);        
         return () => {
             abortController.abort();
             closeSnackbar();
         };
-    }, [id]);
+    }, [id, closeSnackbar]);
 
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+    const onCityNameChange = (event) => {
+        setNewCityName(event.target.value);
+        setError(null);
+    };
+
+    const onFormSubmit = (event) => {
+        event.preventDefault();
         resetBeforeApiCall();
         doUpdateCityById(id, newCityName);        
-    }
+    };
 
     return (
     <Container>
@@ -95,32 +96,29 @@ const AdminEditCity = () => {
                 <Link to={"/admin/cities"} ><ArrowLeftIcon/>Back</Link>
             </center>
             <hr/>
-            {(!city && pending) && <center><Spinner animation="grow" /> </center>}
-            
-            <ErrorServiceOffline error={error} pending={pending} />
-            <ErrorNotFound error={error} pending={pending} />
 
-            {city &&
+            {isLoading && <center><Spinner animation="grow" /></center>}
+
+            {isError && <ErrorContainer error={error} />}
+
+            {isComponentReady &&
             <Row className="justify-content-md-center">
                 <Col md="auto">
-                    <Form inline="true" className="d-flex align-items-end" onSubmit={handleSubmit}>
+                    <Form inline="true" className="d-flex align-items-end" onSubmit={ onFormSubmit }>
                         <FormGroup>
-                            <Form.Label>City:</Form.Label>{' '}
+                            <Form.Label>City:</Form.Label>
                             <FormControl type="text" name="city" 
                                 disabled={pending}
                                 value={newCityName}
-                                onChange={(event) => {
-                                    setNewCityName(event.target.value);
-                                    setError(null);
-                                }}
+                                onChange={onCityNameChange}
                             />
                         </FormGroup>
                         <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>Save</Button>
                     </Form>
                 </Col>
-            </Row>
-            }
+            </Row>}
             <hr />
+
         </Container>
     </Container>
     );

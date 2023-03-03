@@ -1,42 +1,18 @@
 import axios from "axios";
 
-// Watch types
-const getWatchTypes = (abortController=null) => { 
-    return axios.get(`/watch_types`, { signal: abortController?.signal}); 
-};
+const getAvailableMasters = ({ abortController=null, ...params }) => axios.get(`/available_masters`, { params: { ...params } }, { signal: abortController?.signal });
 
-const getAvailableMasters = (cityId, watchTypeId, startDate, abortController=null) => { 
-    return axios.get(`/available_masters`, { 
-        params: { 
-            cityId: cityId, 
-            watchTypeId: watchTypeId, 
-            startDate: startDate
-        }
-    }, { signal: abortController?.signal}); 
-};
+const createOrder = ({ abortController=null, ...params }) => axios.post(`/orders`, { ...params }, { signal: abortController?.signal });
 
-const createOrder = (order, abortController=null) => {
-    return axios.post(`/orders`, { order }, { signal: abortController?.signal});
-};
+const getOrders = ({ abortController=null }) => axios.get(`/orders`, { signal: abortController?.signal });
 
-const getOrders = (abortController=null) => {
-    return axios.get(`/orders`, { signal: abortController?.signal});
-};
+const deleteOrderById = ({ id, abortController=null }) => axios.delete(`/orders/${id}`, { signal: abortController?.signal });
 
-const deleteOrderById = (id, abortController=null) => {
-    return axios.delete(`/orders/${id}`, { signal: abortController?.signal});
-};
+const getOrderById = ({ id, abortController=null }) => axios.get(`/orders/${id}`, { signal: abortController?.signal });
 
-const getOrderById = (id, abortController=null) => {
-    return axios.get(`/orders/${id}`, { signal: abortController?.signal});
-};
-
-const updateOrderById = (id, order, abortController=null) => {
-    return axios.put(`/orders/${id}`, { order }, { signal: abortController?.signal})
-};
+const updateOrderById = ({ id, abortController=null, ...params }) => axios.put(`/orders/${id}`, { ...params }, { signal: abortController?.signal });
 
 export {
-    getWatchTypes,
     getAvailableMasters,
     createOrder,
     getOrders,
