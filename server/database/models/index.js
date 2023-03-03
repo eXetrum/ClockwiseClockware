@@ -9,25 +9,9 @@ const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + './../config/config.js')[env];
 const db = {};
 
-const setupAssociations = (sequelize) => {
-	const { Master, City, MasterCityList } = sequelize.models;
-	
-	/*Master.belongsToMany(City, {
-		through: MasterCityList,
-		as: "cities",
-		foreignKey: "master_id",
-	});*/
-
-	/*City.belongsToMany(Master, {
-		through: MasterCityList,
-		as: "masters",
-		foreignKey: "city_id",
-	});*/
-};
-
 let sequelize;
 if (config.use_env_variable) {
-	console.log('use_env_variable');
+	console.log('use_env_variable:true');
 	sequelize = new Sequelize(process.env[config.use_env_variable], config);
 } else {
 	console.log('use_env_variable:false');
@@ -54,8 +38,6 @@ Object.keys(db).forEach(modelName => {
 		db[modelName].associate(db);
 	}
 });
-
-setupAssociations(sequelize);
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
