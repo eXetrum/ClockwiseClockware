@@ -26,17 +26,15 @@
   },
   "scripts": {
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "lint": "eslint --ext .js, .jsx src --fix",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "prettier": {
+    "singleQuote": true,
+    "printWidth": 100
   },
   "browserslist": {
     "production": [
@@ -51,6 +49,12 @@
     ]
   },
   "devDependencies": {
-    "gh-pages": "^5.0.0"
+    "eslint": "^8.35.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "prettier": "^2.8.4"
   }
 }
