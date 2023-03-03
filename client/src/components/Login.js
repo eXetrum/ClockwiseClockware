@@ -22,7 +22,6 @@ const Login = () => {
 	let abortController = null;
 
 	const doLogin = async (email, password, abortController) => {
-		console.log('doLogin params: ', email, password, abortController);
 		try {
 			const response = await login(email, password, abortController);
 			if(response?.data?.accessToken) {
