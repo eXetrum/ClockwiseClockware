@@ -57,8 +57,6 @@ const AdminEditOrder = () => {
     const isDateTimeAssigned = useMemo(() => startDate !== null, [startDate]);
     const isMasterAssigned = useMemo(() => master !== null, [master]);
 
-    //const isFormValid = useMemo(() => originalOrder && master && city && watch && startDate && !pending, [originalOrder, master, city, watch, startDate, pending]);
-
     // Prepared, cant PUT yet coz of master, but can fetchAvailableMasters
     const isOrderPrepared = useMemo( () => isOriginalOrderAssigned && isClientAssigned && isWatchAssigned && isCityAssigned && isDateTimeAssigned, 
         [isOriginalOrderAssigned, isClientAssigned, isWatchAssigned, isCityAssigned, isDateTimeAssigned]);
@@ -182,7 +180,7 @@ const AdminEditOrder = () => {
             return;
         }
 
-        // Master assigned but CANT handle current order setup: two options here, revert to prev city, search for new master
+        // Master assigned but CAN`T handle current order setup: two options here, revert to prev city, search for new master
         const result = await confirm(`"${master.email}" master cant handle your order. Do you want to search new master ?`, 
             {title: 'Confirm', okText: 'Search', okButtonStyle: 'warning'});
         

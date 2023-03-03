@@ -42,10 +42,8 @@ const create = [
 		let transaction = null;		
 		try {
 			const errors = validationResult(req).array();			
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			let { master } = req.body;
 			
@@ -93,14 +91,12 @@ const remove = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
 			let result = await Master.destroy({ where: { id: id } });
-			if(result == 0)
+			if(result === 0)
 				return res.status(404).json({ detail: 'Master not found' }).end();
 			res.status(204).end();
 		} catch(e) { 
@@ -128,10 +124,8 @@ const get = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
 			const master = await Master.findOne({ 
@@ -176,10 +170,8 @@ const update = [
 		let transaction = null;
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
 			let { master } = req.body;

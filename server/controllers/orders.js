@@ -28,10 +28,8 @@ const getFreeMasters = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			let { cityId, watchId, startDate } = req.query;
 			
@@ -117,10 +115,8 @@ const create = [
 		let transaction = null;
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			}
 	
 			let { order } = req.body;
 			
@@ -202,10 +198,8 @@ const remove = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			}
 			
 			const { id } = req.params;
 
@@ -298,10 +292,8 @@ const update = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
 			let { order } = req.body;

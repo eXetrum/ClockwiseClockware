@@ -18,10 +18,8 @@ const remove = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;			
 			let result = await Client.destroy({ where: { id: id } });			
@@ -53,10 +51,8 @@ const get = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			}
 			
 			const { id } = req.params;			
 			const client = await Client.findOne({ where: { id: id } });
@@ -92,10 +88,8 @@ const update = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			}
 			
 			const { id } = req.params;
 			let { client } = req.body;

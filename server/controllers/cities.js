@@ -17,10 +17,8 @@ const create = [
 	async (req, res) => {		
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			let { cityName } = req.body;
 			cityName = cityName.trim();
@@ -43,10 +41,8 @@ const remove = [
 	async (req, res) => {		
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length) 
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
 			const result = await City.destroy({ where: {id: id} });
@@ -80,10 +76,8 @@ const get = [
 		
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length) 
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
 			
 			const { id } = req.params;
 			const city = await City.findOne({ where: { id: id }});
@@ -112,10 +106,9 @@ const update = [
 	async (req, res) => {
 		try {
 			const errors = validationResult(req).array();
-			if (errors && errors.length) {
-				console.log('Validation ERRORS: ', errors);
+			if (errors && errors.length)
 				return res.status(400).json({ detail: errors[0].msg }).end();
-			} 
+
 			const { id } = req.params;
 			let { cityName } = req.body;
 			cityName = cityName.trim();

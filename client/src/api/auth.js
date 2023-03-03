@@ -5,9 +5,9 @@ const login = ({ abortController=null, ...params }) => axios.post(`/login`, { ..
 
 const register = ({ abortController=null, ...params }) => axios.post(`/register`, { ...params }, { signal: abortController?.signal });
 
-const logout = () => { localStorage.removeItem("user"); };
+const logout = () => localStorage.removeItem("user");
 
-const setToken = (token) => { localStorage.setItem("user", token); }
+const setToken = (token) => localStorage.setItem("user", token);
 
 const getCurrentUser = () => {
 	let jwtToken = localStorage.getItem('user');
@@ -27,7 +27,7 @@ const getCurrentUser = () => {
 	return null;
 };
 
-const isLoggedIn = () => { return getCurrentUser() != null; };
+const isLoggedIn = () => getCurrentUser() != null;
 
 export {
 	login,
