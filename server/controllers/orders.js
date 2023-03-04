@@ -2,13 +2,13 @@ const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, query, validationResult } = require('express-validator');
 const { sendMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
-const { Op, Sequelize } = require('sequelize');
+const { Op } = require('sequelize');
 const db = require('../database/models/index');
-const { Order, Client, Watches, City, Master, MasterCityList } = require('../database/models');
+const { Order, Client, Watches, City, Master } = require('../database/models');
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
-const dateToNearestHour = (timestamp) => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
+const dateToNearestHour = timestamp => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
 
 const getFreeMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -21,12 +21,8 @@ const getFreeMasters = [
         .withMessage('startDate should be of type int')
         .custom((value, { req }) => {
             const curDate = Date.now();
-            if (new Date(value) == 'Invalid date') {
-                throw new Error('Invalid timestamp');
-            }
-            if (value < curDate) {
-                throw new Error('Past date time is not allowed');
-            }
+            if (new Date(value).toString() === 'Invalid Date') throw new Error('Invalid timestamp');
+            if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
 
@@ -58,7 +54,7 @@ const getFreeMasters = [
                     endDate: { [Op.gt]: orderStartDate }
                 }
             });
-            bussyMasters = bussyMasters.map((item) => item.masterId);
+            bussyMasters = bussyMasters.map(item => item.masterId);
 
             const masters = await Master.findAll({
                 where: { id: { [Op.notIn]: bussyMasters } },
@@ -83,7 +79,6 @@ const getFreeMasters = [
 
             res.status(200).json({ masters }).end();
         } catch (e) {
-            console.log(e);
             res.status(400).end();
         }
     }
@@ -123,12 +118,8 @@ const create = [
         .withMessage('order.startDate should be of type int')
         .custom((value, { req }) => {
             const curDate = Date.now();
-            if (new Date(value) == 'Invalid date') {
-                throw new Error('Invalid timestamp');
-            }
-            if (value < curDate) {
-                throw new Error('Past date time is not allowed');
-            }
+            if (new Date(value).toString() === 'Invalid Date') throw new Error('Invalid timestamp');
+            if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
     body('order.timezone')
@@ -159,7 +150,7 @@ const create = [
             if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find((city) => city.id == order.cityId) == null) {
+            if (master.cities.find(city => city.id === order.cityId) == null) {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified city' });
             }
             /// ///////////////////////////////////////////////////
@@ -195,13 +186,9 @@ const create = [
 
             res.status(201).json({ confirmation }).end();
         } catch (e) {
-            console.log(e);
-            console.log(e.constraint);
-            if (transaction) {
-                transaction.rollback();
-            }
+            if (transaction) transaction.rollback();
 
-            if (e.constraint == 'overlapping_times') {
+            if (e.constraint === 'overlapping_times') {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified datetime' });
             }
 
@@ -226,7 +213,6 @@ const getAll = [
             });
             res.status(200).json({ orders }).end();
         } catch (e) {
-            console.log(e);
             res.status(400).json(e).end();
         }
     }
@@ -243,13 +229,12 @@ const remove = [
             const { id } = req.params;
 
             const result = await Order.destroy({ where: { id } });
-            if (result == 0) return res.status(404).json({ detail: '~Order not found~' }).end();
+            if (result === 0) return res.status(404).json({ detail: '~Order not found~' }).end();
 
             res.status(204).end();
         } catch (e) {
-            console.log(e);
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Order not found' }).end();
             }
 
@@ -264,10 +249,7 @@ const get = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) {
-                console.log('Validation ERRORS: ', errors);
-                return res.status(400).json({ detail: errors[0].msg }).end();
-            }
+            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
             const { id } = req.params;
 
@@ -286,7 +268,6 @@ const get = [
                         ]
                     }
                 ]
-                // attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
             });
 
             if (!order) return res.status(404).json({ detail: '~Order not found~' }).end();
@@ -298,9 +279,8 @@ const get = [
 
             res.status(200).json({ order }).end();
         } catch (e) {
-            console.log(e);
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Order not found' }).end();
             }
 
@@ -324,12 +304,8 @@ const update = [
         .withMessage('order.startDate should be of type int')
         .custom((value, { req }) => {
             const curDate = Date.now();
-            if (new Date(value) == 'Invalid date') {
-                throw new Error('Invalid timestamp');
-            }
-            if (value < curDate) {
-                throw new Error('Past date time is not allowed');
-            }
+            if (new Date(value).toString() === 'Invalid Date') throw new Error('Invalid timestamp');
+            if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
     async (req, res) => {
@@ -341,25 +317,19 @@ const update = [
             const { order } = req.body;
 
             const watch = await Watches.findOne({ where: { id: order.watchId } });
-            if (!watch) {
-                return res.status(409).json({ detail: 'Unknown watch type' });
-            }
+            if (!watch) return res.status(409).json({ detail: 'Unknown watch type' });
 
             const city = await City.findOne({ where: { id: order.cityId } });
-            if (!city) {
-                return res.status(409).json({ detail: 'Unknown city' });
-            }
+            if (!city) return res.status(409).json({ detail: 'Unknown city' });
 
             const master = await Master.findOne({
                 where: { id: order.masterId },
                 include: [{ model: City, as: 'cities', through: { attributes: [] } }]
             });
-            if (!master) {
-                return res.status(409).json({ detail: 'Unknown master' });
-            }
+            if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find((city) => city.id == order.cityId) == null) {
+            if (master.cities.find(city => city.id === order.cityId) == null) {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified city' });
             }
             /// ///////////////////////////////////////////////////
@@ -372,8 +342,7 @@ const update = [
 
             res.status(204).end();
         } catch (e) {
-            console.log(e);
-            if (e.constraint == 'overlapping_times') {
+            if (e.constraint === 'overlapping_times') {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified datetime' });
             }
 

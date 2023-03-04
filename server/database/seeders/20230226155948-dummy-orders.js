@@ -4,17 +4,7 @@ const uuid = require('uuid');
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        /**
-         * Add seed commands here.
-         *
-         * Example:
-         * await queryInterface.bulkInsert('People', [{
-         *   name: 'John Doe',
-         *   isBetaMember: false
-         * }], {});
-         */
-
-        const dateToNearestHour = (timestamp) => {
+        const dateToNearestHour = timestamp => {
             const ms = 1000 * 60 * 60;
             return Math.ceil(timestamp / ms) * ms;
         };
@@ -26,7 +16,6 @@ module.exports = {
         };
 
         const now = new Date();
-
         const oneYearFromNow = new Date(dateToNearestHour(now.getTime()));
         oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
 
@@ -74,11 +63,11 @@ module.exports = {
             sequelize.query('SELECT id, email FROM masters', { type: sequelize.QueryTypes.SELECT })
         ]).then(([clients, watches, cities, masters]) => {
             const orders = [];
-            pattern.forEach((p) => {
-                const client = clients.find((client) => client.email == p.clientEmail);
-                const watch = watches.find((watch) => watch.name == p.watchName);
-                const city = cities.find((city) => city.name == p.cityName);
-                const master = masters.find((master) => master.email == p.masterEmail);
+            pattern.forEach(p => {
+                const client = clients.find(client => client.email === p.clientEmail);
+                const watch = watches.find(watch => watch.name === p.watchName);
+                const city = cities.find(city => city.name === p.cityName);
+                const master = masters.find(master => master.email === p.masterEmail);
                 if (client && watch && city && master) {
                     orders.push({
                         id: uuid.v4(),
@@ -99,13 +88,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        /**
-         * Add commands to revert seed here.
-         *
-         * Example:
-         * await queryInterface.bulkDelete('People', null, {});
-         */
-        const Op = Sequelize.Op;
         return queryInterface.bulkDelete('orders', null, {});
     }
 };

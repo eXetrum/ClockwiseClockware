@@ -17,7 +17,7 @@ const RouteProtector = async (req, res, next) => {
     next();
 };
 
-const generateAccessToken = (user) => {
+const generateAccessToken = user => {
     return jwt.sign(user, process.env.JWT_TOKEN_SECRET, { expiresIn: process.env.JWT_TOKEN_EXPIRES });
 };
 

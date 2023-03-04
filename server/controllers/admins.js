@@ -1,5 +1,5 @@
 const { generateAccessToken } = require('../middleware/RouteProtector');
-const { body, param, validationResult } = require('express-validator');
+const { body } = require('express-validator');
 const { Admin } = require('../database/models');
 
 const create = async (req, res) => {
@@ -36,10 +36,9 @@ const login = [
 
             if (!user) return res.status(401).json({ detail: 'Incorrect user/password pair' }).end();
 
-            token = generateAccessToken(user);
+            const token = generateAccessToken(user);
             res.status(200).json({ accessToken: token }).end();
         } catch (e) {
-            console.log(e);
             res.status(400).end();
         }
     }

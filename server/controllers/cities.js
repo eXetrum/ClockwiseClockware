@@ -7,7 +7,6 @@ const getAll = async (req, res) => {
         const cities = await City.findAll({ order: [['updatedAt', 'DESC']] });
         res.status(200).json({ cities }).end();
     } catch (e) {
-        console.log(e);
         res.status(400).end();
     }
 };
@@ -34,8 +33,7 @@ const create = [
             const city = await City.create({ name: cityName });
             res.status(201).json({ city }).end();
         } catch (e) {
-            console.log(e);
-            if (e.name == 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
+            if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
 
             res.status(400).json(e).end();
         }
@@ -55,18 +53,17 @@ const remove = [
             if (!result) return res.status(404).json({ detail: 'City not found' }).end();
             res.status(204).end();
         } catch (e) {
-            console.log(e);
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'City not found' }).end();
             }
 
-            if (e.name == 'SequelizeForeignKeyConstraintError' && e.parent) {
-                if (e.parent.constraint == 'master_city_list_cityId_fkey') {
+            if (e.name === 'SequelizeForeignKeyConstraintError' && e.parent) {
+                if (e.parent.constraint === 'master_city_list_cityId_fkey') {
                     return res.status(409).json({ detail: 'Deletion restricted. Master(s) reference(s)' }).end();
                 }
 
-                if (e.parent.constraint == 'orders_cityId_fkey') {
+                if (e.parent.constraint === 'orders_cityId_fkey') {
                     return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)' }).end();
                 }
             }
@@ -90,10 +87,8 @@ const get = [
 
             res.status(200).json({ city }).end();
         } catch (e) {
-            console.log(e);
-
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'City not found' }).end();
             }
 
@@ -124,19 +119,17 @@ const update = [
             cityName = cityName.trim();
 
             const [affectedRows, result] = await City.update({ name: cityName }, { where: { id }, returning: true });
-            if (affectedRows == 0) return res.status(404).json({ detail: 'City not found' }).end();
+            if (affectedRows === 0) return res.status(404).json({ detail: 'City not found' }).end();
 
             res.status(204).end();
         } catch (e) {
-            console.log(e);
-
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'City not found' }).end();
             }
 
             // City already exists
-            if (e.name == 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
+            if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
 
             res.status(400).end();
         }

@@ -4,6 +4,5 @@
     "singleQuote": true,
     "printWidth": 140,
     "tabWidth": 4,
-    "arrowParens": "always",
-    "singleAttributePerLine": false
+    "arrowParens": "avoid"
 }

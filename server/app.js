@@ -20,6 +20,7 @@ app.use('/api', require('./routes/clients'));
 app.use('/api', require('./routes/orders'));
 
 app.listen(port, () => {
+    // eslint-disable-next-line
     console.log(`Server App listening on port ${port}`);
 });
 

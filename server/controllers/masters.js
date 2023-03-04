@@ -1,6 +1,6 @@
 const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
-const { Master, City, Order, MasterCityList } = require('../database/models');
+const { Master, City, Order } = require('../database/models');
 const db = require('../database/models/index');
 
 const getAll = [
@@ -16,7 +16,6 @@ const getAll = [
             });
             res.status(200).json({ masters }).end();
         } catch (e) {
-            console.log(e);
             res.status(400).end();
         }
     }
@@ -72,16 +71,16 @@ const create = [
             master.email = master.email.trim();
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map((city) => city.id);
+            const dbCityIds = dbCities.map(city => city.id);
 
-            master.cities = master.cities.map((city) => city.id);
+            master.cities = master.cities.map(city => city.id);
             // filter out id's which does not exists in the database
-            master.cities = master.cities.filter((cityId) => dbCityIds.indexOf(cityId) != -1);
+            master.cities = master.cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            master.cities.forEach((cityId) => {
-                const dbCityObj = dbCities.find((city) => city.id == cityId);
+            master.cities.forEach(cityId => {
+                const dbCityObj = dbCities.find(city => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
@@ -94,12 +93,9 @@ const create = [
             master.cities = await result.getCities();
             res.status(201).json({ master }).end();
         } catch (e) {
-            console.log(e);
-            if (transaction) {
-                await transaction.rollback();
-            }
+            if (transaction) await transaction.rollback();
 
-            if (e.name == 'SequelizeUniqueConstraintError') {
+            if (e.name === 'SequelizeUniqueConstraintError') {
                 return res.status(409).json({ detail: 'Master with specified email already exists' }).end();
             }
 
@@ -121,18 +117,16 @@ const remove = [
             if (result === 0) return res.status(404).json({ detail: 'Master not found' }).end();
             res.status(204).end();
         } catch (e) {
-            console.log(e);
-
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Master not found' }).end();
             }
 
-            if (e.name == 'SequelizeForeignKeyConstraintError' && e.parent) {
-                if (e.parent.constraint == 'master_city_list_masterId_fkey') {
+            if (e.name === 'SequelizeForeignKeyConstraintError' && e.parent) {
+                if (e.parent.constraint === 'master_city_list_masterId_fkey') {
                     return res.status(409).json({ detail: 'Deletion restricted. Master contains reference(s) to city/cities' }).end();
                 }
-                if (e.parent.constraint == 'orders_masterId_fkey') {
+                if (e.parent.constraint === 'orders_masterId_fkey') {
                     return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)' }).end();
                 }
             }
@@ -159,9 +153,8 @@ const get = [
             if (!master) return res.status(404).json({ detail: 'Master not found' }).end();
             res.status(200).json({ master }).end();
         } catch (e) {
-            console.log(e);
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Master not found' }).end();
             }
 
@@ -221,16 +214,16 @@ const update = [
             master.email = master.email.trim();
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map((city) => city.id);
+            const dbCityIds = dbCities.map(city => city.id);
             // master.cities contains id's now
-            master.cities = master.cities.map((city) => city.id);
+            master.cities = master.cities.map(city => city.id);
             // filter out id's which does not exists in the database, at this moment
-            master.cities = master.cities.filter((cityId) => dbCityIds.indexOf(cityId) != -1);
+            master.cities = master.cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            master.cities.forEach((cityId) => {
-                const dbCityObj = dbCities.find((city) => city.id == cityId);
+            master.cities.forEach(cityId => {
+                const dbCityObj = dbCities.find(city => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
@@ -245,17 +238,14 @@ const update = [
 
             res.status(204).end();
         } catch (e) {
-            console.log(e);
-            if (transaction) {
-                await transaction.rollback();
-            }
+            if (transaction) await transaction.rollback();
 
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Master not found' }).end();
             }
 
-            if (e.name == 'SequelizeUniqueConstraintError') {
+            if (e.name === 'SequelizeUniqueConstraintError') {
                 return res.status(409).json({ detail: 'Master with specified email already exists' }).end();
             }
 

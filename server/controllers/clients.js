@@ -10,7 +10,6 @@ const getAll = async (req, res) => {
         });
         res.status(200).json({ clients }).end();
     } catch (e) {
-        console.log(e);
         res.status(400).end();
     }
 };
@@ -26,19 +25,17 @@ const remove = [
             const { id } = req.params;
             const result = await Client.destroy({ where: { id } });
 
-            if (result == 0) return res.status(404).json({ detail: '~Client not found~' }).end();
+            if (result === 0) return res.status(404).json({ detail: '~Client not found~' }).end();
 
             res.status(204).end();
         } catch (e) {
-            console.log(e);
-
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Client not found' }).end();
             }
 
-            if (e.name == 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
-                if (e.parent.constraint == 'orders_clientId_fkey') {
+            if (e.name === 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
+                if (e.parent.constraint === 'orders_clientId_fkey') {
                     return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)' }).end();
                 }
             }
@@ -63,9 +60,8 @@ const get = [
 
             res.status(200).json({ client }).end();
         } catch (e) {
-            console.log(e);
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Client not found' }).end();
             }
 
@@ -118,14 +114,12 @@ const update = [
 
             res.status(204).end();
         } catch (e) {
-            console.log(e);
-
             // Incorrect UUID ID string
-            if (e.name == 'SequelizeDatabaseError' && e.parent && e.parent.routine == 'string_to_uuid') {
+            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Client not found' }).end();
             }
 
-            if (e.name == 'SequelizeUniqueConstraintError') {
+            if (e.name === 'SequelizeUniqueConstraintError') {
                 return res.status(409).json({ detail: 'Client with specified email already exists' }).end();
             }
 

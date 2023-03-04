@@ -1,5 +1,4 @@
 'use strict';
-const uuid = require('uuid');
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
@@ -77,39 +76,8 @@ module.exports = (sequelize, DataTypes) => {
             modelName: 'Order',
             tableName: 'orders',
             associations: true
-            /* validate: {
-			bothCoordsOrNone() {
-				if ((this.startDate === null) !== (this.longitude === null)) {
-				throw new Error('Either both latitude and longitude, or neither!');
-				}
-			}
-		} */
         }
     );
 
     return Order;
 };
-/*
-CREATE TABLE orders (
-	id serial PRIMARY KEY,
-	client_id INT NOT NULL,
-	watch_type_id INT NOT NULL,
-	city_id INT NOT NULL,
-	master_id INT NOT NULL,
-
-	start_date timestamp NOT NULL,
-	end_date timestamp NOT NULL,
-
-	FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE RESTRICT,
-	FOREIGN KEY(watch_type_id) REFERENCES watch_type(id) ON DELETE RESTRICT,
-	FOREIGN KEY(city_id) REFERENCES cities(id) ON DELETE RESTRICT,
-	FOREIGN KEY(master_id) REFERENCES masters(id) ON DELETE RESTRICT,
-
-	CONSTRAINT start_date_less_than_end_date CHECK (start_date < end_date),
-	CONSTRAINT overlapping_times EXCLUDE USING GIST (
-		master_id WITH =,
-		box(point(EXTRACT(EPOCH FROM start_date) + 1, 0),
-			point(EXTRACT(EPOCH FROM end_date) - 1,   0)) WITH &&
-	)
-);
-*/
