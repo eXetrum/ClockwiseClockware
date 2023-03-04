@@ -5,7 +5,7 @@
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "npm install && npm run migrate:up -- --env production && npm run seed:up -- --env production",
+    "build": "npm install && npm run migrate:up -- --env production",
     "start": "node app.js",
     "dev": "nodemon app.js",
     "migrate:up": "npx sequelize-cli db:migrate",
