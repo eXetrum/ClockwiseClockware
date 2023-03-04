@@ -1,33 +1,29 @@
 {
-    "env": {
-        "browser": true,
-        "es2021": true
-    },
-    "extends": [
-        "react-app",
-        "react-app/jest",
-        "plugin:react-hooks/recommended",
-        "plugin:react/recommended",
-        "plugin:import/errors",
-        "plugin:import/warnings",
-        "google",
-        "plugin:prettier/recommended",
-        "prettier"
-    ],
-    "overrides": [],
-    "parserOptions": {
-        "ecmaFeatures": {
-            "jsx": true
-        },
-        "ecmaVersion": "latest",
-        "sourceType": "module"
-    },
-    "plugins": [
-        "react",
-        "prettier"
-    ],
-    "rules": {
-        "prettier/prettier": "error",
-        "require-jsdoc": "off"
-    }
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": ["react-app", "react-app/jest", "plugin:prettier/recommended"],
+  "overrides": [],
+  "parserOptions": {
+    "ecmaFeatures": { "jsx": true },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["react", "prettier"],
+  "rules": {
+    "no-console": "warn",
+    "no-var": "error",
+    "semi": "error",
+    "no-multi-spaces": "error",
+    "space-in-parens": "error",
+    "no-multiple-empty-lines": "error",
+    "prefer-const": "error",
+    "no-use-before-define": "error",
+    "quotes": ["error", "single"],
+    "jsx-quotes": ["error", "prefer-single"],
+    "indent": ["warn", 2],
+    "max-len": ["warn", { "code": 140 }]
+  }
 }
