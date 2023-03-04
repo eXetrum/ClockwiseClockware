@@ -4,8 +4,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const morgan = require('morgan');
-const app = express()
-const port = process.env.NODE_APP_PORT || 4200
+const app = express();
+const port = process.env.NODE_APP_PORT || 4200;
 
 app.use(morgan('dev'));
 app.use(cors({ origin: '*' }));
@@ -20,7 +20,7 @@ app.use('/api', require('./routes/clients'));
 app.use('/api', require('./routes/orders'));
 
 app.listen(port, () => {
-	console.log(`Server App listening on port ${port}`)
-})
+    console.log(`Server App listening on port ${port}`);
+});
 
 module.exports = app;
