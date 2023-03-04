@@ -48,6 +48,7 @@ const Order = () => {
     () => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason),
     [dateTimeError],
   );
+
   const isOrderConfirmationMessageReceived = useMemo(() => orderConfirmationMessage !== null, [orderConfirmationMessage]);
 
   const isLoadingMasters = useMemo(() => masters === null && pending, [masters, pending]);
