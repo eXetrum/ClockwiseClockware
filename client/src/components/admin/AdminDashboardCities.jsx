@@ -9,28 +9,26 @@ import AdminCitiesList from './AdminCitiesList';
 import ModalForm from '../ModalForm';
 import ErrorContainer from '../ErrorContainer';
 import { getCities, createCity, deleteCityById } from '../../api/cities';
+import { getErrorText } from '../../utils/error';
 
 const AdminDashboardCities = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [cities, setCities] = useState(null);
-  const [newCityName, setNewCityName] = useState('');
-  const [pending, setPending] = useState(true);
+  const initEmptyCity = () => ({ name: '' });
+
+  const [cities, setCities] = useState([]);
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [newCity, setNewCity] = useState(initEmptyCity());
+  const [pending, setPending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const isLoading = useMemo(() => cities === null && pending, [cities, pending]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => cities !== null, [cities]);
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
+  const isFormValid = useCallback(() => newCity.name, [newCity]);
 
-  const isFormValid = useCallback(() => newCityName, [newCityName]);
-
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
-
-  const fetchCities = async (abortController) => {
+  const fetchInitialData = async (abortController) => {
+    setInitialLoading(true);
     try {
       const response = await getCities({ abortController });
       if (response?.data?.cities) {
@@ -40,44 +38,40 @@ const AdminDashboardCities = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
-  const doCreateCity = async (cityName) => {
+  const doCreateCity = async (city) => {
+    setPending(true);
     try {
-      const response = await createCity({ cityName });
+      const response = await createCity({ cityName: city.name });
       if (response?.data?.city) {
         const { city } = response.data;
         setCities([city, ...cities]);
-        setNewCityName('');
+        setNewCity(initEmptyCity());
         setShowAddForm(false);
         enqueueSnackbar(`City "${city.name}" created`, { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
   const doDeleteCityById = async (id) => {
+    setPending(true);
     try {
       const response = await deleteCityById({ id });
       if ([200, 204].includes(response?.status)) {
         const removedCity = cities.find((item) => item.id === id);
         setCities(cities.filter((item) => item.id !== id));
-        enqueueSnackbar(`City "${removedCity.name}" removed`, {
-          variant: 'success',
-        });
+        enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setCities(cities.filter((item) => item.id !== id));
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (e?.response?.status === 404) setCities(cities.filter((item) => item.id !== id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -85,8 +79,7 @@ const AdminDashboardCities = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    resetBeforeApiCall();
-    fetchCities(abortController);
+    fetchInitialData(abortController);
     return () => {
       abortController.abort();
       closeSnackbar();
@@ -94,21 +87,16 @@ const AdminDashboardCities = () => {
   }, [closeSnackbar]);
 
   const onFormHide = () => {
-    setNewCityName('');
-    setError(null);
+    setNewCity(initEmptyCity());
     setShowAddForm(false);
   };
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    resetBeforeApiCall();
-    doCreateCity(newCityName);
+    doCreateCity(newCity);
   };
 
-  const onCityNameChange = (event) => {
-    setNewCityName(event.target.value);
-    setError(null);
-  };
+  const onCityNameChange = (event) => setNewCity((prev) => ({ ...prev, name: event.target.value }));
 
   const onCityRemove = async (cityId) => {
     const city = cities.find((item) => item.id === cityId);
@@ -118,10 +106,8 @@ const AdminDashboardCities = () => {
       okText: 'Delete',
       okButtonStyle: 'danger',
     });
-    if (!result) return;
 
-    resetBeforeApiCall();
-    doDeleteCityById(cityId);
+    if (result) doDeleteCityById(cityId);
   };
 
   return (
@@ -133,13 +119,13 @@ const AdminDashboardCities = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
             <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && (
           <>
@@ -168,7 +154,7 @@ const AdminDashboardCities = () => {
           formContent={
             <FormGroup>
               <Form.Label>City:</Form.Label>
-              <FormControl type="text" name="city" autoFocus onChange={onCityNameChange} value={newCityName} disabled={pending} />
+              <FormControl type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
             </FormGroup>
           }
         />

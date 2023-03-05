@@ -12,57 +12,37 @@ import ModalForm from '../ModalForm';
 import ErrorContainer from '../ErrorContainer';
 import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
 import { getCities } from '../../api/cities';
+import { getErrorText } from '../../utils/error';
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [cities, setCities] = useState(null);
-  const [pendingCities, setPendingCities] = useState(true);
-  const [masters, setMasters] = useState(null);
-  const [pendingMasters, setPendingMasters] = useState(true);
-  const [newMaster, setNewMaster] = useState({
-    name: '',
-    email: '',
-    rating: 0,
-    cities: [],
-  });
-  const [pending, setPending] = useState(false);
+  const initEmptyMaster = () => ({ name: '', email: '', rating: 0, cities: [] });
+
+  const [cities, setCities] = useState([]);
+  const [masters, setMasters] = useState([]);
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [newMaster, setNewMaster] = useState(initEmptyMaster());
+  const [pending, setPending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const isCitiesLoading = useMemo(() => cities === null && pendingCities, [cities, pendingCities]);
-  const isMastersLoading = useMemo(() => masters === null && pendingMasters, [masters, pendingMasters]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isAddFormReady = useMemo(() => cities !== null, [cities]);
-  const isMasterListReady = useMemo(() => masters !== null, [masters]);
-
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(
     () => newMaster && newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email),
     [newMaster],
   );
 
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
-
-  const fetchCities = async (abortController) => {
+  const fetchInitialData = async (abortController) => {
+    setInitialLoading(true);
     try {
-      const response = await getCities({ abortController });
+      let response = await getCities({ abortController });
       if (response?.data?.cities) {
         const { cities } = response.data;
         setCities(cities);
       }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setPendingCities(false);
-    }
-  };
-
-  const fetchMasters = async (abortController) => {
-    try {
-      const response = await getMasters({ abortController });
+      response = await getMasters({ abortController });
       if (response?.data?.masters) {
         const { masters } = response.data;
         setMasters(masters);
@@ -70,46 +50,40 @@ const AdminDashboardMasters = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPendingMasters(false);
+      setInitialLoading(false);
     }
   };
 
   const doCreateMaster = async (master) => {
+    setPending(true);
     try {
       const response = await createMaster({ master });
       if (response?.data?.master) {
         const { master } = response.data;
         setMasters([master, ...masters]);
-        setNewMaster({ name: '', email: '', rating: 0, cities: [] });
+        setNewMaster(initEmptyMaster());
         setShowAddForm(false);
-        enqueueSnackbar(`Master "${master.name}" created`, {
-          variant: 'success',
-        });
+        enqueueSnackbar(`Master "${master.name}" created`, { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
   const doDeleteMasterById = async (id) => {
+    setPending(true);
     try {
       const response = await deleteMasterById({ id });
       if ([200, 204].includes(response?.status)) {
         const removedMaster = masters.find((item) => item.id === id);
         setMasters(masters.filter((item) => item.id !== id));
-        enqueueSnackbar(`Master "${removedMaster.email}" removed`, {
-          variant: 'success',
-        });
+        enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setMasters(masters.filter((item) => item.id !== id));
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -117,16 +91,7 @@ const AdminDashboardMasters = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    fetchCities(abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [closeSnackbar]);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchMasters(abortController);
+    fetchInitialData(abortController);
     return () => {
       abortController.abort();
       closeSnackbar();
@@ -134,14 +99,12 @@ const AdminDashboardMasters = () => {
   }, [closeSnackbar]);
 
   const onFormHide = () => {
-    setNewMaster({ name: '', email: '', rating: 0, cities: [] });
-    setError(null);
+    setNewMaster(initEmptyMaster());
     setShowAddForm(false);
   };
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    resetBeforeApiCall();
     doCreateMaster(newMaster);
   };
 
@@ -159,10 +122,8 @@ const AdminDashboardMasters = () => {
       okText: 'Delete',
       okButtonStyle: 'danger',
     });
-    if (!result) return;
 
-    resetBeforeApiCall();
-    doDeleteMasterById(masterId);
+    if (result) doDeleteMasterById(masterId);
   };
 
   return (
@@ -174,14 +135,15 @@ const AdminDashboardMasters = () => {
         </center>
         <hr />
 
-        {isCitiesLoading && (
+        {isInitialLoading && (
           <center>
             <Spinner animation="grow" />
           </center>
         )}
-        {isError && <ErrorContainer error={error} />}
 
-        {isAddFormReady && (
+        <ErrorContainer error={error} />
+
+        {isComponentReady && (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -190,24 +152,10 @@ const AdminDashboardMasters = () => {
                 </Link>
               </Col>
             </Row>
-          </>
-        )}
-
-        {isMastersLoading && (
-          <>
-            <hr />
-            <center>
-              <Spinner animation="grow" />
-            </center>
-          </>
-        )}
-        {isMasterListReady && (
-          <>
             <hr />
             <AdminMastersList masters={masters} onRemove={onMasterRemove} />
           </>
         )}
-
         <hr />
 
         <ModalForm

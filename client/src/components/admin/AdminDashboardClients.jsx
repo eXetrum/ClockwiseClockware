@@ -9,31 +9,29 @@ import AdminClientsList from './AdminClientsList';
 import ModalForm from '../ModalForm';
 import ErrorContainer from '../ErrorContainer';
 import { deleteClientById, getClients } from '../../api/clients';
+import { getErrorText } from '../../utils/error';
 
 const AdminDashboardClients = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [clients, setClients] = useState(null);
-  const [newClient, setNewClient] = useState({ name: '', email: '' });
-  const [pending, setPending] = useState(true);
+  const initEmptyClient = () => ({ name: '', email: '' });
+
+  const [clients, setClients] = useState([]);
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [newClient, setNewClient] = useState(initEmptyClient());
+  const [pending, setPending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
-  const isLoading = useMemo(() => clients === null && pending, [clients, pending]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => clients !== null, [clients]);
-
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(
     () => newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newClient.email),
     [newClient],
   );
 
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
-
-  const fetchClients = async (abortController) => {
+  const fetchInitialData = async (abortController) => {
+    setInitialLoading(true);
     try {
       const response = await getClients({ abortController });
       if (response?.data?.clients) {
@@ -43,26 +41,22 @@ const AdminDashboardClients = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
   const doDeleteClientById = async (id) => {
+    setPending(true);
     try {
       const response = await deleteClientById({ id });
       if ([200, 204].includes(response?.status)) {
         const removedClient = clients.find((item) => item.id === id);
         setClients(clients.filter((item) => item.id !== id));
-        enqueueSnackbar(`Client "${removedClient.email}" removed`, {
-          variant: 'success',
-        });
+        enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setClients(clients.filter((item) => item.id !== id));
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -70,38 +64,32 @@ const AdminDashboardClients = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    resetBeforeApiCall();
-    fetchClients(abortController);
+    fetchInitialData(abortController);
     return () => {
       abortController.abort();
       closeSnackbar();
     };
   }, [closeSnackbar]);
 
-  const onFormHide = () => {
-    setNewClient({ name: '', email: '' });
-    setError(null);
+  const onClientFormHide = () => {
+    setNewClient(initEmptyClient());
     setShowAddForm(false);
   };
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    // TODO
-  };
-
+  const onClientFormSubmit = (event) => event.preventDefault();
   const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
   const onClientEmailChange = (event) => setNewClient((prev) => ({ ...prev, email: event.target.value }));
 
   const onClientRemove = async (clientId) => {
     const client = clients.find((item) => item.id === clientId);
+
     const result = await confirm(`Do you want to delete "${client.email}" client ?`, {
       title: 'Confirm',
       okText: 'Delete',
       okButtonStyle: 'danger',
     });
-    if (!result) return;
-    resetBeforeApiCall();
-    doDeleteClientById(clientId);
+
+    if (result) doDeleteClientById(clientId);
   };
 
   return (
@@ -113,13 +101,13 @@ const AdminDashboardClients = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
             <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && (
           <>
@@ -141,8 +129,8 @@ const AdminDashboardClients = () => {
           show={showAddForm}
           title={'Add New Client'}
           okText={'Create'}
-          onHide={onFormHide}
-          onSubmit={onFormSubmit}
+          onHide={onClientFormHide}
+          onSubmit={onClientFormSubmit}
           pending={pending}
           isFormValid={isFormValid}
           formContent={
