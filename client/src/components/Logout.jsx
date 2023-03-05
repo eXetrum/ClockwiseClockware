@@ -12,7 +12,7 @@ const LogOut = () => {
     setRedirect(true);
   }, []);
 
-  if (redirect) return <Navigate to='/' />;
+  if (redirect) return <Navigate to="/" />;
 
   return (
     <Container>

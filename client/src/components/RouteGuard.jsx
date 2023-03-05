@@ -3,7 +3,7 @@ import { isLoggedIn } from '../api/auth';
 
 const RouteGuard = ({ children }) => {
   const location = useLocation();
-  if (!isLoggedIn() && location.pathname !== '/login') return <Navigate to='/login' state={{ from: location }} />;
+  if (!isLoggedIn() && location.pathname !== '/login') return <Navigate to="/login" state={{ from: location }} />;
   return children;
 };
 

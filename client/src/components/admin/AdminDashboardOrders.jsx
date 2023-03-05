@@ -93,7 +93,7 @@ const AdminDashboardOrders = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 

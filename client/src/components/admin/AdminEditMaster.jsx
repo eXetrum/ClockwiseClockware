@@ -125,25 +125,25 @@ const AdminEditMaster = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
         {isError && <ErrorContainer error={error} />}
 
         {isComponentReady && (
-          <Row className='justify-content-md-center'>
+          <Row className="justify-content-md-center">
             <Col xs>
-              <Form inline='true' className='d-flex align-items-end' onSubmit={onFormSubmit}>
+              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                 <FormGroup>
                   <Form.Label>Master email:</Form.Label>
-                  <FormControl type='email' name='masterEmail' onChange={onMasterEmailChange} value={master.email} disabled={pending} />
+                  <FormControl type="email" name="masterEmail" onChange={onMasterEmailChange} value={master.email} disabled={pending} />
                 </FormGroup>
                 <FormGroup>
                   <Form.Label>Master name:</Form.Label>
-                  <FormControl type='text' name='masterName' onChange={onMasterNameChange} value={master.name} disabled={pending} />
+                  <FormControl type="text" name="masterName" onChange={onMasterNameChange} value={master.name} disabled={pending} />
                 </FormGroup>
-                <FormGroup className='ms-3'>
+                <FormGroup className="ms-3">
                   <Form.Label>Rating:</Form.Label>
                   <StarRating
                     onRatingChange={onMasterRatingChange}
@@ -153,19 +153,19 @@ const AdminEditMaster = () => {
                     readonly={pending}
                   />
                 </FormGroup>
-                <FormGroup className='ms-3'>
+                <FormGroup className="ms-3">
                   <Form.Label>Master work cities:</Form.Label>
                   <Multiselect
                     onSelect={onMasterCitySelect}
                     onRemove={onMasterCityRemove}
                     options={cities}
                     selectedValues={master.cities}
-                    displayValue='name'
+                    displayValue="name"
                     disable={pending}
                   />
                 </FormGroup>
 
-                <Button type='submit' className='ms-2 btn btn-success' disabled={!isFormValid()}>
+                <Button type="submit" className="ms-2 btn btn-success" disabled={!isFormValid()}>
                   Save
                 </Button>
               </Form>

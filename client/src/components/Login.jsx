@@ -69,35 +69,35 @@ const Login = () => {
       <Header />
       <Container>
         <hr />
-        <Row className='justify-content-md-center'>
-          <Col xs lg='4' md='auto'>
+        <Row className="justify-content-md-center">
+          <Col xs lg="4" md="auto">
             <h1>Login page</h1>
             <Form onSubmit={onFormSubmit}>
-              <Form.Group className='mb-3'>
+              <Form.Group className="mb-3">
                 <Form.Label>Email address</Form.Label>
                 <Form.Control
-                  type='email'
-                  name='email'
-                  placeholder='Enter email'
+                  type="email"
+                  name="email"
+                  placeholder="Enter email"
                   autoFocus
                   onChange={onFormFieldChange}
                   value={user.email}
                   disabled={pending}
                 />
               </Form.Group>
-              <Form.Group className='mb-3'>
+              <Form.Group className="mb-3">
                 <Form.Label>Password</Form.Label>
                 <Form.Control
-                  type='password'
-                  name='password'
-                  placeholder='Password'
+                  type="password"
+                  name="password"
+                  placeholder="Password"
                   onChange={onFormFieldChange}
                   value={user.password}
                   disabled={pending}
                 />
               </Form.Group>
-              <Button variant='primary' type='submit' disabled={!isFormValid() || pending}>
-                {pending && <Spinner className='me-2' as='span' animation='grow' size='sm' role='status' aria-hidden='true' />}
+              <Button variant="primary" type="submit" disabled={!isFormValid() || pending}>
+                {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                 Login
               </Button>
             </Form>

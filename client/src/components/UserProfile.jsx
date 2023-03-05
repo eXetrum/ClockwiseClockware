@@ -20,8 +20,8 @@ const UserProfile = () => {
             <h1>User Profile</h1>
           </center>
           <hr />
-          <Row className='justify-content-md-center'>
-            <Col md='auto'>
+          <Row className="justify-content-md-center">
+            <Col md="auto">
               <div>Email: {user.email}</div>
               <div>Password: {user.password}</div>
             </Col>

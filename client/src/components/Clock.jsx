@@ -11,10 +11,10 @@ const Clock = () => {
   }, []);
 
   return (
-    <Row className='justify-content-md-center'>
-      <Row className='justify-content-md-center'></Row>
-      <div className='clockBox'>
-        <div className='Time'>
+    <Row className="justify-content-md-center">
+      <Row className="justify-content-md-center"></Row>
+      <div className="clockBox">
+        <div className="Time">
           <p>{currentDateTime.toLocaleTimeString()}</p>
         </div>
       </div>

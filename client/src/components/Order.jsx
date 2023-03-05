@@ -229,7 +229,7 @@ const Order = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
@@ -237,15 +237,15 @@ const Order = () => {
 
         {isComponentReady && (
           <>
-            <Row className='justify-content-md-center'>
-              <Col xs lg='5'>
+            <Row className="justify-content-md-center">
+              <Col xs lg="5">
                 {!isOrderConfirmationMessageReceived && (
                   <Form onSubmit={onFormSubmit}>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <Form.Label>Email:</Form.Label>
                       <Form.Control
-                        type='email'
-                        name='email'
+                        type="email"
+                        name="email"
                         required
                         autoFocus
                         onChange={onClientEmailChange}
@@ -255,14 +255,14 @@ const Order = () => {
                         disabled={pending}
                       />
                       {order.client.email && (
-                        <Form.Control.Feedback type='invalid'>Please provide a valid email (username@host.domain)</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>
                       )}
                     </Form.Group>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <Form.Label>Name:</Form.Label>
                       <Form.Control
-                        type='text'
-                        name='name'
+                        type="text"
+                        name="name"
                         required
                         onChange={onClientNameChange}
                         value={order.client.name}
@@ -271,16 +271,16 @@ const Order = () => {
                         disabled={pending}
                       />
                       {order.client.name && (
-                        <Form.Control.Feedback type='invalid'>Please provide a valid name (min length 3).</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>
                       )}
                     </Form.Group>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <>
                         {watches.map((watch) => (
                           <Form.Check
                             key={watch.id}
-                            type='radio'
-                            name='watch'
+                            type="radio"
+                            name="watch"
                             label={watch.name}
                             inline
                             required
@@ -290,10 +290,10 @@ const Order = () => {
                         ))}
                       </>
                     </Form.Group>
-                    <Form.Group className='mb-4'>
+                    <Form.Group className="mb-4">
                       <Multiselect
-                        placeholder='City'
-                        displayValue='name'
+                        placeholder="City"
+                        displayValue="name"
                         onSelect={onOrderCitySelect}
                         onRemove={onOrderCityRemove}
                         options={cities}
@@ -302,10 +302,10 @@ const Order = () => {
                         disable={pending}
                       />
                     </Form.Group>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DateTimePicker
-                          label='DateTimePicker'
+                          label="DateTimePicker"
                           renderInput={(props) => <TextField {...props} />}
                           views={['year', 'month', 'day', 'hours']}
                           onChange={onOrderDateChange}
@@ -324,16 +324,16 @@ const Order = () => {
                         </strong>
                       )}
                     </Form.Group>
-                    <Button className='mb-3' type='submit' variant='success' disabled={!isFormValid()}>
-                      {pending && <Spinner className='me-2' as='span' animation='grow' size='sm' role='status' aria-hidden='true' />}
+                    <Button className="mb-3" type="submit" variant="success" disabled={!isFormValid()}>
+                      {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                       Search
                     </Button>
                   </Form>
                 )}
 
                 {isOrderConfirmationMessageReceived && (
-                  <Row className='justify-content-md-center'>
-                    <Col md='auto'>
+                  <Row className="justify-content-md-center">
+                    <Col md="auto">
                       <Alert variant={'info'}>
                         <p>Thank you ! Confirmation message was sent to your email. </p>
                         <Container>
@@ -345,8 +345,8 @@ const Order = () => {
                         </Container>
                       </Alert>
                     </Col>
-                    <Col md='auto'>
-                      <Button variant='primary' onClick={setDefaultFormState}>
+                    <Col md="auto">
+                      <Button variant="primary" onClick={setDefaultFormState}>
                         Create new order
                       </Button>
                     </Col>
@@ -357,31 +357,31 @@ const Order = () => {
 
             {isLoadingMasters && (
               <center>
-                <Spinner animation='grow' />{' '}
+                <Spinner animation="grow" />{' '}
               </center>
             )}
             {isMasterListReady && (
               <>
-                <Row className='justify-content-md-center'>
+                <Row className="justify-content-md-center">
                   <hr />
                   {isAllMastersBussy && (
-                    <Row className='justify-content-md-center'>
-                      <Col md='auto'>
+                    <Row className="justify-content-md-center">
+                      <Col md="auto">
                         <Alert variant={'warning'}>There is no masters available at this moment which can handle your order</Alert>
                       </Col>
                     </Row>
                   )}
 
                   {masters.map((master) => (
-                    <Col key={master.id} md='auto' onClick={(e) => onSelectMaster(e, master)}>
-                      <Card className='mb-3' style={{ width: '18rem' }}>
+                    <Col key={master.id} md="auto" onClick={(e) => onSelectMaster(e, master)}>
+                      <Card className="mb-3" style={{ width: '18rem' }}>
                         <Card.Body>
                           <Card.Title>{master.name}</Card.Title>
-                          <Card.Subtitle className='mb-2 text-muted'>{master.email}</Card.Subtitle>
+                          <Card.Subtitle className="mb-2 text-muted">{master.email}</Card.Subtitle>
                           <StarRating value={master.rating} readonly={true} />
                           <Card.Text>
                             {master.cities.map((city) => (
-                              <Badge bg='info' className='p-2 m-1' key={city.id}>
+                              <Badge bg="info" className="p-2 m-1" key={city.id}>
                                 {city.name}
                               </Badge>
                             ))}

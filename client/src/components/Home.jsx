@@ -8,15 +8,15 @@ const Home = () => {
     <Container>
       <Header />
       <Container>
-        <Row className='justify-content-md-center'>
-          <Col md='auto'>
+        <Row className="justify-content-md-center">
+          <Col md="auto">
             <center>
               <h1>Welcome to Clockwise Clockware</h1>
             </center>
           </Col>
         </Row>
-        <Row className='justify-content-md-center'>
-          <Col md='auto'>
+        <Row className="justify-content-md-center">
+          <Col md="auto">
             <Clock />
           </Col>
         </Row>

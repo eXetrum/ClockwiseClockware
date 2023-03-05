@@ -135,7 +135,7 @@ const AdminDashboardCities = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
@@ -143,9 +143,9 @@ const AdminDashboardCities = () => {
 
         {isComponentReady && (
           <>
-            <Row className='justify-content-md-center'>
-              <Col md='auto'>
-                <Link to='#'>
+            <Row className="justify-content-md-center">
+              <Col md="auto">
+                <Link to="#">
                   <AddCircleOutlineOutlinedIcon onClick={() => setShowAddForm(true)} />
                 </Link>
               </Col>
@@ -157,7 +157,7 @@ const AdminDashboardCities = () => {
         <hr />
 
         <ModalForm
-          size='sm'
+          size="sm"
           show={showAddForm}
           title={'Add New City'}
           okText={'Create'}
@@ -168,7 +168,7 @@ const AdminDashboardCities = () => {
           formContent={
             <FormGroup>
               <Form.Label>City:</Form.Label>
-              <FormControl type='text' name='city' autoFocus onChange={onCityNameChange} value={newCityName} disabled={pending} />
+              <FormControl type="text" name="city" autoFocus onChange={onCityNameChange} value={newCityName} disabled={pending} />
             </FormGroup>
           }
         />

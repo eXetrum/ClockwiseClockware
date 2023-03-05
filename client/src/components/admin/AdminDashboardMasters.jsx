@@ -176,16 +176,16 @@ const AdminDashboardMasters = () => {
 
         {isCitiesLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
         {isError && <ErrorContainer error={error} />}
 
         {isAddFormReady && (
           <>
-            <Row className='justify-content-md-center'>
-              <Col md='auto'>
-                <Link to='#'>
+            <Row className="justify-content-md-center">
+              <Col md="auto">
+                <Link to="#">
                   <AddCircleOutlineOutlinedIcon onClick={() => setShowAddForm(true)} />
                 </Link>
               </Col>
@@ -197,7 +197,7 @@ const AdminDashboardMasters = () => {
           <>
             <hr />
             <center>
-              <Spinner animation='grow' />
+              <Spinner animation="grow" />
             </center>
           </>
         )}
@@ -211,7 +211,7 @@ const AdminDashboardMasters = () => {
         <hr />
 
         <ModalForm
-          size='sm'
+          size="sm"
           show={showAddForm}
           title={'Add New Master'}
           okText={'Create'}
@@ -224,8 +224,8 @@ const AdminDashboardMasters = () => {
               <FormGroup>
                 <Form.Label>Master email:</Form.Label>
                 <FormControl
-                  type='email'
-                  name='masterEmail'
+                  type="email"
+                  name="masterEmail"
                   autoFocus
                   required
                   onChange={onMasterEmailChange}
@@ -236,15 +236,15 @@ const AdminDashboardMasters = () => {
               <FormGroup>
                 <Form.Label>Master name:</Form.Label>
                 <FormControl
-                  type='text'
-                  name='masterName'
+                  type="text"
+                  name="masterName"
                   required
                   onChange={onMasterNameChange}
                   value={newMaster.name}
                   disabled={pending}
                 />
               </FormGroup>
-              <FormGroup className='ms-3'>
+              <FormGroup className="ms-3">
                 <Form.Label>Rating:</Form.Label>
                 <StarRating
                   onRatingChange={onMasterRatingChange}
@@ -255,14 +255,14 @@ const AdminDashboardMasters = () => {
                 />
               </FormGroup>
 
-              <FormGroup className='ms-3'>
+              <FormGroup className="ms-3">
                 <Form.Label>Master work cities:</Form.Label>
                 <Multiselect
                   onSelect={onMasterCitySelect}
                   onRemove={onMasterCityRemove}
                   options={cities}
                   selectedValues={newMaster.cities}
-                  displayValue='name'
+                  displayValue="name"
                   disable={pending}
                 />
               </FormGroup>

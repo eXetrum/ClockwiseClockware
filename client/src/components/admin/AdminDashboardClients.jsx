@@ -115,7 +115,7 @@ const AdminDashboardClients = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
@@ -123,9 +123,9 @@ const AdminDashboardClients = () => {
 
         {isComponentReady && (
           <>
-            <Row className='justify-content-md-center'>
-              <Col md='auto'>
-                <Link to='#'>
+            <Row className="justify-content-md-center">
+              <Col md="auto">
+                <Link to="#">
                   <AddCircleOutlineOutlinedIcon onClick={() => setShowAddForm(true)} />
                 </Link>
               </Col>
@@ -137,7 +137,7 @@ const AdminDashboardClients = () => {
         <hr />
 
         <ModalForm
-          size='sm'
+          size="sm"
           show={showAddForm}
           title={'Add New Client'}
           okText={'Create'}
@@ -150,8 +150,8 @@ const AdminDashboardClients = () => {
               <FormGroup>
                 <Form.Label>Client email:</Form.Label>
                 <FormControl
-                  type='text'
-                  name='clientEmail'
+                  type="text"
+                  name="clientEmail"
                   autoFocus
                   onChange={onClientEmailChange}
                   value={newClient.email}
@@ -160,7 +160,7 @@ const AdminDashboardClients = () => {
               </FormGroup>
               <FormGroup>
                 <Form.Label>Client name:</Form.Label>
-                <FormControl type='text' name='clientName' onChange={onClientNameChange} value={newClient.name} disabled={pending} />
+                <FormControl type="text" name="clientName" onChange={onClientNameChange} value={newClient.name} disabled={pending} />
               </FormGroup>
             </>
           }

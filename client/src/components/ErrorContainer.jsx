@@ -9,10 +9,10 @@ const ErrorContainer = ({ error = null }) => {
   if (error == null) return null;
 
   const getIconByError = (error) => {
-    if (error?.code === 'ERR_NETWORK') return <CloudOffIcon fontSize='large' />;
-    if (error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 403) return <BlockOutlinedIcon fontSize='large' />;
-    if (error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 404) return <ErrorOutlineOutlinedIcon fontSize='large' />;
-    if (error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 400) return <SyncProblemIcon fontSize='large' />;
+    if (error?.code === 'ERR_NETWORK') return <CloudOffIcon fontSize="large" />;
+    if (error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 403) return <BlockOutlinedIcon fontSize="large" />;
+    if (error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 404) return <ErrorOutlineOutlinedIcon fontSize="large" />;
+    if (error?.code === 'ERR_BAD_REQUEST' && error?.response?.status === 400) return <SyncProblemIcon fontSize="large" />;
     return null;
   };
 
@@ -21,9 +21,9 @@ const ErrorContainer = ({ error = null }) => {
 
   return (
     <>
-      <Row className='justify-content-md-center'>
-        <Col md='auto'>
-          <Alert key='danger' variant='danger' className='m-0'>
+      <Row className="justify-content-md-center">
+        <Col md="auto">
+          <Alert key="danger" variant="danger" className="m-0">
             {ErrorIcon}
             &nbsp;
             {error?.response?.data?.detail?.toString() || error?.response?.statusText || error?.message || error?.toString()}

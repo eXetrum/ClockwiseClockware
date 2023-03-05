@@ -98,25 +98,25 @@ const AdminEditClient = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
         {isError && <ErrorContainer error={error} />}
 
         {isComponentReady && (
-          <Row className='justify-content-md-center'>
-            <Col md='auto'>
-              <Form inline='true' className='d-flex align-items-end' onSubmit={onFormSubmit}>
+          <Row className="justify-content-md-center">
+            <Col md="auto">
+              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                 <FormGroup>
                   <Form.Label>Client email:</Form.Label>
-                  <FormControl type='email' name='clientEmail' onChange={onClientEmailChange} value={client.email} disabled={pending} />
+                  <FormControl type="email" name="clientEmail" onChange={onClientEmailChange} value={client.email} disabled={pending} />
                 </FormGroup>
                 <FormGroup>
                   <Form.Label>Client name:</Form.Label>
-                  <FormControl type='text' name='clientName' onChange={onClientNameChange} value={client.name} disabled={pending} />
+                  <FormControl type="text" name="clientName" onChange={onClientNameChange} value={client.name} disabled={pending} />
                 </FormGroup>
-                <Button className='ms-2' type='submit' variant='success' disabled={!isFormValid()}>
+                <Button className="ms-2" type="submit" variant="success" disabled={!isFormValid()}>
                   Save
                 </Button>
               </Form>

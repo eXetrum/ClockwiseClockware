@@ -36,20 +36,20 @@ const App = () => {
       <BrowserRouter>
         <AxiosInterceptor>
           <Routes>
-            <Route exact path='/' element={<Home />} />
-            <Route exact path='/login' element={<Login />} />
-            <Route exact path='/logout' element={<Logout />} />
-            <Route exact path='/order' element={<Order />} />
-            <Route exact path='/profile' element={protect(<UserProfile />)} />
-            <Route exact path='/admin/cities' element={protect(<AdminDashboardCities />)} />
-            <Route exact path='/admin/cities/:id' element={protect(<AdminEditCity />)} />
-            <Route exact path='/admin/masters' element={protect(<AdminDashboardMasters />)} />
-            <Route exact path='/admin/masters/:id' element={protect(<AdminEditMaster />)} />
-            <Route exact path='/admin/clients' element={protect(<AdminDashboardClients />)} />
-            <Route exact path='/admin/clients/:id' element={protect(<AdminEditClient />)} />
-            <Route exact path='/admin/orders' element={protect(<AdminDashboardOrders />)} />
-            <Route exact path='/admin/orders/:id' element={protect(<AdminEditOrder />)} />
-            <Route path='*' element={<Navigate to='/' />} />
+            <Route exact path="/" element={<Home />} />
+            <Route exact path="/login" element={<Login />} />
+            <Route exact path="/logout" element={<Logout />} />
+            <Route exact path="/order" element={<Order />} />
+            <Route exact path="/profile" element={protect(<UserProfile />)} />
+            <Route exact path="/admin/cities" element={protect(<AdminDashboardCities />)} />
+            <Route exact path="/admin/cities/:id" element={protect(<AdminEditCity />)} />
+            <Route exact path="/admin/masters" element={protect(<AdminDashboardMasters />)} />
+            <Route exact path="/admin/masters/:id" element={protect(<AdminEditMaster />)} />
+            <Route exact path="/admin/clients" element={protect(<AdminDashboardClients />)} />
+            <Route exact path="/admin/clients/:id" element={protect(<AdminEditClient />)} />
+            <Route exact path="/admin/orders" element={protect(<AdminDashboardOrders />)} />
+            <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrder />)} />
+            <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </AxiosInterceptor>
       </BrowserRouter>

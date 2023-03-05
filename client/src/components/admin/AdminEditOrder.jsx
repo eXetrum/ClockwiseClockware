@@ -318,7 +318,7 @@ const AdminEditOrder = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
@@ -326,11 +326,11 @@ const AdminEditOrder = () => {
 
         {isFormReady && (
           <>
-            <Row className='justify-content-md-center'>
-              <Col xs lg='6'>
+            <Row className="justify-content-md-center">
+              <Col xs lg="6">
                 <Form onSubmit={onFormSubmit}>
                   <hr />
-                  <FormGroup className='mb-3'>
+                  <FormGroup className="mb-3">
                     <Row xs={1} md={2}>
                       <Col>
                         <Form.Label>Client:</Form.Label>
@@ -338,15 +338,15 @@ const AdminEditOrder = () => {
                     </Row>
                     <Row>
                       <Col>
-                        <FormControl type='text' name='clientName' value={client.name} disabled={true} />
+                        <FormControl type="text" name="clientName" value={client.name} disabled={true} />
                       </Col>
                       <Col>
-                        <FormControl type='email' name='clientEmail' value={client.email} disabled={true} />
+                        <FormControl type="email" name="clientEmail" value={client.email} disabled={true} />
                       </Col>
                     </Row>
                   </FormGroup>
                   <hr />
-                  <FormGroup className='mb-3'>
+                  <FormGroup className="mb-3">
                     <Row xs={1} md={2}>
                       <Col>
                         <Form.Label>Watch Type:</Form.Label>
@@ -355,8 +355,8 @@ const AdminEditOrder = () => {
                         {watches.map((item) => (
                           <Form.Check
                             key={item.id}
-                            type='radio'
-                            name='watch'
+                            type="radio"
+                            name="watch"
                             label={item.name}
                             checked={watch.id === item.id}
                             inline
@@ -369,14 +369,14 @@ const AdminEditOrder = () => {
                     </Row>
                   </FormGroup>
                   <hr />
-                  <FormGroup className='mb-4'>
+                  <FormGroup className="mb-4">
                     <Row xs={1} md={2}>
                       <Col>
                         <Form.Label>City:</Form.Label>
                       </Col>
                       <Col>
                         <Multiselect
-                          displayValue='name'
+                          displayValue="name"
                           onSelect={onOrderCitySelect}
                           onRemove={onOrderCityRemove}
                           options={cities}
@@ -388,10 +388,10 @@ const AdminEditOrder = () => {
                     </Row>
                   </FormGroup>
                   <hr />
-                  <FormGroup className='mb-3'>
+                  <FormGroup className="mb-3">
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <DateTimePicker
-                        label='DateTimePicker'
+                        label="DateTimePicker"
                         renderInput={(props) => <TextField {...props} />}
                         views={['year', 'month', 'day', 'hours']}
                         onChange={onOrderDateChange}
@@ -412,10 +412,10 @@ const AdminEditOrder = () => {
                   </FormGroup>
                   <hr />
 
-                  <FormGroup className='mb-4'>
+                  <FormGroup className="mb-4">
                     {!isMasterAssigned && (
                       <Row xs={1} md={3}>
-                        <Col md='auto'>Master is not assigned yet</Col>
+                        <Col md="auto">Master is not assigned yet</Col>
                       </Row>
                     )}
                     {isMasterAssigned && (
@@ -427,10 +427,10 @@ const AdminEditOrder = () => {
                         </Row>
                         <Row>
                           <Col>
-                            <FormControl type='text' name='masterName' value={master.name} disabled={true} />
+                            <FormControl type="text" name="masterName" value={master.name} disabled={true} />
                           </Col>
                           <Col>
-                            <FormControl type='email' name='masterEmail' value={master.email} disabled={true} />
+                            <FormControl type="email" name="masterEmail" value={master.email} disabled={true} />
                           </Col>
                           <Col>
                             <StarRating value={master.rating} readonly={true} />
@@ -439,9 +439,9 @@ const AdminEditOrder = () => {
                       </>
                     )}
 
-                    <Row xs={1} md={2} className='mt-4'>
+                    <Row xs={1} md={2} className="mt-4">
                       <Col md={{ span: 8, offset: 8 }}>
-                        <Button className='mb-2' variant='warning' onClick={onFindMasterBtnClick} disabled={!isOrderPrepared}>
+                        <Button className="mb-2" variant="warning" onClick={onFindMasterBtnClick} disabled={!isOrderPrepared}>
                           Find New Master
                         </Button>
                       </Col>
@@ -449,14 +449,14 @@ const AdminEditOrder = () => {
                   </FormGroup>
                   <hr />
                   <FormGroup>
-                    <Row xs={1} md={2} className='justify-content-md-center mt-4'>
+                    <Row xs={1} md={2} className="justify-content-md-center mt-4">
                       <Col>
-                        <Button className='mb-3' onClick={onResetBtnClick}>
+                        <Button className="mb-3" onClick={onResetBtnClick}>
                           Reset
                         </Button>
                       </Col>
                       <Col>
-                        <Button className='mb-3' type='submit' variant='success' disabled={!isOrderReady}>
+                        <Button className="mb-3" type="submit" variant="success" disabled={!isOrderReady}>
                           Save
                         </Button>
                       </Col>
@@ -469,17 +469,17 @@ const AdminEditOrder = () => {
             {masters && (
               <div>
                 <hr />
-                <Row className='justify-content-md-center mt-4'>
+                <Row className="justify-content-md-center mt-4">
                   {masters.map((master) => (
-                    <Col key={master.id} md='auto' onClick={() => onSelectMaster(master)}>
-                      <Card className='mb-3' style={{ width: '18rem' }}>
+                    <Col key={master.id} md="auto" onClick={() => onSelectMaster(master)}>
+                      <Card className="mb-3" style={{ width: '18rem' }}>
                         <Card.Body>
                           <Card.Title>{master.name}</Card.Title>
-                          <Card.Subtitle className='mb-2 text-muted'>{master.email}</Card.Subtitle>
+                          <Card.Subtitle className="mb-2 text-muted">{master.email}</Card.Subtitle>
                           <StarRating value={master.rating} readonly={true} />
                           <Card.Text>
                             {master.cities.map((city) => (
-                              <Badge bg='info' className='p-2 m-1' key={city.id}>
+                              <Badge bg="info" className="p-2 m-1" key={city.id}>
                                 {city.name}
                               </Badge>
                             ))}
@@ -490,8 +490,8 @@ const AdminEditOrder = () => {
                   ))}
 
                   {!isMasterAssigned && masters.length === 0 && (
-                    <Row className='justify-content-md-center'>
-                      <Col md='auto'>
+                    <Row className="justify-content-md-center">
+                      <Col md="auto">
                         <Alert>No free masters available for specified city and date time</Alert>
                       </Col>
                     </Row>

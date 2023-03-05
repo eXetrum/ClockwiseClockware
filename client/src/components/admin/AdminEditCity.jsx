@@ -101,21 +101,21 @@ const AdminEditCity = () => {
 
         {isLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
         {isError && <ErrorContainer error={error} />}
 
         {isComponentReady && (
-          <Row className='justify-content-md-center'>
-            <Col md='auto'>
-              <Form inline='true' className='d-flex align-items-end' onSubmit={onFormSubmit}>
+          <Row className="justify-content-md-center">
+            <Col md="auto">
+              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                 <FormGroup>
                   <Form.Label>City:</Form.Label>
-                  <FormControl type='text' name='city' disabled={pending} value={newCityName} onChange={onCityNameChange} />
+                  <FormControl type="text" name="city" disabled={pending} value={newCityName} onChange={onCityNameChange} />
                 </FormGroup>
-                <Button className='ms-2' type='submit' variant='success' disabled={!newCityName || pending}>
+                <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>
                   Save
                 </Button>
               </Form>
