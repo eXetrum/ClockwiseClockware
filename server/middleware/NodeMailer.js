@@ -36,6 +36,7 @@ const sendMail = async ({ orderId, client, master, watch, city, startDate, endDa
                 orderId,
                 clientName: client.name,
                 masterName: master.name,
+                masterEmail: master.email,
                 watchName: watch.name,
                 cityName: city.name,
                 startDate,
