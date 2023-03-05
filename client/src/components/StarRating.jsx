@@ -28,12 +28,12 @@ const StarRating = ({ total = 5, value = 0, readonly = false, onRatingChange = n
   };
 
   return (
-    <div className='star-rating'>
+    <div className="star-rating">
       {[...Array(total)].map((star, index) => {
         index += 1;
         return (
           <button
-            type='button'
+            type="button"
             key={index}
             className={index <= ((rating && hover) || hover) ? 'on' : 'off'}
             onClick={() => onClick(index)}
@@ -41,7 +41,7 @@ const StarRating = ({ total = 5, value = 0, readonly = false, onRatingChange = n
             onMouseEnter={() => onMouseEnter(index)}
             onMouseLeave={onMouseLeave}
           >
-            <span className='star'>&#9733;</span>
+            <span className="star">&#9733;</span>
           </button>
         );
       })}

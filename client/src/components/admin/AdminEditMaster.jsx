@@ -9,40 +9,34 @@ import Header from '../Header';
 import ErrorContainer from '../ErrorContainer';
 import { getCities } from '../../api/cities';
 import { getMasterById, updateMasterById } from '../../api/masters';
+import { isGlobalError, getErrorText } from '../../utils/error';
 
 const AdminEditMaster = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [cities, setCities] = useState(null);
-  const [originalMaster, setOriginalMaster] = useState(null);
-  const [master, setMaster] = useState(null);
-  const [pending, setPending] = useState(true);
+  const initEmptyMaster = () => ({ name: '', email: '', rating: 0, cities: [] });
+
+  const [cities, setCities] = useState([]);
+  const [master, setMaster] = useState(initEmptyMaster());
+  const [originalMaster, setOriginalMaster] = useState(initEmptyMaster());
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const isLoading = useMemo(() => (cities === null || master === null) && error === null, [cities, master, error]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => cities !== null && master !== null, [cities, master]);
+  const [pending, setPending] = useState(false);
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
+  const isFormValid = useCallback(() => master.name && master.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(master.email), [master]);
 
-  const isFormValid = useCallback(() => master && master.name && /\w{1,}@\w{1,}\.\w{2,}/gi.test(master.email), [master]);
-
-  const fetchCities = async (abortController) => {
+  const fetchInitialData = async (id, abortController) => {
+    setInitialLoading(true);
     try {
-      const response = await getCities({ abortController });
+      let response = await getCities({ abortController });
       if (response?.data?.cities) {
         const { cities } = response.data;
         setCities(cities);
       }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setPending(false);
-    }
-  };
 
-  const fetchMasterById = async (id, abortController) => {
-    try {
-      const response = await getMasterById({ id, abortController });
+      response = await getMasterById({ id, abortController });
       if (response?.data?.master) {
         const { master } = response.data;
         setMaster(master);
@@ -51,11 +45,12 @@ const AdminEditMaster = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
   const doUpdateMasterById = async (id, master) => {
+    setPending(true);
     try {
       const response = await updateMasterById({ id, master });
       if ([200, 204].includes(response?.status)) {
@@ -64,14 +59,9 @@ const AdminEditMaster = () => {
         enqueueSnackbar('Master updated', { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setMaster(null);
-        setOriginalMaster(null);
-      } else {
-        setMaster(originalMaster);
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      setMaster(originalMaster);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -79,18 +69,7 @@ const AdminEditMaster = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    setPending(true);
-    fetchCities(abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [id, closeSnackbar]);
-
-  useEffect(() => {
-    const abortController = new AbortController();
-    setPending(true);
-    fetchMasterById(id, abortController);
+    fetchInitialData(id, abortController);
     return () => {
       abortController.abort();
       closeSnackbar();
@@ -99,8 +78,6 @@ const AdminEditMaster = () => {
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    setPending(true);
-    setError(null);
     doUpdateMasterById(id, master);
   };
 
@@ -123,27 +100,27 @@ const AdminEditMaster = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && (
-          <Row className='justify-content-md-center'>
+          <Row className="justify-content-md-center">
             <Col xs>
-              <Form inline='true' className='d-flex align-items-end' onSubmit={onFormSubmit}>
+              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                 <FormGroup>
                   <Form.Label>Master email:</Form.Label>
-                  <FormControl type='email' name='masterEmail' onChange={onMasterEmailChange} value={master.email} disabled={pending} />
+                  <FormControl type="email" name="masterEmail" onChange={onMasterEmailChange} value={master.email} disabled={pending} />
                 </FormGroup>
                 <FormGroup>
                   <Form.Label>Master name:</Form.Label>
-                  <FormControl type='text' name='masterName' onChange={onMasterNameChange} value={master.name} disabled={pending} />
+                  <FormControl type="text" name="masterName" onChange={onMasterNameChange} value={master.name} disabled={pending} />
                 </FormGroup>
-                <FormGroup className='ms-3'>
+                <FormGroup className="ms-3">
                   <Form.Label>Rating:</Form.Label>
                   <StarRating
                     onRatingChange={onMasterRatingChange}
@@ -153,19 +130,19 @@ const AdminEditMaster = () => {
                     readonly={pending}
                   />
                 </FormGroup>
-                <FormGroup className='ms-3'>
+                <FormGroup className="ms-3">
                   <Form.Label>Master work cities:</Form.Label>
                   <Multiselect
                     onSelect={onMasterCitySelect}
                     onRemove={onMasterCityRemove}
                     options={cities}
                     selectedValues={master.cities}
-                    displayValue='name'
+                    displayValue="name"
                     disable={pending}
                   />
                 </FormGroup>
 
-                <Button type='submit' className='ms-2 btn btn-success' disabled={!isFormValid()}>
+                <Button type="submit" className="ms-2 btn btn-success" disabled={pending || !isFormValid()}>
                   Save
                 </Button>
               </Form>

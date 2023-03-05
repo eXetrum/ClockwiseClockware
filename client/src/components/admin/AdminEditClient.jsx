@@ -6,28 +6,25 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Header from '../Header';
 import ErrorContainer from '../ErrorContainer';
 import { getClientById, updateClientById } from '../../api/clients';
+import { isGlobalError, getErrorText } from '../../utils/error';
 
 const AdminEditClient = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [client, setClient] = useState(null);
-  const [originalClient, setOriginalClient] = useState(null);
-  const [pending, setPending] = useState(true);
+  const initEmptyClient = () => ({ name: '', email: '' });
+
+  const [client, setClient] = useState(initEmptyClient());
+  const [originalClient, setOriginalClient] = useState(initEmptyClient());
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const isLoading = useMemo(() => client === null && pending, [client, pending]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => client !== null, [client]);
-
-  const isFormValid = useCallback(() => client && client?.name?.length >= 3 && /\w{1,}@\w{1,}\.\w{2,}/gi.test(client?.email), [client]);
-
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
+  const [pending, setPending] = useState(false);
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
+  const isFormValid = useCallback(() => client.name.length >= 3 && /\w{1,}@\w{1,}\.\w{2,}/gi.test(client.email), [client]);
 
   const fetchClienyById = async (id, abortController) => {
+    setInitialLoading(true);
     try {
       const response = await getClientById({ id, abortController });
       if (response?.data?.client) {
@@ -38,11 +35,12 @@ const AdminEditClient = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
   const doUpdateClientById = async (id, client) => {
+    setPending(true);
     try {
       const response = await updateClientById({ id, client });
       if ([200, 204].includes(response?.status)) {
@@ -51,14 +49,9 @@ const AdminEditClient = () => {
         enqueueSnackbar('Cleint updated', { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setClient(null);
-        setOriginalClient(null);
-      } else {
-        setClient(originalClient);
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      setClient(originalClient);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -66,7 +59,6 @@ const AdminEditClient = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    resetBeforeApiCall();
     fetchClienyById(id, abortController);
     return () => {
       abortController.abort();
@@ -76,7 +68,6 @@ const AdminEditClient = () => {
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    resetBeforeApiCall();
     doUpdateClientById(id, client);
   };
 
@@ -96,27 +87,27 @@ const AdminEditClient = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && (
-          <Row className='justify-content-md-center'>
-            <Col md='auto'>
-              <Form inline='true' className='d-flex align-items-end' onSubmit={onFormSubmit}>
+          <Row className="justify-content-md-center">
+            <Col md="auto">
+              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
                 <FormGroup>
                   <Form.Label>Client email:</Form.Label>
-                  <FormControl type='email' name='clientEmail' onChange={onClientEmailChange} value={client.email} disabled={pending} />
+                  <FormControl type="email" name="clientEmail" onChange={onClientEmailChange} value={client.email} disabled={pending} />
                 </FormGroup>
                 <FormGroup>
                   <Form.Label>Client name:</Form.Label>
-                  <FormControl type='text' name='clientName' onChange={onClientNameChange} value={client.name} disabled={pending} />
+                  <FormControl type="text" name="clientName" onChange={onClientNameChange} value={client.name} disabled={pending} />
                 </FormGroup>
-                <Button className='ms-2' type='submit' variant='success' disabled={!isFormValid()}>
+                <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
                   Save
                 </Button>
               </Form>

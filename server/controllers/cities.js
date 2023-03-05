@@ -83,7 +83,7 @@ const get = [
 
             const { id } = req.params;
             const city = await City.findOne({ where: { id } });
-            if (!city) return res.status(404).json({ detail: 'City not found' }).end();
+            if (!city) return res.status(404).json({ detail: '~City not found~' }).end();
 
             res.status(200).json({ city }).end();
         } catch (e) {

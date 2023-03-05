@@ -15,6 +15,7 @@ import { getCities } from '../api/cities';
 import { getWatches } from '../api/watches';
 import { getAvailableMasters, createOrder } from '../api/orders';
 import { dateToNearestHour } from '../utils/dateTime';
+import { isGlobalError, getErrorText } from '../utils/error';
 
 const Order = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -30,56 +31,48 @@ const Order = () => {
     };
   };
 
+  const [watches, setWatches] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [masters, setMasters] = useState([]);
+  const [isShowMasters, setShowMasters] = useState(false);
   const [order, setOrder] = useState(initEmptyOrder());
+
   const [currentDate, setCurrentDate] = useState(dateToNearestHour());
-  const [watches, setWatches] = useState(null);
-  const [cities, setCities] = useState(null);
-  const [masters, setMasters] = useState(null);
   const [orderConfirmationMessage, setOrderConfirmationMessage] = useState(null);
   const [dateTimeError, setDateTimeError] = useState(null);
-  const [pending, setPending] = useState(true);
+
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const isLoading = useMemo(() => (watches === null || cities === null) && pending, [watches, cities, pending]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => watches !== null && cities !== null, [watches, cities]);
+  const [pending, setPending] = useState(false);
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
   const isDateTimeError = useMemo(
     () => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason),
     [dateTimeError],
   );
-  const isOrderConfirmationMessageReceived = useMemo(() => orderConfirmationMessage !== null, [orderConfirmationMessage]);
 
-  const isLoadingMasters = useMemo(() => masters === null && pending, [masters, pending]);
-  const isMasterListReady = useMemo(() => masters !== null && !pending, [masters, pending]);
-  const isAllMastersBussy = useMemo(() => masters?.length === 0, [masters]);
+  const isOrderConfirmationMessageReceived = useMemo(() => orderConfirmationMessage !== null, [orderConfirmationMessage]);
+  const isAllMastersBussy = useMemo(() => masters.length === 0, [masters]);
 
   const isValidEmail = (email) => /\w{1,}@\w{1,}\.\w{2,}/gi.test(email);
   const isValidName = (name) => name?.length >= 3;
 
   const isFormValid = useCallback(
-    () =>
-      isValidName(order?.client?.name) &&
-      isValidEmail(order?.client?.email) &&
-      order?.watch &&
-      order?.city &&
-      order?.startDate >= currentDate,
+    () => isValidName(order.client.name) && isValidEmail(order.client.email) && order.watch && order.city && order.startDate >= currentDate,
     [order, currentDate],
   );
 
   const setDefaultFormState = () => {
     setOrder(initEmptyOrder());
     setCurrentDate(dateToNearestHour());
-    setMasters(null);
+    setMasters([]);
+    setShowMasters(false);
     setOrderConfirmationMessage(null);
   };
 
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
-
   const fetchInitialData = async (abortController) => {
+    setInitialLoading(true);
     try {
       let response = await getWatches({ abortController });
       if (response?.data?.watches) {
@@ -95,11 +88,14 @@ const Order = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
   const fetchAvailableMasters = async (cityId, watchId, startDate) => {
+    setShowMasters(false);
+    setMasters([]);
+    setPending(true);
     try {
       const response = await getAvailableMasters({
         cityId,
@@ -108,21 +104,19 @@ const Order = () => {
       });
       if (response?.data?.masters) {
         const { masters } = response.data;
+        setShowMasters(true);
         setMasters(masters);
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.data?.detail) {
-        enqueueSnackbar(`Error: ${e.response.data.detail}`, {
-          variant: 'error',
-        });
-      }
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
   const doCreateOrder = async (order) => {
+    setPending(true);
     try {
       const response = await createOrder({ order });
       if (response.data.confirmation) {
@@ -131,12 +125,8 @@ const Order = () => {
         enqueueSnackbar('Order placed', { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.data?.detail) {
-        enqueueSnackbar(`Error: ${e.response.data.detail}`, {
-          variant: 'error',
-        });
-      }
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -153,38 +143,30 @@ const Order = () => {
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-
-    resetBeforeApiCall();
-    setMasters(null);
-
     fetchAvailableMasters(order.city.id, order.watch.id, order.startDate.getTime());
   };
 
-  const onClientEmailChange = (event) =>
-    setOrder((prev) => ({
-      ...prev,
-      client: { ...prev.client, email: event.target.value },
-    }));
-  const onClientNameChange = (event) =>
-    setOrder((prev) => ({
-      ...prev,
-      client: { ...prev.client, name: event.target.value },
-    }));
+  const onClientEmailChange = (event) => setOrder((prev) => ({ ...prev, client: { ...prev.client, email: event.target.value } }));
+  const onClientNameChange = (event) => setOrder((prev) => ({ ...prev, client: { ...prev.client, name: event.target.value } }));
   const onWatchTypeChange = (event, watch) => {
     setOrder((prev) => ({ ...prev, watch }));
-    setMasters(null);
+    setShowMasters(false);
+    setMasters([]);
   };
   const onOrderCitySelect = (selectedList, city) => {
     setOrder((prev) => ({ ...prev, city }));
-    setMasters(null);
+    setShowMasters(false);
+    setMasters([]);
   };
   const onOrderCityRemove = (selectedList, removedItem) => {
     setOrder((prev) => ({ ...prev, city: null }));
-    setMasters(null);
+    setShowMasters(false);
+    setMasters([]);
   };
   const onOrderDateChange = (newValue) => {
     setOrder((prev) => ({ ...prev, startDate: new Date(newValue) }));
-    setMasters(null);
+    setShowMasters(false);
+    setMasters([]);
   };
   const onOrderDateError = (reason) => {
     if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
@@ -204,8 +186,8 @@ const Order = () => {
 
     setOrder((prev) => ({ ...prev, master: master }));
 
-    resetBeforeApiCall();
-    setMasters(null);
+    setShowMasters(false);
+    setMasters([]);
 
     doCreateOrder({
       client: { ...order.client },
@@ -226,25 +208,25 @@ const Order = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
-            <Spinner animation='grow' />
+            <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && (
           <>
-            <Row className='justify-content-md-center'>
-              <Col xs lg='5'>
+            <Row className="justify-content-md-center">
+              <Col xs lg="5">
                 {!isOrderConfirmationMessageReceived && (
                   <Form onSubmit={onFormSubmit}>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <Form.Label>Email:</Form.Label>
                       <Form.Control
-                        type='email'
-                        name='email'
+                        type="email"
+                        name="email"
                         required
                         autoFocus
                         onChange={onClientEmailChange}
@@ -254,14 +236,14 @@ const Order = () => {
                         disabled={pending}
                       />
                       {order.client.email && (
-                        <Form.Control.Feedback type='invalid'>Please provide a valid email (username@host.domain)</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>
                       )}
                     </Form.Group>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <Form.Label>Name:</Form.Label>
                       <Form.Control
-                        type='text'
-                        name='name'
+                        type="text"
+                        name="name"
                         required
                         onChange={onClientNameChange}
                         value={order.client.name}
@@ -270,16 +252,16 @@ const Order = () => {
                         disabled={pending}
                       />
                       {order.client.name && (
-                        <Form.Control.Feedback type='invalid'>Please provide a valid name (min length 3).</Form.Control.Feedback>
+                        <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>
                       )}
                     </Form.Group>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <>
                         {watches.map((watch) => (
                           <Form.Check
                             key={watch.id}
-                            type='radio'
-                            name='watch'
+                            type="radio"
+                            name="watch"
                             label={watch.name}
                             inline
                             required
@@ -289,10 +271,10 @@ const Order = () => {
                         ))}
                       </>
                     </Form.Group>
-                    <Form.Group className='mb-4'>
+                    <Form.Group className="mb-4">
                       <Multiselect
-                        placeholder='City'
-                        displayValue='name'
+                        placeholder="City"
+                        displayValue="name"
                         onSelect={onOrderCitySelect}
                         onRemove={onOrderCityRemove}
                         options={cities}
@@ -301,10 +283,10 @@ const Order = () => {
                         disable={pending}
                       />
                     </Form.Group>
-                    <Form.Group className='mb-3'>
+                    <Form.Group className="mb-3">
                       <LocalizationProvider dateAdapter={AdapterDayjs}>
                         <DateTimePicker
-                          label='DateTimePicker'
+                          label="DateTimePicker"
                           renderInput={(props) => <TextField {...props} />}
                           views={['year', 'month', 'day', 'hours']}
                           onChange={onOrderDateChange}
@@ -323,16 +305,16 @@ const Order = () => {
                         </strong>
                       )}
                     </Form.Group>
-                    <Button className='mb-3' type='submit' variant='success' disabled={!isFormValid()}>
-                      {pending && <Spinner className='me-2' as='span' animation='grow' size='sm' role='status' aria-hidden='true' />}
+                    <Button className="mb-3" type="submit" variant="success" disabled={pending || !isFormValid()}>
+                      {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                       Search
                     </Button>
                   </Form>
                 )}
 
                 {isOrderConfirmationMessageReceived && (
-                  <Row className='justify-content-md-center'>
-                    <Col md='auto'>
+                  <Row className="justify-content-md-center">
+                    <Col md="auto">
                       <Alert variant={'info'}>
                         <p>Thank you ! Confirmation message was sent to your email. </p>
                         <Container>
@@ -344,43 +326,43 @@ const Order = () => {
                         </Container>
                       </Alert>
                     </Col>
-                    <Col md='auto'>
-                      <Button variant='primary' onClick={setDefaultFormState}>
-                        Create new order
-                      </Button>
-                    </Col>
                   </Row>
                 )}
               </Col>
             </Row>
+            <hr />
 
-            {isLoadingMasters && (
-              <center>
-                <Spinner animation='grow' />{' '}
-              </center>
-            )}
-            {isMasterListReady && (
+            {isOrderConfirmationMessageReceived ? (
+              <Row className="justify-content-md-center">
+                <Col md="auto">
+                  <Button variant="primary" onClick={setDefaultFormState}>
+                    Create new order
+                  </Button>
+                </Col>
+              </Row>
+            ) : null}
+
+            {isShowMasters && (
               <>
-                <Row className='justify-content-md-center'>
-                  <hr />
+                <Row className="justify-content-md-center">
                   {isAllMastersBussy && (
-                    <Row className='justify-content-md-center'>
-                      <Col md='auto'>
+                    <Row className="justify-content-md-center">
+                      <Col md="auto">
                         <Alert variant={'warning'}>There is no masters available at this moment which can handle your order</Alert>
                       </Col>
                     </Row>
                   )}
 
                   {masters.map((master) => (
-                    <Col key={master.id} md='auto' onClick={(e) => onSelectMaster(e, master)}>
-                      <Card className='mb-3' style={{ width: '18rem' }}>
+                    <Col key={master.id} md="auto" onClick={(e) => onSelectMaster(e, master)}>
+                      <Card className="mb-3" style={{ width: '18rem' }}>
                         <Card.Body>
                           <Card.Title>{master.name}</Card.Title>
-                          <Card.Subtitle className='mb-2 text-muted'>{master.email}</Card.Subtitle>
+                          <Card.Subtitle className="mb-2 text-muted">{master.email}</Card.Subtitle>
                           <StarRating value={master.rating} readonly={true} />
                           <Card.Text>
                             {master.cities.map((city) => (
-                              <Badge bg='info' className='p-2 m-1' key={city.id}>
+                              <Badge bg="info" className="p-2 m-1" key={city.id}>
                                 {city.name}
                               </Badge>
                             ))}
@@ -390,11 +372,11 @@ const Order = () => {
                     </Col>
                   ))}
                 </Row>
+                <hr />
               </>
             )}
           </>
         )}
-        <hr />
       </Container>
     </Container>
   );

@@ -7,52 +7,51 @@ const Header = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setUser(user);
+    setUser(getCurrentUser());
   }, []);
 
   return (
-    <Navbar bg='light' variant='light' expand='lg' className='mb-3'>
+    <Navbar bg="light" variant="light" expand="lg" className="mb-3">
       <Container>
-        <Navbar.Brand as={Link} to='/'>
+        <Navbar.Brand as={Link} to="/">
           Clockwise Clockware
         </Navbar.Brand>
-        <Navbar.Toggle aria-controls='admin-navbar-nav' />
-        <Navbar.Collapse id='admin-navbar-nav'>
+        <Navbar.Toggle aria-controls="admin-navbar-nav" />
+        <Navbar.Collapse id="admin-navbar-nav">
           {user && (
-            <Nav className='navbar-nav me-auto'>
-              <Nav.Link as={Link} to='/admin/cities'>
+            <Nav className="navbar-nav me-auto">
+              <Nav.Link as={Link} to="/admin/cities">
                 Cities
               </Nav.Link>
-              <Nav.Link as={Link} to='/admin/masters'>
+              <Nav.Link as={Link} to="/admin/masters">
                 Masters
               </Nav.Link>
-              <Nav.Link as={Link} to='/admin/clients'>
+              <Nav.Link as={Link} to="/admin/clients">
                 Clients
               </Nav.Link>
-              <Nav.Link as={Link} to='/admin/orders'>
+              <Nav.Link as={Link} to="/admin/orders">
                 {' '}
                 Orders
               </Nav.Link>
             </Nav>
           )}
 
-          <Nav className='navbar-nav ms-auto'>
-            <Nav.Link as={Link} to='/order'>
+          <Nav className="navbar-nav ms-auto">
+            <Nav.Link as={Link} to="/order">
               Order
             </Nav.Link>
             {user ? (
-              <NavDropdown title={user.email} id='basic-nav-dropdown'>
-                <NavDropdown.Item as={Link} to='/profile'>
+              <NavDropdown title={user.email} id="basic-nav-dropdown">
+                <NavDropdown.Item as={Link} to="/profile">
                   Profile
                 </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item as={Link} to='/logout'>
+                <NavDropdown.Item as={Link} to="/logout">
                   Logout
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Nav.Link as={Link} to='/login'>
+              <Nav.Link as={Link} to="/login">
                 Login
               </Nav.Link>
             )}
