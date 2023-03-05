@@ -29,10 +29,7 @@ const AdminDashboardMasters = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(
-    () => newMaster && newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email),
-    [newMaster],
-  );
+  const isFormValid = useCallback(() => newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email), [newMaster]);
 
   const fetchInitialData = async (abortController) => {
     setInitialLoading(true);

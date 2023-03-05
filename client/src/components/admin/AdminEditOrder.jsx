@@ -17,18 +17,24 @@ import { getCities } from '../../api/cities';
 import { getWatches } from '../../api/watches';
 import { getOrderById, updateOrderById, getAvailableMasters } from '../../api/orders';
 import { dateToNearestHour, addHours, dateRangesOverlap } from '../../utils/dateTime';
+import { isGlobalError, getErrorText } from '../../utils/error';
 
 const AdminEditOrder = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { id } = useParams();
 
-  const [watches, setWatches] = useState(null);
-  const [cities, setCities] = useState(null);
-  const [masters, setMasters] = useState(null);
+  const [watches, setWatches] = useState([]);
+  const [cities, setCities] = useState([]);
+  const [masters, setMasters] = useState([]);
+  const [isShowMasters, setShowMasters] = useState(false);
+
+  const [originalOrder, setOriginalOrder] = useState(null);
+  const [isInitialLoading, setInitialLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const [currentDate, setCurrentDate] = useState(null);
-  const [originalOrder, setOriginalOrder] = useState(null);
-  const [selectedCities, setSelectedCities] = useState(null);
+  const [selectedCities, setSelectedCities] = useState([]);
+  const [lastAssignedCity, setLastAssignedCity] = useState(null);
 
   // Order params
   const [client, setClient] = useState(null);
@@ -36,25 +42,12 @@ const AdminEditOrder = () => {
   const [city, setCity] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [master, setMaster] = useState(null);
-  const [lastAssignedCity, setLastAssignedCity] = useState(null);
 
-  //const [showMasters, setShowMasters] = useState(true);
   const [dateTimeError, setDateTimeError] = useState(null);
-
-  const [pendingInitial, setPendingInitial] = useState(true);
-  const [pending, setPending] = useState(false);
-  const [error, setError] = useState(null);
-
-  const isLoading = useMemo(
-    () => (watches === null || cities === null || originalOrder === null) && pendingInitial,
-    [watches, cities, originalOrder, pendingInitial],
-  );
-  const isError = useMemo(() => error !== null, [error]);
   const isDateTimeError = useMemo(
     () => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason),
     [dateTimeError],
   );
-  const isFormReady = useMemo(() => watches !== null && cities !== null && originalOrder !== null, [watches, cities, originalOrder]);
 
   const isOriginalOrderAssigned = useMemo(() => originalOrder !== null, [originalOrder]);
   const isClientAssigned = useMemo(() => client !== null, [client]);
@@ -71,6 +64,9 @@ const AdminEditOrder = () => {
 
   // Ready to PUT
   const isOrderReady = useMemo(() => isOrderPrepared && isMasterAssigned, [isOrderPrepared, isMasterAssigned]);
+
+  const [pending, setPending] = useState(false);
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null && client !== null, [isInitialLoading, error, client]);
 
   const resetOrigOrder = (order) => {
     setClient(order.client);
@@ -97,12 +93,19 @@ const AdminEditOrder = () => {
   };
 
   const fetchInitialData = useCallback(async (id, abortController) => {
+    setInitialLoading(true);
     try {
       let response = await getWatches({ abortController });
-      setWatches(response?.data?.watches ?? null);
+      if (response?.data?.watches) {
+        const { watches } = response.data;
+        setWatches(watches);
+      }
 
       response = await getCities({ abortController });
-      setCities(response?.data?.cities ?? null);
+      if (response?.data?.cities) {
+        const { cities } = response?.data;
+        setCities(cities);
+      }
 
       response = await getOrderById({ id, abortController });
       if (response?.data?.order) {
@@ -112,11 +115,14 @@ const AdminEditOrder = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPendingInitial(false);
+      setInitialLoading(false);
     }
   }, []);
 
   const fetchAvailableMasters = async ({ city, watch, startDate }) => {
+    setShowMasters(false);
+    setMasters([]);
+    setPending(true);
     try {
       const response = await getAvailableMasters({
         cityId: city.id,
@@ -127,6 +133,7 @@ const AdminEditOrder = () => {
         const { masters } = response.data;
         // Check if original master can handle current order
         const masterInMasterList = masters.find((item) => item.id === originalOrder.master.id) != null;
+        setShowMasters(true);
         if (
           !masterInMasterList &&
           ensureMasterCanHandleOrder({
@@ -142,13 +149,16 @@ const AdminEditOrder = () => {
         setMasters(masters);
       }
     } catch (e) {
-      setError(e);
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      resetOrigOrder(originalOrder);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
   const doUpdateOrderById = async ({ id, watch, city, master, startDate }) => {
+    setPending(true);
     try {
       const order = {
         watchId: watch.id,
@@ -162,16 +172,9 @@ const AdminEditOrder = () => {
         enqueueSnackbar('Order updated', { variant: 'success' });
       }
     } catch (e) {
-      if ([401, 403, 404].includes(e?.response?.status)) {
-        setOriginalOrder(null);
-        setError(e);
-      } else {
-        resetOrigOrder(originalOrder);
-        setError(null);
-        enqueueSnackbar(`Error: ${e.response.data.detail}`, {
-          variant: 'error',
-        });
-      }
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      resetOrigOrder(originalOrder);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -189,7 +192,6 @@ const AdminEditOrder = () => {
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    setPending(true);
     doUpdateOrderById({ id, watch, city, master, startDate });
   };
 
@@ -206,7 +208,8 @@ const AdminEditOrder = () => {
     ) {
       setCity(selectedCity);
       setSelectedCities([selectedCity]);
-      setMasters(null);
+      setMasters([]);
+      setShowMasters(false);
       return;
     }
 
@@ -234,7 +237,8 @@ const AdminEditOrder = () => {
     setLastAssignedCity(removedItem);
     setCity(null);
     setSelectedCities([]);
-    setMasters(null);
+    setMasters([]);
+    setShowMasters(false);
   };
 
   const onWatchTypeChange = async (event, newWatch) => {
@@ -249,7 +253,8 @@ const AdminEditOrder = () => {
       })
     ) {
       setWatch(newWatch);
-      setMasters(null);
+      setMasters([]);
+      setShowMasters(false);
       return;
     }
 
@@ -261,14 +266,14 @@ const AdminEditOrder = () => {
 
     if (result) {
       setWatch(newWatch);
-      setMasters(null);
       return fetchAvailableMasters({ city, watch: newWatch, startDate });
     }
   };
 
   const onOrderDateChange = (newValue) => {
     setStartDate(new Date(newValue));
-    setMasters(null);
+    setMasters([]);
+    setShowMasters(false);
   };
 
   const onOrderDateError = (reason) => {
@@ -282,14 +287,14 @@ const AdminEditOrder = () => {
   const onFindMasterBtnClick = (event) => {
     event.preventDefault();
     setMaster(null);
-    setMasters(null);
     fetchAvailableMasters({ city, watch, startDate });
   };
 
   const onResetBtnClick = (event) => {
     event.preventDefault();
     resetOrigOrder(originalOrder);
-    setMasters(null);
+    setMasters([]);
+    setShowMasters(false);
   };
 
   const onSelectMaster = async (master) => {
@@ -300,7 +305,8 @@ const AdminEditOrder = () => {
     });
     if (!result) return;
     setMaster(master);
-    setMasters(null);
+    setMasters([]);
+    setShowMasters(false);
   };
 
   return (
@@ -316,15 +322,15 @@ const AdminEditOrder = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
             <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
-        {isFormReady && (
+        {isComponentReady && (
           <>
             <Row className="justify-content-md-center">
               <Col xs lg="6">
@@ -441,7 +447,7 @@ const AdminEditOrder = () => {
 
                     <Row xs={1} md={2} className="mt-4">
                       <Col md={{ span: 8, offset: 8 }}>
-                        <Button className="mb-2" variant="warning" onClick={onFindMasterBtnClick} disabled={!isOrderPrepared}>
+                        <Button className="mb-2" variant="warning" onClick={onFindMasterBtnClick} disabled={pending || !isOrderPrepared}>
                           Find New Master
                         </Button>
                       </Col>
@@ -456,7 +462,7 @@ const AdminEditOrder = () => {
                         </Button>
                       </Col>
                       <Col>
-                        <Button className="mb-3" type="submit" variant="success" disabled={!isOrderReady}>
+                        <Button className="mb-3" type="submit" variant="success" disabled={pending || !isOrderReady}>
                           Save
                         </Button>
                       </Col>
@@ -466,7 +472,7 @@ const AdminEditOrder = () => {
               </Col>
             </Row>
 
-            {masters && (
+            {isShowMasters && (
               <div>
                 <hr />
                 <Row className="justify-content-md-center mt-4">
