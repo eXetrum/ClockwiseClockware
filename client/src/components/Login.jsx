@@ -17,7 +17,7 @@ const Login = () => {
   const [redirect, setRedirect] = useState(isLoggedIn());
   const [error, setError] = useState(null);
 
-  const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/gi.test(user?.email) && user.password, [user]);
+  const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/gi.test(user.email) && user.password, [user]);
 
   let abortController = null;
 
@@ -34,9 +34,7 @@ const Login = () => {
       }
     } catch (e) {
       setError(e);
-      if (e?.response?.data?.detail) {
-        enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
-      }
+      if (e?.response?.data?.detail) enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
