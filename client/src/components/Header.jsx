@@ -7,8 +7,7 @@ const Header = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setUser(user);
+    setUser(getCurrentUser());
   }, []);
 
   return (
