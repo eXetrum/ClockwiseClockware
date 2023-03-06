@@ -15,3 +15,6 @@
 ### `cd client`
 ### `npm install`
 ### `npm start`
+
+# Run both: server & client (root dir)
+### `npm run dev`
