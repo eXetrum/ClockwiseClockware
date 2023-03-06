@@ -158,6 +158,7 @@ const create = [
             order.client.name = order.client.name.trim();
             order.client.email = order.client.email.trim();
             order.endDate = order.startDate + watch.repairTime * MS_PER_HOUR;
+            order.totalCost = city.pricePerHour * watch.repairTime;
 
             const clientDateTimeStart = moment.unix((order.startDate + order.timezone * MS_PER_HOUR) / 1000);
             const clientDateTimeEnd = moment.unix((order.startDate + order.timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
@@ -308,6 +309,11 @@ const update = [
             if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
+    body('order.status')
+        .exists()
+        .withMessage('order.status required')
+        .isIn(['confirmed', 'completed', 'canceled'])
+        .withMessage('Incorrect order status'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -336,6 +342,7 @@ const update = [
 
             order.startDate = dateToNearestHour(order.startDate);
             order.endDate = order.startDate + watch.repairTime * MS_PER_HOUR;
+            order.totalCost = city.pricePerHour * watch.repairTime;
 
             const [affectedRows, result] = await Order.update(order, { where: { id }, returning: true, limit: 1 });
             if (!affectedRows) return res.status(404).json({ detail: '~Order not found~' }).end();
