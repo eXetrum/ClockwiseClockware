@@ -1,0 +1,26 @@
+{
+  "name": "ClockwiseClockware",
+  "version": "1.0.0",
+  "description": "LEZGOOO",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+	"start-client": "cd client && npm start",
+	"start-server": "cd server && npm run dev",
+    "dev": "npm-run-all --parallel start-client start-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eXetrum/ClockwiseClockware.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/eXetrum/ClockwiseClockware/issues"
+  },
+  "homepage": "https://github.com/eXetrum/ClockwiseClockware#readme",
+  "devDependencies": {
+    "npm-run-all": "^4.1.5"
+  }
+}
