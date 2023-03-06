@@ -23,6 +23,8 @@ const AdminEditOrder = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { id } = useParams();
 
+  const orderStatusEnum = ['confirmed', 'completed', 'canceled'];
+
   const [watches, setWatches] = useState([]);
   const [cities, setCities] = useState([]);
   const [masters, setMasters] = useState([]);
@@ -42,6 +44,7 @@ const AdminEditOrder = () => {
   const [city, setCity] = useState(null);
   const [startDate, setStartDate] = useState(null);
   const [master, setMaster] = useState(null);
+  const [status, setStatus] = useState(null);
 
   const [dateTimeError, setDateTimeError] = useState(null);
   const isDateTimeError = useMemo(
@@ -74,6 +77,8 @@ const AdminEditOrder = () => {
     setCity(order.city);
     setStartDate(new Date(order.startDate));
     setMaster(order.master);
+    setStatus(order.status);
+
     setSelectedCities([order.city]);
     setLastAssignedCity(order.city);
 
@@ -157,7 +162,7 @@ const AdminEditOrder = () => {
     }
   };
 
-  const doUpdateOrderById = async ({ id, watch, city, master, startDate }) => {
+  const doUpdateOrderById = async ({ id, watch, city, master, startDate, status }) => {
     setPending(true);
     try {
       const order = {
@@ -165,10 +170,11 @@ const AdminEditOrder = () => {
         cityId: city.id,
         masterId: master.id,
         startDate: startDate.getTime(),
+        status,
       };
       const response = await updateOrderById({ id, order });
       if ([200, 204].includes(response.status)) {
-        resetOrigOrder({ ...originalOrder, watch, city, master, startDate });
+        resetOrigOrder({ ...originalOrder, watch, city, master, startDate, status });
         enqueueSnackbar('Order updated', { variant: 'success' });
       }
     } catch (e) {
@@ -192,7 +198,7 @@ const AdminEditOrder = () => {
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    doUpdateOrderById({ id, watch, city, master, startDate });
+    doUpdateOrderById({ id, watch, city, master, startDate, status });
   };
 
   const onOrderCitySelect = async (selectedList, selectedCity) => {
@@ -240,6 +246,8 @@ const AdminEditOrder = () => {
     setMasters([]);
     setShowMasters(false);
   };
+
+  const onStatusTypeChange = (event, statusName) => setStatus(statusName);
 
   const onWatchTypeChange = async (event, newWatch) => {
     if (
@@ -336,6 +344,29 @@ const AdminEditOrder = () => {
               <Col xs lg="6">
                 <Form onSubmit={onFormSubmit}>
                   <hr />
+                  <FormGroup className="mb-3">
+                    <Row xs={1} md={2}>
+                      <Col>
+                        <Form.Label>Status:</Form.Label>
+                      </Col>
+                      <Col>
+                        {orderStatusEnum.map((statusName) => (
+                          <Form.Check
+                            key={statusName}
+                            type="radio"
+                            name="status"
+                            label={statusName}
+                            checked={status === statusName}
+                            inline
+                            required
+                            onChange={(event) => onStatusTypeChange(event, statusName)}
+                            disabled={pending}
+                          />
+                        ))}
+                      </Col>
+                    </Row>
+                  </FormGroup>
+
                   <FormGroup className="mb-3">
                     <Row xs={1} md={2}>
                       <Col>
