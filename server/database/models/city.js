@@ -23,6 +23,11 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 unique: true,
                 type: DataTypes.STRING
+            },
+            pricePerHour: {
+                type: DataTypes.FLOAT,
+                defaultValue: 0.0,
+                allowNull: false
             }
         },
         {
