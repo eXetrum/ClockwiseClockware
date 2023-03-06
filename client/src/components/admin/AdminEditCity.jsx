@@ -12,7 +12,8 @@ const AdminEditCity = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyCity = () => ({ name: '' });
+  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
   const [city, setCity] = useState(initEmptyCity());
   const [originalCity, setOriginalCity] = useState(initEmptyCity());
@@ -42,7 +43,7 @@ const AdminEditCity = () => {
   const doUpdateCityById = async (id, city) => {
     setPending(true);
     try {
-      const response = await updateCityById({ id, cityName: city.name });
+      const response = await updateCityById({ id, city });
       if ([200, 204].includes(response?.status)) {
         setCity(city);
         setOriginalCity(city);
@@ -72,6 +73,7 @@ const AdminEditCity = () => {
   };
 
   const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = (event) => setCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
 
   return (
     <Container>
@@ -98,9 +100,21 @@ const AdminEditCity = () => {
           <Row className="justify-content-md-center">
             <Col md="auto">
               <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
+                <FormGroup className="me-3">
+                  <Form.Label>Name:</Form.Label>
+                  <FormControl type="text" name="city" autoFocus disabled={pending} value={city.name} onChange={onCityNameChange} />
+                </FormGroup>
                 <FormGroup>
-                  <Form.Label>City:</Form.Label>
-                  <FormControl type="text" name="city" disabled={pending} value={city.name} onChange={onCityNameChange} />
+                  <Form.Label>Price Per Hour (Employe rate):</Form.Label>
+                  <FormControl
+                    type="number"
+                    name="pricePerHour"
+                    min={0}
+                    step={0.25}
+                    onChange={onCityPricePerHourChange}
+                    value={formatDecimal(city.pricePerHour)}
+                    disabled={pending}
+                  />
                 </FormGroup>
                 <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
                   Save

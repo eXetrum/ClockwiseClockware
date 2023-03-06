@@ -14,7 +14,8 @@ import { getErrorText } from '../../utils/error';
 const AdminDashboardCities = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyCity = () => ({ name: '' });
+  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
   const [cities, setCities] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
@@ -45,7 +46,7 @@ const AdminDashboardCities = () => {
   const doCreateCity = async (city) => {
     setPending(true);
     try {
-      const response = await createCity({ cityName: city.name });
+      const response = await createCity({ city });
       if (response?.data?.city) {
         const { city } = response.data;
         setCities([city, ...cities]);
@@ -97,6 +98,7 @@ const AdminDashboardCities = () => {
   };
 
   const onCityNameChange = (event) => setNewCity((prev) => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = (event) => setNewCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
 
   const onCityRemove = async (cityId) => {
     const city = cities.find((item) => item.id === cityId);
@@ -152,10 +154,24 @@ const AdminDashboardCities = () => {
           pending={pending}
           isFormValid={isFormValid}
           formContent={
-            <FormGroup>
-              <Form.Label>City:</Form.Label>
-              <FormControl type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
-            </FormGroup>
+            <>
+              <FormGroup className="mb-3">
+                <Form.Label>Name:</Form.Label>
+                <FormControl type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
+              </FormGroup>
+              <FormGroup>
+                <Form.Label>Price Per Hour (Employe rate):</Form.Label>
+                <FormControl
+                  type="number"
+                  name="pricePerHour"
+                  min={0}
+                  step={0.25}
+                  onChange={onCityPricePerHourChange}
+                  value={formatDecimal(newCity.pricePerHour)}
+                  disabled={pending}
+                />
+              </FormGroup>
+            </>
           }
         />
       </Container>

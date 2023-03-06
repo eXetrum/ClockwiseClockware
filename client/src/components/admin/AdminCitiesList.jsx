@@ -19,6 +19,8 @@ const AdminCitiesList = ({ cities, onRemove }) => {
     );
   }
 
+  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
@@ -26,6 +28,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
           <tr>
             <th className="text-center p-2 m-0">id</th>
             <th className="text-center p-2 m-0">name</th>
+            <th className="text-center p-2 m-0">pricePerHour</th>
             <th colSpan="2" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
@@ -34,6 +37,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
             <tr key={city.id}>
               <td className="text-center p-2 m-0">{city.id}</td>
               <td className="p-2 m-0">{city.name}</td>
+              <th className="text-center p-2 m-0">{formatDecimal(city.pricePerHour)}</th>
               <td className="text-center p-2 m-0">
                 <Link to={'/admin/cities/' + city.id}>
                   <EditIcon />
