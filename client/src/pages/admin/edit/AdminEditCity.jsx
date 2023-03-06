@@ -3,9 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { useSnackbar } from 'notistack';
-import Header from '../Header';
-import ErrorContainer from '../ErrorContainer';
-import { getCityById, updateCityById } from '../../api/cities';
+import Header from '../../../components/common/Header';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getCityById, updateCityById } from '../../../api/cities';
 
 const AdminEditCity = () => {
   const { id } = useParams();

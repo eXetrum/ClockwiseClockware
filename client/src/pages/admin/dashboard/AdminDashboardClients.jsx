@@ -4,11 +4,11 @@ import { Container, Row, Col, Form, FormGroup, FormControl, Spinner } from 'reac
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import Header from '../Header';
-import AdminClientsList from './AdminClientsList';
-import ModalForm from '../ModalForm';
-import ErrorContainer from '../ErrorContainer';
-import { deleteClientById, getClients } from '../../api/clients';
+import Header from '../../../components/common/Header';
+import AdminClientsList from '../../../components/admin/AdminClientsList';
+import ModalForm from '../../../components/common/ModalForm';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { deleteClientById, getClients } from '../../../api/clients';
 
 const AdminDashboardClients = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
-import StarRating from '../StarRating';
+import StarRating from '../common/StarRating';
 
 const AdminMastersList = ({ masters, onRemove }) => {
   if (masters == null) return null;

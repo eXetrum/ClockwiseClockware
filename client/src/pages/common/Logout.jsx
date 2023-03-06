@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
-import Header from './Header';
-import { logout } from '../api/auth';
+import Header from '../../components/common/Header';
+import { logout } from '../../api/auth';
 
 const LogOut = () => {
   const [redirect, setRedirect] = useState(false);

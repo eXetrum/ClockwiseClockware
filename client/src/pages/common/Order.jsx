@@ -8,13 +8,13 @@ import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import StarRating from './StarRating';
-import Header from './Header';
-import ErrorContainer from './ErrorContainer';
-import { getCities } from '../api/cities';
-import { getWatches } from '../api/watches';
-import { getAvailableMasters, createOrder } from '../api/orders';
-import { dateToNearestHour } from '../utils/dateTime';
+import StarRating from '../../components/common/StarRating';
+import Header from '../../components/common/Header';
+import ErrorContainer from '../../components/common/ErrorContainer';
+import { getCities } from '../../api/cities';
+import { getWatches } from '../../api/watches';
+import { getAvailableMasters, createOrder } from '../../api/orders';
+import { dateToNearestHour } from '../../utils/dateTime';
 
 const Order = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

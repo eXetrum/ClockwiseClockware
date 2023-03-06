@@ -3,9 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import Header from '../Header';
-import ErrorContainer from '../ErrorContainer';
-import { getClientById, updateClientById } from '../../api/clients';
+import Header from '../../../components/common/Header';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getClientById, updateClientById } from '../../../api/clients';
 
 const AdminEditClient = () => {
   const { id } = useParams();

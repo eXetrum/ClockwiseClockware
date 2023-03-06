@@ -10,13 +10,13 @@ import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import Header from '../Header';
-import StarRating from '../StarRating';
-import ErrorContainer from '../ErrorContainer';
-import { getCities } from '../../api/cities';
-import { getWatches } from '../../api/watches';
-import { getOrderById, updateOrderById, getAvailableMasters } from '../../api/orders';
-import { dateToNearestHour, addHours, dateRangesOverlap } from '../../utils/dateTime';
+import Header from '../../../components/common/Header';
+import StarRating from '../../../components/common/StarRating';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getCities } from '../../../api/cities';
+import { getWatches } from '../../../api/watches';
+import { getOrderById, updateOrderById, getAvailableMasters } from '../../../api/orders';
+import { dateToNearestHour, addHours, dateRangesOverlap } from '../../../utils/dateTime';
 
 const AdminEditOrder = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
