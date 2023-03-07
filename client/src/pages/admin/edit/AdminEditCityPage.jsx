@@ -1,65 +1,57 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { useSnackbar } from 'notistack';
 import Header from '../../../components/common/Header';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getCityById, updateCityById } from '../../../api/cities';
+import { isGlobalError, getErrorText } from '../../../utils/error';
 
 const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [city, setCity] = useState(null);
-  const [originalCity, setOriginalCity] = useState(null);
-  const [newCityName, setNewCityName] = useState('');
-  const [pending, setPending] = useState(true);
+  const initEmptyCity = () => ({ name: '' });
+
+  const [city, setCity] = useState(initEmptyCity());
+  const [originalCity, setOriginalCity] = useState(initEmptyCity());
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const isLoading = useMemo(() => city === null && pending, [city, pending]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => city !== null, [city]);
-
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
+  const [pending, setPending] = useState(false);
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
+  const isFormValid = useCallback(() => city.name, [city]);
 
   const fetchCityById = async (id, abortController) => {
+    setInitialLoading(true);
     try {
       const response = await getCityById({ id, abortController });
       if (response?.data?.city) {
         const { city } = response.data;
         setCity(city);
         setOriginalCity(city);
-        setNewCityName(city.name);
       }
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
-  const doUpdateCityById = async (id, cityName) => {
+  const doUpdateCityById = async (id, city) => {
+    setPending(true);
     try {
-      const response = await updateCityById({ id, cityName });
+      const response = await updateCityById({ id, city });
       if ([200, 204].includes(response?.status)) {
-        setCity({ ...city, name: cityName });
-        setOriginalCity({ ...city, name: cityName });
+        setCity(city);
+        setOriginalCity(city);
         enqueueSnackbar('City updated', { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setCity(null);
-        setOriginalCity(null);
-      } else {
-        setCity(originalCity);
-        setNewCityName(originalCity.name);
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      setCity(originalCity);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -67,7 +59,6 @@ const AdminEditCityPage = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    resetBeforeApiCall();
     fetchCityById(id, abortController);
     return () => {
       abortController.abort();
@@ -75,16 +66,12 @@ const AdminEditCityPage = () => {
     };
   }, [id, closeSnackbar]);
 
-  const onCityNameChange = (event) => {
-    setNewCityName(event.target.value);
-    setError(null);
-  };
-
   const onFormSubmit = (event) => {
     event.preventDefault();
-    resetBeforeApiCall();
-    doUpdateCityById(id, newCityName);
+    doUpdateCityById(id, city);
   };
+
+  const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
 
   return (
     <Container>
@@ -99,23 +86,23 @@ const AdminEditCityPage = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
             <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && (
           <Row className="justify-content-md-center">
             <Col md="auto">
               <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
-                <FormGroup>
-                  <Form.Label>City:</Form.Label>
-                  <FormControl type="text" name="city" disabled={pending} value={newCityName} onChange={onCityNameChange} />
-                </FormGroup>
-                <Button className="ms-2" type="submit" variant="success" disabled={!newCityName || pending}>
+                <Form.Group className="me-3">
+                  <Form.Label>Name:</Form.Label>
+                  <Form.Control type="text" name="city" autoFocus disabled={pending} value={city.name} onChange={onCityNameChange} />
+                </Form.Group>
+                <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
                   Save
                 </Button>
               </Form>

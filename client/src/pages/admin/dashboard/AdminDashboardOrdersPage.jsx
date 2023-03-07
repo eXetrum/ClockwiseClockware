@@ -6,24 +6,21 @@ import Header from '../../../components/common/Header';
 import AdminOrdersList from '../../../components/admin/AdminOrdersList';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getOrders, deleteOrderById } from '../../../api/orders';
+import { getErrorText } from '../../../utils/error';
 
 const AdminDashboardOrdersPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const [orders, setOrders] = useState(null);
-  const [pending, setPending] = useState(true);
+  const [orders, setOrders] = useState([]);
+  const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const isLoading = useMemo(() => orders === null && pending, [orders, pending]);
-  const isError = useMemo(() => error !== null, [error]);
-  const isComponentReady = useMemo(() => orders !== null, [orders]);
+  const [pending, setPending] = useState(false);
 
-  const resetBeforeApiCall = () => {
-    setPending(true);
-    setError(null);
-  };
+  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
-  const fetchOrders = async (abortController) => {
+  const fetchInitialData = async (abortController) => {
+    setInitialLoading(true);
     try {
       const response = await getOrders({ abortController });
       if (response?.data?.orders) {
@@ -33,26 +30,22 @@ const AdminDashboardOrdersPage = () => {
     } catch (e) {
       setError(e);
     } finally {
-      setPending(false);
+      setInitialLoading(false);
     }
   };
 
   const doDeleteOrderById = async (id) => {
+    setPending(true);
     try {
       const response = await deleteOrderById({ id });
       if ([200, 204].includes(response?.status)) {
         const removedOrder = orders.find((item) => item.id === id);
         setOrders(orders.filter((item) => item.id !== id));
-        enqueueSnackbar(`Order with id=${removedOrder.id} removed`, {
-          variant: 'success',
-        });
+        enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success' });
       }
     } catch (e) {
-      setError(e);
-      if (e?.response?.status === 404) {
-        setOrders(orders.filter((item) => item.id !== id));
-      }
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      if (e?.response?.status === 404) setOrders(orders.filter((item) => item.id !== id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -60,8 +53,7 @@ const AdminDashboardOrdersPage = () => {
 
   useEffect(() => {
     const abortController = new AbortController();
-    setPending(true);
-    fetchOrders(abortController);
+    fetchInitialData(abortController);
     return () => {
       abortController.abort();
       closeSnackbar();
@@ -76,10 +68,7 @@ const AdminDashboardOrdersPage = () => {
       okText: 'Delete',
       okButtonStyle: 'danger',
     });
-    if (!result) return;
-
-    resetBeforeApiCall();
-    doDeleteOrderById(orderId);
+    if (result) doDeleteOrderById(orderId);
   };
 
   return (
@@ -91,13 +80,13 @@ const AdminDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isLoading && (
+        {isInitialLoading && (
           <center>
             <Spinner animation="grow" />
           </center>
         )}
 
-        {isError && <ErrorContainer error={error} />}
+        <ErrorContainer error={error} />
 
         {isComponentReady && <AdminOrdersList orders={orders} onRemove={onOrderRemove} />}
         <hr />
