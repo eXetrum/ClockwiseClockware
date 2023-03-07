@@ -4,7 +4,7 @@ import Container from 'react-bootstrap/Container';
 import Header from '../../components/common/Header';
 import { logout } from '../../api/auth';
 
-const LogOut = () => {
+const LogOutPage = () => {
   const [redirect, setRedirect] = useState(false);
 
   useEffect(() => {
@@ -22,4 +22,4 @@ const LogOut = () => {
   );
 };
 
-export default LogOut;
+export default LogOutPage;

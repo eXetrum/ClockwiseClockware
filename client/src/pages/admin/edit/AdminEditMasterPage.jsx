@@ -10,7 +10,7 @@ import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getCities } from '../../../api/cities';
 import { getMasterById, updateMasterById } from '../../../api/masters';
 
-const AdminEditMaster = () => {
+const AdminEditMasterPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -178,4 +178,4 @@ const AdminEditMaster = () => {
   );
 };
 
-export default AdminEditMaster;
+export default AdminEditMasterPage;

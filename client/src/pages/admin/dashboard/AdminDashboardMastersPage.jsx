@@ -13,7 +13,7 @@ import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getMasters, createMaster, deleteMasterById } from '../../../api/masters';
 import { getCities } from '../../../api/cities';
 
-const AdminDashboardMasters = () => {
+const AdminDashboardMastersPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const [cities, setCities] = useState(null);
@@ -274,4 +274,4 @@ const AdminDashboardMasters = () => {
   );
 };
 
-export default AdminDashboardMasters;
+export default AdminDashboardMastersPage;

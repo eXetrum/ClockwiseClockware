@@ -10,7 +10,7 @@ import ModalForm from '../../../components/common/ModalForm';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getCities, createCity, deleteCityById } from '../../../api/cities';
 
-const AdminDashboardCities = () => {
+const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const [cities, setCities] = useState(null);
@@ -177,4 +177,4 @@ const AdminDashboardCities = () => {
   );
 };
 
-export default AdminDashboardCities;
+export default AdminDashboardCitiesPage;

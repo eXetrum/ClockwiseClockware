@@ -56,10 +56,12 @@ const getFreeMasters = [
             });
             bussyMasters = bussyMasters.map(item => item.masterId);
 
-            const masters = await Master.findAll({
-                where: { id: { [Op.notIn]: bussyMasters } },
+            let masters = await Master.findAll({
+                where: {
+                    id: { [Op.notIn]: bussyMasters }
+                },
                 include: [
-                    { model: City, as: 'cities', through: { attributes: [] }, where: { id: cityId } },
+                    { model: City, as: 'cities', through: { attributes: [] } },
                     {
                         model: Order,
                         as: 'orders',
@@ -76,6 +78,9 @@ const getFreeMasters = [
                     ['updatedAt', 'DESC']
                 ]
             });
+
+            // No idea how to filter these on 'sequelize level' ([city])
+            masters = masters.filter(master => master.cities.find(city => city.id === cityId));
 
             res.status(200).json({ masters }).end();
         } catch (e) {

@@ -10,7 +10,7 @@ import ModalForm from '../../../components/common/ModalForm';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { deleteClientById, getClients } from '../../../api/clients';
 
-const AdminDashboardClients = () => {
+const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const [clients, setClients] = useState(null);
@@ -170,4 +170,4 @@ const AdminDashboardClients = () => {
   );
 };
 
-export default AdminDashboardClients;
+export default AdminDashboardClientsPage;

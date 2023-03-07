@@ -3,7 +3,7 @@ import { Container, Row, Col } from 'react-bootstrap';
 import Header from '../../components/common/Header';
 import Clock from '../../components/common/Clock';
 
-const Home = () => {
+const HomePage = () => {
   return (
     <Container>
       <Header />
@@ -25,4 +25,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default HomePage;

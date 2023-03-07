@@ -11,19 +11,19 @@ import './logo.svg';
 import { SnackbarProvider } from 'notistack';
 
 import RouteGuard from './providers/RouteGuard';
-import Home from './pages/common/Home';
-import Login from './pages/common/Login';
-import Logout from './pages/common/Logout';
-import Order from './pages/common/Order';
-import UserProfile from './pages/common/UserProfile';
-import AdminDashboardCities from './pages/admin/dashboard/AdminDashboardCities';
-import AdminDashboardMasters from './pages/admin/dashboard/AdminDashboardMasters';
-import AdminDashboardClients from './pages/admin/dashboard/AdminDashboardClients';
-import AdminDashboardOrders from './pages/admin/dashboard/AdminDashboardOrders';
-import AdminEditCity from './pages/admin/edit/AdminEditCity';
-import AdminEditMaster from './pages/admin/edit/AdminEditMaster';
-import AdminEditClient from './pages/admin/edit/AdminEditClient';
-import AdminEditOrder from './pages/admin/edit/AdminEditOrder';
+import HomePage from './pages/common/HomePage';
+import LoginPage from './pages/common/LoginPage';
+import LogoutPage from './pages/common/LogoutPage';
+import OrderPage from './pages/common/OrderPage';
+import UserProfilePage from './pages/common/UserProfilePage';
+import AdminDashboardCitiesPage from './pages/admin/dashboard/AdminDashboardCitiesPage';
+import AdminDashboardMastersPage from './pages/admin/dashboard/AdminDashboardMastersPage';
+import AdminDashboardClientsPage from './pages/admin/dashboard/AdminDashboardClientsPage';
+import AdminDashboardOrdersPage from './pages/admin/dashboard/AdminDashboardOrdersPage';
+import AdminEditCityPage from './pages/admin/edit/AdminEditCityPage';
+import AdminEditMasterPage from './pages/admin/edit/AdminEditMasterPage';
+import AdminEditClientPage from './pages/admin/edit/AdminEditClientPage';
+import AdminEditOrderPage from './pages/admin/edit/AdminEditOrderPage';
 
 import { AxiosInterceptor } from './api/axios.interceptor';
 
@@ -35,19 +35,19 @@ const App = () => {
       <BrowserRouter>
         <AxiosInterceptor>
           <Routes>
-            <Route exact path="/" element={<Home />} />
-            <Route exact path="/login" element={<Login />} />
-            <Route exact path="/logout" element={<Logout />} />
-            <Route exact path="/order" element={<Order />} />
-            <Route exact path="/profile" element={protect(<UserProfile />)} />
-            <Route exact path="/admin/cities" element={protect(<AdminDashboardCities />)} />
-            <Route exact path="/admin/masters" element={protect(<AdminDashboardMasters />)} />
-            <Route exact path="/admin/clients" element={protect(<AdminDashboardClients />)} />
-            <Route exact path="/admin/orders" element={protect(<AdminDashboardOrders />)} />
-            <Route exact path="/admin/cities/:id" element={protect(<AdminEditCity />)} />
-            <Route exact path="/admin/masters/:id" element={protect(<AdminEditMaster />)} />
-            <Route exact path="/admin/clients/:id" element={protect(<AdminEditClient />)} />
-            <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrder />)} />
+            <Route exact path="/" element={<HomePage />} />
+            <Route exact path="/login" element={<LoginPage />} />
+            <Route exact path="/logout" element={<LogoutPage />} />
+            <Route exact path="/order" element={<OrderPage />} />
+            <Route exact path="/profile" element={protect(<UserProfilePage />)} />
+            <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />)} />
+            <Route exact path="/admin/masters" element={protect(<AdminDashboardMastersPage />)} />
+            <Route exact path="/admin/clients" element={protect(<AdminDashboardClientsPage />)} />
+            <Route exact path="/admin/orders" element={protect(<AdminDashboardOrdersPage />)} />
+            <Route exact path="/admin/cities/:id" element={protect(<AdminEditCityPage />)} />
+            <Route exact path="/admin/masters/:id" element={protect(<AdminEditMasterPage />)} />
+            <Route exact path="/admin/clients/:id" element={protect(<AdminEditClientPage />)} />
+            <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrderPage />)} />
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </AxiosInterceptor>

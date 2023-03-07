@@ -7,7 +7,7 @@ import AdminOrdersList from '../../../components/admin/AdminOrdersList';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getOrders, deleteOrderById } from '../../../api/orders';
 
-const AdminDashboardOrders = () => {
+const AdminDashboardOrdersPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const [orders, setOrders] = useState(null);
@@ -106,4 +106,4 @@ const AdminDashboardOrders = () => {
   );
 };
 
-export default AdminDashboardOrders;
+export default AdminDashboardOrdersPage;

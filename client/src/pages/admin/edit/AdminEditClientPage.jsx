@@ -7,7 +7,7 @@ import Header from '../../../components/common/Header';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getClientById, updateClientById } from '../../../api/clients';
 
-const AdminEditClient = () => {
+const AdminEditClientPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -129,4 +129,4 @@ const AdminEditClient = () => {
   );
 };
 
-export default AdminEditClient;
+export default AdminEditClientPage;

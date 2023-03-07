@@ -7,7 +7,7 @@ import Header from '../../../components/common/Header';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getCityById, updateCityById } from '../../../api/cities';
 
-const AdminEditCity = () => {
+const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -128,4 +128,4 @@ const AdminEditCity = () => {
   );
 };
 
-export default AdminEditCity;
+export default AdminEditCityPage;

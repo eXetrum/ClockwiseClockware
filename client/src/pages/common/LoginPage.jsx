@@ -6,7 +6,7 @@ import Header from '../../components/common/Header';
 import ErrorContainer from '../../components/common/ErrorContainer';
 import { isLoggedIn, login, setToken } from '../../api/auth';
 
-const Login = () => {
+const LoginPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const location = useLocation();
@@ -111,4 +111,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;
