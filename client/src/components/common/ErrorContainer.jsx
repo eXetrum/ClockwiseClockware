@@ -1,6 +1,6 @@
 import React from 'react';
 import { Row, Col, Alert } from 'react-bootstrap';
-import { getIconByError, getErrorText } from '../utils/error';
+import { getIconByError, getErrorText } from '../../utils/error';
 
 const ErrorContainer = ({ error = null }) => {
   if (error == null) return null;
