@@ -27,11 +27,13 @@ import AdminEditOrderPage from './pages/admin/edit/AdminEditOrderPage';
 
 import { AxiosInterceptor } from './api/axios.interceptor';
 
+import { SNACKBAR_AUTOHIDE_TIMEOUT } from './utils/constants';
+
 const protect = (child) => <RouteGuard>{child}</RouteGuard>;
 
 const App = () => {
   return (
-    <SnackbarProvider maxSnack={5} autoHideDuration={process.env.SNACKBAR_AUTOHIDE_TIMEOUT}>
+    <SnackbarProvider maxSnack={5} autoHideDuration={SNACKBAR_AUTOHIDE_TIMEOUT}>
       <BrowserRouter>
         <AxiosInterceptor>
           <Routes>
