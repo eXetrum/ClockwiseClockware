@@ -12,7 +12,8 @@ const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyCity = () => ({ name: '' });
+  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
   const [city, setCity] = useState(initEmptyCity());
   const [originalCity, setOriginalCity] = useState(initEmptyCity());
@@ -72,6 +73,7 @@ const AdminEditCityPage = () => {
   };
 
   const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = (event) => setCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
 
   return (
     <Container>
@@ -101,6 +103,18 @@ const AdminEditCityPage = () => {
                 <Form.Group className="me-3">
                   <Form.Label>Name:</Form.Label>
                   <Form.Control type="text" name="city" autoFocus disabled={pending} value={city.name} onChange={onCityNameChange} />
+                </Form.Group>
+                <Form.Group className="me-3">
+                  <Form.Label>Price Per Hour (Employe rate):</Form.Label>
+                  <Form.Control
+                    type="number"
+                    name="pricePerHour"
+                    min={0}
+                    step={0.25}
+                    onChange={onCityPricePerHourChange}
+                    value={formatDecimal(city.pricePerHour)}
+                    disabled={pending}
+                  />
                 </Form.Group>
                 <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
                   Save

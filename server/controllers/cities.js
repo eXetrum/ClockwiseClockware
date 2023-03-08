@@ -13,7 +13,7 @@ const getAll = async (req, res) => {
 
 const create = [
     RouteProtector,
-    body('city').notEmpty().withMessage('City object required'),
+    body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
         .withMessage('city.name required')
@@ -110,7 +110,7 @@ const get = [
 
 const update = [
     RouteProtector,
-    body('city').notEmpty().withMessage('City object required'),
+    body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
         .withMessage('city.name required')
