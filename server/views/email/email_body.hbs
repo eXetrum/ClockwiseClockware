@@ -1,5 +1,6 @@
+<center>
 <p>Mr(s) {{client.name}} thank you for trusting us to do the repair work !</p><br/>
-<table>
+<table class="order-table">
 	<thead>
 		<tr>
 			<th scope="col" colspan=2>Order Details</th>
@@ -12,7 +13,7 @@
 		</tr>
 		<tr>
 			<th scope="row">Master</th>
-			<td><b>{{masterName}}</b>, <i>{{masterEmail}}</i></td>
+			<td><b>{{masterName}}</b>, <a href="mailto:{{masterEmail}}" target="_blank" rel="noreferrer noopener"><i>{{masterEmail}}</i></a></td>
 		</tr>
 		<tr>
 			<th scope="row">City</th>
@@ -32,3 +33,4 @@
 		</tr>
 	</tbody>
 </table>
+</center>

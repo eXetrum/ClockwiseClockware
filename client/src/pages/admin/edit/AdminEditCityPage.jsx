@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { useSnackbar } from 'notistack';
-import Header from '../Header';
-import ErrorContainer from '../ErrorContainer';
-import { getCityById, updateCityById } from '../../api/cities';
-import { isGlobalError, getErrorText } from '../../utils/error';
+import Header from '../../../components/common/Header';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getCityById, updateCityById } from '../../../api/cities';
+import { isGlobalError, getErrorText } from '../../../utils/error';
 
-const AdminEditCity = () => {
+const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
+  const initEmptyCity = () => ({ name: '' });
 
   const [city, setCity] = useState(initEmptyCity());
   const [originalCity, setOriginalCity] = useState(initEmptyCity());
@@ -73,7 +72,6 @@ const AdminEditCity = () => {
   };
 
   const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
-  const onCityPricePerHourChange = (event) => setCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
 
   return (
     <Container>
@@ -100,22 +98,10 @@ const AdminEditCity = () => {
           <Row className="justify-content-md-center">
             <Col md="auto">
               <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
-                <FormGroup className="me-3">
+                <Form.Group className="me-3">
                   <Form.Label>Name:</Form.Label>
-                  <FormControl type="text" name="city" autoFocus disabled={pending} value={city.name} onChange={onCityNameChange} />
-                </FormGroup>
-                <FormGroup>
-                  <Form.Label>Price Per Hour (Employe rate):</Form.Label>
-                  <FormControl
-                    type="number"
-                    name="pricePerHour"
-                    min={0}
-                    step={0.25}
-                    onChange={onCityPricePerHourChange}
-                    value={formatDecimal(city.pricePerHour)}
-                    disabled={pending}
-                  />
-                </FormGroup>
+                  <Form.Control type="text" name="city" autoFocus disabled={pending} value={city.name} onChange={onCityNameChange} />
+                </Form.Group>
                 <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
                   Save
                 </Button>
@@ -129,4 +115,4 @@ const AdminEditCity = () => {
   );
 };
 
-export default AdminEditCity;
+export default AdminEditCityPage;

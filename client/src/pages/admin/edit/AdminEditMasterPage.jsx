@@ -4,14 +4,14 @@ import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } fr
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
-import StarRating from '../StarRating';
-import Header from '../Header';
-import ErrorContainer from '../ErrorContainer';
-import { getCities } from '../../api/cities';
-import { getMasterById, updateMasterById } from '../../api/masters';
-import { isGlobalError, getErrorText } from '../../utils/error';
+import StarRating from '../../../components/common/StarRating';
+import Header from '../../../components/common/Header';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getCities } from '../../../api/cities';
+import { getMasterById, updateMasterById } from '../../../api/masters';
+import { isGlobalError, getErrorText } from '../../../utils/error';
 
-const AdminEditMaster = () => {
+const AdminEditMasterPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -155,4 +155,4 @@ const AdminEditMaster = () => {
   );
 };
 
-export default AdminEditMaster;
+export default AdminEditMasterPage;

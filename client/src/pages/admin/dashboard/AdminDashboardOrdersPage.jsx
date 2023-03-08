@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import Header from '../Header';
-import AdminOrdersList from './AdminOrdersList';
-import ErrorContainer from '../ErrorContainer';
-import { getOrders, deleteOrderById } from '../../api/orders';
-import { getErrorText } from '../../utils/error';
+import Header from '../../../components/common/Header';
+import AdminOrdersList from '../../../components/admin/AdminOrdersList';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getOrders, deleteOrderById } from '../../../api/orders';
+import { getErrorText } from '../../../utils/error';
 
-const AdminDashboardOrders = () => {
+const AdminDashboardOrdersPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const [orders, setOrders] = useState([]);
@@ -95,4 +95,4 @@ const AdminDashboardOrders = () => {
   );
 };
 
-export default AdminDashboardOrders;
+export default AdminDashboardOrdersPage;

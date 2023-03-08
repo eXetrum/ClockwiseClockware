@@ -114,7 +114,7 @@ const remove = [
 
             const { id } = req.params;
             const result = await Master.destroy({ where: { id } });
-            if (result === 0) return res.status(404).json({ detail: 'Master not found' }).end();
+            if (result === 0) return res.status(404).json({ detail: '~Master not found~' }).end();
             res.status(204).end();
         } catch (e) {
             // Incorrect UUID ID string
@@ -150,7 +150,7 @@ const get = [
                 include: { model: City, as: 'cities', through: { attributes: [] } }
             });
 
-            if (!master) return res.status(404).json({ detail: 'Master not found' }).end();
+            if (!master) return res.status(404).json({ detail: '~Master not found~' }).end();
             res.status(200).json({ master }).end();
         } catch (e) {
             // Incorrect UUID ID string

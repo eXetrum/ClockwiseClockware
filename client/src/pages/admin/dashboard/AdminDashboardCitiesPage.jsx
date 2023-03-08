@@ -1,21 +1,20 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Form, Container, Row, Col, Spinner } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import Header from '../Header';
-import AdminCitiesList from './AdminCitiesList';
-import ModalForm from '../ModalForm';
-import ErrorContainer from '../ErrorContainer';
-import { getCities, createCity, deleteCityById } from '../../api/cities';
-import { getErrorText } from '../../utils/error';
+import Header from '../../../components/common/Header';
+import AdminCitiesList from '../../../components/admin/AdminCitiesList';
+import ModalForm from '../../../components/forms/ModalForm';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getCities, createCity, deleteCityById } from '../../../api/cities';
+import { getErrorText } from '../../../utils/error';
 
-const AdminDashboardCities = () => {
+const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
+  const initEmptyCity = () => ({ name: '' });
 
   const [cities, setCities] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
@@ -98,7 +97,6 @@ const AdminDashboardCities = () => {
   };
 
   const onCityNameChange = (event) => setNewCity((prev) => ({ ...prev, name: event.target.value }));
-  const onCityPricePerHourChange = (event) => setNewCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
 
   const onCityRemove = async (cityId) => {
     const city = cities.find((item) => item.id === cityId);
@@ -154,24 +152,10 @@ const AdminDashboardCities = () => {
           pending={pending}
           isFormValid={isFormValid}
           formContent={
-            <>
-              <FormGroup className="mb-3">
-                <Form.Label>Name:</Form.Label>
-                <FormControl type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
-              </FormGroup>
-              <FormGroup>
-                <Form.Label>Price Per Hour (Employe rate):</Form.Label>
-                <FormControl
-                  type="number"
-                  name="pricePerHour"
-                  min={0}
-                  step={0.25}
-                  onChange={onCityPricePerHourChange}
-                  value={formatDecimal(newCity.pricePerHour)}
-                  disabled={pending}
-                />
-              </FormGroup>
-            </>
+            <Form.Group>
+              <Form.Label>City:</Form.Label>
+              <Form.Control type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
+            </Form.Group>
           }
         />
       </Container>
@@ -179,4 +163,4 @@ const AdminDashboardCities = () => {
   );
 };
 
-export default AdminDashboardCities;
+export default AdminDashboardCitiesPage;

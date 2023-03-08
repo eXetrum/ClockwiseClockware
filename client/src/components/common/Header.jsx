@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
-import { getCurrentUser } from '../api/auth';
+import { getCurrentUser } from '../../api/auth';
 
 const Header = () => {
   const [user, setUser] = useState(null);

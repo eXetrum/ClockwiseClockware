@@ -4,7 +4,7 @@ import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import StarRating from '../StarRating';
+import StarRating from '../common/StarRating';
 
 const AdminOrdersList = ({ orders, onRemove }) => {
   if (orders == null) return null;

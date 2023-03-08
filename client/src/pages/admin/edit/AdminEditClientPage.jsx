@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import Header from '../Header';
-import ErrorContainer from '../ErrorContainer';
-import { getClientById, updateClientById } from '../../api/clients';
-import { isGlobalError, getErrorText } from '../../utils/error';
+import Header from '../../../components/common/Header';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getClientById, updateClientById } from '../../../api/clients';
+import { isGlobalError, getErrorText } from '../../../utils/error';
 
 const AdminEditClient = () => {
   const { id } = useParams();
@@ -99,14 +99,14 @@ const AdminEditClient = () => {
           <Row className="justify-content-md-center">
             <Col md="auto">
               <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
-                <FormGroup>
+                <Form.Group>
                   <Form.Label>Client email:</Form.Label>
-                  <FormControl type="email" name="clientEmail" onChange={onClientEmailChange} value={client.email} disabled={pending} />
-                </FormGroup>
-                <FormGroup>
+                  <Form.Control type="email" name="clientEmail" onChange={onClientEmailChange} value={client.email} disabled={pending} />
+                </Form.Group>
+                <Form.Group className="ms-2">
                   <Form.Label>Client name:</Form.Label>
-                  <FormControl type="text" name="clientName" onChange={onClientNameChange} value={client.name} disabled={pending} />
-                </FormGroup>
+                  <Form.Control type="text" name="clientName" onChange={onClientNameChange} value={client.name} disabled={pending} />
+                </Form.Group>
                 <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
                   Save
                 </Button>

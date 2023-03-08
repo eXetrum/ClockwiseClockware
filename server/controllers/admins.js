@@ -43,8 +43,6 @@ const login = [
                 return res.status(401).json({ detail: 'Incorrect user/password pair' }).end();
             }
 
-            delete user.password;
-
             const token = generateAccessToken(user);
             res.status(200).json({ accessToken: token }).end();
         } catch (e) {
