@@ -179,7 +179,7 @@ const create = [
             const result = await Order.create(order);
             await transaction.commit();
 
-            // orderId, client, master, watch, city, startDate, endDate
+            // orderId, client, master, watch, city, startDate, endDate, totalCost
             const confirmation = await sendMail({
                 orderId: result.id,
                 client: order.client,
@@ -187,7 +187,8 @@ const create = [
                 watch,
                 city,
                 startDate: clientDateTimeStart.toString(),
-                endDate: clientDateTimeEnd.toString()
+                endDate: clientDateTimeEnd.toString(),
+                totalCost: order.totalCost
             });
 
             res.status(201).json({ confirmation }).end();
