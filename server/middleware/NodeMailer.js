@@ -25,7 +25,7 @@ transporter.use(
     })
 );
 
-const sendMail = async ({ orderId, client, master, watch, city, startDate, endDate }) => {
+const sendMail = async ({ orderId, client, master, watch, city, startDate, endDate, totalCost }) => {
     try {
         const mailOptions = {
             from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
@@ -40,7 +40,8 @@ const sendMail = async ({ orderId, client, master, watch, city, startDate, endDa
                 watchName: watch.name,
                 cityName: city.name,
                 startDate,
-                endDate
+                endDate,
+                totalCost: Number(totalCost).toFixed(2)
             }
         };
 
