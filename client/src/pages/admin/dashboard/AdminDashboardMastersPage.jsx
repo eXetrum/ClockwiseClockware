@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Form, FormGroup, FormControl, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Multiselect from 'multiselect-react-dropdown';
-import StarRating from '../StarRating';
-import Header from '../Header';
-import AdminMastersList from './AdminMastersList';
-import ModalForm from '../ModalForm';
-import ErrorContainer from '../ErrorContainer';
-import { getMasters, createMaster, deleteMasterById } from '../../api/masters';
-import { getCities } from '../../api/cities';
-import { getErrorText } from '../../utils/error';
+import StarRating from '../../../components/common/StarRating';
+import Header from '../../../components/common/Header';
+import AdminMastersList from '../../../components/admin/AdminMastersList';
+import ModalForm from '../../../components/forms/ModalForm';
+import ErrorContainer from '../../../components/common/ErrorContainer';
+import { getMasters, createMaster, deleteMasterById } from '../../../api/masters';
+import { getCities } from '../../../api/cities';
+import { getErrorText } from '../../../utils/error';
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -166,9 +166,9 @@ const AdminDashboardMasters = () => {
           pending={pending}
           formContent={
             <>
-              <FormGroup>
+              <Form.Group>
                 <Form.Label>Master email:</Form.Label>
-                <FormControl
+                <Form.Control
                   type="email"
                   name="masterEmail"
                   autoFocus
@@ -177,10 +177,10 @@ const AdminDashboardMasters = () => {
                   value={newMaster.email}
                   disabled={pending}
                 />
-              </FormGroup>
-              <FormGroup>
+              </Form.Group>
+              <Form.Group>
                 <Form.Label>Master name:</Form.Label>
-                <FormControl
+                <Form.Control
                   type="text"
                   name="masterName"
                   required
@@ -188,8 +188,8 @@ const AdminDashboardMasters = () => {
                   value={newMaster.name}
                   disabled={pending}
                 />
-              </FormGroup>
-              <FormGroup className="ms-3">
+              </Form.Group>
+              <Form.Group className="ms-3">
                 <Form.Label>Rating:</Form.Label>
                 <StarRating
                   onRatingChange={onMasterRatingChange}
@@ -198,9 +198,9 @@ const AdminDashboardMasters = () => {
                   total={5}
                   readonly={pending}
                 />
-              </FormGroup>
+              </Form.Group>
 
-              <FormGroup className="ms-3">
+              <Form.Group className="ms-3">
                 <Form.Label>Master work cities:</Form.Label>
                 <Multiselect
                   onSelect={onMasterCitySelect}
@@ -210,7 +210,7 @@ const AdminDashboardMasters = () => {
                   displayValue="name"
                   disable={pending}
                 />
-              </FormGroup>
+              </Form.Group>
             </>
           }
         />

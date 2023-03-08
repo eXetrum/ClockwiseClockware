@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
-import Header from './Header';
-import ErrorContainer from './ErrorContainer';
-import { isLoggedIn, login, setToken } from '../api/auth';
+import Header from '../../components/common/Header';
+import ErrorContainer from '../../components/common/ErrorContainer';
+import { isLoggedIn, login, setToken } from '../../api/auth';
 
-const Login = () => {
+const LoginPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const location = useLocation();
@@ -109,4 +109,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default LoginPage;

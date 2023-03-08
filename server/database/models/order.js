@@ -68,7 +68,16 @@ module.exports = (sequelize, DataTypes) => {
             endDate: {
                 type: DataTypes.DATE,
                 allowNull: false
-                // allowNull: true,
+            },
+            status: {
+                type: DataTypes.ENUM(['confirmed', 'completed', 'canceled']),
+                allowNull: false,
+                defaultValue: 'confirmed'
+            },
+            totalCost: {
+                type: DataTypes.FLOAT,
+                defaultValue: 0.0,
+                allowNull: false
             }
         },
         {

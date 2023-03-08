@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import Header from './Header';
-import { getCurrentUser } from '../api/auth';
+import Header from '../../components/common/Header';
+import { getCurrentUser } from '../../api/auth';
 
-const UserProfile = () => {
+const UserProfilePage = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -33,4 +33,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default UserProfilePage;

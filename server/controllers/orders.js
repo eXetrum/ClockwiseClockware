@@ -56,10 +56,12 @@ const getFreeMasters = [
             });
             bussyMasters = bussyMasters.map(item => item.masterId);
 
-            const masters = await Master.findAll({
-                where: { id: { [Op.notIn]: bussyMasters } },
+            let masters = await Master.findAll({
+                where: {
+                    id: { [Op.notIn]: bussyMasters }
+                },
                 include: [
-                    { model: City, as: 'cities', through: { attributes: [] }, where: { id: cityId } },
+                    { model: City, as: 'cities', through: { attributes: [] } },
                     {
                         model: Order,
                         as: 'orders',
@@ -76,6 +78,9 @@ const getFreeMasters = [
                     ['updatedAt', 'DESC']
                 ]
             });
+
+            // No idea how to filter these on 'sequelize level' ([city])
+            masters = masters.filter(master => master.cities.find(city => city.id === cityId));
 
             res.status(200).json({ masters }).end();
         } catch (e) {
@@ -158,6 +163,7 @@ const create = [
             order.client.name = order.client.name.trim();
             order.client.email = order.client.email.trim();
             order.endDate = order.startDate + watch.repairTime * MS_PER_HOUR;
+            order.totalCost = city.pricePerHour * watch.repairTime;
 
             const clientDateTimeStart = moment.unix((order.startDate + order.timezone * MS_PER_HOUR) / 1000);
             const clientDateTimeEnd = moment.unix((order.startDate + order.timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
@@ -173,7 +179,7 @@ const create = [
             const result = await Order.create(order);
             await transaction.commit();
 
-            // orderId, client, master, watch, city, startDate, endDate
+            // orderId, client, master, watch, city, startDate, endDate, totalCost
             const confirmation = await sendMail({
                 orderId: result.id,
                 client: order.client,
@@ -181,7 +187,8 @@ const create = [
                 watch,
                 city,
                 startDate: clientDateTimeStart.toString(),
-                endDate: clientDateTimeEnd.toString()
+                endDate: clientDateTimeEnd.toString(),
+                totalCost: order.totalCost
             });
 
             res.status(201).json({ confirmation }).end();
@@ -308,6 +315,11 @@ const update = [
             if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
+    body('order.status')
+        .exists()
+        .withMessage('order.status required')
+        .isIn(['confirmed', 'completed', 'canceled'])
+        .withMessage('Incorrect order status'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -336,6 +348,7 @@ const update = [
 
             order.startDate = dateToNearestHour(order.startDate);
             order.endDate = order.startDate + watch.repairTime * MS_PER_HOUR;
+            order.totalCost = city.pricePerHour * watch.repairTime;
 
             const [affectedRows, result] = await Order.update(order, { where: { id }, returning: true, limit: 1 });
             if (!affectedRows) return res.status(404).json({ detail: '~Order not found~' }).end();

@@ -13,24 +13,35 @@ const getAll = async (req, res) => {
 
 const create = [
     RouteProtector,
-    body('cityName')
+    body('city').notEmpty().withMessage('city object required'),
+    body('city.name')
         .exists()
-        .withMessage('cityName required')
+        .withMessage('city.name required')
         .isString()
-        .withMessage('cityName should be of type string')
+        .withMessage('city.name should be of type string')
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty cityName is not allowed'),
+        .withMessage('Empty city.name is not allowed'),
+    body('city.pricePerHour')
+        .exists()
+        .withMessage('city.pricePerHour required')
+        .isDecimal()
+        .withMessage('city.pricePerHour should be of decimal type')
+        .custom((value, { req }) => {
+            const pricePerHour = parseFloat(value);
+            if (pricePerHour < 0.0) throw new Error('Invalid pricePerHour. Expected positive decimal value');
+            return true;
+        }),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
-            let { cityName } = req.body;
-            cityName = cityName.trim();
+            let { city } = req.body;
+            city.name = city.name.trim();
 
-            const city = await City.create({ name: cityName });
+            city = await City.create({ ...city });
             res.status(201).json({ city }).end();
         } catch (e) {
             if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
@@ -99,26 +110,36 @@ const get = [
 
 const update = [
     RouteProtector,
-    param('id').exists().notEmpty().withMessage('City ID required'),
-    body('cityName')
+    body('city').notEmpty().withMessage('city object required'),
+    body('city.name')
         .exists()
-        .withMessage('cityName required')
+        .withMessage('city.name required')
         .isString()
-        .withMessage('cityName should be of type string')
+        .withMessage('city.name should be of type string')
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty cityName is not allowed'),
+        .withMessage('Empty city.name is not allowed'),
+    body('city.pricePerHour')
+        .exists()
+        .withMessage('city.pricePerHour required')
+        .isDecimal()
+        .withMessage('city.pricePerHour should be of decimal type')
+        .custom((value, { req }) => {
+            const pricePerHour = parseFloat(value);
+            if (pricePerHour < 0.0) throw new Error('Invalid pricePerHour. Expected positive decimal value');
+            return true;
+        }),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
             const { id } = req.params;
-            let { cityName } = req.body;
-            cityName = cityName.trim();
+            const { city } = req.body;
+            city.name = city.name.trim();
 
-            const [affectedRows, result] = await City.update({ name: cityName }, { where: { id }, returning: true });
+            const [affectedRows, result] = await City.update({ ...city }, { where: { id }, returning: true });
             if (affectedRows === 0) return res.status(404).json({ detail: 'City not found' }).end();
 
             res.status(204).end();

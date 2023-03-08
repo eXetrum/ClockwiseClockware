@@ -4,7 +4,7 @@ import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import StarRating from '../StarRating';
+import StarRating from '../common/StarRating';
 
 const AdminOrdersList = ({ orders, onRemove }) => {
   if (orders == null) return null;
@@ -27,6 +27,8 @@ const AdminOrdersList = ({ orders, onRemove }) => {
     ' ' +
     [pad(date.getHours()), pad(date.getMinutes())].join(':');
 
+  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
@@ -35,8 +37,12 @@ const AdminOrdersList = ({ orders, onRemove }) => {
             <th className="text-center p-2 m-0">id</th>
             <th className="text-center p-2 m-0">Client</th>
             <th className="text-center p-2 m-0">Master</th>
-            <th className="text-center p-2 m-0">City/Clock</th>
-            <th className="text-center p-2 m-0">Date</th>
+            <th className="text-center p-2 m-0">City</th>
+            <th className="text-center p-2 m-0">Clock</th>
+            <th className="text-center p-2 m-0">Date Start</th>
+            <th className="text-center p-2 m-0">Date End</th>
+            <th className="text-center p-2 m-0">Status</th>
+            <th className="text-center p-2 m-0">Total Cost</th>
             <th colSpan="2" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
@@ -66,32 +72,35 @@ const AdminOrdersList = ({ orders, onRemove }) => {
                 </div>
               </td>
               <td className="text-center p-2 m-0">
-                <p>
-                  <Badge className="p-2">{order.city.name}</Badge>
-                </p>
-                <p>
-                  <Badge className="p-2" bg="info">
-                    {order.watch.name}
-                    <Badge pill bg="secondary" className="ms-2">
-                      {order.watch.repairTime}h
-                    </Badge>
-                  </Badge>
-                </p>
+                <Badge className="p-2">{order.city.name}</Badge>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">
-                  {formatDate(new Date(order.endDate))}
-                  <br />
-                  {formatDate(new Date(order.startDate))}
-                </small>
+                <Badge className="p-2" bg="info">
+                  {order.watch.name}
+                  <Badge pill bg="secondary" className="ms-2">
+                    {order.watch.repairTime}h
+                  </Badge>
+                </Badge>
+              </td>
+              <td className="text-center p-2 m-0">
+                <small className="text-muted">{formatDate(new Date(order.startDate))}</small>
+              </td>
+              <td className="text-center p-2 m-0">
+                <small className="text-muted">{formatDate(new Date(order.endDate))}</small>
+              </td>
+              <td className="text-center p-2 m-0">
+                <small className="text-muted">{order.status}</small>
+              </td>
+              <td className="text-center p-2 m-0">
+                <small className="text-muted">{formatDecimal(order.totalCost)}</small>
               </td>
 
               <td className="text-center p-2 m-0">
-                {new Date() < new Date(order.startDate) && (
+                {new Date() < new Date(order.startDate) ? (
                   <Link to={'/admin/orders/' + order.id}>
                     <EditIcon />
                   </Link>
-                )}
+                ) : null}
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">
