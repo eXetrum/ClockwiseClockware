@@ -11,11 +11,11 @@ import './logo.svg';
 import { SnackbarProvider } from 'notistack';
 
 import RouteGuard from './providers/RouteGuard';
-import HomePage from './pages/common/HomePage';
-import LoginPage from './pages/common/LoginPage';
+import { HomePage, LoginPage, LogoutPage, OrderPage, UserProfilePage } from './pages';
+/*import LoginPage from './pages/common/LoginPage';
 import LogoutPage from './pages/common/LogoutPage';
 import OrderPage from './pages/common/OrderPage';
-import UserProfilePage from './pages/common/UserProfilePage';
+import UserProfilePage from './pages/common/UserProfilePage';*/
 import AdminDashboardCitiesPage from './pages/admin/dashboard/AdminDashboardCitiesPage';
 import AdminDashboardMastersPage from './pages/admin/dashboard/AdminDashboardMastersPage';
 import AdminDashboardClientsPage from './pages/admin/dashboard/AdminDashboardClientsPage';
@@ -27,11 +27,13 @@ import AdminEditOrderPage from './pages/admin/edit/AdminEditOrderPage';
 
 import { AxiosInterceptor } from './api/axios.interceptor';
 
+import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
+
 const protect = (child) => <RouteGuard>{child}</RouteGuard>;
 
 const App = () => {
   return (
-    <SnackbarProvider maxSnack={5} autoHideDuration={process.env.SNACKBAR_AUTOHIDE_TIMEOUT}>
+    <SnackbarProvider maxSnack={SNACKBAR_MAX_SNACKS} autoHideDuration={SNACKBAR_AUTOHIDE_TIMEOUT}>
       <BrowserRouter>
         <AxiosInterceptor>
           <Routes>
