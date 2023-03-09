@@ -2,9 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
-import Header from '../../components/common/Header';
-import ErrorContainer from '../../components/common/ErrorContainer';
-import { isLoggedIn, login, setToken } from '../../api/auth';
+import { Header, ErrorContainer } from '../../components/common';
+import { isLoggedIn, login, setToken } from '../../api';
 
 const LoginPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

@@ -4,12 +4,9 @@ import { Form, Container, Row, Col, Spinner } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import Header from '../../../components/common/Header';
-import AdminCitiesList from '../../../components/admin/AdminCitiesList';
-import ModalForm from '../../../components/forms/ModalForm';
-import ErrorContainer from '../../../components/common/ErrorContainer';
-import { getCities, createCity, deleteCityById } from '../../../api/cities';
-import { getErrorText } from '../../../utils/error';
+import { Header, ErrorContainer, AdminCitiesList, ModalForm } from '../../../components';
+import { getCities, createCity, deleteCityById } from '../../../api';
+import { getErrorText } from '../../../utils';
 
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

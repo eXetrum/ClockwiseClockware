@@ -4,15 +4,9 @@ import { Container, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import Header from '../../../components/common/Header';
-import ErrorContainer from '../../../components/common/ErrorContainer';
-import OrderForm from '../../../components/forms/OrderForm';
-import AdminMastersList from '../../../components/admin/AdminMastersList';
-import { getCities } from '../../../api/cities';
-import { getWatches } from '../../../api/watches';
-import { getOrderById, updateOrderById, getAvailableMasters } from '../../../api/orders';
-import { addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils/dateTime';
-import { isGlobalError, getErrorText } from '../../../utils/error';
+import { Header, ErrorContainer, OrderForm, AdminMastersList } from '../../../components';
+import { getWatches, getCities, getOrderById, updateOrderById, getAvailableMasters } from '../../../api';
+import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

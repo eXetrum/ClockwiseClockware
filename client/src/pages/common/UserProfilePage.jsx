@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import Header from '../../components/common/Header';
-import { getCurrentUser } from '../../api/auth';
+import { Header } from '../../components';
+import { getCurrentUser } from '../../api';
 
 const UserProfilePage = () => {
   const [user, setUser] = useState(null);

@@ -9,22 +9,16 @@ import './App.css';
 import './logo.svg';
 
 import { SnackbarProvider } from 'notistack';
+import { HomePage, LoginPage, LogoutPage, OrderPage, UserProfilePage } from './pages/common';
+import {
+  AdminDashboardCitiesPage,
+  AdminDashboardMastersPage,
+  AdminDashboardClientsPage,
+  AdminDashboardOrdersPage,
+} from './pages/admin/dashboard';
+import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditOrderPage } from './pages/admin/edit';
 
-import RouteGuard from './providers/RouteGuard';
-import { HomePage, LoginPage, LogoutPage, OrderPage, UserProfilePage } from './pages';
-/*import LoginPage from './pages/common/LoginPage';
-import LogoutPage from './pages/common/LogoutPage';
-import OrderPage from './pages/common/OrderPage';
-import UserProfilePage from './pages/common/UserProfilePage';*/
-import AdminDashboardCitiesPage from './pages/admin/dashboard/AdminDashboardCitiesPage';
-import AdminDashboardMastersPage from './pages/admin/dashboard/AdminDashboardMastersPage';
-import AdminDashboardClientsPage from './pages/admin/dashboard/AdminDashboardClientsPage';
-import AdminDashboardOrdersPage from './pages/admin/dashboard/AdminDashboardOrdersPage';
-import AdminEditCityPage from './pages/admin/edit/AdminEditCityPage';
-import AdminEditMasterPage from './pages/admin/edit/AdminEditMasterPage';
-import AdminEditClientPage from './pages/admin/edit/AdminEditClientPage';
-import AdminEditOrderPage from './pages/admin/edit/AdminEditOrderPage';
-
+import { RouteGuard } from './providers';
 import { AxiosInterceptor } from './api/axios.interceptor';
 
 import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
