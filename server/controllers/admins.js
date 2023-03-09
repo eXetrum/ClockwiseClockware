@@ -1,6 +1,6 @@
 const { generateAccessToken, comparePassword } = require('../middleware/RouteProtector');
 const { body } = require('express-validator');
-const { Admin } = require('../database/models');
+const { Admin, User } = require('../database/models');
 
 const create = async (req, res) => {
     // TODO:
@@ -32,7 +32,11 @@ const login = [
         try {
             // Get user input
             const { email, password } = req.body;
-            const user = await Admin.findOne({ where: { email }, raw: true });
+            const result1 = await User.scope('admin').create({ email: 'test@test.test', password: 'test', secret: 42 });
+            console.log('creation result: ', result1);
+            const user = await User.findOne({ where: { email } });
+            // const user = await Admin.findOne({ where: { email }, raw: true });
+            console.log('user: ', user);
 
             if (!user) {
                 return res.status(401).json({ detail: 'Incorrect user/password pair' }).end();
@@ -46,6 +50,7 @@ const login = [
             const token = generateAccessToken(user);
             res.status(200).json({ accessToken: token }).end();
         } catch (e) {
+            console.log(e);
             res.status(400).end();
         }
     }

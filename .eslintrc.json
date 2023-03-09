@@ -1,0 +1,14 @@
+{
+    "rules": {
+		"quotes": ["error", "single"],
+        "no-var": "error",
+        "prefer-const": "error",
+		"no-multi-spaces": "error",
+		"no-multiple-empty-lines": "error",
+        "no-use-before-define": "error",
+		"no-console": "warn",
+		"no-unused-vars": "warn",
+        "no-unused-expressions": "warn",		
+		"max-len": ["warn", { "code": 140 }]
+    }
+}

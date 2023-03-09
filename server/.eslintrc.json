@@ -4,7 +4,7 @@
         "es2021": true,
         "node": true
     },
-    "extends": ["standard"],
+    "extends": ["standard", "../.eslintrc.json"],
     "overrides": [],
     "parserOptions": {
         "ecmaVersion": "latest",
@@ -12,18 +12,8 @@
     },
     "plugins": ["prettier"],
     "rules": {
-        "no-console": "warn",
-        "no-var": "error",
-        "prefer-const": "error",
         "semi": "off",
-        "no-multi-spaces": "error",
-        "no-multiple-empty-lines": "error",
-        "no-use-before-define": "error",
-        "no-unused-vars": "warn",
-        "no-unused-expressions": "warn",
         "space-before-function-paren": "off",
-        "quotes": ["error", "single"],
-        "indent": ["warn", 4],
-        "max-len": ["warn", { "code": 140 }]
+        "indent": ["warn", 4]
     }
 }
