@@ -1,5 +1,5 @@
-export { default as AdminCitiesList } from './admin/AdminClientsList';
-export { default as AdminMastersList } from './admin/AdminClientsList';
+export { default as AdminCitiesList } from './admin/AdminCitiesList';
+export { default as AdminMastersList } from './admin/AdminMastersList';
 export { default as AdminClientsList } from './admin/AdminClientsList';
 export { default as AdminOrdersList } from './admin/AdminOrdersList';
 
