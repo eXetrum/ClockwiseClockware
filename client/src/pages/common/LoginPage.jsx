@@ -3,7 +3,9 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
-import { isLoggedIn, login, setToken } from '../../api';
+//import { isLoggedIn, login, setToken } from '../../api';
+import { login } from '../../api';
+import { useAuth } from '../../hooks';
 
 const LoginPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -11,12 +13,16 @@ const LoginPage = () => {
   const location = useLocation();
   const fromPage = location.state?.from?.pathname || '/';
 
-  const [user, setUser] = useState({ email: '', password: '' });
+  const initEmptyUser = () => ({ email: '', password: '' });
+  const [formUser, setFormUser] = useState(initEmptyUser());
+
+  const { user, setAccessToken } = useAuth();
+
   const [pending, setPending] = useState(false);
-  const [redirect, setRedirect] = useState(isLoggedIn());
+  const [redirect, setRedirect] = useState(user !== null);
   const [error, setError] = useState(null);
 
-  const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/gi.test(user?.email) && user.password, [user]);
+  const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/gi.test(formUser?.email) && formUser?.password, [formUser]);
 
   let abortController = null;
 
@@ -27,7 +33,7 @@ const LoginPage = () => {
       const response = await login(email, password, abortController);
       if (response?.data?.accessToken) {
         const { accessToken } = response.data;
-        setToken(accessToken);
+        setAccessToken(accessToken);
         enqueueSnackbar('Success', { variant: 'success' });
         setRedirect(true);
       }
@@ -44,14 +50,14 @@ const LoginPage = () => {
   const onFormFieldChange = (event) => {
     const inputField = event.target.name;
     const inputValue = event.target.value;
-    setUser((prev) => ({ ...prev, [inputField]: inputValue }));
+    setFormUser((prev) => ({ ...prev, [inputField]: inputValue }));
     setError(null);
   };
 
   const onFormSubmit = (event) => {
     event.preventDefault();
     abortController = new AbortController();
-    doLogin({ ...user, abortController });
+    doLogin({ ...formUser, abortController });
   };
 
   useEffect(() => {
@@ -80,7 +86,7 @@ const LoginPage = () => {
                   placeholder="Enter email"
                   autoFocus
                   onChange={onFormFieldChange}
-                  value={user.email}
+                  value={formUser.email}
                   disabled={pending}
                 />
               </Form.Group>
@@ -91,7 +97,7 @@ const LoginPage = () => {
                   name="password"
                   placeholder="Password"
                   onChange={onFormFieldChange}
-                  value={user.password}
+                  value={formUser.password}
                   disabled={pending}
                 />
               </Form.Group>

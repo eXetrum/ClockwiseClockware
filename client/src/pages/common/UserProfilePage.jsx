@@ -1,15 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Header } from '../../components';
-import { getCurrentUser } from '../../api';
+import { useAuth } from '../../hooks';
 
 const UserProfilePage = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const user = getCurrentUser();
-    setUser(user);
-  }, []);
+  const { user } = useAuth();
 
   return (
     <Container>

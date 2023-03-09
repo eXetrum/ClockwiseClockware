@@ -1,15 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
-import { getCurrentUser } from '../../api';
+import { useAuth } from '../../hooks';
 
 const Header = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const user = getCurrentUser();
-    setUser(user);
-  }, []);
+  const { user } = useAuth();
 
   return (
     <Navbar bg="light" variant="light" expand="lg" className="mb-3">

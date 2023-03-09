@@ -1,4 +1,5 @@
-export { login, logout, register, setToken, getCurrentUser, isLoggedIn } from './auth';
+//export { login, logout, register, setToken, getCurrentUser, isLoggedIn } from './auth';
+export { login, register, getCurrentUser, isLoggedIn } from './auth';
 export { getWatches } from './watches';
 export { getCities, createCity, deleteCityById, getCityById, updateCityById } from './cities';
 export { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById } from './masters';
