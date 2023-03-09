@@ -11,10 +11,9 @@ import AdminMastersList from '../../../components/admin/AdminMastersList';
 import { getCities } from '../../../api/cities';
 import { getWatches } from '../../../api/watches';
 import { getOrderById, updateOrderById, getAvailableMasters } from '../../../api/orders';
-import { addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils/dateTime';
-import { isGlobalError, getErrorText } from '../../../utils/error';
+import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
-import { ORDER_STATUS_ENUM } from '../../../utils/constants';
+import { ORDER_STATUS_ENUM } from '../../../constants';
 
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

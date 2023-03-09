@@ -11,15 +11,12 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import ViewMasterCard from '../master/ViewMasterCard';
 import { dateToNearestHour } from '../../utils/dateTime';
 
-import { ORDER_STATUS_ENUM } from '../../utils/constants';
-
 const OrderForm = ({
   order,
   watches,
   cities,
   selectedCities,
   onFormSubmit,
-  onOrderStatusChange,
   onOrderWatchTypeChange,
   onOrderCitySelect,
   onOrderCityRemove,
@@ -126,37 +123,6 @@ const OrderForm = ({
               </Col>
             </Row>
           </Form.Group>
-
-          {isEditForm ? (
-            <>
-              <hr />
-              <Form.Group className="mb-3">
-                <Row>
-                  <Col sm={4}>
-                    <Form.Label>
-                      <b>Status:</b>
-                    </Form.Label>
-                  </Col>
-                  <Col>
-                    {ORDER_STATUS_ENUM.map((statusName) => (
-                      <Form.Check
-                        key={statusName}
-                        type="radio"
-                        name="status"
-                        label={statusName}
-                        checked={order.status === statusName}
-                        inline
-                        required
-                        onChange={(event) => onOrderStatusChange(event, statusName)}
-                        disabled={isPending}
-                      />
-                    ))}
-                  </Col>
-                </Row>
-              </Form.Group>
-            </>
-          ) : null}
-
           <hr />
           <Form.Group className="mb-3">
             <Row>

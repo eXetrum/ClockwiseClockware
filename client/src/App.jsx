@@ -27,7 +27,7 @@ import AdminEditOrderPage from './pages/admin/edit/AdminEditOrderPage';
 
 import { AxiosInterceptor } from './api/axios.interceptor';
 
-import { SNACKBAR_AUTOHIDE_TIMEOUT } from './utils/constants';
+import { SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
 
 const protect = (child) => <RouteGuard>{child}</RouteGuard>;
 

@@ -6,7 +6,7 @@ import { useSnackbar } from 'notistack';
 import Header from '../../../components/common/Header';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getCityById, updateCityById } from '../../../api/cities';
-import { isGlobalError, getErrorText } from '../../../utils/error';
+import { isGlobalError, getErrorText } from '../../../utils';
 
 const AdminEditCityPage = () => {
   const { id } = useParams();

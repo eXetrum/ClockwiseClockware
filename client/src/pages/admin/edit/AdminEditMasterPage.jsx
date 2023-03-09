@@ -9,7 +9,7 @@ import Header from '../../../components/common/Header';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getCities } from '../../../api/cities';
 import { getMasterById, updateMasterById } from '../../../api/masters';
-import { isGlobalError, getErrorText } from '../../../utils/error';
+import { isGlobalError, getErrorText } from '../../../utils';
 
 const AdminEditMasterPage = () => {
   const { id } = useParams();

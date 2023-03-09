@@ -6,7 +6,7 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Header from '../../../components/common/Header';
 import ErrorContainer from '../../../components/common/ErrorContainer';
 import { getClientById, updateClientById } from '../../../api/clients';
-import { isGlobalError, getErrorText } from '../../../utils/error';
+import { isGlobalError, getErrorText } from '../../../utils';
 
 const AdminEditClient = () => {
   const { id } = useParams();
