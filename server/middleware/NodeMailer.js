@@ -41,7 +41,7 @@ const sendMail = async ({ orderId, client, master, watch, city, startDate, endDa
                 cityName: city.name,
                 startDate,
                 endDate,
-                totalCost: Number(totalCost).toFixed(2)
+                totalCost
             }
         };
 
