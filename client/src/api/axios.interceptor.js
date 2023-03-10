@@ -1,31 +1,31 @@
 import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-//import { getCurrentUser, logout } from './auth';
-import jwt from 'jwt-decode';
 import { ACCESS_TOKEN_KEY_NAME } from '../constants';
 
-import { useAuth } from '../hooks';
+import jwt from 'jwt-decode';
 
-const getCurrentUser2 = () => {
-  console.log('getCurrentUser OLD');
-  const jwtToken = localStorage.getItem(ACCESS_TOKEN_KEY_NAME);
+import { login, register } from './auth';
+
+const getCurrentUser = (accessToken) => {
+  let user = null;
   try {
-    const user = jwt(jwtToken);
-    user.token = jwtToken;
+    user = jwt(accessToken);
+    user.token = accessToken;
 
     const date = new Date();
     const elapsed = date.getTime() / 1000;
     if (user.exp < elapsed) {
+      user = null;
       localStorage.removeItem(ACCESS_TOKEN_KEY_NAME);
-      return null;
     }
     return user;
   } catch (e) {
-    if (jwtToken != null) localStorage.removeItem(ACCESS_TOKEN_KEY_NAME);
+    user = null;
+    localStorage.removeItem(ACCESS_TOKEN_KEY_NAME);
   }
 
-  return null;
+  return user;
 };
 
 const AxiosInterceptor = ({ children }) => {
@@ -33,30 +33,29 @@ const AxiosInterceptor = ({ children }) => {
   const location = useLocation();
   const [isSet, setIsSet] = useState(false);
 
-  const { user, getCurrentUser, getAccessToken } = useAuth();
+  const reqInterceptor = useCallback((request) => {
+    const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY_NAME);
+    const user = getCurrentUser(accessToken);
+    console.log('request accessToken=', accessToken);
+    if (user !== null) request.headers['Authorization'] = `Bearer ${accessToken}`;
+    return request;
+  }, []);
 
-  const reqInterceptor = useCallback(
-    (request) => {
-      const user2 = getCurrentUser();
-      console.log('user1: ', user);
-      console.log('user2: ', user2);
-      if (user2 != null) {
-        request.headers['Authorization'] = `Bearer ${user2.token}`;
-      }
-      return request;
-    },
-    [user],
-  );
-
-  //console.log('custom func: ', reqInterceptor({}));
-
-  const reqErrInterceptor = useCallback((error) => Promise.reject(error), []);
-  const resInterceptor = useCallback((response) => response, []);
+  const reqErrInterceptor = useCallback((error) => {
+    console.log('request error');
+    return Promise.reject(error);
+  }, []);
+  const resInterceptor = useCallback((response) => {
+    console.log('response: ');
+    return response;
+  }, []);
 
   const resErrInterceptor = useCallback(
     (error) => {
+      console.log('[Intercepter] error: ', error);
       if (error?.response?.status === 401 && location.pathname !== '/login' && !error?.request?.responseURL?.endsWith('api/login')) {
         localStorage.removeItem(ACCESS_TOKEN_KEY_NAME);
+        console.log('redirect: ');
         return navigate('/login', { state: { from: location } });
       }
       return Promise.reject(error);
@@ -65,12 +64,17 @@ const AxiosInterceptor = ({ children }) => {
   );
 
   useEffect(() => {
+    console.log('[AxiosInterceptor], useEffect');
+
     const requestInterceptor = axios.interceptors.request.use(reqInterceptor, reqErrInterceptor);
     const responseInterceptor = axios.interceptors.response.use(resInterceptor, resErrInterceptor);
     setIsSet(true);
+
+    //[requestInterceptor, responseInterceptor] = setup();
     return () => {
-      axios.interceptors.response.eject(requestInterceptor);
-      axios.interceptors.response.eject(responseInterceptor);
+      console.log('[AxiosInterceptor], eject');
+      //axios.interceptors.response.eject(requestInterceptor);
+      //axios.interceptors.response.eject(responseInterceptor);
     };
   }, [reqInterceptor, reqErrInterceptor, resInterceptor, resErrInterceptor]);
 

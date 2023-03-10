@@ -8,7 +8,6 @@ import '@fontsource/roboto/700.css';
 import './App.css';
 import './logo.svg';
 
-import { SnackbarProvider } from 'notistack';
 import { HomePage, LoginPage, LogoutPage, OrderPage, UserProfilePage } from './pages/common';
 import {
   AdminDashboardCitiesPage,
@@ -18,43 +17,37 @@ import {
 } from './pages/admin/dashboard';
 import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditOrderPage } from './pages/admin/edit';
 
+import { SnackbarProvider } from 'notistack';
 import { RouteGuard } from './providers';
 import { AxiosInterceptor } from './api/axios.interceptor';
 
 import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
 
-import { useAuth } from './hooks';
-
 const protect = (child) => <RouteGuard>{child}</RouteGuard>;
 
 const App = () => {
-  const { user, accessToken } = useAuth('App');
-  console.log('[APP]: ', user, accessToken);
-
   return (
     <SnackbarProvider maxSnack={SNACKBAR_MAX_SNACKS} autoHideDuration={SNACKBAR_AUTOHIDE_TIMEOUT}>
-      <>
-        <BrowserRouter>
-          <AxiosInterceptor>
-            <Routes>
-              <Route exact path="/" element={<HomePage />} />
-              <Route exact path="/login" element={<LoginPage />} />
-              <Route exact path="/logout" element={<LogoutPage />} />
-              <Route exact path="/order" element={<OrderPage />} />
-              <Route exact path="/profile" element={protect(<UserProfilePage />)} />
-              <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />)} />
-              <Route exact path="/admin/masters" element={protect(<AdminDashboardMastersPage />)} />
-              <Route exact path="/admin/clients" element={protect(<AdminDashboardClientsPage />)} />
-              <Route exact path="/admin/orders" element={protect(<AdminDashboardOrdersPage />)} />
-              <Route exact path="/admin/cities/:id" element={protect(<AdminEditCityPage />)} />
-              <Route exact path="/admin/masters/:id" element={protect(<AdminEditMasterPage />)} />
-              <Route exact path="/admin/clients/:id" element={protect(<AdminEditClientPage />)} />
-              <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrderPage />)} />
-              <Route path="*" element={<Navigate to="/" />} />
-            </Routes>
-          </AxiosInterceptor>
-        </BrowserRouter>
-      </>
+      <BrowserRouter>
+        <AxiosInterceptor>
+          <Routes>
+            <Route exact path="/" element={<HomePage />} />
+            <Route exact path="/login" element={<LoginPage />} />
+            <Route exact path="/logout" element={<LogoutPage />} />
+            <Route exact path="/order" element={<OrderPage />} />
+            <Route exact path="/profile" element={protect(<UserProfilePage />)} />
+            <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />)} />
+            <Route exact path="/admin/masters" element={protect(<AdminDashboardMastersPage />)} />
+            <Route exact path="/admin/clients" element={protect(<AdminDashboardClientsPage />)} />
+            <Route exact path="/admin/orders" element={protect(<AdminDashboardOrdersPage />)} />
+            <Route exact path="/admin/cities/:id" element={protect(<AdminEditCityPage />)} />
+            <Route exact path="/admin/masters/:id" element={protect(<AdminEditMasterPage />)} />
+            <Route exact path="/admin/clients/:id" element={protect(<AdminEditClientPage />)} />
+            <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrderPage />)} />
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </AxiosInterceptor>
+      </BrowserRouter>
     </SnackbarProvider>
   );
 };

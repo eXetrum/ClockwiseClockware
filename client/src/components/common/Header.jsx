@@ -26,7 +26,6 @@ const Header = () => {
                 Clients
               </Nav.Link>
               <Nav.Link as={Link} to="/admin/orders">
-                {' '}
                 Orders
               </Nav.Link>
             </Nav>
