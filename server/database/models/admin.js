@@ -1,23 +1,17 @@
 const { Model } = require('sequelize');
+const bcrypt = require('bcryptjs');
+
+const hashPassword = async (plaintextPassword) => {
+    const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
+    return hash;
+};
 
 module.exports = (sequelize, DataTypes) => {
     class Admin extends Model {
-        static associate(models) {
-            /*Admin.hasOne(models.User, {
-                foreignKey: 'roleable_id',
-                constraints: false,
-                scope: {
-                    roleable: 'admin'
-                }
-            });*/
-            Admin.belongsTo(models.User, {
-                foreignKey: 'user_ref_id',
-                constraints: false,
-                scope: {
-                    role: 'admin'
-                }
-            });
-        }
+        static associate(models) {}
+        authenticate = (plainValue) => {
+            return bcrypt.compareSync(plainValue, this.password);
+        };
     }
     Admin.init(
         {
@@ -43,5 +37,17 @@ module.exports = (sequelize, DataTypes) => {
             tableName: 'admins'
         }
     );
+
+    Admin.addHook('beforeSave', 'hashPasswordHook', async (user, options) => {
+        const hash = await hashPassword(user.password);
+        user.password = hash;
+    });
+    Admin.addHook('beforeBulkCreate', 'hashPasswordHookMany', async (users, options) => {
+        users.forEach(async (user) => {
+            const hash = await hashPassword(user.password);
+            user.password = hash;
+        });
+    });
+
     return Admin;
 };

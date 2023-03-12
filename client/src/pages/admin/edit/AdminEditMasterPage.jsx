@@ -4,11 +4,8 @@ import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } fr
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import Multiselect from 'multiselect-react-dropdown';
-import StarRating from '../../../components/common/StarRating';
-import Header from '../../../components/common/Header';
-import ErrorContainer from '../../../components/common/ErrorContainer';
-import { getCities } from '../../../api/cities';
-import { getMasterById, updateMasterById } from '../../../api/masters';
+import { Header, StarRating, ErrorContainer } from '../../../components/common';
+import { getCities, getMasterById, updateMasterById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
 
 const AdminEditMasterPage = () => {

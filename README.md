@@ -7,7 +7,6 @@
 
 ### `cd server`
 ### `npm install`
-### `node installDB.js`
 ### `npm run dev`
 ### `npm start`
 

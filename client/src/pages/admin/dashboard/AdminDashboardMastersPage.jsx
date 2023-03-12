@@ -5,14 +5,9 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Multiselect from 'multiselect-react-dropdown';
-import StarRating from '../../../components/common/StarRating';
-import Header from '../../../components/common/Header';
-import AdminMastersList from '../../../components/admin/AdminMastersList';
-import ModalForm from '../../../components/forms/ModalForm';
-import ErrorContainer from '../../../components/common/ErrorContainer';
-import { getMasters, createMaster, deleteMasterById } from '../../../api/masters';
-import { getCities } from '../../../api/cities';
-import { getErrorText } from '../../../utils/error';
+import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
+import { getCities, getMasters, createMaster, deleteMasterById } from '../../../api';
+import { getErrorText } from '../../../utils';
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

@@ -2,17 +2,20 @@ const { RouteProtector } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
 const { Client, Order } = require('../database/models');
 
-const getAll = async (req, res) => {
-    try {
-        const clients = await Client.findAll({
-            include: { model: Order, as: 'orders' },
-            order: [['updatedAt', 'DESC']]
-        });
-        res.status(200).json({ clients }).end();
-    } catch (e) {
-        res.status(400).end();
+const getAll = [
+    RouteProtector,
+    async (req, res) => {
+        try {
+            const clients = await Client.findAll({
+                include: { model: Order, as: 'orders' },
+                order: [['updatedAt', 'DESC']]
+            });
+            res.status(200).json({ clients }).end();
+        } catch (e) {
+            res.status(400).end();
+        }
     }
-};
+];
 
 const remove = [
     RouteProtector,
