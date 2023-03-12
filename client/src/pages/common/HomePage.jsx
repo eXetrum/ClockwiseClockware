@@ -1,7 +1,6 @@
 import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import Header from '../../components/common/Header';
-import Clock from '../../components/common/Clock';
+import { Header, Clock } from '../../components/common';
 
 const HomePage = () => {
   return (

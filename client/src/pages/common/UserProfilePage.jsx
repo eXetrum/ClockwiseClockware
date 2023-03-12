@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import Header from '../../components/common/Header';
-import { getCurrentUser } from '../../api/auth';
+import { Header } from '../../components';
+import { useAuth } from '../../hooks';
+import { parseToken } from '../../utils';
 
 const UserProfilePage = () => {
-  const [user, setUser] = useState(null);
+  const { accessToken } = useAuth();
+  const [user, setUser] = useState();
 
   useEffect(() => {
-    const user = getCurrentUser();
-    setUser(user);
-  }, []);
+    setUser(parseToken(accessToken));
+  }, [accessToken]);
 
   return (
     <Container>

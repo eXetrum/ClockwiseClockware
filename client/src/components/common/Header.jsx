@@ -1,14 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
-import { getCurrentUser } from '../../api/auth';
+import { useAuth } from '../../hooks';
+import { parseToken } from '../../utils';
 
 const Header = () => {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    setUser(getCurrentUser());
-  }, []);
+  const { accessToken } = useAuth();
+  const user = parseToken(accessToken);
 
   return (
     <Navbar bg="light" variant="light" expand="lg" className="mb-3">
@@ -30,7 +28,6 @@ const Header = () => {
                 Clients
               </Nav.Link>
               <Nav.Link as={Link} to="/admin/orders">
-                {' '}
                 Orders
               </Nav.Link>
             </Nav>

@@ -2,15 +2,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import Header from '../../components/common/Header';
-import ErrorContainer from '../../components/common/ErrorContainer';
-import OrderForm from '../../components/forms/OrderForm';
-import AdminMastersList from '../../components/admin/AdminMastersList';
-import { getCities } from '../../api/cities';
-import { getWatches } from '../../api/watches';
-import { getAvailableMasters, createOrder } from '../../api/orders';
-import { addHours, dateRangesOverlap, dateToNearestHour } from '../../utils/dateTime';
-import { isGlobalError, getErrorText } from '../../utils/error';
+import { Header, OrderForm, AdminMastersList, ErrorContainer } from '../../components';
+import { getWatches, getCities, getAvailableMasters, createOrder } from '../../api';
+import { addHours, dateRangesOverlap, dateToNearestHour, isGlobalError, getErrorText } from '../../utils';
 
 const OrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

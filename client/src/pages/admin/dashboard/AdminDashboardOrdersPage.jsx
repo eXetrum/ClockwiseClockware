@@ -2,11 +2,9 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import Header from '../../../components/common/Header';
-import AdminOrdersList from '../../../components/admin/AdminOrdersList';
-import ErrorContainer from '../../../components/common/ErrorContainer';
-import { getOrders, deleteOrderById } from '../../../api/orders';
-import { getErrorText } from '../../../utils/error';
+import { Header, ErrorContainer, AdminOrdersList } from '../../../components';
+import { getOrders, deleteOrderById } from '../../../api';
+import { getErrorText } from '../../../utils';
 
 const AdminDashboardOrdersPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();

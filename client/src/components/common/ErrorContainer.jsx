@@ -1,14 +1,13 @@
 import React from 'react';
 import { Row, Col, Alert } from 'react-bootstrap';
-import { getIconByError, getErrorText } from '../../utils/error';
+
+import { getIconByError, isGlobalError, getErrorText } from '../../utils';
 
 const ErrorContainer = ({ error = null }) => {
-  if (error == null) return null;
+  if (error == null || !isGlobalError(error)) return null;
 
   const ErrorIcon = getIconByError(error);
   if (!ErrorIcon) return null;
-
-  const ErrorText = getErrorText(error);
 
   return (
     <>
@@ -17,7 +16,7 @@ const ErrorContainer = ({ error = null }) => {
           <Alert key="danger" variant="danger" className="m-0">
             {ErrorIcon}
             &nbsp;
-            {ErrorText}
+            {getErrorText(error)}
           </Alert>
         </Col>
       </Row>
