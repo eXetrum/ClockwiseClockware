@@ -71,16 +71,16 @@ const create = [
             master.email = master.email.trim();
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map(city => city.id);
+            const dbCityIds = dbCities.map((city) => city.id);
 
-            master.cities = master.cities.map(city => city.id);
+            master.cities = master.cities.map((city) => city.id);
             // filter out id's which does not exists in the database
-            master.cities = master.cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
+            master.cities = master.cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            master.cities.forEach(cityId => {
-                const dbCityObj = dbCities.find(city => city.id === cityId);
+            master.cities.forEach((cityId) => {
+                const dbCityObj = dbCities.find((city) => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
@@ -214,16 +214,16 @@ const update = [
             master.email = master.email.trim();
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map(city => city.id);
+            const dbCityIds = dbCities.map((city) => city.id);
             // master.cities contains id's now
-            master.cities = master.cities.map(city => city.id);
+            master.cities = master.cities.map((city) => city.id);
             // filter out id's which does not exists in the database, at this moment
-            master.cities = master.cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
+            master.cities = master.cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            master.cities.forEach(cityId => {
-                const dbCityObj = dbCities.find(city => city.id === cityId);
+            master.cities.forEach((cityId) => {
+                const dbCityObj = dbCities.find((city) => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 

@@ -12,6 +12,8 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'masterId',
                 as: 'orders'
             });
+
+            Master.belongsTo(models.User, { foreignKey: 'userId' });
         }
     }
 
@@ -23,15 +25,6 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 primaryKey: true
             },
-            email: {
-                allowNull: false,
-                unique: true,
-                type: DataTypes.STRING
-            },
-            password: {
-                allowNull: true,
-                type: DataTypes.STRING
-            },
             name: {
                 allowNull: false,
                 type: DataTypes.STRING
@@ -39,6 +32,21 @@ module.exports = (sequelize, DataTypes) => {
             rating: {
                 allowNull: false,
                 type: DataTypes.INTEGER
+            },
+            isActive: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            userId: {
+                type: DataTypes.UUID,
+                allowNull: false,
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'RESTRICT'
             }
         },
         {

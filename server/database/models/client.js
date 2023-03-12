@@ -8,6 +8,8 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: 'clientId',
                 as: 'orders'
             });
+
+            Client.belongsTo(models.User, { foreignKey: 'userId' });
         }
     }
 
@@ -19,18 +21,24 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 primaryKey: true
             },
-            email: {
-                allowNull: false,
-                unique: true,
-                type: DataTypes.STRING
-            },
-            password: {
-                allowNull: true,
-                type: DataTypes.STRING
-            },
             name: {
                 allowNull: false,
                 type: DataTypes.STRING
+            },
+            isActive: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            userId: {
+                type: DataTypes.UUID,
+                allowNull: false,
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'RESTRICT'
             }
         },
         {

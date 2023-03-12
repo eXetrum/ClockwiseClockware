@@ -1,9 +1,4 @@
-const bcrypt = require('bcryptjs');
-
-const hashPassword = async (plaintextPassword) => {
-    const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
-    return hash;
-};
+const { hashPassword } = require('../../utils');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
