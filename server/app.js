@@ -12,7 +12,7 @@ app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use('/api', require('./routes/admins'));
+app.use('/api', require('./routes/auth'));
 app.use('/api', require('./routes/cities'));
 app.use('/api', require('./routes/watches'));
 app.use('/api', require('./routes/masters'));
