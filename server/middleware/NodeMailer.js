@@ -1,63 +1,60 @@
 require('dotenv').config();
+
 const nodemailer = require('nodemailer');
+const hbs = require('nodemailer-express-handlebars');
 
 const transporter = nodemailer.createTransport({
-	service: 'gmail',
+    service: 'gmail',
     auth: {
         user: process.env.NODEMAILER_AUTH_GMAIL_USER,
         pass: process.env.NODEMAILER_AUTH_GMAIL_APP_PASS
     }
 });
 
-const sendMail = async(orderId, client, master, watch, city, startDate, endDate) => {
-	try {
-		const params = {
-			from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
-			to: client.email,
-			subject: 'Your order details at ClockwiseClockware',
-			text: '',
-			html: `
-			<html>
-			<head></head>
-			<body>
-				<p>Mr(s) ${client.name} thank you for trusting us to do the repair work !</p><br/>
-				<p>Order details:</p>
-				<p>Order ID=${orderId}</p>
-				<table>
-					<thead>
-						<tr>
-							<th>Master</th>
-							<th>City</th>
-							<th>Watch type</th>						
-							<th>Start Date</th>
-							<th>End Date</th>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td><b>${master.name}</b>, <i>${master.email}</i></td>
-							<td>${city.name}</td>
-							<td>${watch.name}</td>						
-							<td>${startDate}</td>
-							<td>${endDate}</td>
-						</tr>
-					</tbody>
-				</table>
-			</body>
-			</html>`,
-		};
-		
-		let result = await transporter.sendMail(params);
-		if(result != null) {
-			// Keep: 'messageId', 'messageTime', and remove rest
-			['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach(prop => delete result[prop]);
-		}
-		return result;
-	} catch(e) {
-		return e;
-	}
+transporter.use(
+    'compile',
+    hbs({
+        viewEngine: {
+            extname: '.hbs',
+            layoutsDir: 'views/email/',
+            defaultLayout: 'template',
+            partialsDir: 'views/partials/'
+        },
+        viewPath: './views/email/',
+        extName: '.hbs'
+    })
+);
+
+const sendMail = async ({ orderId, client, master, watch, city, startDate, endDate }) => {
+    try {
+        const mailOptions = {
+            from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
+            to: client.email,
+            subject: 'Your order details at ClockwiseClockware',
+            template: 'email_body',
+            context: {
+                orderId,
+                clientName: client.name,
+                masterName: master.name,
+                masterEmail: master.email,
+                watchName: watch.name,
+                cityName: city.name,
+                startDate,
+                endDate
+            }
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        if (result != null) {
+            // Keep: 'messageId', 'messageTime', and remove rest
+            ['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach(prop => delete result[prop]);
+        }
+        return result;
+    } catch (e) {
+        return e;
+    }
 };
 
 module.exports = {
-	sendMail
+    sendMail
 };

@@ -1,0 +1,21 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "jest": true
+  },
+  "extends": ["react-app", "react-app/jest", "plugin:prettier/recommended", "../.eslintrc.json"],
+  "overrides": [],
+  "parserOptions": {
+    "ecmaFeatures": { "jsx": true },
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "plugins": ["react", "prettier"],
+  "rules": {
+    "semi": "error",
+    "space-in-parens": "error",
+    "jsx-quotes": ["error", "prefer-double"],
+    "indent": ["warn", 2]
+  }
+}

@@ -1,5 +1,5 @@
-import axios from "axios";
+import axios from 'axios';
 
-const getWatches = ({ abortController=null }) => axios.get(`/watches`, { signal: abortController?.signal }); 
+const getWatches = ({ abortController = null }) => axios.get('/watches', { signal: abortController?.signal });
 
 export { getWatches };
