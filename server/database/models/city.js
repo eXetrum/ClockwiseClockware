@@ -25,9 +25,15 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING
             },
             pricePerHour: {
-                type: DataTypes.FLOAT,
-                defaultValue: 0.0,
-                allowNull: false
+                type: DataTypes.BIGINT,
+                defaultValue: 0,
+                allowNull: false,
+                get() {
+                    return Number(this.getDataValue('pricePerHour') / 100).toFixed(2);
+                },
+                set(value) {
+                    this.setDataValue('pricePerHour', value * 100);
+                }
             }
         },
         {

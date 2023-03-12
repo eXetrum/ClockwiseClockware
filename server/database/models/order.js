@@ -75,9 +75,15 @@ module.exports = (sequelize, DataTypes) => {
                 defaultValue: 'confirmed'
             },
             totalCost: {
-                type: DataTypes.FLOAT,
-                defaultValue: 0.0,
-                allowNull: false
+                type: DataTypes.BIGINT,
+                defaultValue: 0,
+                allowNull: false,
+                get() {
+                    return Number(this.getDataValue('totalCost') / 100).toFixed(2);
+                },
+                set(value) {
+                    this.setDataValue('totalCost', value * 100);
+                }
             }
         },
         {
