@@ -18,11 +18,21 @@ const create = [
         .exists()
         .withMessage('city.name required')
         .isString()
-        .withMessage('city.name should be of string type')
+        .withMessage('city.name should be of type string')
         .trim()
         .escape()
         .notEmpty()
         .withMessage('Empty city.name is not allowed'),
+    body('city.pricePerHour')
+        .exists()
+        .withMessage('city.pricePerHour required')
+        .isDecimal()
+        .withMessage('city.pricePerHour should be of decimal type')
+        .custom((value, { req }) => {
+            const pricePerHour = parseFloat(value);
+            if (pricePerHour < 0.0) throw new Error('Invalid pricePerHour. Expected positive decimal value');
+            return true;
+        }),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -51,7 +61,7 @@ const remove = [
 
             const { id } = req.params;
             const result = await City.destroy({ where: { id } });
-            if (!result) return res.status(404).json({ detail: '~City not found~' }).end();
+            if (!result) return res.status(404).json({ detail: 'City not found' }).end();
             res.status(204).end();
         } catch (e) {
             // Incorrect UUID ID string
@@ -100,17 +110,26 @@ const get = [
 
 const update = [
     RouteProtector,
-    param('id').exists().notEmpty().withMessage('City ID required'),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
         .withMessage('city.name required')
         .isString()
-        .withMessage('city.name should be of string type')
+        .withMessage('city.name should be of type string')
         .trim()
         .escape()
         .notEmpty()
         .withMessage('Empty city.name is not allowed'),
+    body('city.pricePerHour')
+        .exists()
+        .withMessage('city.pricePerHour required')
+        .isDecimal()
+        .withMessage('city.pricePerHour should be of decimal type')
+        .custom((value, { req }) => {
+            const pricePerHour = parseFloat(value);
+            if (pricePerHour < 0.0) throw new Error('Invalid pricePerHour. Expected positive decimal value');
+            return true;
+        }),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -121,7 +140,7 @@ const update = [
             city.name = city.name.trim();
 
             const [affectedRows, result] = await City.update({ ...city }, { where: { id }, returning: true });
-            if (affectedRows === 0) return res.status(404).json({ detail: '~City not found~' }).end();
+            if (affectedRows === 0) return res.status(404).json({ detail: 'City not found' }).end();
 
             res.status(204).end();
         } catch (e) {

@@ -8,11 +8,19 @@ import { Header, ErrorContainer, OrderForm, AdminMastersList } from '../../../co
 import { getWatches, getCities, getOrderById, updateOrderById, getAvailableMasters } from '../../../api';
 import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
+import { ORDER_STATUS_ENUM } from '../../../utils/constants';
+
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { id } = useParams();
 
-  const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour() });
+  const initEmptyOrder = () => ({
+    client: { name: '', email: '' },
+    master: null,
+    city: null,
+    status: ORDER_STATUS_ENUM[0],
+    startDate: dateToNearestHour(),
+  });
 
   const [watches, setWatches] = useState([]);
   const [cities, setCities] = useState([]);
@@ -112,7 +120,7 @@ const AdminEditOrderPage = () => {
     }
   };
 
-  const doUpdateOrderById = async ({ id, watch, city, master, startDate }) => {
+  const doUpdateOrderById = async ({ id, watch, city, master, startDate, status }) => {
     setPending(true);
     try {
       const order = {
@@ -120,10 +128,11 @@ const AdminEditOrderPage = () => {
         cityId: city.id,
         masterId: master.id,
         startDate: startDate.getTime(),
+        status,
       };
       const response = await updateOrderById({ id, order });
       if ([200, 204].includes(response.status)) {
-        resetOrigOrder({ ...originalOrder, watch, city, master, startDate });
+        resetOrigOrder({ ...originalOrder, watch, city, master, startDate, status });
         enqueueSnackbar('Order updated', { variant: 'success' });
       }
     } catch (e) {
@@ -148,6 +157,8 @@ const AdminEditOrderPage = () => {
     event.preventDefault();
     doUpdateOrderById({ ...newOrder });
   };
+
+  const onOrderStatusChange = (event, statusName) => setNewOrder((prev) => ({ ...prev, status: statusName }));
 
   const onOrderCitySelect = async (selectedList, newCity) => {
     if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, city: newCity })) {
@@ -234,6 +245,7 @@ const AdminEditOrderPage = () => {
 
   const handlers = {
     onFormSubmit,
+    onOrderStatusChange,
     onOrderWatchTypeChange,
     onOrderCitySelect,
     onOrderCityRemove,
