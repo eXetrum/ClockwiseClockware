@@ -1,21 +1,16 @@
-const uuid = require('uuid');
+const bcrypt = require('bcryptjs');
+
+const hashPassword = async (plaintextPassword) => {
+    const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
+    return hash;
+};
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        try {
-            const Op = Sequelize.Op;
-            await queryInterface.bulkDelete('admins', { email: { [Op.in]: ['admin@example.com'] } }, {});
-        } catch {}
-        return queryInterface.bulkInsert('admins', [
-            {
-                id: uuid.v4(),
-                email: 'admin@example.com',
-                password: 'passwordsecret',
-                createdAt: new Date(),
-                updatedAt: new Date()
-            }
-        ]);
+        const hash = await hashPassword('passwordsecret');
+        const Op = Sequelize.Op;
+        return queryInterface.bulkUpdate('admins', { password: hash }, { email: { [Op.in]: ['admin@example.com'] } });
     },
 
     async down(queryInterface, Sequelize) {
