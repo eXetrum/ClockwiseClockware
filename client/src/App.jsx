@@ -8,7 +8,7 @@ import '@fontsource/roboto/700.css';
 import './App.css';
 import './logo.svg';
 
-import { HomePage, LoginPage, LogoutPage, OrderPage, UserProfilePage } from './pages/common';
+import { HomePage, LoginPage, LogoutPage, RegisterPage, OrderPage, UserProfilePage } from './pages/common';
 import {
   AdminDashboardCitiesPage,
   AdminDashboardMastersPage,
@@ -30,6 +30,7 @@ const App = () => {
           <Route exact path="/" element={<HomePage />} />
           <Route exact path="/login" element={<LoginPage />} />
           <Route exact path="/logout" element={<LogoutPage />} />
+          <Route exact path="/register" element={<RegisterPage />} />
           <Route exact path="/order" element={<OrderPage />} />
           <Route exact path="/profile" element={protect(<UserProfilePage />)} />
           <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />)} />

@@ -15,5 +15,6 @@ export { default as AdminEditOrderPage } from './admin/edit/AdminEditOrderPage';
 export { default as HomePage } from './common/HomePage';
 export { default as LoginPage } from './common/LoginPage';
 export { default as LogoutPage } from './common/LogoutPage';
+export { default as RegisterPage } from './common/RegisterPage';
 export { default as UserProfilePage } from './common/UserProfilePage';
 export { default as OrderPage } from './common/OrderPage';
