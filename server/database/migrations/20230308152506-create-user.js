@@ -1,4 +1,6 @@
 'use strict';
+const { USER_ROLES } = require('../../constants');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
@@ -19,14 +21,9 @@ module.exports = {
                 type: Sequelize.DataTypes.STRING
             },
             role: {
-                type: Sequelize.DataTypes.ENUM(['admin', 'master', 'client']),
+                type: Sequelize.DataTypes.ENUM([...Object.values(USER_ROLES)]),
                 allowNull: false
             },
-            user_ref_id: {
-                allowNull: false,
-                type: Sequelize.DataTypes.UUID
-            },
-
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DataTypes.DATE

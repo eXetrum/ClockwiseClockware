@@ -1,21 +1,25 @@
 'use strict';
+
 const { Model } = require('sequelize');
+const { USER_ROLES } = require('../../constants');
+const { hashPassword, compareSync } = require('../../utils');
+
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
+        authenticate = (plainValue) => compareSync(plainValue, this.password);
+
         static associate(models) {
-            // define association here
-            User.hasOne(models.Admin);
-            User.hasOne(models.Master);
-            User.hasOne(models.Client);
-            /*User.belongsToMany(models.Admin, {
-                //through: models.MasterCityList,
-                as: 'cities',
-                foreignKey: 'masterId'
+            /*User.hasOne(models.Client, {
+                scope: {
+                    role: 'admin'
+                },
+                as: 'admin',
+                foreignKey:  'id'
             });*/
-            /*Master.hasMany(models.Order, {
-              foreignKey: 'masterId',
-              as: 'orders'
-          });*/
+
+            User.hasOne(models.Admin, { foreignKey: 'userId' });
+            User.hasOne(models.Master, { foreignKey: 'userId' });
+            User.hasOne(models.Client, { foreignKey: 'userId' });
         }
     }
     User.init(
@@ -34,25 +38,18 @@ module.exports = (sequelize, DataTypes) => {
             password: {
                 allowNull: false,
                 type: DataTypes.STRING
-                /*set(value) {
-                    this.setDataValue('password', hash(this.username + value));
-                }*/
             },
             role: {
-                type: DataTypes.ENUM(['admin', 'master', 'client']),
+                type: DataTypes.ENUM([...Object.values(USER_ROLES)]),
                 allowNull: false
-            },
-            user_ref_id: {
-                allowNull: false,
-                type: DataTypes.UUID
             }
         },
         {
             sequelize,
             modelName: 'User',
             tableName: 'users',
-            associations: true,
-            scopes: {
+            associations: true
+            /*scopes: {
                 admin: {
                     where: {
                         role: 'admin'
@@ -71,8 +68,20 @@ module.exports = (sequelize, DataTypes) => {
                     },
                     include: [{ model: 'Client' }]
                 }
-            }
+            }*/
         }
     );
+
+    User.addHook('beforeSave', 'hashPasswordHook', async (user, options) => {
+        const hash = await hashPassword(user.password);
+        user.password = hash;
+    });
+    User.addHook('beforeBulkCreate', 'hashPasswordHookMany', async (users, options) => {
+        users.forEach(async (user) => {
+            const hash = await hashPassword(user.password);
+            user.password = hash;
+        });
+    });
+
     return User;
 };
