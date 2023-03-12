@@ -2,9 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
 import { useAuth } from '../../hooks';
+import { parseToken } from '../../utils';
 
 const Header = () => {
-  const { user } = useAuth();
+  const { accessToken } = useAuth();
+  const user = parseToken(accessToken);
 
   return (
     <Navbar bg="light" variant="light" expand="lg" className="mb-3">

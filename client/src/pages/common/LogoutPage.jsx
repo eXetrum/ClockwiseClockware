@@ -6,12 +6,12 @@ import { useAuth } from '../../hooks';
 
 const LogOutPage = () => {
   const [redirect, setRedirect] = useState(false);
-  const { logout } = useAuth();
+  const { setAccessToken } = useAuth();
 
   useEffect(() => {
-    logout();
+    setAccessToken(null);
     setRedirect(true);
-  }, [logout]);
+  }, [setAccessToken]);
 
   if (redirect) return <Navigate to="/" />;
 

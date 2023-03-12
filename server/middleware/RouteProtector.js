@@ -13,6 +13,7 @@ const comparePassword = async (plaintextPassword, hash) => {
 
 const RouteProtector = async (req, res, next) => {
     if (!req.headers.authorization) {
+        console.log('NO HEADER');
         res.status(401).end();
         return;
     }
@@ -20,6 +21,7 @@ const RouteProtector = async (req, res, next) => {
         const token = req.headers.authorization.split(' ')[1];
         jwt.verify(token, process.env.JWT_TOKEN_SECRET);
     } catch (e) {
+        console.log('BAD TOKEN');
         res.status(401).end();
         return;
     }

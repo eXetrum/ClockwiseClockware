@@ -15,10 +15,10 @@ const LoginPage = () => {
   const initEmptyUser = () => ({ email: '', password: '' });
   const [formUser, setFormUser] = useState(initEmptyUser());
 
-  const { user, setAccessToken } = useAuth();
+  const { setAccessToken } = useAuth();
 
   const [pending, setPending] = useState(false);
-  const [redirect, setRedirect] = useState(user !== null);
+  const [redirect, setRedirect] = useState(false);
   const [error, setError] = useState(null);
 
   const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/gi.test(formUser?.email) && formUser?.password, [formUser]);
@@ -38,9 +38,7 @@ const LoginPage = () => {
       }
     } catch (e) {
       setError(e);
-      if (e?.response?.data?.detail) {
-        enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
-      }
+      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
