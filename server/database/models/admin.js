@@ -32,16 +32,23 @@ module.exports = (sequelize, DataTypes) => {
             }
         },
         {
+            hooks: {
+                beforeSave: async (user, options) => {
+                    const hash = hashPassword(user.password);
+                    user.password = hash;
+                },
+                beforeBulkCreate: (users, options) => {
+                    users.forEach(async (user) => {
+                        const hash = await hashPassword(user.password);
+                        user.password = hash;
+                    });
+                }
+            },
             sequelize,
             modelName: 'Admin',
             tableName: 'admins'
         }
     );
-
-    Admin.addHook('beforeSave', 'hashPasswordHook', async (user, options) => {
-        const hash = hashPassword(user.password);
-        user.password = hash;
-    });
 
     return Admin;
 };
