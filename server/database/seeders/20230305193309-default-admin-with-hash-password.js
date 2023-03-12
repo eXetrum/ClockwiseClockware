@@ -1,5 +1,4 @@
 const uuid = require('uuid');
-const { hashPassword } = require('../../middleware/RouteProtector');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -12,7 +11,7 @@ module.exports = {
             {
                 id: uuid.v4(),
                 email: 'admin@example.com',
-                password: await hashPassword('passwordsecret'),
+                password: 'passwordsecret',
                 createdAt: new Date(),
                 updatedAt: new Date()
             }

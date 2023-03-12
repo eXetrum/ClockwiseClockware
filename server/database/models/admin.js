@@ -1,8 +1,17 @@
 const { Model } = require('sequelize');
+const bcrypt = require('bcryptjs');
+
+const hashPassword = async (plaintextPassword) => {
+    const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
+    return hash;
+};
 
 module.exports = (sequelize, DataTypes) => {
     class Admin extends Model {
         static associate(models) {}
+        authenticate = (plainValue) => {
+            return bcrypt.compareSync(plainValue, this.password);
+        };
     }
     Admin.init(
         {
@@ -28,5 +37,11 @@ module.exports = (sequelize, DataTypes) => {
             tableName: 'admins'
         }
     );
+
+    Admin.addHook('beforeSave', 'hashPasswordHook', async (user, options) => {
+        const hash = hashPassword(user.password);
+        user.password = hash;
+    });
+
     return Admin;
 };
