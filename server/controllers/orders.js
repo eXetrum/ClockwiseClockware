@@ -1,4 +1,5 @@
-const { RouteProtector } = require('../middleware/RouteProtector');
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE } = require('../constants');
 const { body, param, query, validationResult } = require('express-validator');
 const { sendMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
@@ -8,7 +9,7 @@ const { Order, Client, Watches, City, Master } = require('../database/models');
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
-const dateToNearestHour = timestamp => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
+const dateToNearestHour = (timestamp) => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
 
 const getFreeMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -54,7 +55,7 @@ const getFreeMasters = [
                     endDate: { [Op.gt]: orderStartDate }
                 }
             });
-            bussyMasters = bussyMasters.map(item => item.masterId);
+            bussyMasters = bussyMasters.map((item) => item.masterId);
 
             let masters = await Master.findAll({
                 where: {
@@ -80,7 +81,7 @@ const getFreeMasters = [
             });
 
             // No idea how to filter these on 'sequelize level' ([city])
-            masters = masters.filter(master => master.cities.find(city => city.id === cityId));
+            masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
 
             res.status(200).json({ masters }).end();
         } catch (e) {
@@ -155,7 +156,7 @@ const create = [
             if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find(city => city.id === order.cityId) == null) {
+            if (master.cities.find((city) => city.id === order.cityId) == null) {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified city' });
             }
             /// ///////////////////////////////////////////////////
@@ -205,7 +206,7 @@ const create = [
 ];
 
 const getAll = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     async (req, res) => {
         try {
             const orders = await Order.findAll({
@@ -226,7 +227,7 @@ const getAll = [
 ];
 
 const remove = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Order ID required').isUUID().withMessage('Order ID should be of type string'),
     async (req, res) => {
         try {
@@ -251,7 +252,7 @@ const remove = [
 ];
 
 const get = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Order ID required').isString().withMessage('Order ID should be of type string'),
     async (req, res) => {
         try {
@@ -297,7 +298,7 @@ const get = [
 ];
 
 const update = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Order ID required').isString().withMessage('Order ID should be of type string'),
     body('order').exists().withMessage('order object required').isObject().withMessage('order object required'),
     body('order.watchId').exists().withMessage('order.watchId required').isUUID().withMessage('Incorrect watchId'),
@@ -341,7 +342,7 @@ const update = [
             if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find(city => city.id === order.cityId) == null) {
+            if (master.cities.find((city) => city.id === order.cityId) == null) {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified city' });
             }
             /// ///////////////////////////////////////////////////

@@ -1,10 +1,11 @@
-const { RouteProtector } = require('../middleware/RouteProtector');
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { Master, City, Order } = require('../database/models');
 const db = require('../database/models/index');
 
 const getAll = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     async (req, res) => {
         try {
             const masters = await Master.findAll({
@@ -22,7 +23,7 @@ const getAll = [
 ];
 
 const create = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     body('master').notEmpty().withMessage('Master object required'),
     body('master.name')
         .exists()
@@ -105,7 +106,7 @@ const create = [
 ];
 
 const remove = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('Master ID required'),
     async (req, res) => {
         try {
@@ -137,7 +138,7 @@ const remove = [
 ];
 
 const get = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('Master ID required'),
     async (req, res) => {
         try {
@@ -164,7 +165,7 @@ const get = [
 ];
 
 const update = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('Master ID required'),
     body('master').notEmpty().withMessage('Master object required'),
     body('master.name')

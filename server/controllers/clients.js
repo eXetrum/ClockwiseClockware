@@ -1,24 +1,40 @@
-const { RouteProtector } = require('../middleware/RouteProtector');
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
-const { Client, Order } = require('../database/models');
+const { User, Client, Order } = require('../database/models');
 
 const getAll = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     async (req, res) => {
         try {
-            const clients = await Client.findAll({
-                include: { model: Order, as: 'orders' },
+            const records = await Client.findAll({
+                include: [
+                    {
+                        model: User,
+                        attributes: { exclude: ['password'] }
+                    },
+                    { model: Order, as: 'orders' }
+                ],
+
                 order: [['updatedAt', 'DESC']]
+            });
+            const clients = records.map((client) => {
+                return {
+                    ...client.toJSON(),
+                    id: client.User.id,
+                    email: client.User.email
+                };
             });
             res.status(200).json({ clients }).end();
         } catch (e) {
+            console.log(e);
             res.status(400).end();
         }
     }
 ];
 
 const remove = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('Client ID required'),
     async (req, res) => {
         try {
@@ -26,8 +42,7 @@ const remove = [
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
             const { id } = req.params;
-            const result = await Client.destroy({ where: { id } });
-
+            const result = await User.destroy({ where: { id } });
             if (result === 0) return res.status(404).json({ detail: '~Client not found~' }).end();
 
             res.status(204).end();
@@ -49,7 +64,7 @@ const remove = [
 ];
 
 const get = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('Client ID required'),
     async (req, res) => {
         try {
@@ -74,7 +89,7 @@ const get = [
 ];
 
 const update = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Client ID required').isUUID().withMessage('Client ID should be of type string'),
     body('client').notEmpty().withMessage('Client object required'),
     body('client.name')

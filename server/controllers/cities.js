@@ -1,4 +1,4 @@
-const { RouteProtector } = require('../middleware/RouteProtector');
+const { RequireAuth } = require('../middleware/RouteProtector');
 const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
 
@@ -12,7 +12,7 @@ const getAll = async (req, res) => {
 };
 
 const create = [
-    RouteProtector,
+    RequireAuth(),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
@@ -52,7 +52,7 @@ const create = [
 ];
 
 const remove = [
-    RouteProtector,
+    RequireAuth(),
     param('id').exists().notEmpty().withMessage('City ID required'),
     async (req, res) => {
         try {
@@ -85,7 +85,7 @@ const remove = [
 ];
 
 const get = [
-    RouteProtector,
+    RequireAuth(),
     param('id').exists().notEmpty().withMessage('City ID required'),
     async (req, res) => {
         try {
@@ -109,7 +109,7 @@ const get = [
 ];
 
 const update = [
-    RouteProtector,
+    RequireAuth(),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()

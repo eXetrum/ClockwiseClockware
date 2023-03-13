@@ -64,7 +64,10 @@ const create = [
                 //const master = await Master.create({});
                 //user.setUserRefId(client.id);
                 throw new Error('bruh');
-            }
+            } /*else if (role === 'admin') {
+                const user = await User.create({ email, password, role });
+                const result = await user.createAdmin({});
+            }*/
             await transaction.commit();
             res.status(200).json({ email, password, role });
         } catch (e) {
