@@ -8,6 +8,7 @@ module.exports = (sequelize, DataTypes) => {
                 as: 'cities',
                 foreignKey: 'masterId'
             });
+
             Master.hasMany(models.Order, {
                 foreignKey: 'masterId',
                 as: 'orders'

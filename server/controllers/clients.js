@@ -86,6 +86,7 @@ const create = [
                 const user = await User.create({ ...client, role: 'client' }, { transaction: t });
                 const details = await user.createClient({ ...client }, { transaction: t });
 
+                delete user.password;
                 delete details.id;
                 delete details.userId;
 
@@ -218,6 +219,10 @@ const update = [
             // Prepare data
             client.name = client.name.trim();
             client.email = client.email.trim();
+
+            delete client.id;
+            delete client.createdAt;
+            delete client.updatedAt;
 
             await db.sequelize.transaction(async (t) => {
                 const [affectedRowsClient, resultClient] = await Client.update(

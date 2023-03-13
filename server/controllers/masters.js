@@ -1,7 +1,7 @@
 const { RequireAuth } = require('../middleware/RouteProtector');
 const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
-const { User, Master, City, Order } = require('../database/models');
+const { User, Master, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
 
 const getAll = [
@@ -19,7 +19,6 @@ const getAll = [
                 order: [['createdAt', 'DESC']]
             });
 
-            // TODO
             const masters = records.map((master) => {
                 const obj = {
                     ...master.toJSON(),
@@ -38,7 +37,7 @@ const getAll = [
 
 const create = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    body('master').notEmpty().withMessage('Master object required'),
+    body('master').notEmpty().withMessage('master object required'),
     body('master.name')
         .exists()
         .withMessage('master name required')
@@ -59,6 +58,15 @@ const create = [
         .withMessage('empty master email is not allowed')
         .isEmail()
         .withMessage('master email is not correct'),
+    body('master.password')
+        .exists()
+        .withMessage('master password required')
+        .isString()
+        .withMessage('master password should be of string type')
+        .trim()
+        .escape()
+        .notEmpty()
+        .withMessage('empty master password is not allowed'),
     body('master.rating')
         .exists()
         .withMessage('master rating required')
@@ -74,7 +82,7 @@ const create = [
     body('master.cities').exists().withMessage('master cities required').isArray().withMessage('master cities should be an array'),
     body('master.cities.*.id')
         .exists()
-        .withMessage('Each object of cities array should contains id field')
+        .withMessage('each object of cities array should contains id field')
         .isString()
         .withMessage('city id should be of type string'),
 
@@ -88,6 +96,7 @@ const create = [
             // Prepare data
             master.name = master.name.trim();
             master.email = master.email.trim();
+            master.password = master.password.trim();
 
             const dbCities = await City.findAll();
             const dbCityIds = dbCities.map((city) => city.id);
@@ -103,28 +112,21 @@ const create = [
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
-            const user = await db.sequelize.transaction(async (t) => {
+            const [user, details] = await db.sequelize.transaction(async (t) => {
                 const user = await User.create({ ...master, role: 'master' }, { transaction: t });
                 const details = await user.createMaster({ ...master }, { transaction: t });
                 await details.setCities(masterCities, { transaction: t });
 
+                delete user.password;
                 delete details.id;
                 delete details.userId;
 
-                return { ...details.toJSON(), ...user.toJSON() };
+                return [{ ...details.toJSON(), ...user.toJSON() }, details];
             });
 
-            //const result = await Master.create(master, { transaction });
-            //await result.setCities(masterCities, { transaction });
-            //await transaction.commit();
-
-            //master = result.toJSON();
-            //master.cities = await result.getCities();
-            console.log(user);
-
+            user.cities = await details.getCities();
             res.status(201).json({ master: user }).end();
         } catch (e) {
-            console.log(e);
             if (e.name === 'SequelizeUniqueConstraintError') {
                 return res.status(409).json({ detail: 'User with specified email already exists' }).end();
             }
@@ -136,19 +138,27 @@ const create = [
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('Master ID required'),
+    param('id').exists().notEmpty().withMessage('master ID required'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
             const { id } = req.params;
-            const result = await Master.destroy({ where: { id } });
-            if (result === 0) return res.status(404).json({ detail: '~Master not found~' }).end();
+
+            await db.sequelize.transaction(async (t) => {
+                const resultMasterDetails = await Master.destroy({ where: { userId: id } }, { transaction: t });
+                const resultUserDetails = await User.destroy({ where: { id } }, { transaction: t });
+                if (resultMasterDetails === 0 || resultUserDetails === 0) throw new Error('MasterNotFound');
+            });
+
             res.status(204).end();
         } catch (e) {
             // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
+            if (
+                (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') ||
+                (e.message && e.message === 'MasterNotFound')
+            ) {
                 return res.status(404).json({ detail: 'Master not found' }).end();
             }
 
@@ -168,19 +178,28 @@ const remove = [
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('Master ID required'),
+    param('id').exists().notEmpty().withMessage('master ID required'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
             const { id } = req.params;
-            const master = await Master.findOne({
-                where: { id },
-                include: { model: City, as: 'cities', through: { attributes: [] } }
+
+            let master = await Master.findOne({
+                where: { userId: id },
+                include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }],
+                attributes: { exclude: ['id', 'userId'] }
             });
 
             if (!master) return res.status(404).json({ detail: '~Master not found~' }).end();
+
+            master = {
+                ...master.toJSON(),
+                ...master.User.toJSON()
+            };
+            delete master.User;
+
             res.status(200).json({ master }).end();
         } catch (e) {
             // Incorrect UUID ID string
@@ -195,28 +214,28 @@ const get = [
 
 const update = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('Master ID required'),
-    body('master').notEmpty().withMessage('Master object required'),
+    param('id').exists().notEmpty().withMessage('master ID required'),
+    body('master').notEmpty().withMessage('master object required'),
     body('master.name')
         .exists()
-        .withMessage('Master name required')
+        .withMessage('master name required')
         .isString()
-        .withMessage('Master name should be of type string')
+        .withMessage('master name should be of type string')
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty master name is not allowed'),
+        .withMessage('empty master name is not allowed'),
     body('master.email')
         .exists()
-        .withMessage('Master email required')
+        .withMessage('master email required')
         .isString()
-        .withMessage('Master email should be of type string')
+        .withMessage('master email should be of type string')
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty master email is not allowed')
+        .withMessage('empty master email is not allowed')
         .isEmail()
-        .withMessage('Master email is not correct'),
+        .withMessage('master email is not correct'),
     body('master.rating')
         .exists()
         .withMessage('Master rating required')
@@ -224,14 +243,18 @@ const update = [
         .withMessage('Master rating should be of numeric value')
         .isInt({ min: 0, max: 5 })
         .withMessage('Master rating must be in range [0; 5]'),
-    body('master.cities').exists().withMessage('Master cities required').isArray().withMessage('Master cities should be an array'),
+    body('master.isActive')
+        .exists()
+        .withMessage('master isActive field required')
+        .isBoolean()
+        .withMessage('master isActive field should be of boolean type'),
+    body('master.cities').exists().withMessage('master cities required').isArray().withMessage('master cities should be an array'),
     body('master.cities.*.id')
         .exists()
-        .withMessage('Each object of cities array should contains id field')
+        .withMessage('each object of cities array should contains id field')
         .isString()
         .withMessage('city id should be of type string'),
     async (req, res) => {
-        let transaction = null;
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
@@ -257,21 +280,41 @@ const update = [
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
-            transaction = await db.sequelize.transaction();
-            let [affectedRows, result] = await Master.update(master, { where: { id }, returning: true, limit: 1 });
+            delete master.id;
+            delete master.createdAt;
+            delete master.updatedAt;
 
-            if (!affectedRows) return res.status(404).json({ detail: '~Master not found~' }).end();
+            await db.sequelize.transaction(async (t) => {
+                const [affectedRowsMaster, resultMaster] = await Master.update(
+                    master,
+                    {
+                        where: { userId: id },
+                        include: [{ model: City, as: 'cities', through: MasterCityList, required: true }],
 
-            result = result[0];
-            await result.setCities(masterCities, { transaction });
-            await transaction.commit();
+                        returning: true,
+                        limit: 1
+                    },
+                    { transaction: t }
+                );
+                if (affectedRowsMaster === 0) throw new Error('MasterNotFound');
+
+                const [affectedRowsUser, resultUser] = await User.update(
+                    master,
+                    { where: { id, role: 'master' }, returning: true, limit: 1 },
+                    { transaction: t }
+                );
+                if (affectedRowsUser === 0) throw new Error('MasterNotFound');
+
+                await resultMaster[0].setCities(masterCities, { transaction: t });
+            });
 
             res.status(204).end();
         } catch (e) {
-            if (transaction) await transaction.rollback();
-
             // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
+            if (
+                (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') ||
+                (e.message && e.message === 'MasterNotFound')
+            ) {
                 return res.status(404).json({ detail: 'Master not found' }).end();
             }
 

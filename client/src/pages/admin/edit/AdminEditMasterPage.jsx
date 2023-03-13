@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, FormGroup, FormControl, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Container, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import Multiselect from 'multiselect-react-dropdown';
-import { Header, StarRating, ErrorContainer } from '../../../components/common';
+import { Header, ErrorContainer, MasterForm } from '../../../components';
 import { getCities, getMasterById, updateMasterById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
 
@@ -12,7 +11,7 @@ const AdminEditMasterPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyMaster = () => ({ name: '', email: '', rating: 0, cities: [] });
+  const initEmptyMaster = () => ({ email: '', password: '', name: '', rating: 0, isActive: false, cities: [] });
 
   const [cities, setCities] = useState([]);
   const [master, setMaster] = useState(initEmptyMaster());
@@ -20,9 +19,8 @@ const AdminEditMasterPage = () => {
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [pending, setPending] = useState(false);
+  const [isPending, setPending] = useState(false);
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(() => master.name && master.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(master.email), [master]);
 
   const fetchInitialData = async (id, abortController) => {
     setInitialLoading(true);
@@ -81,8 +79,19 @@ const AdminEditMasterPage = () => {
   const onMasterEmailChange = (event) => setMaster((prevState) => ({ ...prevState, email: event.target.value }));
   const onMasterNameChange = (event) => setMaster((prevState) => ({ ...prevState, name: event.target.value }));
   const onMasterRatingChange = (value) => setMaster((prevState) => ({ ...prevState, rating: value }));
+  const onMasterIsActiveChange = (event) => setMaster((prev) => ({ ...prev, isActive: event.target.checked }));
   const onMasterCitySelect = (selectedList, selectedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
   const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
+
+  const handlers = {
+    onFormSubmit,
+    onMasterEmailChange,
+    onMasterNameChange,
+    onMasterRatingChange,
+    onMasterIsActiveChange,
+    onMasterCitySelect,
+    onMasterCityRemove,
+  };
 
   return (
     <Container>
@@ -105,47 +114,7 @@ const AdminEditMasterPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
-          <Row className="justify-content-md-center">
-            <Col xs>
-              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
-                <FormGroup>
-                  <Form.Label>Master email:</Form.Label>
-                  <FormControl type="email" name="masterEmail" onChange={onMasterEmailChange} value={master.email} disabled={pending} />
-                </FormGroup>
-                <FormGroup>
-                  <Form.Label>Master name:</Form.Label>
-                  <FormControl type="text" name="masterName" onChange={onMasterNameChange} value={master.name} disabled={pending} />
-                </FormGroup>
-                <FormGroup className="ms-3">
-                  <Form.Label>Rating:</Form.Label>
-                  <StarRating
-                    onRatingChange={onMasterRatingChange}
-                    onRatingReset={onMasterRatingChange}
-                    value={master.rating}
-                    total={5}
-                    readonly={pending}
-                  />
-                </FormGroup>
-                <FormGroup className="ms-3">
-                  <Form.Label>Master work cities:</Form.Label>
-                  <Multiselect
-                    onSelect={onMasterCitySelect}
-                    onRemove={onMasterCityRemove}
-                    options={cities}
-                    selectedValues={master.cities}
-                    displayValue="name"
-                    disable={pending}
-                  />
-                </FormGroup>
-
-                <Button type="submit" className="ms-2 btn btn-success" disabled={pending || !isFormValid()}>
-                  Save
-                </Button>
-              </Form>
-            </Col>
-          </Row>
-        )}
+        {isComponentReady && <MasterForm {...{ isPending, master, cities, ...handlers }} />}
         <hr />
       </Container>
     </Container>

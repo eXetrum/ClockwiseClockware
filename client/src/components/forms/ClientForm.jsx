@@ -52,7 +52,6 @@ const ClientForm = ({
                 <Form.Check
                   type="checkbox"
                   name="clientIsActive"
-                  id="clientIsActiveSwitch"
                   checked={client.isActive}
                   onChange={onClientIsActiveChange}
                   disabled={isPending}

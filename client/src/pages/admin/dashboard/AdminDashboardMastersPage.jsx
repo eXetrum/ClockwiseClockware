@@ -212,18 +212,6 @@ const AdminDashboardMasters = () => {
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Check
-                  type="checkbox"
-                  name="clientIsActive"
-                  id="clientIsActiveSwitch"
-                  checked={newMaster.isActive}
-                  onChange={onMasterIsActiveChange}
-                  disabled={isPending}
-                  label="IsActive"
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
                 <Form.Label>Master cities:</Form.Label>
                 <Multiselect
                   onSelect={onMasterCitySelect}
@@ -232,6 +220,18 @@ const AdminDashboardMasters = () => {
                   selectedValues={newMaster.cities}
                   displayValue="name"
                   disable={isPending}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Check
+                  type="checkbox"
+                  name="clientIsActive"
+                  id="clientIsActiveSwitch"
+                  checked={newMaster.isActive}
+                  onChange={onMasterIsActiveChange}
+                  disabled={isPending}
+                  label="IsActive"
                 />
               </Form.Group>
             </>
