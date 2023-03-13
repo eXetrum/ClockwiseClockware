@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import ViewMasterCard from '../master/ViewMasterCard';
@@ -17,7 +17,8 @@ const MasterTableList = ({ masters, onRemove }) => {
             <th className="text-center p-3 m-0">name</th>
             <th className="text-center p-3 m-0">cities</th>
             <th className="text-center p-3 m-0">rating</th>
-            <th colSpan="2" className="text-center p-3 m-0"></th>
+            <th className="text-center p-3 m-0">isActive</th>
+            <th colSpan="3" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
         <tbody>
@@ -35,6 +36,14 @@ const MasterTableList = ({ masters, onRemove }) => {
               </td>
               <td className="text-center p-2 m-0">
                 <StarRating total={5} value={master.rating} readonly={true} />
+              </td>
+              <td className="text-center p-2 m-0">
+                {master.isActive ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
+              </td>
+              <td className="text-center p-2 m-0">
+                <Button size="sm" variant="outline-warning" onClick={() => alert('Not Implemented')}>
+                  Reset password
+                </Button>
               </td>
               <>
                 <td className="text-center p-3 m-0">

@@ -1,20 +1,34 @@
 const { RequireAuth } = require('../middleware/RouteProtector');
 const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
-const { Master, City, Order } = require('../database/models');
+const { User, Master, City, Order } = require('../database/models');
 const db = require('../database/models/index');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
     async (req, res) => {
         try {
-            const masters = await Master.findAll({
+            const records = await Master.findAll({
                 include: [
+                    {
+                        model: User
+                    },
                     { model: City, as: 'cities', through: { attributes: [] } },
                     { model: Order, as: 'orders' }
                 ],
-                order: [['updatedAt', 'DESC']]
+                order: [['createdAt', 'DESC']]
             });
+
+            // TODO
+            const masters = records.map((master) => {
+                const obj = {
+                    ...master.toJSON(),
+                    ...master.User.toJSON()
+                };
+                delete obj.User;
+                return obj;
+            });
+
             res.status(200).json({ masters }).end();
         } catch (e) {
             res.status(400).end();
@@ -27,32 +41,37 @@ const create = [
     body('master').notEmpty().withMessage('Master object required'),
     body('master.name')
         .exists()
-        .withMessage('Master name required')
+        .withMessage('master name required')
         .isString()
-        .withMessage('Master name should be of type string')
+        .withMessage('master name should be of string type')
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty master name is not allowed'),
+        .withMessage('empty master name is not allowed'),
     body('master.email')
         .exists()
-        .withMessage('Master email required')
+        .withMessage('master email required')
         .isString()
-        .withMessage('Master email should be of type string')
+        .withMessage('master email should be of string type')
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty master email is not allowed')
+        .withMessage('empty master email is not allowed')
         .isEmail()
-        .withMessage('Master email is not correct'),
+        .withMessage('master email is not correct'),
     body('master.rating')
         .exists()
-        .withMessage('Master rating required')
+        .withMessage('master rating required')
         .isNumeric()
-        .withMessage('Master rating should be of numeric value')
+        .withMessage('master rating should be of numeric value')
         .isInt({ min: 0, max: 5 })
-        .withMessage('Master rating must be in range [0; 5]'),
-    body('master.cities').exists().withMessage('Master cities required').isArray().withMessage('Master cities should be an array'),
+        .withMessage('master rating must be in range [0; 5]'),
+    body('master.isActive')
+        .exists()
+        .withMessage('master isActive field required')
+        .isBoolean()
+        .withMessage('master isActive field should be of boolean type'),
+    body('master.cities').exists().withMessage('master cities required').isArray().withMessage('master cities should be an array'),
     body('master.cities.*.id')
         .exists()
         .withMessage('Each object of cities array should contains id field')
@@ -60,12 +79,11 @@ const create = [
         .withMessage('city id should be of type string'),
 
     async (req, res) => {
-        let transaction = null;
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
 
-            let { master } = req.body;
+            const { master } = req.body;
 
             // Prepare data
             master.name = master.name.trim();
@@ -85,19 +103,30 @@ const create = [
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
-            transaction = await db.sequelize.transaction();
-            const result = await Master.create(master, { transaction });
-            await result.setCities(masterCities, { transaction });
-            await transaction.commit();
+            const user = await db.sequelize.transaction(async (t) => {
+                const user = await User.create({ ...master, role: 'master' }, { transaction: t });
+                const details = await user.createMaster({ ...master }, { transaction: t });
+                await details.setCities(masterCities, { transaction: t });
 
-            master = result.toJSON();
-            master.cities = await result.getCities();
-            res.status(201).json({ master }).end();
+                delete details.id;
+                delete details.userId;
+
+                return { ...details.toJSON(), ...user.toJSON() };
+            });
+
+            //const result = await Master.create(master, { transaction });
+            //await result.setCities(masterCities, { transaction });
+            //await transaction.commit();
+
+            //master = result.toJSON();
+            //master.cities = await result.getCities();
+            console.log(user);
+
+            res.status(201).json({ master: user }).end();
         } catch (e) {
-            if (transaction) await transaction.rollback();
-
+            console.log(e);
             if (e.name === 'SequelizeUniqueConstraintError') {
-                return res.status(409).json({ detail: 'Master with specified email already exists' }).end();
+                return res.status(409).json({ detail: 'User with specified email already exists' }).end();
             }
 
             res.status(400).json(e).end();
@@ -247,7 +276,7 @@ const update = [
             }
 
             if (e.name === 'SequelizeUniqueConstraintError') {
-                return res.status(409).json({ detail: 'Master with specified email already exists' }).end();
+                return res.status(409).json({ detail: 'User with specified email already exists' }).end();
             }
 
             res.status(400).json(e).end();

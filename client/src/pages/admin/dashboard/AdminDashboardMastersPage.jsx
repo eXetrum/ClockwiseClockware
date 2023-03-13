@@ -12,7 +12,7 @@ import { getErrorText } from '../../../utils';
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyMaster = () => ({ name: '', email: '', rating: 0, cities: [] });
+  const initEmptyMaster = () => ({ name: '', email: '', password: '', rating: 0, isActive: false, cities: [] });
 
   const [cities, setCities] = useState([]);
   const [masters, setMasters] = useState([]);
@@ -20,11 +20,14 @@ const AdminDashboardMasters = () => {
   const [error, setError] = useState(null);
 
   const [newMaster, setNewMaster] = useState(initEmptyMaster());
-  const [pending, setPending] = useState(false);
+  const [isPending, setPending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(() => newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email), [newMaster]);
+  const isFormValid = useCallback(
+    () => newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email) && newMaster.password,
+    [newMaster],
+  );
 
   const fetchInitialData = async (abortController) => {
     setInitialLoading(true);
@@ -102,7 +105,9 @@ const AdminDashboardMasters = () => {
 
   const onMasterEmailChange = (event) => setNewMaster((prev) => ({ ...prev, email: event.target.value }));
   const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));
+  const onMasterPasswordChange = (event) => setNewMaster((prev) => ({ ...prev, password: event.target.value }));
   const onMasterRatingChange = (value) => setNewMaster((prev) => ({ ...prev, rating: value }));
+  const onMasterIsActiveChange = (event) => setNewMaster((prev) => ({ ...prev, isActive: event.target.checked }));
   const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
   const onMasterCityRemove = (selectedList, removedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
 
@@ -158,11 +163,11 @@ const AdminDashboardMasters = () => {
           onHide={onFormHide}
           onSubmit={onFormSubmit}
           isFormValid={isFormValid}
-          pending={pending}
+          pending={isPending}
           formContent={
             <>
-              <Form.Group>
-                <Form.Label>Master email:</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label>Email:</Form.Label>
                 <Form.Control
                   type="email"
                   name="masterEmail"
@@ -170,40 +175,63 @@ const AdminDashboardMasters = () => {
                   required
                   onChange={onMasterEmailChange}
                   value={newMaster.email}
-                  disabled={pending}
+                  disabled={isPending}
                 />
               </Form.Group>
-              <Form.Group>
-                <Form.Label>Master name:</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label>Name:</Form.Label>
                 <Form.Control
                   type="text"
                   name="masterName"
                   required
                   onChange={onMasterNameChange}
                   value={newMaster.name}
-                  disabled={pending}
+                  disabled={isPending}
                 />
               </Form.Group>
-              <Form.Group className="ms-3">
+              <Form.Group className="mb-3">
+                <Form.Label>Password:</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="masterPassword"
+                  required
+                  onChange={onMasterPasswordChange}
+                  value={newMaster.password}
+                  disabled={isPending}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
                 <Form.Label>Rating:</Form.Label>
                 <StarRating
                   onRatingChange={onMasterRatingChange}
                   onRatingReset={onMasterRatingChange}
                   value={newMaster.rating}
                   total={5}
-                  readonly={pending}
+                  readonly={isPending}
                 />
               </Form.Group>
 
-              <Form.Group className="ms-3">
-                <Form.Label>Master work cities:</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Check
+                  type="checkbox"
+                  name="clientIsActive"
+                  id="clientIsActiveSwitch"
+                  checked={newMaster.isActive}
+                  onChange={onMasterIsActiveChange}
+                  disabled={isPending}
+                  label="IsActive"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Label>Master cities:</Form.Label>
                 <Multiselect
                   onSelect={onMasterCitySelect}
                   onRemove={onMasterCityRemove}
                   options={cities}
                   selectedValues={newMaster.cities}
                   displayValue="name"
-                  disable={pending}
+                  disable={isPending}
                 />
               </Form.Group>
             </>

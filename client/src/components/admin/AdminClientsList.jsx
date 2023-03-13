@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -40,7 +40,11 @@ const AdminClientsList = ({ clients, onRemove }) => {
               <td className="text-center p-2 m-0">
                 {client.isActive ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
               </td>
-              <td className="text-center p-2 m-0">Reset password </td>
+              <td className="text-center p-2 m-0">
+                <Button size="sm" variant="outline-warning" onClick={() => alert('Not Implemented')}>
+                  Reset password
+                </Button>
+              </td>
               <td className="text-center p-2 m-0">
                 <Link to={'/admin/clients/' + client.id}>
                   <EditIcon />
