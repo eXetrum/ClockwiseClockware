@@ -7,21 +7,21 @@ module.exports = {
         return queryInterface.bulkInsert('watches', [
             {
                 id: uuid.v4(),
-                name: 'Маленький',
+                name: 'Small',
                 repairTime: 1,
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
                 id: uuid.v4(),
-                name: 'Середній',
+                name: 'Mid',
                 repairTime: 2,
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
                 id: uuid.v4(),
-                name: 'Великий',
+                name: 'Large',
                 repairTime: 3,
                 createdAt: new Date(),
                 updatedAt: new Date()
@@ -35,7 +35,7 @@ module.exports = {
             'watches',
             {
                 name: {
-                    [Op.in]: ['Маленький', 'Середній', 'Великий']
+                    [Op.in]: ['Small', 'Mid', 'Large']
                 }
             },
             {}

@@ -8,11 +8,7 @@ module.exports = {
                 allowNull: false,
                 primaryKey: true
             },
-            roleUserId: {
-                allowNull: false,
-                type: Sequelize.DataTypes.UUID
-            },
-            /*email: {
+            email: {
                 type: Sequelize.DataTypes.STRING,
                 allowNull: false,
                 unique: true
@@ -20,7 +16,7 @@ module.exports = {
             password: {
                 allowNull: false,
                 type: Sequelize.DataTypes.STRING
-            },*/
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DataTypes.DATE

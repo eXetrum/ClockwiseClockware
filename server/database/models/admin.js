@@ -22,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
                     key: 'id'
                 },
                 onUpdate: 'CASCADE',
-                onDelete: 'CASCADE'
+                onDelete: 'RESTRICT'
             }
         },
         {

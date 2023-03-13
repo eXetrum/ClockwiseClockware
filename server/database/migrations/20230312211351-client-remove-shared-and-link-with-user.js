@@ -14,7 +14,7 @@ module.exports = {
                     key: 'id'
                 },
                 onUpdate: 'CASCADE',
-                onDelete: 'CASCADE'
+                onDelete: 'RESTRICT'
             }),
             await queryInterface.addColumn('clients', 'isActive', {
                 allowNull: false,
