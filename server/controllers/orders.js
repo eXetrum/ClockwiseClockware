@@ -172,12 +172,12 @@ const create = [
             transaction = await db.sequelize.transaction();
             let client = await Client.findOne({ where: { email: order.client.email } });
             if (client == null) {
-                client = await Client.create(order.client);
+                client = await Client.create(order.client, { transaction });
             } else {
-                await Client.update({ name: order.client.name }, { where: { email: order.client.email } });
+                await Client.update({ name: order.client.name }, { where: { email: order.client.email } }, { transaction });
             }
             order.clientId = client.id;
-            const result = await Order.create(order);
+            const result = await Order.create(order, { transaction });
             await transaction.commit();
 
             // orderId, client, master, watch, city, startDate, endDate, totalCost
@@ -194,7 +194,7 @@ const create = [
 
             res.status(201).json({ confirmation }).end();
         } catch (e) {
-            if (transaction) transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             if (e.constraint === 'overlapping_times') {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified datetime' });

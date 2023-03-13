@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -12,7 +12,7 @@ const AdminClientsList = ({ clients, onRemove }) => {
       <Container>
         <Row className="justify-content-md-center mt-3">
           <Col md="auto">
-            <Alert>No records yet</Alert>
+            <Alert variant="warning">No records yet</Alert>
           </Col>
         </Row>
       </Container>
@@ -27,6 +27,7 @@ const AdminClientsList = ({ clients, onRemove }) => {
             <th className="text-center p-2 m-0">id</th>
             <th className="text-center p-2 m-0">email</th>
             <th className="text-center p-2 m-0">name</th>
+            <th className="text-center p-2 m-0">isActive</th>
             <th colSpan="3" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
@@ -36,6 +37,9 @@ const AdminClientsList = ({ clients, onRemove }) => {
               <td className="text-center p-2 m-0">{client.id}</td>
               <td className="text-center p-2 m-0">{client.email}</td>
               <td className="text-center p-2 m-0">{client.name}</td>
+              <td className="text-center p-2 m-0">
+                {client.isActive ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
+              </td>
               <td className="text-center p-2 m-0">Reset password </td>
               <td className="text-center p-2 m-0">
                 <Link to={'/admin/clients/' + client.id}>

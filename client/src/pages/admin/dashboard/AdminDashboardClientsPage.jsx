@@ -5,25 +5,26 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { Header, ErrorContainer, AdminClientsList, ModalForm } from '../../../components';
-import { deleteClientById, getClients } from '../../../api';
+import { createClient, deleteClientById, getClients } from '../../../api';
 import { getErrorText } from '../../../utils';
 
 const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyClient = () => ({ name: '', email: '' });
+  const initEmptyClient = () => ({ email: '', password: '', name: '', isActive: false });
 
   const [clients, setClients] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const [newClient, setNewClient] = useState(initEmptyClient());
-  const [pending, setPending] = useState(false);
+  const [isPending, setPending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(
-    () => newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newClient.email),
+    () =>
+      newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newClient.email) && newClient.password,
     [newClient],
   );
 
@@ -39,6 +40,24 @@ const AdminDashboardClientsPage = () => {
       setError(e);
     } finally {
       setInitialLoading(false);
+    }
+  };
+
+  const doCreateClient = async (client) => {
+    setPending(true);
+    try {
+      const response = await createClient({ client });
+      if (response?.data?.client) {
+        const { client } = response.data;
+        setClients([client, ...clients]);
+        setNewClient(initEmptyClient());
+        setShowAddForm(false);
+        enqueueSnackbar(`Client "${client.email}" created`, { variant: 'success' });
+      }
+    } catch (e) {
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
     }
   };
 
@@ -73,9 +92,14 @@ const AdminDashboardClientsPage = () => {
     setShowAddForm(false);
   };
 
-  const onClientFormSubmit = (event) => event.preventDefault();
-  const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
+  const onClientFormSubmit = (event) => {
+    event.preventDefault();
+    doCreateClient(newClient);
+  };
   const onClientEmailChange = (event) => setNewClient((prev) => ({ ...prev, email: event.target.value }));
+  const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
+  const onClientPasswordChange = (event) => setNewClient((prev) => ({ ...prev, password: event.target.value }));
+  const onClientIsActiveChange = (event) => setNewClient((prev) => ({ ...prev, isActive: event.target.checked }));
 
   const onClientRemove = async (clientId) => {
     const client = clients.find((item) => item.id === clientId);
@@ -128,25 +152,46 @@ const AdminDashboardClientsPage = () => {
           okText={'Create'}
           onHide={onClientFormHide}
           onSubmit={onClientFormSubmit}
-          pending={pending}
+          pending={isPending}
           isFormValid={isFormValid}
           formContent={
             <>
-              <FormGroup>
-                <Form.Label>Client email:</Form.Label>
+              <FormGroup className="mb-3">
+                <Form.Label>Email:</Form.Label>
                 <FormControl
                   type="text"
                   name="clientEmail"
                   autoFocus
                   onChange={onClientEmailChange}
                   value={newClient.email}
-                  disabled={pending}
+                  disabled={isPending}
                 />
               </FormGroup>
-              <FormGroup>
-                <Form.Label>Client name:</Form.Label>
-                <FormControl type="text" name="clientName" onChange={onClientNameChange} value={newClient.name} disabled={pending} />
+              <FormGroup className="mb-3">
+                <Form.Label>Name:</Form.Label>
+                <FormControl type="text" name="clientName" onChange={onClientNameChange} value={newClient.name} disabled={isPending} />
               </FormGroup>
+              <FormGroup className="mb-3">
+                <Form.Label>Password:</Form.Label>
+                <FormControl
+                  type="password"
+                  name="clientPassword"
+                  onChange={onClientPasswordChange}
+                  value={newClient.password}
+                  disabled={isPending}
+                />
+              </FormGroup>
+              <Form.Group>
+                <Form.Check
+                  type="checkbox"
+                  name="clientIsActive"
+                  id="clientIsActiveSwitch"
+                  checked={newClient.isActive}
+                  onChange={onClientIsActiveChange}
+                  disabled={isPending}
+                  label="IsActive"
+                />
+              </Form.Group>
             </>
           }
         />

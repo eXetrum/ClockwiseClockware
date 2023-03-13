@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Container, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
-import { Header, ErrorContainer } from '../../../components/common';
+import { Header, ErrorContainer, ClientForm } from '../../../components';
 import { getClientById, updateClientById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
 
@@ -11,16 +11,15 @@ const AdminEditClient = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyClient = () => ({ name: '', email: '' });
+  const initEmptyClient = () => ({ email: '', password: '', name: '', isActive: false });
 
   const [client, setClient] = useState(initEmptyClient());
   const [originalClient, setOriginalClient] = useState(initEmptyClient());
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [pending, setPending] = useState(false);
+  const [isPending, setPending] = useState(false);
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(() => client.name.length >= 3 && /\w{1,}@\w{1,}\.\w{2,}/gi.test(client.email), [client]);
 
   const fetchClienyById = async (id, abortController) => {
     setInitialLoading(true);
@@ -72,6 +71,14 @@ const AdminEditClient = () => {
 
   const onClientEmailChange = (event) => setClient((prev) => ({ ...prev, email: event.target.value }));
   const onClientNameChange = (event) => setClient((prev) => ({ ...prev, name: event.target.value }));
+  const onClientIsActiveChange = (event) => setClient((prev) => ({ ...prev, isActive: event.target.checked }));
+
+  const handlers = {
+    onFormSubmit,
+    onClientEmailChange,
+    onClientNameChange,
+    onClientIsActiveChange,
+  };
 
   return (
     <Container>
@@ -94,25 +101,7 @@ const AdminEditClient = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
-          <Row className="justify-content-md-center">
-            <Col md="auto">
-              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
-                <Form.Group>
-                  <Form.Label>Client email:</Form.Label>
-                  <Form.Control type="email" name="clientEmail" onChange={onClientEmailChange} value={client.email} disabled={pending} />
-                </Form.Group>
-                <Form.Group className="ms-2">
-                  <Form.Label>Client name:</Form.Label>
-                  <Form.Control type="text" name="clientName" onChange={onClientNameChange} value={client.name} disabled={pending} />
-                </Form.Group>
-                <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
-                  Save
-                </Button>
-              </Form>
-            </Col>
-          </Row>
-        )}
+        {isComponentReady && <ClientForm {...{ isPending, client, ...handlers }} />}
         <hr />
       </Container>
     </Container>

@@ -12,7 +12,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
       <Container>
         <Row className="justify-content-md-center mt-3">
           <Col md="auto">
-            <Alert>No records yet</Alert>
+            <Alert variant="warning">No records yet</Alert>
           </Col>
         </Row>
       </Container>

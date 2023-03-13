@@ -31,7 +31,7 @@ const sendMail = async ({ orderId, client, master, watch, city, startDate, endDa
             from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
             to: client.email,
             subject: 'Your order details at ClockwiseClockware',
-            template: 'email_body',
+            template: 'order_confirmation_body',
             context: {
                 orderId,
                 clientName: client.name,
@@ -48,7 +48,7 @@ const sendMail = async ({ orderId, client, master, watch, city, startDate, endDa
         const result = await transporter.sendMail(mailOptions);
         if (result != null) {
             // Keep: 'messageId', 'messageTime', and remove rest
-            ['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach(prop => delete result[prop]);
+            ['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach((prop) => delete result[prop]);
         }
         return result;
     } catch (e) {

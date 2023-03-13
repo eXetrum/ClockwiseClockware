@@ -5,7 +5,7 @@ const { User, Admin, Client, Master } = require('../database/models');
 
 const { USER_ROLES } = require('../constants');
 
-const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)].filter((item) => item !== 'admin');
+const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)]; //.filter((item) => item !== 'admin');
 
 const create = [
     body('email')
@@ -52,27 +52,28 @@ const create = [
             console.log('register=', email, password, role);
 
             transaction = await db.sequelize.transaction();
-
+            let user = null;
             if (role === 'client') {
-                const user = await User.create({ email, password, role });
-                console.log('user: ', user);
-                const result = await user.createClient({ name });
-                console.log('result: ', result);
+                user = await User.create({ email, password, role }, { transaction });
+                await user.createClient({ name }, { transaction });
+                user = user.toJSON();
+                user = { ...user, name };
             } else if (role === 'master') {
                 const { cities } = req.body;
                 //const client = await Client.create({ name });
                 //const master = await Master.create({});
                 //user.setUserRefId(client.id);
                 throw new Error('bruh');
-            } /*else if (role === 'admin') {
-                const user = await User.create({ email, password, role });
-                const result = await user.createAdmin({});
-            }*/
+            } else if (role === 'admin') {
+                const user = await User.create({ email, password, role }, { transaction });
+                const result = await user.createAdmin({}, { transaction });
+            }
             await transaction.commit();
-            res.status(200).json({ email, password, role });
+
+            res.status(201).json({ user });
         } catch (e) {
             console.log(e);
-            if (transaction) transaction.rollback();
+            if (transaction) await transaction.rollback();
 
             if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'User email already exists' }).end();
             res.status(400).end();
@@ -108,8 +109,8 @@ const login = [
 
             // Get user input
             const { email, password } = req.body;
-            let user = await User.findOne({ where: { email } });
-            //const user = await Admin.findOne({ where: { email } });
+            let user = await User.scope('withPassword').findOne({ where: { email } });
+
             console.log('user=', user);
             const a = await user.getAdmin();
             console.log('user A=', a);
@@ -131,7 +132,7 @@ const login = [
             else if (user.role === 'master') params = await user.getMaster();
             else if (user.role === 'client') params = await user.getClient();
 
-            user = { ...user.toJSON(), ...params.toJSON() };
+            user = { ...params.toJSON(), ...user.toJSON() };
 
             const token = generateAccessToken(user); //.toJSON());
             res.status(200).json({ accessToken: token }).end();

@@ -48,7 +48,20 @@ module.exports = (sequelize, DataTypes) => {
             sequelize,
             modelName: 'User',
             tableName: 'users',
-            associations: true
+            associations: true,
+            defaultScope: {
+                attributes: {
+                    exclude: ['password']
+                },
+                order: [['createdAt', 'DESC']]
+            },
+            scopes: {
+                withPassword: {
+                    attributes: {
+                        include: ['password']
+                    }
+                }
+            }
             /*scopes: {
                 admin: {
                     where: {

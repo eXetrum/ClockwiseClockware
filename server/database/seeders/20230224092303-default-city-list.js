@@ -7,12 +7,14 @@ module.exports = {
             {
                 id: uuid.v4(),
                 name: 'Dnipro',
+                pricePerHour: 525,
                 createdAt: new Date(),
                 updatedAt: new Date()
             },
             {
                 id: uuid.v4(),
                 name: 'Uzhgorod',
+                pricePerHour: 125,
                 createdAt: new Date(),
                 updatedAt: new Date()
             }
