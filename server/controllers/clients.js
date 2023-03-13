@@ -82,6 +82,9 @@ const create = [
             let user = await User.create({ ...client, role: 'client' }, { transaction });
             const details = await user.createClient({ ...client }, { transaction });
 
+            delete details.id;
+            delete details.userId;
+
             user = { ...details.toJSON(), ...user.toJSON() };
             await transaction.commit();
 
@@ -214,9 +217,6 @@ const update = [
             client.name = client.name.trim();
             client.email = client.email.trim();
 
-            //let result = await Client.findOne({ where: { id }, include: [{ model: User}] });
-            //if(!result) return res.status(404).json({ detail: '~Client not found~' }).end();
-
             transaction = await db.sequelize.transaction();
             const [affectedRowsClient, resultClient] = await Client.update(
                 client,
@@ -227,18 +227,15 @@ const update = [
                 },
                 { transaction }
             );
-            console.log(affectedRowsClient, resultClient);
             const [affectedRowsUser, resultUser] = await User.update(client, { where: { id }, returning: true, limit: 1 }, { transaction });
-            console.log(affectedRowsUser, resultUser);
 
             if (!affectedRowsClient || !affectedRowsUser) return res.status(404).json({ detail: '~Client not found~' }).end();
-
             await transaction.commit();
 
             res.status(204).end();
         } catch (e) {
             if (transaction) await transaction.rollback();
-            console.log(e);
+
             // Incorrect UUID ID string
             if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
                 return res.status(404).json({ detail: 'Client not found' }).end();
