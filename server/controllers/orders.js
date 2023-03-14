@@ -1,7 +1,7 @@
 const { RequireAuth } = require('../middleware/RouteProtector');
 const { ACCESS_SCOPE } = require('../constants');
 const { body, param, query, validationResult } = require('express-validator');
-const { sendMail } = require('../middleware/NodeMailer');
+const { sendOrderConfirmationMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
 const { Op } = require('sequelize');
 const db = require('../database/models/index');
@@ -181,7 +181,7 @@ const create = [
             await transaction.commit();
 
             // orderId, client, master, watch, city, startDate, endDate, totalCost
-            const confirmation = await sendMail({
+            const confirmation = await sendOrderConfirmationMail({
                 orderId: result.id,
                 client: order.client,
                 master,

@@ -2,17 +2,34 @@ require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
 const { ACCESS_SCOPE } = require('../constants');
+const { User } = require('../database/models');
 
 const RouteProtector = async (req, res, next, scope = ACCESS_SCOPE.AnyAuth) => {
-    if (!req.headers.authorization) {
-        res.status(401).end();
-        return;
-    }
     try {
-        const token = req.headers.authorization.split(' ')[1];
-        const user = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
+        // Header exists
+        if (!req.headers.authorization) return res.status(401).end();
 
-        if (!scope.includes(user.role)) res.status(403).end();
+        // Token exists and valid
+        const token = req.headers.authorization.split(' ')[1];
+        const tokenUser = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
+
+        // Ensure user with id still exists
+        const dbUser = await User.findOne({ where: { id: tokenUser.id } });
+        if (!dbUser) return res.status(401).end();
+
+        // Ensure account is active (in case if administraotr decide to temporary disable)
+        if (!dbUser.isActive) return res.status(401).json({ detail: 'Account temporary disabled' }).end();
+
+        const details = await dbUser.getDetails();
+
+        // Master/Client account must be with email verified flag (for master additionaly approved by admin).
+        if (ACCESS_SCOPE.MasterOrClient.includes(dbUser.role) && !details.isEmailVerified)
+            return res.status(401).json({ detail: 'Email address is not confirmed yet' }).end();
+
+        if (ACCESS_SCOPE.MasterOnly.includes(dbUser.role) && !details.isApprovedByAdmin)
+            return res.status(401).json({ detail: 'Account is not approved by admin yet' }).end();
+
+        if (!scope.includes(dbUser.role)) return res.status(403).end();
     } catch (e) {
         return res.status(401).end();
     }

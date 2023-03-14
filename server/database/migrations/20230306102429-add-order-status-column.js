@@ -10,6 +10,6 @@ module.exports = {
     },
     async down(queryInterface, Sequelize) {
         // https://stackoverflow.com/a/74485531
-        await queryInterface.removeColumn('orders', 'status');
+        await queryInterface.sequelize.query('DROP TYPE "enum_orders_status"; ALTER TABLE "orders" DROP COLUMN "status"');
     }
 };

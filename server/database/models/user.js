@@ -8,15 +8,13 @@ module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         authenticate = (plainValue) => compareSync(plainValue, this.password);
 
-        static associate(models) {
-            /*User.hasOne(models.Client, {
-                scope: {
-                    role: 'admin'
-                },
-                as: 'admin',
-                foreignKey:  'id'
-            });*/
+        getDetails = async () => {
+            if (this.role === 'admin') return await this.getAdmin();
+            if (this.role === 'master') return await this.getMaster();
+            if (this.role === 'client') return await this.getClient();
+        };
 
+        static associate(models) {
             User.hasOne(models.Admin, { foreignKey: 'userId' });
             User.hasOne(models.Master, { foreignKey: 'userId' });
             User.hasOne(models.Client, { foreignKey: 'userId' });
@@ -42,6 +40,11 @@ module.exports = (sequelize, DataTypes) => {
             role: {
                 type: DataTypes.ENUM([...Object.values(USER_ROLES)]),
                 allowNull: false
+            },
+            isActive: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: true
             }
         },
         {
@@ -62,26 +65,6 @@ module.exports = (sequelize, DataTypes) => {
                     }
                 }
             }
-            /*scopes: {
-                admin: {
-                    where: {
-                        role: 'admin'
-                    },
-                    include: [{ model: 'Admin' }]
-                },
-                master: {
-                    where: {
-                        role: 'master'
-                    },
-                    include: [{ model: 'Master' }]
-                },
-                client: {
-                    where: {
-                        role: 'client'
-                    },
-                    include: [{ model: 'Client' }]
-                }
-            }*/
         }
     );
 

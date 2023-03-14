@@ -34,7 +34,12 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 type: DataTypes.INTEGER
             },
-            isActive: {
+            isEmailVerified: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            isApprovedByAdmin: {
                 allowNull: false,
                 type: DataTypes.BOOLEAN,
                 defaultValue: false

@@ -5,11 +5,11 @@ const USER_ROLES = Object.freeze({
 });
 
 const ACCESS_SCOPE = Object.freeze({
-    AnyAuth: ['admin', 'master', 'client'],
-    AdminOnly: ['admin'],
-    MasterOnly: ['master'],
-    ClientOnly: ['client'],
-    AdminOrSelf: ['client', 'self']
+    AnyAuth: [USER_ROLES.ADMIN, USER_ROLES.MASTER, USER_ROLES.CLIENT],
+    AdminOnly: [USER_ROLES.ADMIN],
+    MasterOnly: [USER_ROLES.MASTER],
+    ClientOnly: [USER_ROLES.CLIENT],
+    MasterOrClient: [USER_ROLES.MASTER, USER_ROLES.CLIENT]
 });
 
 module.exports = {

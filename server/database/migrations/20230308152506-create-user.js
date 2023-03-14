@@ -24,6 +24,11 @@ module.exports = {
                 type: Sequelize.DataTypes.ENUM([...Object.values(USER_ROLES)]),
                 allowNull: false
             },
+            isActive: {
+                allowNull: false,
+                type: Sequelize.DataTypes.BOOLEAN,
+                defaultValue: true
+            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DataTypes.DATE
@@ -35,6 +40,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable('users');
+        await queryInterface.sequelize.query('DROP TYPE "enum_users_status"; DROP TABLE users;');
     }
 };

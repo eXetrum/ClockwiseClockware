@@ -16,7 +16,12 @@ module.exports = {
                 onUpdate: 'CASCADE',
                 onDelete: 'RESTRICT'
             }),
-            await queryInterface.addColumn('masters', 'isActive', {
+            await queryInterface.addColumn('masters', 'isEmailVerified', {
+                allowNull: false,
+                type: Sequelize.DataTypes.BOOLEAN,
+                defaultValue: false
+            }),
+            await queryInterface.addColumn('masters', 'isApprovedByAdmin', {
                 allowNull: false,
                 type: Sequelize.DataTypes.BOOLEAN,
                 defaultValue: false
@@ -26,7 +31,8 @@ module.exports = {
 
     async down(queryInterface, Sequelize) {
         await Promise.all([
-            await queryInterface.removeColumn('masters', 'isActive'),
+            await queryInterface.removeColumn('masters', 'isApprovedByAdmin'),
+            await queryInterface.removeColumn('masters', 'isEmailVerified'),
             await queryInterface.removeColumn('masters', 'userId'),
             await queryInterface.addColumn('masters', 'password', {
                 allowNull: false,
