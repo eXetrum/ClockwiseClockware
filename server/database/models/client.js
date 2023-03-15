@@ -3,6 +3,10 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Client extends Model {
+        setEmailVerified(value) {
+            this.setDataValue('isEmailVerified', value);
+        }
+
         static associate(models) {
             Client.hasMany(models.Order, {
                 foreignKey: 'clientId',

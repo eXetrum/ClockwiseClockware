@@ -1,9 +1,11 @@
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
 const { generateAccessToken } = require('../middleware/RouteProtector');
 const { body, validationResult } = require('express-validator');
 const db = require('../database/models/index');
-const { User, Admin, Client, Master, City } = require('../database/models');
-
-const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
+const { User, Admin, Client, Master, City, Confirmations } = require('../database/models');
+const { sendPasswordResetMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
+const { generatePassword, generateConfirmationToken } = require('../utils');
 
 const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)].filter((item) => item !== 'admin');
 
@@ -107,8 +109,6 @@ const create = [
 
             res.status(201).json({ user });
         } catch (e) {
-            console.log(e);
-
             if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'User email already exists' }).end();
             res.status(400).end();
         }
@@ -158,7 +158,7 @@ const login = [
             }
 
             if (ACCESS_SCOPE.MasterOnly.includes(user.role) && !details.isApprovedByAdmin) {
-                return res.status(403).json({ detail: 'Account is not approved by admin yet' }).end();
+                return res.status(403).json({ detail: 'Account is not approved yet' }).end();
             }
 
             const compositeUser = { ...details.toJSON(), ...user.toJSON() };
@@ -175,7 +175,110 @@ const login = [
     }
 ];
 
+const verify = async (req, res) => {
+    try {
+        const { token } = req.query;
+
+        const confirmation = await Confirmations.findOne({ where: { token } });
+        if (!confirmation) return res.status(400).json({ detail: 'Invalid token' }).end();
+
+        const user = await User.findOne({ where: { id: confirmation.userId } });
+        if (!user) return res.status(400).json({ detail: 'User not found' }).end();
+
+        const account = await user.getDetails();
+        if (account.isEmailVerified === true) return res.status(409).json({ detail: 'User has been already verified. Please Login' }).end();
+
+        await account.setEmailVerified(true);
+        await account.save();
+
+        await Confirmations.destroy({ where: { token } });
+        // TODO: send "congratz" letter ???
+        res.status(200).json({ detail: 'Your account has been successfully verified' }).end();
+    } catch (e) {
+        res.status(400).end();
+    }
+};
+
+const resetPassword = [
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
+    body('userId').exists().withMessage('userId required').isString().withMessage('userId should be of string type'),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+
+            const { userId } = req.body;
+
+            const user = await User.findOne({ where: { id: userId } });
+            if (!user) return res.status(404).json({ detail: 'User not found' }).end();
+
+            if (!ACCESS_SCOPE.MasterOrClient.includes(user.role)) {
+                return res.status(409).json({ detail: 'Unable to reset password for this user type' }).end();
+            }
+
+            const password = generatePassword();
+            await user.setPassword(password);
+            await user.save();
+
+            const result = await sendPasswordResetMail({ email: user.email, password });
+            if (!('messageId' in result)) {
+                return res
+                    .status(500)
+                    .json({ detail: result ? result.toString() : 'NodeMailer error' })
+                    .end();
+            }
+
+            return res.status(204).end();
+        } catch (e) {
+            res.status(400).end();
+        }
+    }
+];
+
+const resendEmailConfirmation = [
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
+    body('userId').exists().withMessage('userId required').isString().withMessage('userId should be of string type'),
+    async (req, res) => {
+        try {
+            // TODO
+            const { userId } = req.body;
+            const user = await User.findOne({ where: { id: userId } });
+            if (!user) return res.status(404).json({ detail: 'User not found' }).end();
+
+            if (!ACCESS_SCOPE.MasterOrClient.includes(user.role)) {
+                return res.status(409).json({ detail: 'Unable to resend email confirmation letter for this user type' }).end();
+            }
+
+            const account = await user.getDetails();
+            if (account.isEmailVerified === true) {
+                return res.status(409).json({ detail: 'User has been already verified. Please Login' }).end();
+            }
+
+            const password = generatePassword();
+            const token = generateConfirmationToken();
+            const verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
+
+            await Confirmations.create({ userId: user.id, token });
+
+            const result = await sendEmailConfirmationMail({ email: user.email, password, verificationLink });
+            if (!('messageId' in result)) {
+                return res
+                    .status(500)
+                    .json({ detail: result ? result.toString() : 'NodeMailer error' })
+                    .end();
+            }
+
+            return res.status(204).end();
+        } catch (e) {
+            res.status(400).end();
+        }
+    }
+];
+
 module.exports = {
     create,
-    login
+    login,
+    verify,
+    resetPassword,
+    resendEmailConfirmation
 };

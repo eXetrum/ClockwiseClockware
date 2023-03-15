@@ -8,13 +8,11 @@ import { Header, ErrorContainer, OrderForm, AdminMastersList } from '../../../co
 import { getWatches, getCities, getOrderById, updateOrderById, getAvailableMasters } from '../../../api';
 import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
-import { ORDER_STATUS_ENUM } from '../../../constants';
-
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { id } = useParams();
 
-  const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour() });
+  const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour(), status: '' });
 
   const [watches, setWatches] = useState([]);
   const [cities, setCities] = useState([]);
@@ -77,7 +75,6 @@ const AdminEditOrderPage = () => {
       if (response?.data?.order) {
         const { order } = response.data;
         order.startDate = new Date(order.startDate);
-        console.log('getOrderById: ', order);
         resetOrigOrder(order);
       }
     } catch (e) {
@@ -115,7 +112,7 @@ const AdminEditOrderPage = () => {
     }
   };
 
-  const doUpdateOrderById = async ({ id, watch, city, master, startDate }) => {
+  const doUpdateOrderById = async ({ id, watch, city, master, startDate, status }) => {
     setPending(true);
     try {
       const order = {
@@ -123,10 +120,11 @@ const AdminEditOrderPage = () => {
         cityId: city.id,
         masterId: master.id,
         startDate: startDate.getTime(),
+        status,
       };
       const response = await updateOrderById({ id, order });
       if ([200, 204].includes(response.status)) {
-        resetOrigOrder({ ...originalOrder, watch, city, master, startDate });
+        resetOrigOrder({ ...originalOrder, watch, city, master, startDate, status });
         enqueueSnackbar('Order updated', { variant: 'success' });
       }
     } catch (e) {
@@ -211,9 +209,7 @@ const AdminEditOrderPage = () => {
     resetMasterList();
   };
 
-  const onOrderStatusChange = () => {
-    console.log('status change:');
-  };
+  const onOrderStatusChange = (event, status) => setNewOrder((prev) => ({ ...prev, status }));
 
   const onFindMasterBtnClick = (event) => {
     event.preventDefault();

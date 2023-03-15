@@ -5,7 +5,7 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { Header, ErrorContainer, AdminClientsList, ModalForm } from '../../../components';
-import { createClient, deleteClientById, getClients } from '../../../api';
+import { createClient, deleteClientById, getClients, resetPassword, resendEmailConfirmation } from '../../../api';
 import { getErrorText, validateEmail } from '../../../utils';
 
 const AdminDashboardClientsPage = () => {
@@ -77,6 +77,36 @@ const AdminDashboardClientsPage = () => {
     }
   };
 
+  const doResetPassword = async (client) => {
+    try {
+      setPending(true);
+      const response = await resetPassword({ userId: client.id });
+      if ([200, 204].includes(response?.status)) {
+        enqueueSnackbar(`Password for ${client.email} has been successfully reset`, { variant: 'success' });
+      }
+    } catch (e) {
+      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const doResendEmailConfirmation = async (client) => {
+    try {
+      setPending(true);
+      const response = await resendEmailConfirmation({ userId: client.id });
+      if ([200, 204].includes(response?.status)) {
+        enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
+      }
+    } catch (e) {
+      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
   useEffect(() => {
     const abortController = new AbortController();
     fetchInitialData(abortController);
@@ -111,6 +141,9 @@ const AdminDashboardClientsPage = () => {
     if (result) doDeleteClientById(clientId);
   };
 
+  const onClientResetPassword = async (client) => doResetPassword(client);
+  const onClientResendEmailConfirmation = async (client) => doResendEmailConfirmation(client);
+
   return (
     <Container>
       <Header />
@@ -138,7 +171,13 @@ const AdminDashboardClientsPage = () => {
               </Col>
             </Row>
             <hr />
-            <AdminClientsList clients={clients} onRemove={onClientRemove} />
+            <AdminClientsList
+              clients={clients}
+              onRemove={onClientRemove}
+              onResetPassword={onClientResetPassword}
+              onResendEmailConfirmation={onClientResendEmailConfirmation}
+              isPending={isPending}
+            />
           </>
         )}
         <hr />

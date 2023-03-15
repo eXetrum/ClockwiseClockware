@@ -1,6 +1,6 @@
 require('dotenv').config();
 const bcrypt = require('bcryptjs');
-const { Entropy } = require('entropy-string');
+const { Entropy, charset64 } = require('entropy-string');
 
 const { MS_PER_HOUR } = require('../constants');
 
@@ -18,9 +18,15 @@ const generatePassword = () => {
     return entropy.string();
 };
 
+const generateConfirmationToken = () => {
+    const entropy = new Entropy({ total: 1e10, risk: 1e12, charset: charset64 });
+    return entropy.string();
+};
+
 module.exports = {
     hashPassword,
     compareSync,
     generatePassword,
+    generateConfirmationToken,
     dateToNearestHour
 };

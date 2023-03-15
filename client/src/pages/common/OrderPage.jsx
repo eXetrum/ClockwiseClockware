@@ -221,7 +221,6 @@ const OrderPage = () => {
 
     setNewOrder((prev) => ({ ...prev, master }));
     resetMasterList();
-    console.log('selected master: ', master);
   };
 
   const handlers = {

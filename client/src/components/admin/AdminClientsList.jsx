@@ -8,7 +8,7 @@ import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
-const AdminClientsList = ({ clients, onRemove }) => {
+const AdminClientsList = ({ clients, onRemove, onResetPassword, onResendEmailConfirmation, isPending }) => {
   if (clients == null) return null;
 
   if (clients.length === 0) {
@@ -47,11 +47,11 @@ const AdminClientsList = ({ clients, onRemove }) => {
               <td className="p-3 m-0">{client.name}</td>
               <td className="text-center p-2 m-0 col-2">
                 <Stack spacing={1}>
-                  <Button size="sm" variant="outline-warning" onClick={() => alert('Not Implemented')}>
+                  <Button size="sm" variant="outline-warning" onClick={() => onResetPassword(client)} disabled={isPending}>
                     Reset password
                   </Button>
                   {!client.isEmailVerified ? (
-                    <Button size="sm" variant="outline-primary" onClick={() => alert('Not Implemented')}>
+                    <Button size="sm" variant="outline-primary" onClick={() => onResendEmailConfirmation(client)} disabled={isPending}>
                       Resend email confirmation
                     </Button>
                   ) : null}

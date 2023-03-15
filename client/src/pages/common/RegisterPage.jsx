@@ -3,6 +3,7 @@ import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
 import { register } from '../../api';
+import { validateEmail } from '../../utils';
 
 const RegisterPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -15,7 +16,7 @@ const RegisterPage = () => {
 
   const isFormValid = useCallback(() => {
     const { email, password, name, role } = user;
-    return /\w{1,}@\w{1,}\.\w{2,}/gi.test(email) && password;
+    return validateEmail(email) && password;
   }, [user]);
 
   let abortController = null;
@@ -66,7 +67,7 @@ const RegisterPage = () => {
         <hr />
         <Row className="justify-content-md-center">
           <Col xs lg="4" md="auto">
-            <h1>Login page</h1>
+            <h1>Registration page</h1>
             <Form onSubmit={onFormSubmit}>
               <Form.Group className="mb-3">
                 <Form.Label>Email address</Form.Label>

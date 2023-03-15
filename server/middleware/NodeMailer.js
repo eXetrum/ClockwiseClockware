@@ -56,6 +56,57 @@ const sendOrderConfirmationMail = async ({ orderId, client, master, watch, city,
     }
 };
 
+const sendEmailConfirmationMail = async ({ email, password, verificationLink }) => {
+    try {
+        const mailOptions = {
+            from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
+            to: email,
+            subject: 'Registration at ClockwiseClockware',
+            template: 'email_confirmation_body',
+            context: {
+                email,
+                password,
+                verificationLink
+            }
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        if (result != null) {
+            // Keep: 'messageId', 'messageTime', and remove rest
+            ['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach((prop) => delete result[prop]);
+        }
+        return result;
+    } catch (e) {
+        return e;
+    }
+};
+
+const sendPasswordResetMail = async ({ email, password }) => {
+    try {
+        const mailOptions = {
+            from: `${process.env.NODEMAILER_AUTH_GMAIL_USER}@gmail.com`,
+            to: email,
+            subject: 'Password Reset',
+            template: 'reset_password_body',
+            context: {
+                email,
+                password
+            }
+        };
+
+        const result = await transporter.sendMail(mailOptions);
+        if (result != null) {
+            // Keep: 'messageId', 'messageTime', and remove rest
+            ['accepted', 'rejected', 'ehlo', 'envelopeTime', 'messageSize', 'response', 'envelope'].forEach((prop) => delete result[prop]);
+        }
+        return result;
+    } catch (e) {
+        return e;
+    }
+};
+
 module.exports = {
-    sendOrderConfirmationMail
+    sendOrderConfirmationMail,
+    sendEmailConfirmationMail,
+    sendPasswordResetMail
 };

@@ -2,6 +2,10 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Master extends Model {
+        setEmailVerified(value) {
+            this.setDataValue('isEmailVerified', value);
+        }
+
         static associate(models) {
             Master.belongsToMany(models.City, {
                 through: models.MasterCityList,

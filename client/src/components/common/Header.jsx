@@ -16,7 +16,7 @@ const Header = () => {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="admin-navbar-nav" />
         <Navbar.Collapse id="admin-navbar-nav">
-          {user && (
+          {user && user.rol === 'admin' ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/admin/cities">
                 Cities
@@ -31,7 +31,7 @@ const Header = () => {
                 Orders
               </Nav.Link>
             </Nav>
-          )}
+          ) : null}
 
           <Nav className="navbar-nav ms-auto">
             <Nav.Link as={Link} to="/order">
@@ -48,9 +48,14 @@ const Header = () => {
                 </NavDropdown.Item>
               </NavDropdown>
             ) : (
-              <Nav.Link as={Link} to="/login">
-                Login
-              </Nav.Link>
+              <>
+                <Nav.Link as={Link} to="/login">
+                  Login
+                </Nav.Link>
+                <Nav.Link as={Link} to="/register">
+                  Register
+                </Nav.Link>
+              </>
             )}
           </Nav>
         </Navbar.Collapse>
