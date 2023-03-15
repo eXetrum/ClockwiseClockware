@@ -5,11 +5,10 @@ const { sendOrderConfirmationMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
 const { Op } = require('sequelize');
 const db = require('../database/models/index');
-const { Order, Client, Watches, City, Master } = require('../database/models');
+const { User, Client, Master, Watches, City, Order } = require('../database/models');
 
-const MS_PER_HOUR = 60 * 60 * 1000;
-
-const dateToNearestHour = (timestamp) => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
+const { MS_PER_HOUR } = require('../constants');
+const { dateToNearestHour, generatePassword } = require('../utils');
 
 const getFreeMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -59,9 +58,12 @@ const getFreeMasters = [
 
             let masters = await Master.findAll({
                 where: {
-                    id: { [Op.notIn]: bussyMasters }
+                    userId: { [Op.notIn]: bussyMasters }
                 },
                 include: [
+                    {
+                        model: User
+                    },
                     { model: City, as: 'cities', through: { attributes: [] } },
                     {
                         model: Order,
@@ -71,17 +73,31 @@ const getFreeMasters = [
                             { model: City, as: 'city' }
                         ],
                         attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                        order: [['updatedAt', 'DESC']]
+                        order: [['createdAt', 'DESC']]
                     }
                 ],
                 order: [
                     ['rating', 'DESC'],
-                    ['updatedAt', 'DESC']
+                    ['createdAt', 'DESC']
                 ]
+            });
+
+            masters = masters.map((master) => {
+                const obj = {
+                    ...master.toJSON(),
+                    ...master.User.toJSON()
+                };
+                delete obj.User;
+                delete obj.userId;
+
+                return obj;
             });
 
             // No idea how to filter these on 'sequelize level' ([city])
             masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
+
+            // Filter out masters accounts which is not verified/approved
+            masters = masters.filter((master) => master.isEmailVerified && master.isApprovedByAdmin);
 
             res.status(200).json({ masters }).end();
         } catch (e) {
@@ -136,7 +152,6 @@ const create = [
         .withMessage('order.timezone should be of type int'),
 
     async (req, res) => {
-        let transaction = null;
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
@@ -150,9 +165,10 @@ const create = [
             if (!city) return res.status(409).json({ detail: 'Unknown city' });
 
             const master = await Master.findOne({
-                where: { id: order.masterId },
-                include: [{ model: City, as: 'cities', through: { attributes: [] } }]
+                where: { userId: order.masterId },
+                include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }]
             });
+
             if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
@@ -169,19 +185,38 @@ const create = [
             const clientDateTimeStart = moment.unix((order.startDate + order.timezone * MS_PER_HOUR) / 1000);
             const clientDateTimeEnd = moment.unix((order.startDate + order.timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
 
-            transaction = await db.sequelize.transaction();
-            let client = await Client.findOne({ where: { email: order.client.email } });
-            if (client == null) {
-                client = await Client.create(order.client, { transaction });
-            } else {
-                await Client.update({ name: order.client.name }, { where: { email: order.client.email } }, { transaction });
-            }
-            order.clientId = client.id;
-            const result = await Order.create(order, { transaction });
-            await transaction.commit();
+            const [result, clientPassword] = await db.sequelize.transaction(async (t) => {
+                let clientPassword = null;
+                let user = await User.findOne({ where: { email: order.client.email } });
 
+                // Admin/Master cant create orders they should use different non Admin/Master accounts
+                if (user != null && !ACCESS_SCOPE.ClientOnly.includes(user.role)) {
+                    throw new Error('ClientsOnly');
+                }
+
+                if (user == null) {
+                    clientPassword = generatePassword();
+                    user = await User.create({ ...order.client, password: clientPassword, role: 'client' }, { transaction: t });
+                    await user.createClient({ ...order.client }, { transaction: t });
+                } else {
+                    await Client.update(
+                        { ...order.client },
+                        {
+                            where: { userId: user.id },
+                            limit: 1
+                        },
+                        { transaction: t }
+                    );
+                }
+
+                order.clientId = user.id;
+
+                return [await Order.create(order, { transaction: t }), clientPassword];
+            });
+
+            const confirmation = { message: 42, orderId: result.id };
             // orderId, client, master, watch, city, startDate, endDate, totalCost
-            const confirmation = await sendOrderConfirmationMail({
+            /*const confirmation = await sendOrderConfirmationMail({
                 orderId: result.id,
                 client: order.client,
                 master,
@@ -190,11 +225,19 @@ const create = [
                 startDate: clientDateTimeStart.toString(),
                 endDate: clientDateTimeEnd.toString(),
                 totalCost: order.totalCost
-            });
+            });*/
+
+            if (clientPassword !== null) {
+                // TODO: Send email confirmation message + order confirmation message
+            } else {
+                // TODO: Send order confirmation message
+            }
 
             res.status(201).json({ confirmation }).end();
         } catch (e) {
-            if (transaction) await transaction.rollback();
+            if (e.message && e.message === 'ClientsOnly') {
+                return res.status(409).json({ detail: 'Clients only (new or existing)' }).end();
+            }
 
             if (e.constraint === 'overlapping_times') {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified datetime' });
@@ -209,16 +252,31 @@ const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
     async (req, res) => {
         try {
-            const orders = await Order.findAll({
+            const records = await Order.findAll({
                 include: [
-                    { model: Client, as: 'client' },
+                    { model: Client, include: [{ model: User }], as: 'client' },
                     { model: Watches, as: 'watch' },
                     { model: City, as: 'city' },
-                    { model: Master, as: 'master' }
+                    { model: Master, include: [{ model: User }], as: 'master' }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['masterId'], ['startDate', 'DESC'], ['updatedAt', 'DESC']]
+                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
             });
+
+            const orders = records.map((order) => {
+                const obj = {
+                    ...order.toJSON(),
+                    client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                    master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
+                };
+                delete obj.client.User;
+                delete obj.client.userId;
+                delete obj.master.User;
+                delete obj.master.userId;
+
+                return obj;
+            });
+
             res.status(200).json({ orders }).end();
         } catch (e) {
             res.status(400).json(e).end();
@@ -263,7 +321,7 @@ const get = [
 
             const order = await Order.findOne({
                 where: { id },
-                include: [
+                /*include: [
                     { model: Client, as: 'client' },
                     { model: Watches, as: 'watch' },
                     { model: City, as: 'city' },
@@ -275,7 +333,20 @@ const get = [
                             { model: City, as: 'cities' }
                         ]
                     }
-                ]
+                ]*/
+
+                include: [
+                    { model: Client, include: [{ model: User }], as: 'client' },
+                    { model: Watches, as: 'watch' },
+                    { model: City, as: 'city' },
+                    {
+                        model: Master,
+                        as: 'master',
+                        include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }]
+                    }
+                ],
+                attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
+                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
             });
 
             if (!order) return res.status(404).json({ detail: '~Order not found~' }).end();
@@ -285,7 +356,19 @@ const get = [
                 return res.status(403).json({ detail: 'Unable to get order with datetime that is already past' }).end();
             }
 
-            res.status(200).json({ order }).end();
+            // TODO: postprocessing
+            console.log(order);
+            const obj = {
+                ...order.toJSON(),
+                client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
+            };
+            delete obj.client.User;
+            delete obj.client.userId;
+            delete obj.master.User;
+            delete obj.master.userId;
+
+            res.status(200).json({ order: obj }).end();
         } catch (e) {
             // Incorrect UUID ID string
             if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {

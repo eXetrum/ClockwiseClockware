@@ -9,7 +9,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import ViewMasterCard from '../master/ViewMasterCard';
-import { dateToNearestHour } from '../../utils/dateTime';
+import { validateEmail, dateToNearestHour } from '../../utils';
 
 const OrderForm = ({
   order,
@@ -45,11 +45,11 @@ const OrderForm = ({
 
   const isMasterAssigned = useMemo(() => order?.master !== null, [order]);
   const isOrderPreparedForMasterSearch = useMemo(
-    () => order !== null && order.city !== null && order.watch !== null && order.startDate !== null,
+    () => order !== null && order?.city !== null && order?.watch !== null && order?.startDate !== null,
     [order],
   );
 
-  const isValidEmail = (email) => /\w{1,}@\w{1,}\.\w{2,}/gi.test(email);
+  const isValidEmail = (email) => validateEmail(email);
   const isValidName = (name) => name?.length >= 3;
 
   const currentDate = dateToNearestHour();

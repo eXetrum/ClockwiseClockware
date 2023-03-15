@@ -11,7 +11,7 @@ const AdminEditClient = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyClient = () => ({ email: '', password: '', name: '', isActive: false });
+  const initEmptyClient = () => ({ email: '', password: '', name: '' });
 
   const [client, setClient] = useState(initEmptyClient());
   const [originalClient, setOriginalClient] = useState(initEmptyClient());
@@ -71,13 +71,11 @@ const AdminEditClient = () => {
 
   const onClientEmailChange = (event) => setClient((prev) => ({ ...prev, email: event.target.value }));
   const onClientNameChange = (event) => setClient((prev) => ({ ...prev, name: event.target.value }));
-  const onClientIsActiveChange = (event) => setClient((prev) => ({ ...prev, isActive: event.target.checked }));
 
   const handlers = {
     onFormSubmit,
     onClientEmailChange,
     onClientNameChange,
-    onClientIsActiveChange,
   };
 
   return (

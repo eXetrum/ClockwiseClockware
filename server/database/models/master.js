@@ -5,12 +5,14 @@ module.exports = (sequelize, DataTypes) => {
         static associate(models) {
             Master.belongsToMany(models.City, {
                 through: models.MasterCityList,
-                as: 'cities',
-                foreignKey: 'masterId'
+                foreignKey: 'masterId',
+                sourceKey: 'userId',
+                as: 'cities'
             });
 
             Master.hasMany(models.Order, {
                 foreignKey: 'masterId',
+                sourceKey: 'userId',
                 as: 'orders'
             });
 

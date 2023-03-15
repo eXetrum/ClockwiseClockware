@@ -1,16 +1,9 @@
 import React, { useCallback } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
+import { validateEmail } from '../../utils';
 
-const ClientForm = ({
-  client,
-  onFormSubmit,
-  onClientEmailChange,
-  onClientNameChange,
-  onClientIsActiveChange,
-  isPending,
-  successButtonText = 'Save',
-}) => {
-  const isFormValid = useCallback(() => client.name.length >= 3 && /\w{1,}@\w{1,}\.\w{2,}/gi.test(client.email), [client]);
+const ClientForm = ({ client, onFormSubmit, onClientEmailChange, onClientNameChange, isPending, successButtonText = 'Save' }) => {
+  const isFormValid = useCallback(() => client.name.length >= 3 && validateEmail(client.email), [client]);
 
   return (
     <Row className="justify-content-md-center">
@@ -41,24 +34,6 @@ const ClientForm = ({
             </Row>
           </Form.Group>
 
-          <Form.Group>
-            <Row className="mt-2">
-              <Col sm={4}>
-                <Form.Label>
-                  <b>IsActive:</b>
-                </Form.Label>
-              </Col>
-              <Col>
-                <Form.Check
-                  type="checkbox"
-                  name="clientIsActive"
-                  checked={client.isActive}
-                  onChange={onClientIsActiveChange}
-                  disabled={isPending}
-                />
-              </Col>
-            </Row>
-          </Form.Group>
           <Form.Group>
             <Row>
               <Col sm={4}></Col>

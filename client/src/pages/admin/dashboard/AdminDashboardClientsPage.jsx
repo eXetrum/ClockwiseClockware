@@ -6,12 +6,12 @@ import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { Header, ErrorContainer, AdminClientsList, ModalForm } from '../../../components';
 import { createClient, deleteClientById, getClients } from '../../../api';
-import { getErrorText } from '../../../utils';
+import { getErrorText, validateEmail } from '../../../utils';
 
 const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyClient = () => ({ email: '', password: '', name: '', isActive: false });
+  const initEmptyClient = () => ({ email: '', password: '', name: '' });
 
   const [clients, setClients] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
@@ -23,8 +23,7 @@ const AdminDashboardClientsPage = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(
-    () =>
-      newClient && newClient?.name?.length >= 3 && newClient.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newClient.email) && newClient.password,
+    () => newClient && newClient?.name?.length >= 3 && newClient.email && validateEmail(newClient.email) && newClient.password,
     [newClient],
   );
 
@@ -99,7 +98,6 @@ const AdminDashboardClientsPage = () => {
   const onClientEmailChange = (event) => setNewClient((prev) => ({ ...prev, email: event.target.value }));
   const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
   const onClientPasswordChange = (event) => setNewClient((prev) => ({ ...prev, password: event.target.value }));
-  const onClientIsActiveChange = (event) => setNewClient((prev) => ({ ...prev, isActive: event.target.checked }));
 
   const onClientRemove = async (clientId) => {
     const client = clients.find((item) => item.id === clientId);
@@ -181,17 +179,6 @@ const AdminDashboardClientsPage = () => {
                   disabled={isPending}
                 />
               </FormGroup>
-              <Form.Group>
-                <Form.Check
-                  type="checkbox"
-                  name="clientIsActive"
-                  id="clientIsActiveSwitch"
-                  checked={newClient.isActive}
-                  onChange={onClientIsActiveChange}
-                  disabled={isPending}
-                  label="IsActive"
-                />
-              </Form.Group>
             </>
           }
         />

@@ -2,6 +2,7 @@ import React, { useCallback } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
 import { StarRating } from '../common';
+import { validateEmail } from '../../utils';
 
 const MasterForm = ({
   master,
@@ -10,13 +11,13 @@ const MasterForm = ({
   onMasterEmailChange,
   onMasterNameChange,
   onMasterRatingChange,
-  onMasterIsActiveChange,
+  onMasterIsApprovedByAdminChange,
   onMasterCitySelect,
   onMasterCityRemove,
   isPending,
   successButtonText = 'Save',
 }) => {
-  const isFormValid = useCallback(() => master.name && master.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(master.email), [master]);
+  const isFormValid = useCallback(() => master.name && master.email && validateEmail(master.email), [master]);
 
   return (
     <Row className="justify-content-md-center">
@@ -90,15 +91,15 @@ const MasterForm = ({
             <Row className="mt-4">
               <Col sm={4}>
                 <Form.Label>
-                  <b>IsActive:</b>
+                  <b>approved:</b>
                 </Form.Label>
               </Col>
               <Col>
                 <Form.Check
                   type="checkbox"
-                  name="masterIsActive"
-                  checked={master.isActive}
-                  onChange={onMasterIsActiveChange}
+                  name="masterIsApprovedByAdmin"
+                  checked={master.isApprovedByAdmin}
+                  onChange={onMasterIsApprovedByAdminChange}
                   disabled={isPending}
                 />
               </Col>

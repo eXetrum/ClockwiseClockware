@@ -7,12 +7,19 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import Multiselect from 'multiselect-react-dropdown';
 import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
 import { getCities, getMasters, createMaster, deleteMasterById } from '../../../api';
-import { getErrorText } from '../../../utils';
+import { getErrorText, validateEmail } from '../../../utils';
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyMaster = () => ({ name: '', email: '', password: '', rating: 0, isActive: false, cities: [] });
+  const initEmptyMaster = () => ({
+    name: '',
+    email: '',
+    password: '',
+    rating: 0,
+    isApprovedByAdmin: false,
+    cities: [],
+  });
 
   const [cities, setCities] = useState([]);
   const [masters, setMasters] = useState([]);
@@ -25,7 +32,7 @@ const AdminDashboardMasters = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(
-    () => newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email) && newMaster.password,
+    () => newMaster.name && newMaster.email && validateEmail(newMaster.email) && newMaster.password,
     [newMaster],
   );
 
@@ -107,7 +114,8 @@ const AdminDashboardMasters = () => {
   const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));
   const onMasterPasswordChange = (event) => setNewMaster((prev) => ({ ...prev, password: event.target.value }));
   const onMasterRatingChange = (value) => setNewMaster((prev) => ({ ...prev, rating: value }));
-  const onMasterIsActiveChange = (event) => setNewMaster((prev) => ({ ...prev, isActive: event.target.checked }));
+  const onMasterIsApprovedByAdminChange = (event) => setNewMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
+
   const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
   const onMasterCityRemove = (selectedList, removedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
 
@@ -226,12 +234,11 @@ const AdminDashboardMasters = () => {
               <Form.Group className="mb-3">
                 <Form.Check
                   type="checkbox"
-                  name="clientIsActive"
-                  id="clientIsActiveSwitch"
-                  checked={newMaster.isActive}
-                  onChange={onMasterIsActiveChange}
+                  name="clientIsApprovedByAdmin"
+                  checked={newMaster.isApprovedByAdmin}
+                  onChange={onMasterIsApprovedByAdminChange}
                   disabled={isPending}
-                  label="IsActive"
+                  label="approved"
                 />
               </Form.Group>
             </>

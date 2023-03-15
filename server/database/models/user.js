@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.ENUM([...Object.values(USER_ROLES)]),
                 allowNull: false
             },
-            isActive: {
+            isEnabled: {
                 allowNull: false,
                 type: DataTypes.BOOLEAN,
                 defaultValue: true

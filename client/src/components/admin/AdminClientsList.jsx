@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Button, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Alert } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 const AdminClientsList = ({ clients, onRemove }) => {
   if (clients == null) return null;
@@ -27,23 +31,31 @@ const AdminClientsList = ({ clients, onRemove }) => {
             <th className="text-center p-2 m-0">id</th>
             <th className="text-center p-2 m-0">email</th>
             <th className="text-center p-2 m-0">name</th>
-            <th className="text-center p-2 m-0">isActive</th>
             <th colSpan="3" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
         <tbody>
           {clients.map((client) => (
             <tr key={client.id} className="m-0">
-              <td className="text-center p-2 m-0">{client.id}</td>
-              <td className="text-center p-2 m-0">{client.email}</td>
-              <td className="text-center p-2 m-0">{client.name}</td>
-              <td className="text-center p-2 m-0">
-                {client.isActive ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
+              <td className="text-center p-3 m-0 col-2">{client.id}</td>
+              <td className="p-3 m-0">
+                <Stack direction="row" alignItems="center" gap={1}>
+                  {client.isEmailVerified ? <CheckIcon fontSize="small" /> : <QuestionMarkIcon fontSize="small" />}
+                  <Typography variant="body1">{client.email}</Typography>
+                </Stack>
               </td>
-              <td className="text-center p-2 m-0">
-                <Button size="sm" variant="outline-warning" onClick={() => alert('Not Implemented')}>
-                  Reset password
-                </Button>
+              <td className="p-3 m-0">{client.name}</td>
+              <td className="text-center p-2 m-0 col-2">
+                <Stack spacing={1}>
+                  <Button size="sm" variant="outline-warning" onClick={() => alert('Not Implemented')}>
+                    Reset password
+                  </Button>
+                  {!client.isEmailVerified ? (
+                    <Button size="sm" variant="outline-primary" onClick={() => alert('Not Implemented')}>
+                      Resend email confirmation
+                    </Button>
+                  ) : null}
+                </Stack>
               </td>
               <td className="text-center p-2 m-0">
                 <Link to={'/admin/clients/' + client.id}>

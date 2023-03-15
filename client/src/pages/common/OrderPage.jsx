@@ -221,6 +221,7 @@ const OrderPage = () => {
 
     setNewOrder((prev) => ({ ...prev, master }));
     resetMasterList();
+    console.log('selected master: ', master);
   };
 
   const handlers = {
@@ -273,7 +274,7 @@ const OrderPage = () => {
                 <hr />
                 <Row className="justify-content-md-center">
                   <Col md="auto">
-                    <Button variant="primary" onClick={() => resetOrigOrder()}>
+                    <Button variant="primary" onClick={() => resetOrigOrder(initEmptyOrder())}>
                       Create new order
                     </Button>
                   </Col>

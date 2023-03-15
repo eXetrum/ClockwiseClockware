@@ -25,6 +25,8 @@ const getAll = [
                     ...master.User.toJSON()
                 };
                 delete obj.User;
+                delete obj.userId;
+
                 return obj;
             });
 
@@ -74,11 +76,11 @@ const create = [
         .withMessage('master rating should be of numeric value')
         .isInt({ min: 0, max: 5 })
         .withMessage('master rating must be in range [0; 5]'),
-    body('master.isActive')
+    body('master.isApprovedByAdmin')
         .exists()
-        .withMessage('master isActive field required')
+        .withMessage('master isApprovedByAdmin field required')
         .isBoolean()
-        .withMessage('master isActive field should be of boolean type'),
+        .withMessage('master isApprovedByAdmin field should be of boolean type'),
     body('master.cities').exists().withMessage('master cities required').isArray().withMessage('master cities should be an array'),
     body('master.cities.*.id')
         .exists()
@@ -97,6 +99,8 @@ const create = [
             master.name = master.name.trim();
             master.email = master.email.trim();
             master.password = master.password.trim();
+            delete master.isEmalVerified;
+            delete master.isEnabled;
 
             const dbCities = await City.findAll();
             const dbCityIds = dbCities.map((city) => city.id);
@@ -243,11 +247,11 @@ const update = [
         .withMessage('Master rating should be of numeric value')
         .isInt({ min: 0, max: 5 })
         .withMessage('Master rating must be in range [0; 5]'),
-    body('master.isActive')
+    body('master.isApprovedByAdmin')
         .exists()
-        .withMessage('master isActive field required')
+        .withMessage('master isApprovedByAdmin field required')
         .isBoolean()
-        .withMessage('master isActive field should be of boolean type'),
+        .withMessage('master isApprovedByAdmin field should be of boolean type'),
     body('master.cities').exists().withMessage('master cities required').isArray().withMessage('master cities should be an array'),
     body('master.cities.*.id')
         .exists()
@@ -265,6 +269,8 @@ const update = [
             // Prepare data
             master.name = master.name.trim();
             master.email = master.email.trim();
+            delete master.isEmalVerified;
+            delete master.isEnabled;
 
             const dbCities = await City.findAll();
             const dbCityIds = dbCities.map((city) => city.id);

@@ -12,7 +12,10 @@ const ACCESS_SCOPE = Object.freeze({
     MasterOrClient: [USER_ROLES.MASTER, USER_ROLES.CLIENT]
 });
 
+const MS_PER_HOUR = 60 * 60 * 1000;
+
 module.exports = {
     USER_ROLES,
-    ACCESS_SCOPE
+    ACCESS_SCOPE,
+    MS_PER_HOUR
 };

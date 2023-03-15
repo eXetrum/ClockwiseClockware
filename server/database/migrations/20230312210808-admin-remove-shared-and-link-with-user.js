@@ -9,6 +9,7 @@ module.exports = {
             await queryInterface.addColumn('admins', 'userId', {
                 type: Sequelize.DataTypes.UUID,
                 allowNull: false,
+                unique: true,
                 references: {
                     model: 'users',
                     key: 'id'

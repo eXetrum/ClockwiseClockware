@@ -3,7 +3,7 @@ const { body, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, Admin, Client, Master, City } = require('../database/models');
 
-const { USER_ROLES } = require('../constants');
+const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
 
 const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)].filter((item) => item !== 'admin');
 
@@ -149,13 +149,24 @@ const login = [
                 return res.status(401).json({ detail: 'Incorrect user/password pair' }).end();
             }
 
-            const details = user.getDetails();
+            if (!user.isEnabled) return res.status(403).json({ detail: 'Account temporary disabled' }).end();
 
-            delete user.password;
-            delete details.id;
-            delete details.userId;
+            const details = await user.getDetails();
 
-            const token = generateAccessToken({ ...user.toJSON(), ...details.toJSON() });
+            if (ACCESS_SCOPE.MasterOrClient.includes(user.role) && !details.isEmailVerified) {
+                return res.status(403).json({ detail: 'Email address is not confirmed yet' }).end();
+            }
+
+            if (ACCESS_SCOPE.MasterOnly.includes(user.role) && !details.isApprovedByAdmin) {
+                return res.status(403).json({ detail: 'Account is not approved by admin yet' }).end();
+            }
+
+            const compositeUser = { ...details.toJSON(), ...user.toJSON() };
+
+            delete compositeUser.password;
+            delete compositeUser.userId;
+
+            const token = generateAccessToken(compositeUser);
 
             res.status(200).json({ accessToken: token }).end();
         } catch (e) {

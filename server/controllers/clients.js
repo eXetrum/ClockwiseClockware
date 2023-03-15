@@ -65,11 +65,6 @@ const create = [
         .escape()
         .notEmpty()
         .withMessage('empty client password is not allowed'),
-    body('client.isActive')
-        .exists()
-        .withMessage('client isActive field required')
-        .isBoolean()
-        .withMessage('client isActive field should be of boolean type'),
 
     async (req, res) => {
         try {
@@ -81,6 +76,8 @@ const create = [
             client.email = client.email.trim();
             client.name = client.name.trim();
             client.password = client.password.trim();
+            delete client.isEnabled;
+            delete client.isEmailVerified;
 
             const user = await db.sequelize.transaction(async (t) => {
                 const user = await User.create({ ...client, role: 'client' }, { transaction: t });
@@ -203,11 +200,6 @@ const update = [
         .withMessage('empty client email is not allowed')
         .isEmail()
         .withMessage('client email is not correct'),
-    body('client.isActive')
-        .exists()
-        .withMessage('client isActive field required')
-        .isBoolean()
-        .withMessage('client isActive field should be of boolean type'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -219,6 +211,8 @@ const update = [
             // Prepare data
             client.name = client.name.trim();
             client.email = client.email.trim();
+            delete client.isEnabled;
+            delete client.isEmailVerified;
 
             delete client.id;
             delete client.createdAt;

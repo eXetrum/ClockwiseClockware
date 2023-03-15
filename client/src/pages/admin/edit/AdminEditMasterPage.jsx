@@ -11,7 +11,14 @@ const AdminEditMasterPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyMaster = () => ({ email: '', password: '', name: '', rating: 0, isActive: false, cities: [] });
+  const initEmptyMaster = () => ({
+    name: '',
+    email: '',
+    password: '',
+    rating: 0,
+    isApprovedByAdmin: false,
+    cities: [],
+  });
 
   const [cities, setCities] = useState([]);
   const [master, setMaster] = useState(initEmptyMaster());
@@ -79,7 +86,7 @@ const AdminEditMasterPage = () => {
   const onMasterEmailChange = (event) => setMaster((prevState) => ({ ...prevState, email: event.target.value }));
   const onMasterNameChange = (event) => setMaster((prevState) => ({ ...prevState, name: event.target.value }));
   const onMasterRatingChange = (value) => setMaster((prevState) => ({ ...prevState, rating: value }));
-  const onMasterIsActiveChange = (event) => setMaster((prev) => ({ ...prev, isActive: event.target.checked }));
+  const onMasterIsApprovedByAdminChange = (event) => setMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
   const onMasterCitySelect = (selectedList, selectedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
   const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
 
@@ -88,7 +95,7 @@ const AdminEditMasterPage = () => {
     onMasterEmailChange,
     onMasterNameChange,
     onMasterRatingChange,
-    onMasterIsActiveChange,
+    onMasterIsApprovedByAdminChange,
     onMasterCitySelect,
     onMasterCityRemove,
   };

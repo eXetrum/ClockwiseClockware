@@ -8,6 +8,8 @@ import { Header, ErrorContainer, OrderForm, AdminMastersList } from '../../../co
 import { getWatches, getCities, getOrderById, updateOrderById, getAvailableMasters } from '../../../api';
 import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
+import { ORDER_STATUS_ENUM } from '../../../constants';
+
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { id } = useParams();
@@ -75,6 +77,7 @@ const AdminEditOrderPage = () => {
       if (response?.data?.order) {
         const { order } = response.data;
         order.startDate = new Date(order.startDate);
+        console.log('getOrderById: ', order);
         resetOrigOrder(order);
       }
     } catch (e) {
@@ -208,6 +211,10 @@ const AdminEditOrderPage = () => {
     resetMasterList();
   };
 
+  const onOrderStatusChange = () => {
+    console.log('status change:');
+  };
+
   const onFindMasterBtnClick = (event) => {
     event.preventDefault();
     setNewOrder((prev) => ({ ...prev, master: null }));
@@ -238,6 +245,7 @@ const AdminEditOrderPage = () => {
     onOrderCitySelect,
     onOrderCityRemove,
     onOrderDateChange,
+    onOrderStatusChange,
     onFindMasterBtnClick,
     onResetBtnClick,
   };

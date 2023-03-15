@@ -15,22 +15,25 @@ const RouteProtector = async (req, res, next, scope = ACCESS_SCOPE.AnyAuth) => {
 
         // Ensure user with id still exists
         const dbUser = await User.findOne({ where: { id: tokenUser.id } });
-        if (!dbUser) return res.status(401).end();
+        if (!dbUser) return res.status(401).json({ detail: 'Account not found' }).end();
 
-        // Ensure account is active (in case if administraotr decide to temporary disable)
-        if (!dbUser.isActive) return res.status(401).json({ detail: 'Account temporary disabled' }).end();
+        // Ensure account is enabled (in case if administraotr decide to temporary disable)
+        if (!dbUser.isEnabled) return res.status(401).json({ detail: 'Account temporary disabled' }).end();
 
         const details = await dbUser.getDetails();
 
         // Master/Client account must be with email verified flag (for master additionaly approved by admin).
-        if (ACCESS_SCOPE.MasterOrClient.includes(dbUser.role) && !details.isEmailVerified)
+        if (ACCESS_SCOPE.MasterOrClient.includes(dbUser.role) && !details.isEmailVerified) {
             return res.status(401).json({ detail: 'Email address is not confirmed yet' }).end();
+        }
 
-        if (ACCESS_SCOPE.MasterOnly.includes(dbUser.role) && !details.isApprovedByAdmin)
+        if (ACCESS_SCOPE.MasterOnly.includes(dbUser.role) && !details.isApprovedByAdmin) {
             return res.status(401).json({ detail: 'Account is not approved by admin yet' }).end();
+        }
 
         if (!scope.includes(dbUser.role)) return res.status(403).end();
     } catch (e) {
+        console.log(e);
         return res.status(401).end();
     }
 
