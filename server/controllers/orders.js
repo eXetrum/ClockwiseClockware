@@ -223,12 +223,10 @@ const create = [
             });
 
             if (autoRegistration.password !== null) {
-                // TODO: Auto registration -> send email confirmation message
+                // Auto registration -> send email confirmation message
                 await sendEmailConfirmationMail({ ...autoRegistration });
             }
 
-            // TODO: Send order confirmation message
-            //const confirmation = { message: 42, orderId: dbOrder.id };
             // orderId, client, master, watch, city, startDate, endDate, totalCost
             const confirmation = await sendOrderConfirmationMail({
                 orderId: dbOrder.id,
@@ -243,8 +241,6 @@ const create = [
 
             res.status(201).json({ confirmation }).end();
         } catch (e) {
-            console.log(e);
-
             if (e.message && e.message === 'ClientsOnly') {
                 return res.status(409).json({ detail: 'Clients only (new or existing)' }).end();
             }

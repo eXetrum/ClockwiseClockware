@@ -10,7 +10,7 @@ import Typography from '@mui/material/Typography';
 import ViewMasterCard from '../master/ViewMasterCard';
 import StarRating from '../common/StarRating';
 
-const MasterTableList = ({ masters, onRemove }) => {
+const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }) => {
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
@@ -51,11 +51,11 @@ const MasterTableList = ({ masters, onRemove }) => {
               </td>
               <td className="text-center p-2 m-0 col-2">
                 <Stack spacing={1}>
-                  <Button size="sm" variant="outline-warning" onClick={() => alert('Not Implemented')}>
+                  <Button size="sm" variant="outline-warning" onClick={() => onResetPassword(master)} disabled={isPending}>
                     Reset password
                   </Button>
                   {!master.isEmailVerified ? (
-                    <Button size="sm" variant="outline-primary" onClick={() => alert('Not Implemented')}>
+                    <Button size="sm" variant="outline-primary" onClick={() => onResendEmailConfirmation(master)} disabled={isPending}>
                       Resend email confirmation
                     </Button>
                   ) : null}
@@ -97,7 +97,7 @@ const MasterCardList = ({ masters, onSelect }) => {
   );
 };
 
-const AdminMastersList = ({ masters, onSelect, onRemove, isAdminView = true }) => {
+const AdminMastersList = ({ masters, onSelect, onRemove, onResetPassword, onResendEmailConfirmation, isPending, isAdminView = true }) => {
   if (masters == null) return null;
   const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
 
@@ -113,7 +113,7 @@ const AdminMastersList = ({ masters, onSelect, onRemove, isAdminView = true }) =
     );
   }
 
-  if (isAdminView) return <MasterTableList {...{ masters, onRemove }} />;
+  if (isAdminView) return <MasterTableList {...{ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }} />;
   return <MasterCardList {...{ masters, onSelect }} />;
 };
 

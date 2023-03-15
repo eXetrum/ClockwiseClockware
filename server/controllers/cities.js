@@ -1,4 +1,5 @@
 const { RequireAuth } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
 
@@ -12,7 +13,7 @@ const getAll = async (req, res) => {
 };
 
 const create = [
-    RequireAuth(),
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
@@ -52,7 +53,7 @@ const create = [
 ];
 
 const remove = [
-    RequireAuth(),
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('City ID required'),
     async (req, res) => {
         try {
@@ -85,7 +86,7 @@ const remove = [
 ];
 
 const get = [
-    RequireAuth(),
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('City ID required'),
     async (req, res) => {
         try {
@@ -109,7 +110,7 @@ const get = [
 ];
 
 const update = [
-    RequireAuth(),
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()

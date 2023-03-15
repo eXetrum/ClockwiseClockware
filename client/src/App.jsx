@@ -20,7 +20,9 @@ import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditO
 import { AxiosInterceptor } from './api/axios.interceptor';
 import { RouteGuard } from './providers';
 
-const protect = (child) => <RouteGuard>{child}</RouteGuard>;
+import { ACCESS_SCOPE } from './constants';
+
+const protect = (child, scope = ACCESS_SCOPE.AnyAuth) => <RouteGuard scope={scope}>{child}</RouteGuard>;
 
 const App = () => {
   return (
@@ -33,14 +35,14 @@ const App = () => {
           <Route exact path="/register" element={<RegisterPage />} />
           <Route exact path="/order" element={<OrderPage />} />
           <Route exact path="/profile" element={protect(<UserProfilePage />)} />
-          <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />)} />
-          <Route exact path="/admin/masters" element={protect(<AdminDashboardMastersPage />)} />
-          <Route exact path="/admin/clients" element={protect(<AdminDashboardClientsPage />)} />
-          <Route exact path="/admin/orders" element={protect(<AdminDashboardOrdersPage />)} />
-          <Route exact path="/admin/cities/:id" element={protect(<AdminEditCityPage />)} />
-          <Route exact path="/admin/masters/:id" element={protect(<AdminEditMasterPage />)} />
-          <Route exact path="/admin/clients/:id" element={protect(<AdminEditClientPage />)} />
-          <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrderPage />)} />
+          <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/masters" element={protect(<AdminDashboardMastersPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/clients" element={protect(<AdminDashboardClientsPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/orders" element={protect(<AdminDashboardOrdersPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/cities/:id" element={protect(<AdminEditCityPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/masters/:id" element={protect(<AdminEditMasterPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/clients/:id" element={protect(<AdminEditClientPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrderPage />, ACCESS_SCOPE.AdminOnly)} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AxiosInterceptor>

@@ -6,7 +6,7 @@ import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Multiselect from 'multiselect-react-dropdown';
 import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
-import { getCities, getMasters, createMaster, deleteMasterById } from '../../../api';
+import { getCities, getMasters, createMaster, deleteMasterById, resetPassword, resendEmailConfirmation } from '../../../api';
 import { getErrorText, validateEmail } from '../../../utils';
 
 const AdminDashboardMasters = () => {
@@ -91,6 +91,36 @@ const AdminDashboardMasters = () => {
     }
   };
 
+  const doResetPassword = async (master) => {
+    try {
+      setPending(true);
+      const response = await resetPassword({ userId: master.id });
+      if ([200, 204].includes(response?.status)) {
+        enqueueSnackbar(`Password for ${master.email} has been successfully reset`, { variant: 'success' });
+      }
+    } catch (e) {
+      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const doResendEmailConfirmation = async (master) => {
+    try {
+      setPending(true);
+      const response = await resendEmailConfirmation({ userId: master.id });
+      if ([200, 204].includes(response?.status)) {
+        enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
+      }
+    } catch (e) {
+      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
   useEffect(() => {
     const abortController = new AbortController();
     fetchInitialData(abortController);
@@ -131,6 +161,9 @@ const AdminDashboardMasters = () => {
     if (result) doDeleteMasterById(masterId);
   };
 
+  const onMasterResetPassword = async (master) => doResetPassword(master);
+  const onMasterResendEmailConfirmation = async (master) => doResendEmailConfirmation(master);
+
   return (
     <Container>
       <Header />
@@ -158,7 +191,13 @@ const AdminDashboardMasters = () => {
               </Col>
             </Row>
             <hr />
-            <AdminMastersList masters={masters} onRemove={onMasterRemove} />
+            <AdminMastersList
+              masters={masters}
+              onRemove={onMasterRemove}
+              onResetPassword={onMasterResetPassword}
+              onResendEmailConfirmation={onMasterResendEmailConfirmation}
+              isPending={isPending}
+            />
           </>
         )}
         <hr />

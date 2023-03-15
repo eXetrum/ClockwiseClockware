@@ -3,7 +3,7 @@ const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
 const { generateAccessToken } = require('../middleware/RouteProtector');
 const { body, validationResult } = require('express-validator');
 const db = require('../database/models/index');
-const { User, Admin, Client, Master, City, Confirmations } = require('../database/models');
+const { User, City, Confirmations } = require('../database/models');
 const { sendPasswordResetMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
 const { generatePassword, generateConfirmationToken } = require('../utils');
 
@@ -55,8 +55,6 @@ const create = [
             name = name.trim();
             role = role.trim();
 
-            console.log('register=', email, password, role, name);
-
             const [user, details] = await db.sequelize.transaction(async (t) => {
                 if (role === 'client') {
                     const user = await User.create({ email, password, role }, { transaction: t });
@@ -107,7 +105,21 @@ const create = [
 
             if (user.role === 'master') user.cities = await details.getCities();
 
-            res.status(201).json({ user });
+            // Send confirmation message to user email
+            const token = generateConfirmationToken();
+            const verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
+
+            await Confirmations.create({ userId: user.id, token });
+
+            const result = await sendEmailConfirmationMail({ email, password, verificationLink });
+            if (!('messageId' in result)) {
+                return res
+                    .status(500)
+                    .json({ detail: result ? result.toString() : 'NodeMailer error' })
+                    .end();
+            }
+
+            return res.status(204).end();
         } catch (e) {
             if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'User email already exists' }).end();
             res.status(400).end();
@@ -240,7 +252,6 @@ const resendEmailConfirmation = [
     body('userId').exists().withMessage('userId required').isString().withMessage('userId should be of string type'),
     async (req, res) => {
         try {
-            // TODO
             const { userId } = req.body;
             const user = await User.findOne({ where: { id: userId } });
             if (!user) return res.status(404).json({ detail: 'User not found' }).end();
@@ -254,13 +265,12 @@ const resendEmailConfirmation = [
                 return res.status(409).json({ detail: 'User has been already verified. Please Login' }).end();
             }
 
-            const password = generatePassword();
             const token = generateConfirmationToken();
             const verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
 
             await Confirmations.create({ userId: user.id, token });
 
-            const result = await sendEmailConfirmationMail({ email: user.email, password, verificationLink });
+            const result = await sendEmailConfirmationMail({ email: user.email, password: null, verificationLink });
             if (!('messageId' in result)) {
                 return res
                     .status(500)

@@ -25,6 +25,7 @@ const UserProfilePage = () => {
             <Col md="auto">
               <div>Email: {user.email}</div>
               <div>Password: {user.password}</div>
+              <div>Role: {user.role}</div>
             </Col>
           </Row>
           <hr />

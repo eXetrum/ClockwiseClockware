@@ -33,7 +33,6 @@ const RouteProtector = async (req, res, next, scope = ACCESS_SCOPE.AnyAuth) => {
 
         if (!scope.includes(dbUser.role)) return res.status(403).end();
     } catch (e) {
-        console.log(e);
         return res.status(401).end();
     }
 

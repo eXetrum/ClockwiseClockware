@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
 import { useAuth } from '../../hooks';
 import { parseToken } from '../../utils';
+import { USER_ROLES } from '../../constants';
 
 const Header = () => {
   const { accessToken } = useAuth();
@@ -16,7 +17,7 @@ const Header = () => {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="admin-navbar-nav" />
         <Navbar.Collapse id="admin-navbar-nav">
-          {user && user.rol === 'admin' ? (
+          {user && user.role === USER_ROLES.ADMIN ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/admin/cities">
                 Cities
