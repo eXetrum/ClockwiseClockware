@@ -3,17 +3,12 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Order extends Model {
-        /**
-         * Helper method for defining associations.
-         * This method is not a part of Sequelize lifecycle.
-         * The `models/index` file will call this method automatically.
-         */
         static associate(models) {
             // define association here
-            Order.belongsTo(models.Client, { as: 'client', foreignKey: 'clientId' });
+            Order.belongsTo(models.Client, { as: 'client', foreignKey: 'clientId', targetKey: 'userId' });
             Order.belongsTo(models.Watches, { as: 'watch', foreignKey: 'watchId' });
             Order.belongsTo(models.City, { as: 'city', foreignKey: 'cityId' });
-            Order.belongsTo(models.Master, { as: 'master', foreignKey: 'masterId' });
+            Order.belongsTo(models.Master, { as: 'master', foreignKey: 'masterId', targetKey: 'userId' });
         }
     }
 
@@ -30,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.UUID,
                 references: {
                     model: 'clients',
-                    key: 'id'
+                    key: 'userId'
                 },
                 onDelete: 'RESTRICT'
             },
@@ -57,7 +52,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.UUID,
                 references: {
                     model: 'masters',
-                    key: 'id'
+                    key: 'userId'
                 },
                 onDelete: 'RESTRICT'
             },
@@ -75,9 +70,15 @@ module.exports = (sequelize, DataTypes) => {
                 defaultValue: 'confirmed'
             },
             totalCost: {
-                type: DataTypes.FLOAT,
-                defaultValue: 0.0,
-                allowNull: false
+                type: DataTypes.BIGINT,
+                defaultValue: 0,
+                allowNull: false,
+                get() {
+                    return Number(this.getDataValue('totalCost') / 100).toFixed(2);
+                },
+                set(value) {
+                    this.setDataValue('totalCost', value * 100);
+                }
             }
         },
         {

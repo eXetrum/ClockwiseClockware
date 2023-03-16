@@ -1,4 +1,5 @@
-const { RouteProtector } = require('../middleware/RouteProtector');
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
 
@@ -12,8 +13,8 @@ const getAll = async (req, res) => {
 };
 
 const create = [
-    RouteProtector,
-    body('city').notEmpty().withMessage('City object required'),
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
+    body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
         .withMessage('city.name required')
@@ -52,7 +53,7 @@ const create = [
 ];
 
 const remove = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('City ID required'),
     async (req, res) => {
         try {
@@ -85,7 +86,7 @@ const remove = [
 ];
 
 const get = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().notEmpty().withMessage('City ID required'),
     async (req, res) => {
         try {
@@ -109,8 +110,8 @@ const get = [
 ];
 
 const update = [
-    RouteProtector,
-    body('city').notEmpty().withMessage('City object required'),
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
+    body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
         .withMessage('city.name required')

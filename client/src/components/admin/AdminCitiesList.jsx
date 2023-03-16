@@ -12,7 +12,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
       <Container>
         <Row className="justify-content-md-center mt-3">
           <Col md="auto">
-            <Alert>No records yet</Alert>
+            <Alert variant="warning">No records yet</Alert>
           </Col>
         </Row>
       </Container>
@@ -35,15 +35,15 @@ const AdminCitiesList = ({ cities, onRemove }) => {
         <tbody>
           {cities.map((city) => (
             <tr key={city.id}>
-              <td className="text-center p-2 m-0">{city.id}</td>
-              <td className="p-2 m-0">{city.name}</td>
-              <th className="text-center p-2 m-0">{formatDecimal(city.pricePerHour)}</th>
-              <td className="text-center p-2 m-0">
+              <td className="text-center p-2 m-0 col-2">{city.id}</td>
+              <td className="text-center p-2 m-0">{city.name}</td>
+              <th className="text-center p-2 m-0 col-1">{formatDecimal(city.pricePerHour)}</th>
+              <td className="text-center p-2 m-0 col-1">
                 <Link to={'/admin/cities/' + city.id}>
                   <EditIcon />
                 </Link>
               </td>
-              <td className="text-center p-2 m-0">
+              <td className="text-center p-2 m-0 col-1">
                 <Link to="#">
                   <DeleteForeverIcon onClick={() => onRemove(city.id)} />
                 </Link>

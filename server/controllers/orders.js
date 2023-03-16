@@ -1,14 +1,12 @@
-const { RouteProtector } = require('../middleware/RouteProtector');
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE, MS_PER_HOUR } = require('../constants');
 const { body, param, query, validationResult } = require('express-validator');
-const { sendMail } = require('../middleware/NodeMailer');
+const { sendOrderConfirmationMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
 const { Op } = require('sequelize');
 const db = require('../database/models/index');
-const { Order, Client, Watches, City, Master } = require('../database/models');
-
-const MS_PER_HOUR = 60 * 60 * 1000;
-
-const dateToNearestHour = timestamp => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
+const { User, Client, Master, Watches, City, Order, Confirmations } = require('../database/models');
+const { dateToNearestHour, generatePassword, generateConfirmationToken } = require('../utils');
 
 const getFreeMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -54,12 +52,17 @@ const getFreeMasters = [
                     endDate: { [Op.gt]: orderStartDate }
                 }
             });
-            bussyMasters = bussyMasters.map(item => item.masterId);
+            bussyMasters = bussyMasters.map((item) => item.masterId);
 
-            const masters = await Master.findAll({
-                where: { id: { [Op.notIn]: bussyMasters } },
+            let masters = await Master.findAll({
+                where: {
+                    userId: { [Op.notIn]: bussyMasters }
+                },
                 include: [
-                    { model: City, as: 'cities', through: { attributes: [] }, where: { id: cityId } },
+                    {
+                        model: User
+                    },
+                    { model: City, as: 'cities', through: { attributes: [] } },
                     {
                         model: Order,
                         as: 'orders',
@@ -68,14 +71,31 @@ const getFreeMasters = [
                             { model: City, as: 'city' }
                         ],
                         attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                        order: [['updatedAt', 'DESC']]
+                        order: [['createdAt', 'DESC']]
                     }
                 ],
                 order: [
                     ['rating', 'DESC'],
-                    ['updatedAt', 'DESC']
+                    ['createdAt', 'DESC']
                 ]
             });
+
+            masters = masters.map((master) => {
+                const obj = {
+                    ...master.toJSON(),
+                    ...master.User.toJSON()
+                };
+                delete obj.User;
+                delete obj.userId;
+
+                return obj;
+            });
+
+            // No idea how to filter these on 'sequelize level' ([city])
+            masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
+
+            // Filter out masters accounts which is not verified/approved
+            masters = masters.filter((master) => master.isEmailVerified && master.isApprovedByAdmin);
 
             res.status(200).json({ masters }).end();
         } catch (e) {
@@ -130,7 +150,6 @@ const create = [
         .withMessage('order.timezone should be of type int'),
 
     async (req, res) => {
-        let transaction = null;
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
@@ -143,16 +162,22 @@ const create = [
             const city = await City.findOne({ where: { id: order.cityId } });
             if (!city) return res.status(409).json({ detail: 'Unknown city' });
 
-            const master = await Master.findOne({
-                where: { id: order.masterId },
-                include: [{ model: City, as: 'cities', through: { attributes: [] } }]
+            let master = await Master.findOne({
+                where: { userId: order.masterId },
+                include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }]
             });
+
             if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find(city => city.id === order.cityId) == null) {
+            if (master.cities.find((city) => city.id === order.cityId) == null) {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified city' });
             }
+            master = {
+                ...master.toJSON(),
+                ...master.User.toJSON()
+            };
+            delete master.User;
             /// ///////////////////////////////////////////////////
             order.startDate = dateToNearestHour(order.startDate);
             order.client.name = order.client.name.trim();
@@ -163,31 +188,67 @@ const create = [
             const clientDateTimeStart = moment.unix((order.startDate + order.timezone * MS_PER_HOUR) / 1000);
             const clientDateTimeEnd = moment.unix((order.startDate + order.timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
 
-            transaction = await db.sequelize.transaction();
-            let client = await Client.findOne({ where: { email: order.client.email } });
-            if (client == null) {
-                client = await Client.create(order.client);
-            } else {
-                await Client.update({ name: order.client.name }, { where: { email: order.client.email } });
-            }
-            order.clientId = client.id;
-            const result = await Order.create(order);
-            await transaction.commit();
+            const [dbOrder, autoRegistration] = await db.sequelize.transaction(async (t) => {
+                const autoRegistration = { email: order.client.email, password: null, verificationLink: '' };
+                let user = await User.findOne({ where: { email: order.client.email } });
 
-            // orderId, client, master, watch, city, startDate, endDate
-            const confirmation = await sendMail({
-                orderId: result.id,
+                // Admin/Master cant create orders they should use different non Admin/Master accounts
+                if (user != null && !ACCESS_SCOPE.ClientOnly.includes(user.role)) {
+                    throw new Error('ClientsOnly');
+                }
+
+                if (user == null) {
+                    autoRegistration.password = generatePassword();
+                    user = await User.create({ ...order.client, password: autoRegistration.password, role: 'client' }, { transaction: t });
+                    await user.createClient({ ...order.client }, { transaction: t });
+
+                    const token = generateConfirmationToken();
+                    await Confirmations.create({ userId: user.id, token });
+
+                    autoRegistration.verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
+                } else {
+                    await Client.update(
+                        { ...order.client },
+                        {
+                            where: { userId: user.id },
+                            limit: 1
+                        },
+                        { transaction: t }
+                    );
+                }
+
+                order.clientId = user.id;
+
+                return [await Order.create(order, { transaction: t }), autoRegistration];
+            });
+
+            if (autoRegistration.password !== null) {
+                // Auto registration -> send email confirmation message
+                await sendEmailConfirmationMail({ ...autoRegistration });
+            }
+
+            // orderId, client, master, watch, city, startDate, endDate, totalCost
+            await sendOrderConfirmationMail({
+                orderId: dbOrder.id,
                 client: order.client,
                 master,
                 watch,
                 city,
                 startDate: clientDateTimeStart.toString(),
-                endDate: clientDateTimeEnd.toString()
+                endDate: clientDateTimeEnd.toString(),
+                totalCost: order.totalCost
             });
+
+            const confirmation = {
+                orderId: dbOrder.id,
+                ...(autoRegistration.password && { autoRegistration })
+            };
 
             res.status(201).json({ confirmation }).end();
         } catch (e) {
-            if (transaction) transaction.rollback();
+            if (e.message && e.message === 'ClientsOnly') {
+                return res.status(409).json({ detail: 'Clients only (new or existing)' }).end();
+            }
 
             if (e.constraint === 'overlapping_times') {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified datetime' });
@@ -199,19 +260,34 @@ const create = [
 ];
 
 const getAll = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     async (req, res) => {
         try {
-            const orders = await Order.findAll({
+            const records = await Order.findAll({
                 include: [
-                    { model: Client, as: 'client' },
+                    { model: Client, include: [{ model: User }], as: 'client' },
                     { model: Watches, as: 'watch' },
                     { model: City, as: 'city' },
-                    { model: Master, as: 'master' }
+                    { model: Master, include: [{ model: User }], as: 'master' }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['masterId'], ['startDate', 'DESC'], ['updatedAt', 'DESC']]
+                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
             });
+
+            const orders = records.map((order) => {
+                const obj = {
+                    ...order.toJSON(),
+                    client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                    master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
+                };
+                delete obj.client.User;
+                delete obj.client.userId;
+                delete obj.master.User;
+                delete obj.master.userId;
+
+                return obj;
+            });
+
             res.status(200).json({ orders }).end();
         } catch (e) {
             res.status(400).json(e).end();
@@ -220,7 +296,7 @@ const getAll = [
 ];
 
 const remove = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Order ID required').isUUID().withMessage('Order ID should be of type string'),
     async (req, res) => {
         try {
@@ -245,7 +321,7 @@ const remove = [
 ];
 
 const get = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Order ID required').isString().withMessage('Order ID should be of type string'),
     async (req, res) => {
         try {
@@ -257,18 +333,17 @@ const get = [
             const order = await Order.findOne({
                 where: { id },
                 include: [
-                    { model: Client, as: 'client' },
+                    { model: Client, include: [{ model: User }], as: 'client' },
                     { model: Watches, as: 'watch' },
                     { model: City, as: 'city' },
                     {
                         model: Master,
                         as: 'master',
-                        include: [
-                            { model: Order, as: 'orders' },
-                            { model: City, as: 'cities' }
-                        ]
+                        include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }]
                     }
-                ]
+                ],
+                attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
+                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
             });
 
             if (!order) return res.status(404).json({ detail: '~Order not found~' }).end();
@@ -278,7 +353,17 @@ const get = [
                 return res.status(403).json({ detail: 'Unable to get order with datetime that is already past' }).end();
             }
 
-            res.status(200).json({ order }).end();
+            const obj = {
+                ...order.toJSON(),
+                client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
+            };
+            delete obj.client.User;
+            delete obj.client.userId;
+            delete obj.master.User;
+            delete obj.master.userId;
+
+            res.status(200).json({ order: obj }).end();
         } catch (e) {
             // Incorrect UUID ID string
             if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
@@ -291,7 +376,7 @@ const get = [
 ];
 
 const update = [
-    RouteProtector,
+    RequireAuth(ACCESS_SCOPE.AdminOnly),
     param('id').exists().withMessage('Order ID required').isString().withMessage('Order ID should be of type string'),
     body('order').exists().withMessage('order object required').isObject().withMessage('order object required'),
     body('order.watchId').exists().withMessage('order.watchId required').isUUID().withMessage('Incorrect watchId'),
@@ -329,13 +414,14 @@ const update = [
             if (!city) return res.status(409).json({ detail: 'Unknown city' });
 
             const master = await Master.findOne({
-                where: { id: order.masterId },
-                include: [{ model: City, as: 'cities', through: { attributes: [] } }]
+                where: { userId: order.masterId },
+                include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }]
             });
+
             if (!master) return res.status(409).json({ detail: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find(city => city.id === order.cityId) == null) {
+            if (master.cities.find((city) => city.id === order.cityId) == null) {
                 return res.status(409).json({ detail: 'Master cant handle this order at specified city' });
             }
             /// ///////////////////////////////////////////////////

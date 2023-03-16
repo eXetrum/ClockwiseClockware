@@ -3,8 +3,8 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.addColumn('orders', 'totalCost', {
-            type: Sequelize.FLOAT,
-            defaultValue: 0.0,
+            type: Sequelize.BIGINT,
+            defaultValue: 0,
             allowNull: false
         });
     },

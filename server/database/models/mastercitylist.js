@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
          */
         static associate(models) {
             // define association here
-            MasterCityList.belongsTo(models.Master, { foreignKey: 'masterId' });
+            MasterCityList.belongsTo(models.Master, { foreignKey: 'masterId', targetKey: 'userId' });
             MasterCityList.belongsTo(models.City, { foreignKey: 'cityId' });
         }
     }
@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.UUID,
                 references: {
                     model: 'masters',
-                    key: 'id'
+                    key: 'userId'
                 },
                 onDelete: 'RESTRICT'
             },

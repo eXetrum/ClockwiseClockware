@@ -2,7 +2,9 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Admin extends Model {
-        static associate(models) {}
+        static associate(models) {
+            Admin.belongsTo(models.User, { foreignKey: 'userId' });
+        }
     }
     Admin.init(
         {
@@ -12,14 +14,15 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 primaryKey: true
             },
-            email: {
+            userId: {
+                type: DataTypes.UUID,
                 allowNull: false,
-                unique: true,
-                type: DataTypes.STRING
-            },
-            password: {
-                allowNull: false,
-                type: DataTypes.STRING
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'RESTRICT'
             }
         },
         {
@@ -28,5 +31,6 @@ module.exports = (sequelize, DataTypes) => {
             tableName: 'admins'
         }
     );
+
     return Admin;
 };
