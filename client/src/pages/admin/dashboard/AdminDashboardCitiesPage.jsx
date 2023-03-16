@@ -11,7 +11,8 @@ import { getErrorText } from '../../../utils';
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyCity = () => ({ name: '' });
+  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
   const [cities, setCities] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
@@ -94,6 +95,7 @@ const AdminDashboardCitiesPage = () => {
   };
 
   const onCityNameChange = (event) => setNewCity((prev) => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = (event) => setNewCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
 
   const onCityRemove = async (cityId) => {
     const city = cities.find((item) => item.id === cityId);
@@ -149,10 +151,24 @@ const AdminDashboardCitiesPage = () => {
           pending={pending}
           isFormValid={isFormValid}
           formContent={
-            <Form.Group>
-              <Form.Label>City:</Form.Label>
-              <Form.Control type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
-            </Form.Group>
+            <>
+              <Form.Group className="mb-3">
+                <Form.Label>Name:</Form.Label>
+                <Form.Control type="text" name="city" autoFocus onChange={onCityNameChange} value={newCity.name} disabled={pending} />
+              </Form.Group>
+              <Form.Group>
+                <Form.Label>Price Per Hour (Employe rate):</Form.Label>
+                <Form.Control
+                  type="number"
+                  name="pricePerHour"
+                  min={0}
+                  step={0.25}
+                  onChange={onCityPricePerHourChange}
+                  value={formatDecimal(newCity.pricePerHour)}
+                  disabled={pending}
+                />
+              </Form.Group>
+            </>
           }
         />
       </Container>
