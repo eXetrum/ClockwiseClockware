@@ -228,7 +228,7 @@ const create = [
             }
 
             // orderId, client, master, watch, city, startDate, endDate, totalCost
-            const confirmation = await sendOrderConfirmationMail({
+            await sendOrderConfirmationMail({
                 orderId: dbOrder.id,
                 client: order.client,
                 master,
@@ -238,6 +238,11 @@ const create = [
                 endDate: clientDateTimeEnd.toString(),
                 totalCost: order.totalCost
             });
+
+            const confirmation = {
+                orderId: dbOrder.id,
+                ...(autoRegistration.password && { autoRegistration })
+            };
 
             res.status(201).json({ confirmation }).end();
         } catch (e) {
