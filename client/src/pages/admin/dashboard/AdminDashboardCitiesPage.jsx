@@ -8,11 +8,11 @@ import { Header, ErrorContainer, AdminCitiesList, ModalForm } from '../../../com
 import { getCities, createCity, deleteCityById } from '../../../api';
 import { getErrorText } from '../../../utils';
 
+const formatDecimal = (value) => parseFloat(value).toFixed(2);
+const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
+
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
   const [cities, setCities] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
@@ -61,12 +61,10 @@ const AdminDashboardCitiesPage = () => {
   const doDeleteCityById = async (id) => {
     setPending(true);
     try {
-      const response = await deleteCityById({ id });
-      if ([200, 204].includes(response?.status)) {
-        const removedCity = cities.find((item) => item.id === id);
-        setCities(cities.filter((item) => item.id !== id));
-        enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success' });
-      }
+      await deleteCityById({ id });
+      const removedCity = cities.find((item) => item.id === id);
+      setCities(cities.filter((item) => item.id !== id));
+      enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setCities(cities.filter((item) => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });

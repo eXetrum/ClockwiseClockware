@@ -35,12 +35,10 @@ const AdminDashboardOrdersPage = () => {
   const doDeleteOrderById = async (id) => {
     setPending(true);
     try {
-      const response = await deleteOrderById({ id });
-      if ([200, 204].includes(response?.status)) {
-        const removedOrder = orders.find((item) => item.id === id);
-        setOrders(orders.filter((item) => item.id !== id));
-        enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success' });
-      }
+      await deleteOrderById({ id });
+      const removedOrder = orders.find((item) => item.id === id);
+      setOrders(orders.filter((item) => item.id !== id));
+      enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setOrders(orders.filter((item) => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });

@@ -9,17 +9,17 @@ import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from 
 import { getCities, getMasters, createMaster, deleteMasterById, resetPassword, resendEmailConfirmation } from '../../../api';
 import { getErrorText, validateEmail } from '../../../utils';
 
+const initEmptyMaster = () => ({
+  name: '',
+  email: '',
+  password: '',
+  rating: 0,
+  isApprovedByAdmin: false,
+  cities: [],
+});
+
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const initEmptyMaster = () => ({
-    name: '',
-    email: '',
-    password: '',
-    rating: 0,
-    isApprovedByAdmin: false,
-    cities: [],
-  });
 
   const [cities, setCities] = useState([]);
   const [masters, setMasters] = useState([]);
@@ -32,7 +32,7 @@ const AdminDashboardMasters = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(
-    () => newMaster.name && newMaster.email && validateEmail(newMaster.email) && newMaster.password,
+    () => newMaster.name && newMaster.email && validateEmail(newMaster.email) && newMaster.password && newMaster.cities.length > 0,
     [newMaster],
   );
 
@@ -77,12 +77,10 @@ const AdminDashboardMasters = () => {
   const doDeleteMasterById = async (id) => {
     setPending(true);
     try {
-      const response = await deleteMasterById({ id });
-      if ([200, 204].includes(response?.status)) {
-        const removedMaster = masters.find((item) => item.id === id);
-        setMasters(masters.filter((item) => item.id !== id));
-        enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
-      }
+      await deleteMasterById({ id });
+      const removedMaster = masters.find((item) => item.id === id);
+      setMasters(masters.filter((item) => item.id !== id));
+      enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
@@ -94,10 +92,8 @@ const AdminDashboardMasters = () => {
   const doResetPassword = async (master) => {
     try {
       setPending(true);
-      const response = await resetPassword({ userId: master.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Password for ${master.email} has been successfully reset`, { variant: 'success' });
-      }
+      await resetPassword({ userId: master.id });
+      enqueueSnackbar(`Password for ${master.email} has been successfully reset`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
@@ -109,10 +105,8 @@ const AdminDashboardMasters = () => {
   const doResendEmailConfirmation = async (master) => {
     try {
       setPending(true);
-      const response = await resendEmailConfirmation({ userId: master.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
-      }
+      await resendEmailConfirmation({ userId: master.id });
+      enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });

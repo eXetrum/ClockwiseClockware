@@ -1,8 +1,9 @@
 const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { User, Master, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
+const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -16,23 +17,15 @@ const getAll = [
                     { model: City, as: 'cities', through: { attributes: [] } },
                     { model: Order, as: 'orders' }
                 ],
+                attributes: { exclude: ['id', 'userId'] },
                 order: [['createdAt', 'DESC']]
             });
 
-            const masters = records.map((master) => {
-                const obj = {
-                    ...master.toJSON(),
-                    ...master.User.toJSON()
-                };
-                delete obj.User;
-                delete obj.userId;
-
-                return obj;
-            });
+            const masters = records.map(master => ({ ...master.toJSON(), ...master.User.toJSON() }));
 
             res.status(200).json({ masters }).end();
-        } catch (e) {
-            res.status(400).end();
+        } catch (error) {
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -91,51 +84,50 @@ const create = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { master } = req.body;
-
-            // Prepare data
-            master.name = master.name.trim();
-            master.email = master.email.trim();
-            master.password = master.password.trim();
-            delete master.isEmalVerified;
-            delete master.isEnabled;
+            const { name, email, password, rating, isApprovedByAdmin } = req.body.master;
+            let { cities } = req.body.master;
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map((city) => city.id);
+            const dbCityIds = dbCities.map(city => city.id);
 
-            master.cities = master.cities.map((city) => city.id);
+            cities = cities.map(city => city.id);
             // filter out id's which does not exists in the database
-            master.cities = master.cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
+            cities = cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            master.cities.forEach((cityId) => {
-                const dbCityObj = dbCities.find((city) => city.id === cityId);
+            cities.forEach(cityId => {
+                const dbCityObj = dbCities.find(city => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
-            const [user, details] = await db.sequelize.transaction(async (t) => {
-                const user = await User.create({ ...master, role: 'master' }, { transaction: t });
-                const details = await user.createMaster({ ...master }, { transaction: t });
-                await details.setCities(masterCities, { transaction: t });
-
-                delete user.password;
-                delete details.id;
-                delete details.userId;
-
-                return [{ ...details.toJSON(), ...user.toJSON() }, details];
-            });
-
-            user.cities = await details.getCities();
-            res.status(201).json({ master: user }).end();
-        } catch (e) {
-            if (e.name === 'SequelizeUniqueConstraintError') {
-                return res.status(409).json({ detail: 'User with specified email already exists' }).end();
+            if (masterCities.length === 0) {
+                return res.status(409).json({ message: 'master must be associated at least with one city' }).end();
             }
 
-            res.status(400).json(e).end();
+            const [user, details] = await db.sequelize.transaction(async t => {
+                const user = await User.create(
+                    { email: email.trim(), password: password.trim(), role: USER_ROLES.MASTER },
+                    { transaction: t }
+                );
+                const details = await user.createMaster({ name: name.trim(), rating, isApprovedByAdmin }, { transaction: t });
+                await details.setCities(masterCities, { transaction: t });
+
+                return [user, details];
+            });
+
+            cities = await details.getCities();
+            res.status(201)
+                .json({ master: { ...details.toJSON(), ...user.toJSON(), cities } })
+                .end();
+        } catch (error) {
+            if (isDbErrorEntryAlreadyExists(error)) {
+                return res.status(409).json({ message: 'User with specified email already exists' }).end();
+            }
+
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -146,36 +138,32 @@ const remove = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
 
-            await db.sequelize.transaction(async (t) => {
+            await db.sequelize.transaction(async t => {
                 const resultMasterDetails = await Master.destroy({ where: { userId: id } }, { transaction: t });
                 const resultUserDetails = await User.destroy({ where: { id } }, { transaction: t });
-                if (resultMasterDetails === 0 || resultUserDetails === 0) throw new Error('MasterNotFound');
+                if (resultMasterDetails === 0 || resultUserDetails === 0) throw new Error('EntryNotFound');
             });
 
             res.status(204).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (
-                (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') ||
-                (e.message && e.message === 'MasterNotFound')
-            ) {
-                return res.status(404).json({ detail: 'Master not found' }).end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) {
+                return res.status(404).json({ message: 'Master not found' }).end();
             }
 
-            if (e.name === 'SequelizeForeignKeyConstraintError' && e.parent) {
-                if (e.parent.constraint === 'master_city_list_masterId_fkey') {
-                    return res.status(409).json({ detail: 'Deletion restricted. Master contains reference(s) to city/cities' }).end();
+            if (isDbErrorEntryReferences(error)) {
+                if (error.parent.constraint === 'master_city_list_masterId_fkey') {
+                    return res.status(409).json({ message: 'Deletion restricted. Master contains reference(s) to city/cities' }).end();
                 }
-                if (e.parent.constraint === 'orders_masterId_fkey') {
-                    return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)' }).end();
+                if (error.parent.constraint === 'orders_masterId_fkey') {
+                    return res.status(409).json({ message: 'Deletion restricted. Order(s) reference(s)' }).end();
                 }
             }
 
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -186,32 +174,27 @@ const get = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
 
-            let master = await Master.findOne({
+            const master = await Master.findOne({
                 where: { userId: id },
                 include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }],
                 attributes: { exclude: ['id', 'userId'] }
             });
 
-            if (!master) return res.status(404).json({ detail: '~Master not found~' }).end();
+            if (!master) return res.status(404).json({ message: '~Master not found~' }).end();
 
-            master = {
-                ...master.toJSON(),
-                ...master.User.toJSON()
-            };
-            delete master.User;
-
-            res.status(200).json({ master }).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
-                return res.status(404).json({ detail: 'Master not found' }).end();
+            res.status(200)
+                .json({ master: { ...master.toJSON(), ...master.User.toJSON() } })
+                .end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) {
+                return res.status(404).json({ message: 'Master not found' }).end();
             }
 
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -261,38 +244,33 @@ const update = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { master } = req.body;
-
-            // Prepare data
-            master.name = master.name.trim();
-            master.email = master.email.trim();
-            delete master.isEmalVerified;
-            delete master.isEnabled;
+            const { name, email, rating, isApprovedByAdmin } = req.body.master;
+            let { cities } = req.body.master;
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map((city) => city.id);
+            const dbCityIds = dbCities.map(city => city.id);
             // master.cities contains id's now
-            master.cities = master.cities.map((city) => city.id);
+            cities = cities.map(city => city.id);
             // filter out id's which does not exists in the database, at this moment
-            master.cities = master.cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
+            cities = cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            master.cities.forEach((cityId) => {
-                const dbCityObj = dbCities.find((city) => city.id === cityId);
+            cities.forEach(cityId => {
+                const dbCityObj = dbCities.find(city => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
-            delete master.id;
-            delete master.createdAt;
-            delete master.updatedAt;
+            if (masterCities.length === 0) {
+                return res.status(409).json({ message: 'master must be associated at least with one city' }).end();
+            }
 
-            await db.sequelize.transaction(async (t) => {
+            await db.sequelize.transaction(async t => {
                 const [affectedRowsMaster, resultMaster] = await Master.update(
-                    master,
+                    { name: name.trim(), rating, isApprovedByAdmin },
                     {
                         where: { userId: id },
                         include: [{ model: City, as: 'cities', through: MasterCityList, required: true }],
@@ -302,33 +280,26 @@ const update = [
                     },
                     { transaction: t }
                 );
-                if (affectedRowsMaster === 0) throw new Error('MasterNotFound');
+                if (affectedRowsMaster === 0) throw new Error('EntryNotFound');
 
                 const [affectedRowsUser, resultUser] = await User.update(
-                    master,
-                    { where: { id, role: 'master' }, returning: true, limit: 1 },
+                    { email: email.trim() },
+                    { where: { id, role: USER_ROLES.MASTER }, returning: true, limit: 1 },
                     { transaction: t }
                 );
-                if (affectedRowsUser === 0) throw new Error('MasterNotFound');
+                if (affectedRowsUser === 0) throw new Error('EntryNotFound');
 
                 await resultMaster[0].setCities(masterCities, { transaction: t });
             });
 
             res.status(204).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (
-                (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') ||
-                (e.message && e.message === 'MasterNotFound')
-            ) {
-                return res.status(404).json({ detail: 'Master not found' }).end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Master not found' }).end();
+            if (isDbErrorEntryAlreadyExists(error)) {
+                return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            if (e.name === 'SequelizeUniqueConstraintError') {
-                return res.status(409).json({ detail: 'User with specified email already exists' }).end();
-            }
-
-            res.status(400).json(e).end();
+            res.status(400).json(error).end();
         }
     }
 ];

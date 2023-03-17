@@ -9,7 +9,7 @@ import { validateEmail, isGlobalError, getErrorText } from '../../utils';
 import { USER_ROLES } from '../../constants';
 
 const RegisterPage = () => {
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   const navigate = useNavigate();
 
@@ -23,8 +23,14 @@ const RegisterPage = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(() => {
-    const { email, password, name, role, isTosAccepted } = user;
-    return validateEmail(email) && password && ((role === 'master' && name) || name.length >= 3) && isTosAccepted;
+    const { email, password, name, role, isTosAccepted, cities } = user;
+    return (
+      validateEmail(email) &&
+      password &&
+      ((role === USER_ROLES.MASTER && name) || name.length >= 3) &&
+      isTosAccepted &&
+      (role === USER_ROLES.CLIENT || cities.length > 0)
+    );
   }, [user]);
 
   const fetchInitialData = async (abortController) => {
@@ -46,16 +52,12 @@ const RegisterPage = () => {
     setPending(true);
     setError(null);
     try {
-      const response = await register({ ...user });
-      if ([200, 201, 204].includes(response?.status)) {
-        enqueueSnackbar('Success', { variant: 'success' });
-        setUser(initEmptyUser());
-        const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-        await delay(3000);
-        navigate('/');
-      }
+      await register({ ...user });
+      enqueueSnackbar('Success', { variant: 'success' });
+      setUser(initEmptyUser());
+      navigate('/');
     } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      if (isGlobalError(e)) return setError(e);
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
@@ -84,14 +86,16 @@ const RegisterPage = () => {
     fetchInitialData(abortController);
     return () => {
       abortController.abort();
-      closeSnackbar();
     };
-  }, [closeSnackbar]);
+  }, []);
 
   return (
     <Container>
       <Header />
       <Container>
+        <center>
+          <h1>Registration page</h1>
+        </center>
         <hr />
 
         {isInitialLoading ? (
@@ -105,7 +109,6 @@ const RegisterPage = () => {
         {isComponentReady ? (
           <Row className="justify-content-md-center">
             <Col xs lg="4" md="auto">
-              <h1>Registration page</h1>
               <Form onSubmit={onFormSubmit}>
                 <Form.Group className="mb-3">
                   <Form.Label>Email address</Form.Label>
@@ -114,6 +117,7 @@ const RegisterPage = () => {
                     name="email"
                     placeholder="Enter email"
                     autoFocus
+                    required
                     onChange={onFormFieldChange}
                     value={user.email}
                     disabled={isPending}
@@ -125,6 +129,7 @@ const RegisterPage = () => {
                     type="password"
                     name="password"
                     placeholder="Password"
+                    required
                     onChange={onFormFieldChange}
                     value={user.password}
                     disabled={isPending}
@@ -136,6 +141,7 @@ const RegisterPage = () => {
                     type="text"
                     name="name"
                     placeholder="Name"
+                    required
                     onChange={onFormFieldChange}
                     value={user.name}
                     disabled={isPending}
@@ -181,6 +187,7 @@ const RegisterPage = () => {
                       <Form.Check
                         type="checkbox"
                         name="isTosAccepted"
+                        required
                         checked={user.isTosAccepted}
                         onChange={onUserTosAcceptedChanged}
                         disabled={isPending}

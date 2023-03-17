@@ -17,7 +17,7 @@ const MasterForm = ({
   isPending,
   successButtonText = 'Save',
 }) => {
-  const isFormValid = useCallback(() => master.name && master.email && validateEmail(master.email), [master]);
+  const isFormValid = useCallback(() => master.name && master.email && validateEmail(master.email) && master.cities.length > 0, [master]);
 
   return (
     <Row className="justify-content-md-center">

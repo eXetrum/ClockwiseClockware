@@ -2,13 +2,14 @@ const { RequireAuth } = require('../middleware/RouteProtector');
 const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
+const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
 
 const getAll = async (req, res) => {
     try {
-        const cities = await City.findAll({ order: [['updatedAt', 'DESC']] });
+        const cities = await City.findAll({ order: [['createdAt', 'DESC']] });
         res.status(200).json({ cities }).end();
-    } catch (e) {
-        res.status(400).end();
+    } catch (error) {
+        res.status(400).json(error).end();
     }
 };
 
@@ -23,7 +24,7 @@ const create = [
         .trim()
         .escape()
         .notEmpty()
-        .withMessage('Empty city.name is not allowed'),
+        .withMessage('empty city.name is not allowed'),
     body('city.pricePerHour')
         .exists()
         .withMessage('city.pricePerHour required')
@@ -37,50 +38,46 @@ const create = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            let { city } = req.body;
-            city.name = city.name.trim();
+            const { name, pricePerHour } = req.body.city;
 
-            city = await City.create({ ...city });
+            const city = await City.create({ name: name.trim(), pricePerHour });
             res.status(201).json({ city }).end();
-        } catch (e) {
-            if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
+        } catch (error) {
+            if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();
 
-            res.status(400).json(e).end();
+            res.status(400).json(error).end();
         }
     }
 ];
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('City ID required'),
+    param('id').exists().notEmpty().withMessage('city ID required'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
             const result = await City.destroy({ where: { id } });
-            if (!result) return res.status(404).json({ detail: 'City not found' }).end();
+            if (!result) return res.status(404).json({ message: 'City not found' }).end();
             res.status(204).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
-                return res.status(404).json({ detail: 'City not found' }).end();
-            }
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
 
-            if (e.name === 'SequelizeForeignKeyConstraintError' && e.parent) {
-                if (e.parent.constraint === 'master_city_list_cityId_fkey') {
-                    return res.status(409).json({ detail: 'Deletion restricted. Master(s) reference(s)' }).end();
+            if (isDbErrorEntryReferences(error)) {
+                if (error.parent.constraint === 'master_city_list_cityId_fkey') {
+                    return res.status(409).json({ message: 'Deletion restricted. Master(s) reference(s)' }).end();
                 }
 
-                if (e.parent.constraint === 'orders_cityId_fkey') {
-                    return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)' }).end();
+                if (error.parent.constraint === 'orders_cityId_fkey') {
+                    return res.status(409).json({ message: 'Deletion restricted. Order(s) reference(s)' }).end();
                 }
             }
 
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -91,20 +88,17 @@ const get = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
             const city = await City.findOne({ where: { id } });
-            if (!city) return res.status(404).json({ detail: '~City not found~' }).end();
+            if (!city) return res.status(404).json({ message: '~City not found~' }).end();
 
             res.status(200).json({ city }).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
-                return res.status(404).json({ detail: 'City not found' }).end();
-            }
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
 
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -134,26 +128,20 @@ const update = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { city } = req.body;
-            city.name = city.name.trim();
+            const { name, pricePerHour } = req.body.city;
 
-            const [affectedRows, result] = await City.update({ ...city }, { where: { id }, returning: true });
-            if (affectedRows === 0) return res.status(404).json({ detail: 'City not found' }).end();
+            const [affectedRows, result] = await City.update({ name: name.trim(), pricePerHour }, { where: { id }, returning: true });
+            if (affectedRows === 0) return res.status(404).json({ message: 'City not found' }).end();
 
             res.status(204).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
-                return res.status(404).json({ detail: 'City not found' }).end();
-            }
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
+            if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();
 
-            // City already exists
-            if (e.name === 'SequelizeUniqueConstraintError') return res.status(409).json({ detail: 'City already exists' }).end();
-
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];

@@ -7,18 +7,18 @@ import { Header, ErrorContainer, MasterForm } from '../../../components';
 import { getCities, getMasterById, updateMasterById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
 
+const initEmptyMaster = () => ({
+  name: '',
+  email: '',
+  password: '',
+  rating: 0,
+  isApprovedByAdmin: false,
+  cities: [],
+});
+
 const AdminEditMasterPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const initEmptyMaster = () => ({
-    name: '',
-    email: '',
-    password: '',
-    rating: 0,
-    isApprovedByAdmin: false,
-    cities: [],
-  });
 
   const [cities, setCities] = useState([]);
   const [master, setMaster] = useState(initEmptyMaster());
@@ -54,12 +54,10 @@ const AdminEditMasterPage = () => {
   const doUpdateMasterById = async (id, master) => {
     setPending(true);
     try {
-      const response = await updateMasterById({ id, master });
-      if ([200, 204].includes(response?.status)) {
-        setMaster(master);
-        setOriginalMaster(master);
-        enqueueSnackbar('Master updated', { variant: 'success' });
-      }
+      await updateMasterById({ id, master });
+      setMaster(master);
+      setOriginalMaster(master);
+      enqueueSnackbar('Master updated', { variant: 'success' });
     } catch (e) {
       if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
       setMaster(originalMaster);
