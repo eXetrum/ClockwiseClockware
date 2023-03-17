@@ -4,8 +4,9 @@ export { default as AdminClientsList } from './admin/AdminClientsList';
 export { default as AdminOrdersList } from './admin/AdminOrdersList';
 
 export { default as ViewMasterCard } from './master/ViewMasterCard';
+export { default as MasterOrdersList } from './master/MasterOrdersList';
 
-// export { default as ... } from './client/...';
+export { default as ClientOrdersList } from './client/ClientOrdersList';
 
 export { default as ModalForm } from './forms/ModalForm';
 //export { default as CityForm } from './forms/CityForm';

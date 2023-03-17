@@ -16,6 +16,8 @@ import {
   AdminDashboardOrdersPage,
 } from './pages/admin/dashboard';
 import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditOrderPage } from './pages/admin/edit';
+import { MasterDashboardOrdersPage } from './pages/master/dashboard';
+import { ClientDashboardOrdersPage } from './pages/client/dashboard';
 
 import { AxiosInterceptor } from './api/axios.interceptor';
 import { RouteGuard } from './providers';
@@ -24,6 +26,8 @@ import { ACCESS_SCOPE } from './constants';
 
 const AnyAuthRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.AnyAuth}>{child}</RouteGuard>;
 const AdminRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.AdminOnly}>{child}</RouteGuard>;
+const MasterRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.MasterOnly}>{child}</RouteGuard>;
+const ClientRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.ClientOnly}>{child}</RouteGuard>;
 
 const App = () => {
   return (
@@ -44,6 +48,8 @@ const App = () => {
           <Route exact path="/admin/masters/:id" element={AdminRoute(<AdminEditMasterPage />)} />
           <Route exact path="/admin/clients/:id" element={AdminRoute(<AdminEditClientPage />)} />
           <Route exact path="/admin/orders/:id" element={AdminRoute(<AdminEditOrderPage />)} />
+          <Route exact path="/master/orders" element={MasterRoute(<MasterDashboardOrdersPage />)} />
+          <Route exact path="/client/orders" element={ClientRoute(<ClientDashboardOrdersPage />)} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AxiosInterceptor>

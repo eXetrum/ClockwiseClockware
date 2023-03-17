@@ -3,18 +3,19 @@ import { NavLink, Navigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
-import { validateEmail, getErrorText } from '../../utils';
+import { validateEmail, getErrorText, parseToken } from '../../utils';
 import { login } from '../../api';
 import { useAuth } from '../../hooks';
+import { USER_ROLES } from '../../constants';
 
 const LoginPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const location = useLocation();
-  const fromPage = location.state?.from?.pathname || '/';
 
   const initEmptyUser = () => ({ email: '', password: '' });
   const [formUser, setFormUser] = useState(initEmptyUser());
+  const [fromPage, setFromPage] = useState(location.state?.from?.pathname || '/');
 
   const { setAccessToken } = useAuth();
 
@@ -34,6 +35,11 @@ const LoginPage = () => {
       if (response?.data?.accessToken) {
         const { accessToken } = response.data;
         setAccessToken(accessToken);
+        const user = parseToken(accessToken);
+
+        if (user.role === USER_ROLES.MASTER) setFromPage('/master/orders');
+        else if (user.role === USER_ROLES.CLIENT) setFromPage('/client/orders');
+
         enqueueSnackbar('Success', { variant: 'success' });
         setRedirect(true);
       }

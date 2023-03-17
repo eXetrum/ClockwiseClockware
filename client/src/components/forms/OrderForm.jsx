@@ -11,7 +11,7 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import ViewMasterCard from '../master/ViewMasterCard';
 import { validateEmail, dateToNearestHour } from '../../utils';
 
-import { ORDER_STATUS_ENUM } from '../../constants';
+import { ORDER_STATUS } from '../../constants';
 
 const OrderForm = ({
   order,
@@ -82,7 +82,7 @@ const OrderForm = ({
                     </Form.Label>
                   </Col>
                   <Col>
-                    {ORDER_STATUS_ENUM.map((status) => (
+                    {Object.values(ORDER_STATUS).map((status) => (
                       <Form.Check
                         key={status}
                         type="radio"

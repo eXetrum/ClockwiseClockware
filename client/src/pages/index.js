@@ -9,8 +9,10 @@ export { default as AdminEditClientPage } from './admin/edit/AdminEditClientPage
 export { default as AdminEditOrderPage } from './admin/edit/AdminEditOrderPage';
 
 // export { default as ... } from './master/...';
+export { default as MasterDashboardOrdersPage } from './master/dashboard/MasterDashboardOrdersPage';
 
 // export { default as ... } from './client/...';
+export { default as ClientDashboardOrdersPage } from './client/dashboard/ClientDashboardOrdersPage';
 
 export { default as HomePage } from './common/HomePage';
 export { default as LoginPage } from './common/LoginPage';

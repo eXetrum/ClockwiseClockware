@@ -1,5 +1,5 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE, MS_PER_HOUR, USER_ROLES } = require('../constants');
+const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
+const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR } = require('../constants');
 const { body, param, query, validationResult } = require('express-validator');
 const { sendOrderConfirmationMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
@@ -53,7 +53,7 @@ const getFreeMasters = [
                     endDate: { [Op.gt]: orderStartDate }
                 }
             });
-            bussyMasters = bussyMasters.map(item => item.masterId);
+            bussyMasters = bussyMasters.map((item) => item.masterId);
 
             let masters = await Master.findAll({
                 where: {
@@ -81,13 +81,13 @@ const getFreeMasters = [
                 ]
             });
 
-            masters = masters.map(master => ({ ...master.toJSON(), ...master.User.toJSON() }));
+            masters = masters.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
 
             // No idea how to filter these on 'sequelize level' ([city])
-            masters = masters.filter(master => master.cities.find(city => city.id === cityId));
+            masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
 
             // Filter out masters accounts which is not verified/approved
-            masters = masters.filter(master => master.isEmailVerified && master.isApprovedByAdmin);
+            masters = masters.filter((master) => master.isEmailVerified && master.isApprovedByAdmin);
 
             res.status(200).json({ masters }).end();
         } catch (error) {
@@ -163,7 +163,7 @@ const create = [
             if (!master) return res.status(409).json({ message: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find(city => city.id === order.cityId) == null) {
+            if (master.cities.find((city) => city.id === order.cityId) == null) {
                 return res.status(409).json({ message: 'Master cant handle this order at specified city' });
             }
 
@@ -177,7 +177,7 @@ const create = [
             const clientDateTimeStart = moment.unix((order.startDate + order.timezone * MS_PER_HOUR) / 1000);
             const clientDateTimeEnd = moment.unix((order.startDate + order.timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
 
-            const [dbOrder, autoRegistration] = await db.sequelize.transaction(async t => {
+            const [dbOrder, autoRegistration] = await db.sequelize.transaction(async (t) => {
                 const autoRegistration = { email: order.client.email, password: null, verificationLink: '' };
                 let user = await User.findOne({ where: { email: order.client.email } });
 
@@ -252,10 +252,17 @@ const create = [
 ];
 
 const getAll = [
-    RequireAuth(ACCESS_SCOPE.AdminOnly),
+    RequireAuth(ACCESS_SCOPE.AnyAuth),
     async (req, res) => {
         try {
+            const user = parseAuthToken(req.headers);
+
+            let where = {};
+            if (user.role === USER_ROLES.MASTER) where = { masterId: user.id };
+            else if (user.role === USER_ROLES.CLIENT) where = { clientId: user.id };
+
             const records = await Order.findAll({
+                where,
                 include: [
                     { model: Client, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'client' },
                     { model: Watches, as: 'watch' },
@@ -266,7 +273,7 @@ const getAll = [
                 order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
             });
 
-            const orders = records.map(order => ({
+            const orders = records.map((order) => ({
                 ...order.toJSON(),
                 client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
                 master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
@@ -403,7 +410,7 @@ const update = [
             if (!master) return res.status(409).json({ message: 'Unknown master' });
 
             // Ensure master can handle order for specified cityId
-            if (master.cities.find(city => city.id === order.cityId) == null) {
+            if (master.cities.find((city) => city.id === order.cityId) == null) {
                 return res.status(409).json({ message: 'Master cant handle this order at specified city' });
             }
             /// ///////////////////////////////////////////////////

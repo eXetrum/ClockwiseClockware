@@ -1,4 +1,9 @@
-export const ORDER_STATUS_ENUM = ['confirmed', 'completed', 'canceled'];
+export const ORDER_STATUS = Object.freeze({
+  CONFIRMED: 'confirmed',
+  COMPLETED: 'completed',
+  CANCELED: 'canceled',
+});
+
 export const USER_ROLES = Object.freeze({
   ADMIN: 'admin',
   MASTER: 'master',
