@@ -17,10 +17,10 @@ import {
 } from './pages/admin/dashboard';
 import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditOrderPage } from './pages/admin/edit';
 
-import { AxiosInterceptor } from './api/axios.interceptor';
 import { RouteGuard } from './providers';
-
 import { ACCESS_SCOPE } from './constants';
+
+import { AxiosInterceptor } from './api/axios.interceptor';
 
 const protect = (child, scope = ACCESS_SCOPE.AnyAuth) => <RouteGuard scope={scope}>{child}</RouteGuard>;
 

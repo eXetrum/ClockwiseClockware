@@ -48,7 +48,7 @@ const create = [
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
-            // TODO:
+
             let { email, password, name, role } = req.body;
             email = email.trim();
             password = password.trim();

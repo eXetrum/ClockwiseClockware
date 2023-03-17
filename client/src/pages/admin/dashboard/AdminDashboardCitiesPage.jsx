@@ -5,18 +5,26 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, AdminCitiesList, ModalForm } from '../../../components';
-import { getCities, createCity, deleteCityById } from '../../../api';
+import { /*getCities,*/ createCity, deleteCityById } from '../../../api';
 import { getErrorText } from '../../../utils';
+
+import { useSelector, useDispatch } from 'react-redux';
+
+import { citiesSlice } from '../../../store/reducers';
 
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
+  const { getCities } = citiesSlice.actions;
+  const { cities, isFetched, isLoading, error } = useSelector((state) => state.citiesReducer);
+  const dispatch = useDispatch();
+
   const formatDecimal = (value) => parseFloat(value).toFixed(2);
   const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
-  const [cities, setCities] = useState([]);
+  //const [cities, setCities] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
+  //const [error, setError] = useState(null);
 
   const [newCity, setNewCity] = useState(initEmptyCity());
   const [pending, setPending] = useState(false);

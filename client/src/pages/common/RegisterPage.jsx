@@ -24,7 +24,7 @@ const RegisterPage = () => {
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(() => {
     const { email, password, name, role, isTosAccepted } = user;
-    return validateEmail(email) && password && ((role === 'master' && name) || name.length >= 3) && isTosAccepted;
+    return validateEmail(email) && password && ((role === USER_ROLES.MASTER && name) || name.length >= 3) && isTosAccepted;
   }, [user]);
 
   const fetchInitialData = async (abortController) => {
