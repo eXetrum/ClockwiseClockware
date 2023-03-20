@@ -2,7 +2,9 @@
 const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
     class Confirmations extends Model {
-        static associate(models) {}
+        static associate(models) {
+            Confirmations.belongsTo(models.User, { foreignKey: 'userId' });
+        }
     }
     Confirmations.init(
         {
@@ -14,7 +16,13 @@ module.exports = (sequelize, DataTypes) => {
             },
             userId: {
                 type: DataTypes.UUID,
-                allowNull: false
+                allowNull: false,
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'CASCADE'
             },
             token: {
                 allowNull: false,

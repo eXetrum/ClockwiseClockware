@@ -195,7 +195,7 @@ const create = [
                     await user.createClient({ ...order.client }, { transaction: t });
 
                     const token = generateConfirmationToken();
-                    await Confirmations.create({ userId: user.id, token });
+                    await Confirmations.create({ userId: user.id, token }, { transaction: t });
 
                     autoRegistration.verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
                 } else {
