@@ -52,7 +52,6 @@ module.exports = {
             endDate: {
                 type: Sequelize.DataTypes.DATE,
                 allowNull: false
-                // allowNull: true,
             },
             createdAt: {
                 allowNull: false,

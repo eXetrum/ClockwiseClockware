@@ -22,6 +22,10 @@ const isGlobalError = (error) => {
 };
 
 const getErrorText = (error) =>
-  error?.response?.data?.detail?.toString() || error?.response?.statusText || error?.message || error?.toString();
+  error?.response?.data?.detail?.toString() ||
+  error?.response?.data?.message?.toString() ||
+  error?.response?.statusText ||
+  error?.message ||
+  error?.toString();
 
 export { getIconByError, getErrorText, isGlobalError };

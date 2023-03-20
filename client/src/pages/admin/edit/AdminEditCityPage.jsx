@@ -7,12 +7,12 @@ import { Header, ErrorContainer } from '../../../components/common';
 import { getCityById, updateCityById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
 
+const formatDecimal = (value) => parseFloat(value).toFixed(2);
+const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
+
 const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-  const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
   const [city, setCity] = useState(initEmptyCity());
   const [originalCity, setOriginalCity] = useState(initEmptyCity());
@@ -42,12 +42,10 @@ const AdminEditCityPage = () => {
   const doUpdateCityById = async (id, city) => {
     setPending(true);
     try {
-      const response = await updateCityById({ id, city });
-      if ([200, 204].includes(response?.status)) {
-        setCity(city);
-        setOriginalCity(city);
-        enqueueSnackbar('City updated', { variant: 'success' });
-      }
+      await updateCityById({ id, city });
+      setCity(city);
+      setOriginalCity(city);
+      enqueueSnackbar('City updated', { variant: 'success' });
     } catch (e) {
       if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
       setCity(originalCity);

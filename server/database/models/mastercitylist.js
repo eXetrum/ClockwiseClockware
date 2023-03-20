@@ -4,14 +4,8 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class MasterCityList extends Model {
-        /**
-         * Helper method for defining associations.
-         * This method is not a part of Sequelize lifecycle.
-         * The `models/index` file will call this method automatically.
-         */
         static associate(models) {
-            // define association here
-            MasterCityList.belongsTo(models.Master, { foreignKey: 'masterId' });
+            MasterCityList.belongsTo(models.Master, { foreignKey: 'masterId', targetKey: 'userId' });
             MasterCityList.belongsTo(models.City, { foreignKey: 'cityId' });
         }
     }
@@ -27,9 +21,9 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.UUID,
                 references: {
                     model: 'masters',
-                    key: 'id'
+                    key: 'userId'
                 },
-                onDelete: 'RESTRICT'
+                onDelete: 'CASCADE'
             },
             cityId: {
                 allowNull: false,

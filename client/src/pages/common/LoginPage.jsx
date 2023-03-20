@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { NavLink, Navigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
+import { validateEmail, getErrorText } from '../../utils';
 import { login } from '../../api';
 import { useAuth } from '../../hooks';
 
@@ -21,7 +22,7 @@ const LoginPage = () => {
   const [redirect, setRedirect] = useState(false);
   const [error, setError] = useState(null);
 
-  const isFormValid = useCallback(() => /\w{1,}@\w{1,}\.\w{2,}/gi.test(formUser?.email) && formUser?.password, [formUser]);
+  const isFormValid = useCallback(() => validateEmail(formUser?.email) && formUser?.password, [formUser]);
 
   let abortController = null;
 
@@ -38,7 +39,7 @@ const LoginPage = () => {
       }
     } catch (e) {
       setError(e);
-      enqueueSnackbar(`Error: ${e.response.data.detail}`, { variant: 'error' });
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
@@ -98,10 +99,28 @@ const LoginPage = () => {
                   disabled={pending}
                 />
               </Form.Group>
-              <Button variant="primary" type="submit" disabled={!isFormValid() || pending}>
-                {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                Login
-              </Button>
+
+              <Form.Group>
+                <Row>
+                  <Col sm={4}>&nbsp;</Col>
+                  <Col className="d-flex justify-content-md-end">
+                    <Button variant="primary" type="submit" disabled={!isFormValid() || pending}>
+                      {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                      Login
+                    </Button>
+                  </Col>
+                </Row>
+              </Form.Group>
+
+              <hr />
+              <Form.Group>
+                <Row className="justify-content-md-center">
+                  <p className="text-center pt-1 m-0">Dont have an account ?</p>
+                  <NavLink className="text-center p-0 m-0 navbar-item" to="/register">
+                    Register
+                  </NavLink>
+                </Row>
+              </Form.Group>
             </Form>
           </Col>
         </Row>

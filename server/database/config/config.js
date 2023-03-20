@@ -12,7 +12,7 @@ module.exports = {
         dialectOptions: {
             ssl: process.env.POSTGRES_SSL === 'true'
         },
-        logging: false
+        logging: true
     },
     test: {
         username: process.env.POSTGRES_USER,
@@ -25,7 +25,7 @@ module.exports = {
         dialectOptions: {
             ssl: process.env.POSTGRES_SSL === 'true'
         },
-        logging: false
+        logging: true
     },
     production: {
         username: process.env.POSTGRES_USER,

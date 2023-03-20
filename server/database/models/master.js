@@ -2,16 +2,25 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
     class Master extends Model {
+        setEmailVerified(value) {
+            this.setDataValue('isEmailVerified', value);
+        }
+
         static associate(models) {
             Master.belongsToMany(models.City, {
                 through: models.MasterCityList,
-                as: 'cities',
-                foreignKey: 'masterId'
+                foreignKey: 'masterId',
+                sourceKey: 'userId',
+                as: 'cities'
             });
+
             Master.hasMany(models.Order, {
                 foreignKey: 'masterId',
+                sourceKey: 'userId',
                 as: 'orders'
             });
+
+            Master.belongsTo(models.User, { foreignKey: 'userId' });
         }
     }
 
@@ -23,15 +32,6 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 primaryKey: true
             },
-            email: {
-                allowNull: false,
-                unique: true,
-                type: DataTypes.STRING
-            },
-            password: {
-                allowNull: true,
-                type: DataTypes.STRING
-            },
             name: {
                 allowNull: false,
                 type: DataTypes.STRING
@@ -39,6 +39,26 @@ module.exports = (sequelize, DataTypes) => {
             rating: {
                 allowNull: false,
                 type: DataTypes.INTEGER
+            },
+            isEmailVerified: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            isApprovedByAdmin: {
+                allowNull: false,
+                type: DataTypes.BOOLEAN,
+                defaultValue: false
+            },
+            userId: {
+                type: DataTypes.UUID,
+                allowNull: false,
+                references: {
+                    model: 'users',
+                    key: 'id'
+                },
+                onUpdate: 'CASCADE',
+                onDelete: 'RESTRICT'
             }
         },
         {

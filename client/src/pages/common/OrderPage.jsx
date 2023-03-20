@@ -259,13 +259,31 @@ const OrderPage = () => {
                 <Row className="justify-content-md-center">
                   <Col md="auto">
                     <Alert variant={'info'}>
-                      <p>Thank you ! Confirmation message was sent to your email. </p>
                       <Container>
-                        {Object.keys(orderConfirmationMessage).map((key, index) => (
-                          <p key={index}>
-                            {key.toString()}:{orderConfirmationMessage[key].toString()}
-                          </p>
-                        ))}
+                        <h5 className="text-center mb-4">Thank you ! Order confirmation message was sent to your email. </h5>
+                        <Row className="mb-3">
+                          <Col>
+                            <b>Order ID:</b>
+                          </Col>
+                          <Col>{orderConfirmationMessage.orderId}</Col>
+                        </Row>
+                        {orderConfirmationMessage.autoRegistration ? (
+                          <Row>
+                            <Col>
+                              <b>Registration information:</b>
+                            </Col>
+                            <Col>
+                              {Object.keys(orderConfirmationMessage.autoRegistration).map((key, index) => (
+                                <Row key={index}>
+                                  <Col sm={4}>
+                                    <i>{key.toString()}</i>
+                                  </Col>
+                                  :<Col>{orderConfirmationMessage.autoRegistration[key].toString()}</Col>
+                                </Row>
+                              ))}
+                            </Col>
+                          </Row>
+                        ) : null}
                       </Container>
                     </Alert>
                   </Col>
@@ -273,7 +291,7 @@ const OrderPage = () => {
                 <hr />
                 <Row className="justify-content-md-center">
                   <Col md="auto">
-                    <Button variant="primary" onClick={() => resetOrigOrder()}>
+                    <Button variant="primary" onClick={() => resetOrigOrder(initEmptyOrder())}>
                       Create new order
                     </Button>
                   </Col>

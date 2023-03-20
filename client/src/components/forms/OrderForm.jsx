@@ -9,9 +9,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import ViewMasterCard from '../master/ViewMasterCard';
-import { dateToNearestHour } from '../../utils/dateTime';
+import { validateEmail, dateToNearestHour } from '../../utils';
 
-import { ORDER_STATUS_ENUM } from '../../utils/constants';
+import { ORDER_STATUS_ENUM } from '../../constants';
 
 const OrderForm = ({
   order,
@@ -19,11 +19,11 @@ const OrderForm = ({
   cities,
   selectedCities,
   onFormSubmit,
-  onOrderStatusChange,
   onOrderWatchTypeChange,
   onOrderCitySelect,
   onOrderCityRemove,
   onOrderDateChange,
+  onOrderStatusChange,
   onFindMasterBtnClick,
   onResetBtnClick,
   onClientEmailChange,
@@ -48,11 +48,11 @@ const OrderForm = ({
 
   const isMasterAssigned = useMemo(() => order?.master !== null, [order]);
   const isOrderPreparedForMasterSearch = useMemo(
-    () => order !== null && order.city !== null && order.watch !== null && order.startDate !== null,
+    () => order !== null && order?.city !== null && order?.watch !== null && order?.startDate !== null,
     [order],
   );
 
-  const isValidEmail = (email) => /\w{1,}@\w{1,}\.\w{2,}/gi.test(email);
+  const isValidEmail = (email) => validateEmail(email);
   const isValidName = (name) => name?.length >= 3;
 
   const currentDate = dateToNearestHour();
@@ -71,6 +71,36 @@ const OrderForm = ({
     <Row className="justify-content-md-center">
       <Col xs lg="6">
         <Form onSubmit={onFormSubmit}>
+          {isEditForm ? (
+            <>
+              <hr />
+              <Form.Group>
+                <Row>
+                  <Col sm={4}>
+                    <Form.Label>
+                      <b>Status:</b>
+                    </Form.Label>
+                  </Col>
+                  <Col>
+                    {ORDER_STATUS_ENUM.map((status) => (
+                      <Form.Check
+                        key={status}
+                        type="radio"
+                        name="status"
+                        label={status}
+                        checked={order?.status === status}
+                        inline
+                        required
+                        onChange={(event) => onOrderStatusChange(event, status)}
+                        disabled={isPending}
+                      />
+                    ))}
+                  </Col>
+                </Row>
+              </Form.Group>
+            </>
+          ) : null}
+
           <hr />
           <Form.Group>
             <Row>
@@ -126,37 +156,6 @@ const OrderForm = ({
               </Col>
             </Row>
           </Form.Group>
-
-          {isEditForm ? (
-            <>
-              <hr />
-              <Form.Group className="mb-3">
-                <Row>
-                  <Col sm={4}>
-                    <Form.Label>
-                      <b>Status:</b>
-                    </Form.Label>
-                  </Col>
-                  <Col>
-                    {ORDER_STATUS_ENUM.map((statusName) => (
-                      <Form.Check
-                        key={statusName}
-                        type="radio"
-                        name="status"
-                        label={statusName}
-                        checked={order.status === statusName}
-                        inline
-                        required
-                        onChange={(event) => onOrderStatusChange(event, statusName)}
-                        disabled={isPending}
-                      />
-                    ))}
-                  </Col>
-                </Row>
-              </Form.Group>
-            </>
-          ) : null}
-
           <hr />
           <Form.Group className="mb-3">
             <Row>

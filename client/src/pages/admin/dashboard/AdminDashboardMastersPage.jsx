@@ -6,13 +6,20 @@ import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Multiselect from 'multiselect-react-dropdown';
 import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
-import { getCities, getMasters, createMaster, deleteMasterById } from '../../../api';
-import { getErrorText } from '../../../utils';
+import { getCities, getMasters, createMaster, deleteMasterById, resetPassword, resendEmailConfirmation } from '../../../api';
+import { getErrorText, validateEmail } from '../../../utils';
+
+const initEmptyMaster = () => ({
+  name: '',
+  email: '',
+  password: '',
+  rating: 0,
+  isApprovedByAdmin: false,
+  cities: [],
+});
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const initEmptyMaster = () => ({ name: '', email: '', rating: 0, cities: [] });
 
   const [cities, setCities] = useState([]);
   const [masters, setMasters] = useState([]);
@@ -20,11 +27,14 @@ const AdminDashboardMasters = () => {
   const [error, setError] = useState(null);
 
   const [newMaster, setNewMaster] = useState(initEmptyMaster());
-  const [pending, setPending] = useState(false);
+  const [isPending, setPending] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(() => newMaster.name && newMaster.email && /\w{1,}@\w{1,}\.\w{2,}/gi.test(newMaster.email), [newMaster]);
+  const isFormValid = useCallback(
+    () => newMaster.name && newMaster.email && validateEmail(newMaster.email) && newMaster.password && newMaster.cities.length > 0,
+    [newMaster],
+  );
 
   const fetchInitialData = async (abortController) => {
     setInitialLoading(true);
@@ -67,14 +77,38 @@ const AdminDashboardMasters = () => {
   const doDeleteMasterById = async (id) => {
     setPending(true);
     try {
-      const response = await deleteMasterById({ id });
-      if ([200, 204].includes(response?.status)) {
-        const removedMaster = masters.find((item) => item.id === id);
-        setMasters(masters.filter((item) => item.id !== id));
-        enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
-      }
+      await deleteMasterById({ id });
+      const removedMaster = masters.find((item) => item.id === id);
+      setMasters(masters.filter((item) => item.id !== id));
+      enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const doResetPassword = async (master) => {
+    try {
+      setPending(true);
+      await resetPassword({ userId: master.id });
+      enqueueSnackbar(`Password for ${master.email} has been successfully reset`, { variant: 'success' });
+    } catch (e) {
+      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const doResendEmailConfirmation = async (master) => {
+    try {
+      setPending(true);
+      await resendEmailConfirmation({ userId: master.id });
+      enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
+    } catch (e) {
+      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
@@ -102,7 +136,10 @@ const AdminDashboardMasters = () => {
 
   const onMasterEmailChange = (event) => setNewMaster((prev) => ({ ...prev, email: event.target.value }));
   const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));
+  const onMasterPasswordChange = (event) => setNewMaster((prev) => ({ ...prev, password: event.target.value }));
   const onMasterRatingChange = (value) => setNewMaster((prev) => ({ ...prev, rating: value }));
+  const onMasterIsApprovedByAdminChange = (event) => setNewMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
+
   const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
   const onMasterCityRemove = (selectedList, removedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
 
@@ -117,6 +154,9 @@ const AdminDashboardMasters = () => {
 
     if (result) doDeleteMasterById(masterId);
   };
+
+  const onMasterResetPassword = async (master) => doResetPassword(master);
+  const onMasterResendEmailConfirmation = async (master) => doResendEmailConfirmation(master);
 
   return (
     <Container>
@@ -145,7 +185,13 @@ const AdminDashboardMasters = () => {
               </Col>
             </Row>
             <hr />
-            <AdminMastersList masters={masters} onRemove={onMasterRemove} />
+            <AdminMastersList
+              masters={masters}
+              onRemove={onMasterRemove}
+              onResetPassword={onMasterResetPassword}
+              onResendEmailConfirmation={onMasterResendEmailConfirmation}
+              isPending={isPending}
+            />
           </>
         )}
         <hr />
@@ -158,11 +204,11 @@ const AdminDashboardMasters = () => {
           onHide={onFormHide}
           onSubmit={onFormSubmit}
           isFormValid={isFormValid}
-          pending={pending}
+          pending={isPending}
           formContent={
             <>
-              <Form.Group>
-                <Form.Label>Master email:</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label>Email:</Form.Label>
                 <Form.Control
                   type="email"
                   name="masterEmail"
@@ -170,40 +216,62 @@ const AdminDashboardMasters = () => {
                   required
                   onChange={onMasterEmailChange}
                   value={newMaster.email}
-                  disabled={pending}
+                  disabled={isPending}
                 />
               </Form.Group>
-              <Form.Group>
-                <Form.Label>Master name:</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label>Name:</Form.Label>
                 <Form.Control
                   type="text"
                   name="masterName"
                   required
                   onChange={onMasterNameChange}
                   value={newMaster.name}
-                  disabled={pending}
+                  disabled={isPending}
                 />
               </Form.Group>
-              <Form.Group className="ms-3">
+              <Form.Group className="mb-3">
+                <Form.Label>Password:</Form.Label>
+                <Form.Control
+                  type="password"
+                  name="masterPassword"
+                  required
+                  onChange={onMasterPasswordChange}
+                  value={newMaster.password}
+                  disabled={isPending}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
                 <Form.Label>Rating:</Form.Label>
                 <StarRating
                   onRatingChange={onMasterRatingChange}
                   onRatingReset={onMasterRatingChange}
                   value={newMaster.rating}
                   total={5}
-                  readonly={pending}
+                  readonly={isPending}
                 />
               </Form.Group>
 
-              <Form.Group className="ms-3">
-                <Form.Label>Master work cities:</Form.Label>
+              <Form.Group className="mb-3">
+                <Form.Label>Master cities:</Form.Label>
                 <Multiselect
                   onSelect={onMasterCitySelect}
                   onRemove={onMasterCityRemove}
                   options={cities}
                   selectedValues={newMaster.cities}
                   displayValue="name"
-                  disable={pending}
+                  disable={isPending}
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Check
+                  type="checkbox"
+                  name="clientIsApprovedByAdmin"
+                  checked={newMaster.isApprovedByAdmin}
+                  onChange={onMasterIsApprovedByAdminChange}
+                  disabled={isPending}
+                  label="approved"
                 />
               </Form.Group>
             </>
