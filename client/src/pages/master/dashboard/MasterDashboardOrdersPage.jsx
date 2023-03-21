@@ -1,11 +1,17 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
+import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, MasterOrdersList } from '../../../components';
-import { getOrders } from '../../../api';
+import { getOrders, patchOrderById } from '../../../api';
+import { ORDER_STATUS } from '../../../constants';
+import { isGlobalError, getErrorText } from '../../../utils';
 
 const MasterDashboardOrdersPage = () => {
+  const { enqueueSnackbar } = useSnackbar();
+
   const [orders, setOrders] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
+  const [isPending, setPending] = useState(false);
   const [error, setError] = useState(null);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
@@ -33,6 +39,24 @@ const MasterDashboardOrdersPage = () => {
     };
   }, []);
 
+  const doFinishOrder = async (id) => {
+    setPending(true);
+    try {
+      await patchOrderById({
+        id,
+        status: ORDER_STATUS.COMPLETED,
+      });
+      const idx = orders.map((item) => item.id).indexOf(id);
+      orders[idx].status = ORDER_STATUS.COMPLETED;
+      setOrders(orders);
+    } catch (e) {
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <Container>
       <Header />
@@ -50,7 +74,7 @@ const MasterDashboardOrdersPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterOrdersList orders={orders} />}
+        {isComponentReady && <MasterOrdersList orders={orders} onComplete={doFinishOrder} isPending={isPending} />}
         <hr />
       </Container>
     </Container>

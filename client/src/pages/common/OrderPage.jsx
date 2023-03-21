@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
@@ -6,19 +7,22 @@ import { Header, OrderForm, AdminMastersList, ErrorContainer } from '../../compo
 import { getWatches, getCities, getAvailableMasters, createOrder } from '../../api';
 import { addHours, dateRangesOverlap, dateToNearestHour, isGlobalError, getErrorText } from '../../utils';
 
+const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, watch: null, startDate: dateToNearestHour() });
+
 const OrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, watch: null, startDate: dateToNearestHour() });
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [watches, setWatches] = useState([]);
   const [cities, setCities] = useState([]);
 
-  const [newOrder, setNewOrder] = useState(initEmptyOrder());
+  const [newOrder, setNewOrder] = useState(location?.state?.order || initEmptyOrder());
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedCities, setSelectedCities] = useState(location?.state?.order?.city ? [location?.state?.order?.city] : []);
   const [lastAssignedCity, setLastAssignedCity] = useState(null);
 
   const [masters, setMasters] = useState([]);
@@ -116,8 +120,22 @@ const OrderPage = () => {
         enqueueSnackbar('Order placed', { variant: 'success' });
       }
     } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+      if (isGlobalError(e) && e?.response?.status !== 403) return setError(e);
+
+      if (e?.response?.status === 403) {
+        const result = await confirm(
+          `User with specified email already exists. To continue you need to login with ${client.email} first. Proceed ?`,
+          {
+            title: 'User already exists',
+            okText: 'Yes',
+            cancelText: 'No',
+            okButtonStyle: 'success',
+          },
+        );
+        if (result) navigate('/login', { state: { from: location, order: newOrder } });
+      } else {
+        enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+      }
     } finally {
       setPending(false);
     }

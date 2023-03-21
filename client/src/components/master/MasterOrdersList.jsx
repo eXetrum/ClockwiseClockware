@@ -1,7 +1,8 @@
 import React from 'react';
-import { Container, Row, Col, Table, Alert, Button } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert, Button, Spinner } from 'react-bootstrap';
+import { ORDER_STATUS } from '../../constants';
 
-const MasterOrdersList = ({ orders, onRemove }) => {
+const MasterOrdersList = ({ orders, onComplete, isPending }) => {
   if (orders == null) return null;
 
   if (orders.length === 0) {
@@ -60,7 +61,12 @@ const MasterOrdersList = ({ orders, onRemove }) => {
                 <small className="text-muted">{order.status}</small>
               </td>
               <td className="text-center p-2 m-0 col-2">
-                <Button onClick={() => alert('NOT IMPLEMENTED YET')}>Change order status</Button>
+                {order.status === ORDER_STATUS.CONFIRMED ? (
+                  <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending}>
+                    {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                    Finish order
+                  </Button>
+                ) : null}
               </td>
             </tr>
           ))}

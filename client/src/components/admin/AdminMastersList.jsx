@@ -45,6 +45,7 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
               </td>
               <td className="text-center p-2 m-0">
                 <StarRating total={5} value={master.rating} readonly={true} />
+                <b>{master.rating}/5</b>
               </td>
               <td className="text-center p-2 m-0">
                 {master.isApprovedByAdmin ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}

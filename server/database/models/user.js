@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING
             },
             role: {
-                type: DataTypes.ENUM([...Object.values(USER_ROLES)]),
+                type: DataTypes.ENUM(Object.values(USER_ROLES)),
                 allowNull: false
             },
             isEnabled: {

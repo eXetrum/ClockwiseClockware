@@ -1,8 +1,10 @@
 import React from 'react';
-import { Container, Row, Col, Table, Alert, Button } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
+import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import { ORDER_STATUS } from '../../constants';
 
-const ClientOrdersList = ({ orders, onRemove }) => {
+const ClientOrdersList = ({ orders, onReview }) => {
   if (orders == null) return null;
 
   if (orders.length === 0) {
@@ -37,7 +39,7 @@ const ClientOrdersList = ({ orders, onRemove }) => {
             <th className="text-center p-2 m-0">Date End</th>
             <th className="text-center p-2 m-0">Total Cost</th>
             <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0"></th>
+            <th className="text-center p-2 m-0">Rate</th>
           </tr>
         </thead>
         <tbody>
@@ -60,13 +62,21 @@ const ClientOrdersList = ({ orders, onRemove }) => {
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>
               </td>
-              {order.status === ORDER_STATUS.COMPLETED ? (
-                <td className="text-center p-2 m-0 col-2">
-                  <Button onClick={() => alert('NOT IMPLEMENTED YET')}>Rate this order</Button>
-                </td>
-              ) : (
-                <td>&nbsp;</td>
-              )}
+              <td className="text-center p-2 m-0 col-1">
+                {order.status === ORDER_STATUS.COMPLETED ? (
+                  <>
+                    {order.rating === null ? (
+                      <Link to="#">
+                        <ThumbUpOutlinedIcon onClick={() => onReview(order.id)} />
+                      </Link>
+                    ) : (
+                      order.rating
+                    )}
+                  </>
+                ) : (
+                  <>&nbsp;</>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>

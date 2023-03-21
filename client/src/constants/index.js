@@ -16,6 +16,7 @@ export const ACCESS_SCOPE = {
   MasterOnly: [USER_ROLES.MASTER],
   ClientOnly: [USER_ROLES.CLIENT],
   MasterOrClient: [USER_ROLES.MASTER, USER_ROLES.CLIENT],
+  AdminOrMaster: [USER_ROLES.ADMIN, USER_ROLES.MASTER],
 };
 
 export const SNACKBAR_MAX_SNACKS = 5;

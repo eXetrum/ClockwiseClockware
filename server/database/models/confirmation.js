@@ -33,7 +33,8 @@ module.exports = (sequelize, DataTypes) => {
         {
             sequelize,
             modelName: 'Confirmations',
-            tableName: 'confirmations'
+            tableName: 'confirmations',
+            associations: true
         }
     );
     return Confirmations;

@@ -8,7 +8,7 @@ import '@fontsource/roboto/700.css';
 import './App.css';
 import './logo.svg';
 
-import { HomePage, LoginPage, LogoutPage, RegisterPage, OrderPage, UserProfilePage } from './pages/common';
+import { HomePage, LoginPage, LogoutPage, RegisterPage, OrderPage, UserProfilePage, VerifyPage } from './pages/common';
 import {
   AdminDashboardCitiesPage,
   AdminDashboardMastersPage,
@@ -50,6 +50,7 @@ const App = () => {
           <Route exact path="/admin/orders/:id" element={AdminRoute(<AdminEditOrderPage />)} />
           <Route exact path="/master/orders" element={MasterRoute(<MasterDashboardOrdersPage />)} />
           <Route exact path="/client/orders" element={ClientRoute(<ClientDashboardOrdersPage />)} />
+          <Route exact path="/verify/:token" element={<VerifyPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AxiosInterceptor>

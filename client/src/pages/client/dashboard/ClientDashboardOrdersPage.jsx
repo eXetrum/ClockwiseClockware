@@ -1,12 +1,22 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Spinner } from 'react-bootstrap';
-import { Header, ErrorContainer, ClientOrdersList } from '../../../components';
-import { getOrders } from '../../../api';
+import { Container, Row, Form, Spinner } from 'react-bootstrap';
+import { useSnackbar } from 'notistack';
+import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from '../../../components';
+import { getOrders, patchOrderById } from '../../../api';
+import { isGlobalError, getErrorText } from '../../../utils';
 
 const ClientDashboardOrdersPage = () => {
+  const DEFAULT_RATING_VALUE = 5;
+
+  const { enqueueSnackbar } = useSnackbar();
+
   const [orders, setOrders] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [isPending, setPending] = useState(false);
+  const [showRateForm, setShowRateForm] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [rating, setRating] = useState(DEFAULT_RATING_VALUE);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
@@ -33,6 +43,39 @@ const ClientDashboardOrdersPage = () => {
     };
   }, []);
 
+  const onReview = async (id) => {
+    setSelectedOrder(orders.find((item) => item.id === id));
+    setShowRateForm(true);
+  };
+
+  const onFormHide = () => {
+    setShowRateForm(false);
+    setRating(DEFAULT_RATING_VALUE);
+  };
+
+  const onFormSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const id = selectedOrder.id;
+      setPending(true);
+      await patchOrderById({
+        id,
+        status: orders.find((item) => item.id === id)?.status,
+        rating,
+      });
+      const idx = orders.map((item) => item.id).indexOf(id);
+      orders[idx].rating = rating;
+      setOrders(orders);
+      setShowRateForm(false);
+    } catch (e) {
+      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+  const onRatingChange = (value) => setRating(value);
+
   return (
     <Container>
       <Header />
@@ -50,8 +93,28 @@ const ClientDashboardOrdersPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <ClientOrdersList orders={orders} />}
+        {isComponentReady && <ClientOrdersList orders={orders} onReview={onReview} isPending={isPending} />}
         <hr />
+
+        <ModalForm
+          size="sm"
+          show={showRateForm}
+          title={'Rate order'}
+          okText={'Apply'}
+          onHide={onFormHide}
+          onSubmit={onFormSubmit}
+          isFormValid={() => true}
+          pending={isPending}
+          formContent={
+            <>
+              <Form.Group className="justify-content-md-center">
+                <Row md="auto" className="justify-content-md-center">
+                  <StarRating onRatingChange={onRatingChange} onRatingReset={onRatingChange} value={rating} total={5} pending={isPending} />
+                </Row>
+              </Form.Group>
+            </>
+          }
+        />
       </Container>
     </Container>
   );
