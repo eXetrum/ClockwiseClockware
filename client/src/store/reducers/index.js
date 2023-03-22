@@ -1,2 +1,2 @@
-export { citiesSlice } from './citiesSlice';
-export { default as citiesReducer } from './citiesSlice';
+export { citySlice } from './CitySlice';
+export { default as cityReducer } from './CitySlice';

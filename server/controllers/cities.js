@@ -6,7 +6,7 @@ const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryRefer
 
 const getAll = async (req, res) => {
     try {
-        const cities = await City.findAll({ order: [['createdAt']] });
+        const cities = await City.findAll({ order: [['createdAt', 'DESC']] });
         res.status(200).json({ cities }).end();
     } catch (error) {
         res.status(400).json(error).end();

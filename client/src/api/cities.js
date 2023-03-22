@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const getCities = ({ abortController = null }) => axios.get('/cities', { signal: abortController?.signal });
+const getCities = () => axios.get('/cities');
+//const getCities = ({ abortController = null }) => axios.get('/cities', { signal: abortController?.signal });
 
 const createCity = ({ abortController = null, ...params }) => axios.post('/cities', { ...params }, { signal: abortController?.signal });
 

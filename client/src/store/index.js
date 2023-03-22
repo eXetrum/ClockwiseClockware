@@ -1,8 +1,8 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { citiesReducer } from './reducers';
+import { cityReducer } from './reducers';
 
 const rootReducer = combineReducers({
-  citiesReducer,
+  cityReducer,
 });
 
 export const store = configureStore({

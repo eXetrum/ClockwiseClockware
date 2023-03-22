@@ -5,14 +5,14 @@ import './index.css';
 import App from './App';
 
 import { SnackbarProvider } from 'notistack';
-import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
-
+import { Provider } from 'react-redux';
 import { AuthProvider } from './hooks';
 
-import axios from 'axios';
+import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
 
 import { store } from './store';
-import { Provider } from 'react-redux';
+
+import axios from 'axios';
 
 axios.defaults.baseURL = process.env.REACT_APP_API_URL;
 axios.defaults.headers.post['Content-Type'] = 'application/json';
