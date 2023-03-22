@@ -31,8 +31,6 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
 
   const formatDecimal = (value) => parseFloat(value).toFixed(2);
 
-  const currentDate = new Date();
-
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
@@ -94,32 +92,29 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>
+                {order.status === ORDER_STATUS.CONFIRMED ? (
+                  <Stack spacing={1}>
+                    <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending} variant="success">
+                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                      Complete
+                    </Button>
+                    <Button onClick={() => onCancel(order.id)} size="sm" disabled={isPending} variant="secondary">
+                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                      Cancel
+                    </Button>
+                  </Stack>
+                ) : null}
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{formatDecimal(order.totalCost)}</small>
               </td>
 
               <td className="text-center p-2 m-0">
-                {currentDate < new Date(order.startDate) ? (
+                {order.status === ORDER_STATUS.CONFIRMED ? (
                   <Link to={'/admin/orders/' + order.id}>
                     <EditIcon />
                   </Link>
-                ) : (
-                  <>
-                    {order.status === ORDER_STATUS.CONFIRMED ? (
-                      <Stack spacing={1}>
-                        <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending} variant="success">
-                          {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                          Complete
-                        </Button>
-                        <Button onClick={() => onCancel(order.id)} size="sm" disabled={isPending} variant="secondary">
-                          {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                          Cancel
-                        </Button>
-                      </Stack>
-                    ) : null}
-                  </>
-                )}
+                ) : null}
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">
