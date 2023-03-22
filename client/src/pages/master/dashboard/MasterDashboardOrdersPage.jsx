@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Container, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, MasterOrdersList } from '../../../components';
 import { getOrders, patchOrderById } from '../../../api';
@@ -39,7 +40,15 @@ const MasterDashboardOrdersPage = () => {
     };
   }, []);
 
-  const doFinishOrder = async (id) => {
+  const doOrderComplete = async (id) => {
+    const result = await confirm(`Do you want to mark order with id=${id} as completed ?`, {
+      title: 'Confirm',
+      okText: 'Completed',
+      okButtonStyle: 'success',
+    });
+
+    if (!result) return;
+
     setPending(true);
     try {
       await patchOrderById({
@@ -74,7 +83,7 @@ const MasterDashboardOrdersPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterOrdersList orders={orders} onComplete={doFinishOrder} isPending={isPending} />}
+        {isComponentReady && <MasterOrdersList orders={orders} onComplete={doOrderComplete} isPending={isPending} />}
         <hr />
       </Container>
     </Container>

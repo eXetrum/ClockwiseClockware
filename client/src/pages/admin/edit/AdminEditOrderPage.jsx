@@ -8,7 +8,7 @@ import { Header, ErrorContainer, OrderForm, AdminMastersList } from '../../../co
 import { getWatches, getCities, getOrderById, updateOrderById, getAvailableMasters } from '../../../api';
 import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
-const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour(), status: '' });
+const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour() });
 
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -112,7 +112,7 @@ const AdminEditOrderPage = () => {
     }
   };
 
-  const doUpdateOrderById = async ({ id, watch, city, master, startDate, status }) => {
+  const doUpdateOrderById = async ({ id, watch, city, master, startDate }) => {
     setPending(true);
     try {
       const order = {
@@ -120,11 +120,10 @@ const AdminEditOrderPage = () => {
         cityId: city.id,
         masterId: master.id,
         startDate: startDate.getTime(),
-        status,
       };
 
       await updateOrderById({ id, order });
-      resetOrigOrder({ ...originalOrder, watch, city, master, startDate, status });
+      resetOrigOrder({ ...originalOrder, watch, city, master, startDate });
       enqueueSnackbar('Order updated', { variant: 'success' });
     } catch (e) {
       if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
@@ -208,8 +207,6 @@ const AdminEditOrderPage = () => {
     resetMasterList();
   };
 
-  const onOrderStatusChange = (event, status) => setNewOrder((prev) => ({ ...prev, status }));
-
   const onFindMasterBtnClick = (event) => {
     event.preventDefault();
     setNewOrder((prev) => ({ ...prev, master: null }));
@@ -240,7 +237,6 @@ const AdminEditOrderPage = () => {
     onOrderCitySelect,
     onOrderCityRemove,
     onOrderDateChange,
-    onOrderStatusChange,
     onFindMasterBtnClick,
     onResetBtnClick,
   };

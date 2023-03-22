@@ -11,8 +11,6 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import ViewMasterCard from '../master/ViewMasterCard';
 import { validateEmail, dateToNearestHour } from '../../utils';
 
-import { ORDER_STATUS } from '../../constants';
-
 const OrderForm = ({
   order,
   watches,
@@ -23,7 +21,6 @@ const OrderForm = ({
   onOrderCitySelect,
   onOrderCityRemove,
   onOrderDateChange,
-  onOrderStatusChange,
   onFindMasterBtnClick,
   onResetBtnClick,
   onClientEmailChange,
@@ -71,36 +68,6 @@ const OrderForm = ({
     <Row className="justify-content-md-center">
       <Col xs lg="6">
         <Form onSubmit={onFormSubmit}>
-          {isEditForm ? (
-            <>
-              <hr />
-              <Form.Group>
-                <Row>
-                  <Col sm={4}>
-                    <Form.Label>
-                      <b>Status:</b>
-                    </Form.Label>
-                  </Col>
-                  <Col>
-                    {Object.values(ORDER_STATUS).map((status) => (
-                      <Form.Check
-                        key={status}
-                        type="radio"
-                        name="status"
-                        label={status}
-                        checked={order?.status === status}
-                        inline
-                        required
-                        onChange={(event) => onOrderStatusChange(event, status)}
-                        disabled={isPending}
-                      />
-                    ))}
-                  </Col>
-                </Row>
-              </Form.Group>
-            </>
-          ) : null}
-
           <hr />
           <Form.Group>
             <Row>

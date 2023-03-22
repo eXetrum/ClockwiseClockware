@@ -393,19 +393,22 @@ const update = [
             if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
-    body('order.status')
-        .exists()
-        .withMessage('order.status required')
-        .isIn(Object.values(ORDER_STATUS))
-        .withMessage('Incorrect order status'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { watchId, cityId, masterId, status } = req.body.order;
+            const { watchId, cityId, masterId } = req.body.order;
             let { startDate } = req.body.order;
+
+            const originalOrder = await Order.findOne({ where: { id } });
+            if (!originalOrder) return res.status(404).json({ message: 'Order not found' }).end();
+
+            // No updates allowed for completed/canceled orders
+            if ([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELED].includes(originalOrder.status)) {
+                return res.status(409).json({ message: 'Restricted. Unable to update order details. Order is finallized now.' }).end();
+            }
 
             const watch = await Watches.findOne({ where: { id: watchId } });
             if (!watch) return res.status(409).json({ message: 'Unknown watch type' }).end();
@@ -431,7 +434,7 @@ const update = [
             const totalCost = city.pricePerHour * watch.repairTime;
 
             const [affectedRows, result] = await Order.update(
-                { watchId, cityId, masterId, startDate, endDate, totalCost, status },
+                { watchId, cityId, masterId, startDate, endDate, totalCost },
                 { where: { id }, returning: true, limit: 1 }
             );
             if (!affectedRows) return res.status(404).json({ message: '~Order not found~' }).end();
@@ -450,7 +453,11 @@ const update = [
 const patch = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
     param('id').exists().withMessage('Order ID required').isString().withMessage('Order ID should be of type string'),
-    body('status').exists().withMessage('Order status required').isIn(Object.values(ORDER_STATUS)).withMessage('Incorrect order status'),
+    body('status')
+        .exists()
+        .withMessage('Order status required')
+        .isIn(Object.values(ORDER_STATUS))
+        .withMessage('Incorrect order status value'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -462,11 +469,17 @@ const patch = [
             const originalOrder = await Order.findOne({ where: { id } });
             if (!originalOrder) return res.status(404).json({ message: 'Order not found' }).end();
 
-            // For clients
+            // ==== Client ==== (clients cant change status but can rate order)
             const authUser = parseAuthToken(req.headers);
             if (authUser.role === USER_ROLES.CLIENT) {
                 if (originalOrder.rating !== null) {
                     return res.status(409).json({ message: 'Order already rated' }).end();
+                }
+                if (originalOrder.status === ORDER_STATUS.CONFIRMED) {
+                    return res.status(409).json({ message: 'Order is not completed yet' }).end();
+                }
+                if (originalOrder.status === ORDER_STATUS.CANCELED) {
+                    return res.status(409).json({ message: 'Order is marked as canceled and cannot be rated' }).end();
                 }
 
                 const rating = parseInt(req.body.rating);
@@ -500,24 +513,16 @@ const patch = [
                 return res.status(204).end();
             }
 
-            // Admin/Master
+            // ==== Admin/Master ====
+            // No updates allowed for completed/canceled orders
+            if ([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELED].includes(originalOrder.status)) {
+                return res.status(409).json({ message: 'Restricted. Unable to update order details. Order is finallized now.' }).end();
+            }
 
-            // Check if order already in progress/end
-            const currentDate = Date.now();
-            // startDate    10:00
-            // currentDate  10:30
-            // repairTime      3h
-            //              startDate  currentDate
-            //                      |  ~
-            //    7     8     9    10  ~ 11    12    13    14
-            //    |     |     |     |  ~  |     |     |     |
-            // \\\|\\\\\|\\\\\|\\\\\[..~..|.....|.....].....|...
-            //
-            // Order in progress/already over (actually should over because of startDate + repairTime but in fact may not)
-            if (new Date(originalOrder.startDate).getTime() < currentDate) {
-                // No updates allowed for completed/canceled orders with datetime in past
-                if ([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELED].includes(originalOrder.status)) {
-                    return res.status(409).json({ message: 'Restricted. Unable to update order details. Order is frozen now.' }).end();
+            // === Master === (only can mark order as completed)
+            if (authUser.role === USER_ROLES.MASTER) {
+                if (status !== ORDER_STATUS.COMPLETED) {
+                    return res.status(409).json({ message: 'Restricted. Specified order status is not allowable for master role' }).end();
                 }
             }
 

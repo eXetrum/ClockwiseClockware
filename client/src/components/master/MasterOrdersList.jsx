@@ -1,5 +1,6 @@
 import React from 'react';
 import { Container, Row, Col, Table, Alert, Button, Spinner } from 'react-bootstrap';
+import Stack from '@mui/material/Stack';
 import { ORDER_STATUS } from '../../constants';
 
 const MasterOrdersList = ({ orders, onComplete, isPending }) => {
@@ -37,7 +38,6 @@ const MasterOrdersList = ({ orders, onComplete, isPending }) => {
             <th className="text-center p-2 m-0">Date End</th>
             <th className="text-center p-2 m-0">Total Cost</th>
             <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0"></th>
           </tr>
         </thead>
         <tbody>
@@ -59,13 +59,13 @@ const MasterOrdersList = ({ orders, onComplete, isPending }) => {
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>
-              </td>
-              <td className="text-center p-2 m-0 col-2">
                 {order.status === ORDER_STATUS.CONFIRMED ? (
-                  <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending}>
-                    {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                    Finish order
-                  </Button>
+                  <Stack spacing={1}>
+                    <Button onClick={() => onComplete(order.id)} size="sm" variant="success" disabled={isPending}>
+                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                      Complete
+                    </Button>
+                  </Stack>
                 ) : null}
               </td>
             </tr>
