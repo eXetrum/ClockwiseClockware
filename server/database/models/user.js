@@ -12,9 +12,9 @@ module.exports = (sequelize, DataTypes) => {
         };
 
         getDetails = async () => {
-            if (this.role === 'admin') return await this.getAdmin();
-            if (this.role === 'master') return await this.getMaster();
-            if (this.role === 'client') return await this.getClient();
+            if (this.role === USER_ROLES.ADMIN) return await this.getAdmin();
+            if (this.role === USER_ROLES.MASTER) return await this.getMaster();
+            if (this.role === USER_ROLES.CLIENT) return await this.getClient();
         };
 
         static associate(models) {
@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.STRING
             },
             role: {
-                type: DataTypes.ENUM([...Object.values(USER_ROLES)]),
+                type: DataTypes.ENUM(Object.values(USER_ROLES)),
                 allowNull: false
             },
             isEnabled: {

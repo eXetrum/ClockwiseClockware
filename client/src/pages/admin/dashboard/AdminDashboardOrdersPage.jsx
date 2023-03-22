@@ -3,8 +3,9 @@ import { Container, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, AdminOrdersList } from '../../../components';
-import { getOrders, deleteOrderById } from '../../../api';
+import { getOrders, deleteOrderById, patchOrderById } from '../../../api';
 import { getErrorText } from '../../../utils';
+import { ORDER_STATUS } from '../../../constants';
 
 const AdminDashboardOrdersPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -13,7 +14,7 @@ const AdminDashboardOrdersPage = () => {
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [pending, setPending] = useState(false);
+  const [isPending, setPending] = useState(false);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
@@ -35,12 +36,10 @@ const AdminDashboardOrdersPage = () => {
   const doDeleteOrderById = async (id) => {
     setPending(true);
     try {
-      const response = await deleteOrderById({ id });
-      if ([200, 204].includes(response?.status)) {
-        const removedOrder = orders.find((item) => item.id === id);
-        setOrders(orders.filter((item) => item.id !== id));
-        enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success' });
-      }
+      await deleteOrderById({ id });
+      const removedOrder = orders.find((item) => item.id === id);
+      setOrders(orders.filter((item) => item.id !== id));
+      enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setOrders(orders.filter((item) => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
@@ -69,6 +68,50 @@ const AdminDashboardOrdersPage = () => {
     if (result) doDeleteOrderById(orderId);
   };
 
+  const doOrderComplete = async (id) => {
+    try {
+      const result = await confirm(`Do you want to mark order with id=${id} as completed ?`, {
+        title: 'Confirm',
+        okText: 'Completed',
+        okButtonStyle: 'success',
+      });
+
+      if (!result) return;
+
+      setPending(true);
+      await patchOrderById({ id, status: ORDER_STATUS.COMPLETED });
+      const idx = orders.map((item) => item.id).indexOf(id);
+      orders[idx].status = ORDER_STATUS.COMPLETED;
+      setOrders(orders);
+    } catch (e) {
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
+  const doOrderCancel = async (id) => {
+    try {
+      const result = await confirm(`Do you want to mark order with id=${id} as canceled ?`, {
+        title: 'Confirm',
+        okText: 'Canceled',
+        okButtonStyle: 'success',
+      });
+
+      if (!result) return;
+
+      setPending(true);
+      await patchOrderById({ id, status: ORDER_STATUS.CANCELED });
+      const idx = orders.map((item) => item.id).indexOf(id);
+      orders[idx].status = ORDER_STATUS.CANCELED;
+      setOrders(orders);
+    } catch (e) {
+      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+    } finally {
+      setPending(false);
+    }
+  };
+
   return (
     <Container>
       <Header />
@@ -86,7 +129,15 @@ const AdminDashboardOrdersPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <AdminOrdersList orders={orders} onRemove={onOrderRemove} />}
+        {isComponentReady && (
+          <AdminOrdersList
+            orders={orders}
+            onRemove={onOrderRemove}
+            onComplete={doOrderComplete}
+            onCancel={doOrderCancel}
+            isPending={isPending}
+          />
+        )}
         <hr />
       </Container>
     </Container>

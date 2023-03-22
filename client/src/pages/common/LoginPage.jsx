@@ -1,25 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { NavLink, Navigate, useLocation } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
-import { validateEmail, getErrorText } from '../../utils';
+import { validateEmail, getErrorText, parseToken } from '../../utils';
 import { login } from '../../api';
 import { useAuth } from '../../hooks';
+import { USER_ROLES } from '../../constants';
+
+const initEmptyUser = () => ({ email: '', password: '' });
 
 const LoginPage = () => {
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   const location = useLocation();
-  const fromPage = location.state?.from?.pathname || '/';
+  const navigate = useNavigate();
 
-  const initEmptyUser = () => ({ email: '', password: '' });
   const [formUser, setFormUser] = useState(initEmptyUser());
 
   const { setAccessToken } = useAuth();
 
   const [pending, setPending] = useState(false);
-  const [redirect, setRedirect] = useState(false);
   const [error, setError] = useState(null);
 
   const isFormValid = useCallback(() => validateEmail(formUser?.email) && formUser?.password, [formUser]);
@@ -34,8 +36,31 @@ const LoginPage = () => {
       if (response?.data?.accessToken) {
         const { accessToken } = response.data;
         setAccessToken(accessToken);
+        const user = parseToken(accessToken);
+
         enqueueSnackbar('Success', { variant: 'success' });
-        setRedirect(true);
+
+        const fromPage = location.state?.from?.pathname || '/';
+
+        if (user.role === USER_ROLES.MASTER) return navigate('/master/orders');
+        else if (user.role === USER_ROLES.CLIENT && fromPage !== '/order') return navigate('/client/orders');
+
+        // is order exists and client email/name differs
+        const order = location?.state?.order;
+        if (order && user && (order.client?.email !== user.email || order.client?.name !== user.name)) {
+          const result = await confirm(
+            'Authenticated user data is different from prepared order details. Do you want to replace with current user data ?',
+            {
+              title: 'User mismatch',
+              okText: 'Update',
+              cancelText: 'Do not update',
+              okButtonStyle: 'success',
+            },
+          );
+          if (result) return navigate(fromPage, { state: { ...location.state, email: user.email, name: user.name } });
+        }
+
+        return navigate(fromPage, { state: location.state });
       }
     } catch (e) {
       setError(e);
@@ -61,11 +86,8 @@ const LoginPage = () => {
   useEffect(() => {
     return () => {
       abortController?.abort();
-      closeSnackbar();
     };
-  }, [abortController, closeSnackbar]);
-
-  if (redirect) return <Navigate to={fromPage} />;
+  }, [abortController]);
 
   return (
     <Container>

@@ -1,8 +1,17 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
-const { ACCESS_SCOPE } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 const { User } = require('../database/models');
+
+const parseAuthToken = (requestHeaders) => {
+    try {
+        const token = requestHeaders.authorization.split(' ')[1];
+        const user = jwt.verify(token, process.env.JWT_TOKEN_SECRET);
+        return user;
+    } catch (error) {}
+    return null;
+};
 
 const RouteProtector = async (req, res, next, scope = ACCESS_SCOPE.AnyAuth) => {
     try {
@@ -27,7 +36,7 @@ const RouteProtector = async (req, res, next, scope = ACCESS_SCOPE.AnyAuth) => {
             return res.status(401).json({ detail: 'Email address is not confirmed yet' }).end();
         }
 
-        if (ACCESS_SCOPE.MasterOnly.includes(dbUser.role) && !details.isApprovedByAdmin) {
+        if (dbUser.role === USER_ROLES.MASTER && !details.isApprovedByAdmin) {
             return res.status(401).json({ detail: 'Account is not approved by admin yet' }).end();
         }
 
@@ -48,4 +57,4 @@ const generateAccessToken = (user) => {
     return jwt.sign(user, process.env.JWT_TOKEN_SECRET, { expiresIn: process.env.JWT_TOKEN_EXPIRES });
 };
 
-module.exports = { RouteProtector: RequireAuth, RequireAuth, generateAccessToken };
+module.exports = { RequireAuth, generateAccessToken, parseAuthToken };

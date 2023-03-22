@@ -7,11 +7,11 @@ import { Header, ErrorContainer, ClientForm } from '../../../components';
 import { getClientById, updateClientById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
 
+const initEmptyClient = () => ({ email: '', password: '', name: '' });
+
 const AdminEditClient = () => {
   const { id } = useParams();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const initEmptyClient = () => ({ email: '', password: '', name: '' });
 
   const [client, setClient] = useState(initEmptyClient());
   const [originalClient, setOriginalClient] = useState(initEmptyClient());
@@ -40,12 +40,10 @@ const AdminEditClient = () => {
   const doUpdateClientById = async (id, client) => {
     setPending(true);
     try {
-      const response = await updateClientById({ id, client });
-      if ([200, 204].includes(response?.status)) {
-        setClient(client);
-        setOriginalClient(client);
-        enqueueSnackbar('Cleint updated', { variant: 'success' });
-      }
+      await updateClientById({ id, client });
+      setClient(client);
+      setOriginalClient(client);
+      enqueueSnackbar('Cleint updated', { variant: 'success' });
     } catch (e) {
       if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
       setClient(originalClient);

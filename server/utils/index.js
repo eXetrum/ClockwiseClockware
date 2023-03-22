@@ -23,10 +23,19 @@ const generateConfirmationToken = () => {
     return entropy.string();
 };
 
+const isDbErrorEntryNotFound = (error) =>
+    (error.name === 'SequelizeDatabaseError' && error.parent && error.parent.routine === 'string_to_uuid') ||
+    (error.message && error.message === 'EntryNotFound');
+const isDbErrorEntryAlreadyExists = (error) => error.name === 'SequelizeUniqueConstraintError';
+const isDbErrorEntryReferences = (error) => error.name === 'SequelizeForeignKeyConstraintError' && error.parent;
+
 module.exports = {
     hashPassword,
     compareSync,
     generatePassword,
     generateConfirmationToken,
-    dateToNearestHour
+    dateToNearestHour,
+    isDbErrorEntryNotFound,
+    isDbErrorEntryAlreadyExists,
+    isDbErrorEntryReferences
 };

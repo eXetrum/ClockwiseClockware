@@ -8,10 +8,10 @@ import { Header, ErrorContainer, AdminClientsList, ModalForm } from '../../../co
 import { createClient, deleteClientById, getClients, resetPassword, resendEmailConfirmation } from '../../../api';
 import { getErrorText, validateEmail } from '../../../utils';
 
+const initEmptyClient = () => ({ email: '', password: '', name: '' });
+
 const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
-  const initEmptyClient = () => ({ email: '', password: '', name: '' });
 
   const [clients, setClients] = useState([]);
   const [isInitialLoading, setInitialLoading] = useState(false);
@@ -63,12 +63,10 @@ const AdminDashboardClientsPage = () => {
   const doDeleteClientById = async (id) => {
     setPending(true);
     try {
-      const response = await deleteClientById({ id });
-      if ([200, 204].includes(response?.status)) {
-        const removedClient = clients.find((item) => item.id === id);
-        setClients(clients.filter((item) => item.id !== id));
-        enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success' });
-      }
+      await deleteClientById({ id });
+      const removedClient = clients.find((item) => item.id === id);
+      setClients(clients.filter((item) => item.id !== id));
+      enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });

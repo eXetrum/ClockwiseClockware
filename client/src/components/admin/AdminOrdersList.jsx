@@ -1,12 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert, Badge, Button, Spinner } from 'react-bootstrap';
+import Stack from '@mui/material/Stack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../common/StarRating';
+import { ORDER_STATUS } from '../../constants';
 
-const AdminOrdersList = ({ orders, onRemove }) => {
+const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) => {
   if (orders == null) return null;
 
   if (orders.length === 0) {
@@ -28,6 +30,8 @@ const AdminOrdersList = ({ orders, onRemove }) => {
     [pad(date.getHours()), pad(date.getMinutes())].join(':');
 
   const formatDecimal = (value) => parseFloat(value).toFixed(2);
+
+  const currentDate = new Date();
 
   return (
     <Container>
@@ -96,11 +100,26 @@ const AdminOrdersList = ({ orders, onRemove }) => {
               </td>
 
               <td className="text-center p-2 m-0">
-                {new Date() < new Date(order.startDate) ? (
+                {currentDate < new Date(order.startDate) ? (
                   <Link to={'/admin/orders/' + order.id}>
                     <EditIcon />
                   </Link>
-                ) : null}
+                ) : (
+                  <>
+                    {order.status === ORDER_STATUS.CONFIRMED ? (
+                      <Stack spacing={1}>
+                        <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending} variant="success">
+                          {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                          Complete
+                        </Button>
+                        <Button onClick={() => onCancel(order.id)} size="sm" disabled={isPending} variant="secondary">
+                          {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                          Cancel
+                        </Button>
+                      </Stack>
+                    ) : null}
+                  </>
+                )}
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">

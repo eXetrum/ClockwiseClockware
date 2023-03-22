@@ -1,8 +1,9 @@
 const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, Client, Order } = require('../database/models');
+const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -18,17 +19,12 @@ const getAll = [
                 attributes: { exclude: ['id', 'userId'] },
                 order: [['createdAt', 'DESC']]
             });
-            const clients = records.map((client) => {
-                const obj = {
-                    ...client.toJSON(),
-                    ...client.User.toJSON()
-                };
-                delete obj.User;
-                return obj;
-            });
+
+            const clients = records.map((client) => ({ ...client.toJSON(), ...client.User.toJSON() }));
+
             res.status(200).json({ clients }).end();
-        } catch (e) {
-            res.status(400).end();
+        } catch (error) {
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -69,107 +65,84 @@ const create = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { client } = req.body;
+            const { email, password, name } = req.body.client;
 
-            client.email = client.email.trim();
-            client.name = client.name.trim();
-            client.password = client.password.trim();
-            delete client.isEnabled;
-            delete client.isEmailVerified;
+            const client = await db.sequelize.transaction(async (t) => {
+                const user = await User.create(
+                    { email: email.trim(), password: password.trim(), role: USER_ROLES.CLIENT },
+                    { transaction: t }
+                );
+                const details = await user.createClient({ name: name.trim() }, { transaction: t });
 
-            const user = await db.sequelize.transaction(async (t) => {
-                const user = await User.create({ ...client, role: 'client' }, { transaction: t });
-                const details = await user.createClient({ ...client }, { transaction: t });
-
-                delete user.password;
-                delete details.id;
-                delete details.userId;
-
-                return { ...details.toJSON(), ...user.toJSON() };
+                const { id, userId, ...clientDetails } = details.toJSON();
+                return { ...clientDetails, ...user.toJSON() };
             });
 
-            res.status(201).json({ client: user }).end();
-        } catch (e) {
-            if (e.name === 'SequelizeUniqueConstraintError') {
-                return res.status(409).json({ detail: 'User with specified email already exists' }).end();
+            res.status(201).json({ client }).end();
+        } catch (error) {
+            if (isDbErrorEntryAlreadyExists(error)) {
+                return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('Client ID required'),
+    param('id').exists().notEmpty().withMessage('client ID required'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
 
             await db.sequelize.transaction(async (t) => {
                 const resultClientDetails = await Client.destroy({ where: { userId: id } }, { transaction: t });
                 const resultUserDetails = await User.destroy({ where: { id } }, { transaction: t });
-                if (resultClientDetails === 0 || resultUserDetails === 0) throw new Error('ClientNotFound');
+                if (resultClientDetails === 0 || resultUserDetails === 0) throw new Error('EntryNotFound');
             });
 
             res.status(204).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (
-                (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') ||
-                // Custom error that comes from transaction body
-                (e.message && e.message === 'ClientNotFound')
-            ) {
-                return res.status(404).json({ detail: 'Client not found' }).end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Client not found' }).end();
+            if (isDbErrorEntryReferences(error) && error.parent.constraint === 'orders_clientId_fkey') {
+                return res.status(409).json({ message: 'Deletion restricted. Order(s) reference(s)' }).end();
             }
 
-            if (e.name === 'SequelizeForeignKeyConstraintError' && e.parent && e.parent.constraint) {
-                if (e.parent.constraint === 'orders_clientId_fkey') {
-                    return res.status(409).json({ detail: 'Deletion restricted. Order(s) reference(s)' }).end();
-                }
-            }
-
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('Client ID required'),
+    param('id').exists().notEmpty().withMessage('client ID required'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
 
-            let client = await Client.findOne({
+            const client = await Client.findOne({
                 where: { userId: id },
                 include: [{ model: User }],
                 attributes: { exclude: ['id', 'userId'] }
             });
-            if (!client) return res.status(404).json({ detail: '~Client not found~' }).end();
+            if (!client) return res.status(404).json({ message: '~Client not found~' }).end();
 
-            client = {
-                ...client.toJSON(),
-                ...client.User.toJSON()
-            };
-            delete client.User;
+            res.status(200)
+                .json({ client: { ...client.toJSON(), ...client.User.toJSON() } })
+                .end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Client not found' }).end();
 
-            res.status(200).json({ client }).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') {
-                return res.status(404).json({ detail: 'Client not found' }).end();
-            }
-
-            res.status(400).end();
+            res.status(400).json(error).end();
         }
     }
 ];
@@ -203,24 +176,14 @@ const update = [
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
-            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { client } = req.body;
-
-            // Prepare data
-            client.name = client.name.trim();
-            client.email = client.email.trim();
-            delete client.isEnabled;
-            delete client.isEmailVerified;
-
-            delete client.id;
-            delete client.createdAt;
-            delete client.updatedAt;
+            const { name, email } = req.body.client;
 
             await db.sequelize.transaction(async (t) => {
                 const [affectedRowsClient, resultClient] = await Client.update(
-                    client,
+                    { name: name.trim() },
                     {
                         where: { userId: id },
                         returning: true,
@@ -228,31 +191,24 @@ const update = [
                     },
                     { transaction: t }
                 );
-                if (affectedRowsClient === 0) throw new Error('ClientNotFound');
+                if (affectedRowsClient === 0) throw new Error('EntryNotFound');
 
                 const [affectedRowsUser, resultUser] = await User.update(
-                    client,
+                    { email: email.trim() },
                     { where: { id }, returning: true, limit: 1 },
                     { transaction: t }
                 );
-                if (affectedRowsUser === 0) throw new Error('ClientNotFound');
+                if (affectedRowsUser === 0) throw new Error('EntryNotFound');
             });
 
             res.status(204).end();
-        } catch (e) {
-            // Incorrect UUID ID string
-            if (
-                (e.name === 'SequelizeDatabaseError' && e.parent && e.parent.routine === 'string_to_uuid') ||
-                (e.message && e.message === 'ClientNotFound')
-            ) {
-                return res.status(404).json({ detail: 'Client not found' }).end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Client not found' }).end();
+            if (isDbErrorEntryAlreadyExists(error)) {
+                return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            if (e.name === 'SequelizeUniqueConstraintError') {
-                return res.status(409).json({ detail: 'User with specified email already exists' }).end();
-            }
-
-            res.status(400).json(e).end();
+            res.status(400).end();
         }
     }
 ];

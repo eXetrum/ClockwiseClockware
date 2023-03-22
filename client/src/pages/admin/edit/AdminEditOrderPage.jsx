@@ -8,11 +8,11 @@ import { Header, ErrorContainer, OrderForm, AdminMastersList } from '../../../co
 import { getWatches, getCities, getOrderById, updateOrderById, getAvailableMasters } from '../../../api';
 import { isGlobalError, getErrorText, addHours, dateRangesOverlap, dateToNearestHour } from '../../../utils';
 
+const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour(), status: '' });
+
 const AdminEditOrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { id } = useParams();
-
-  const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, startDate: dateToNearestHour(), status: '' });
 
   const [watches, setWatches] = useState([]);
   const [cities, setCities] = useState([]);
@@ -122,11 +122,10 @@ const AdminEditOrderPage = () => {
         startDate: startDate.getTime(),
         status,
       };
-      const response = await updateOrderById({ id, order });
-      if ([200, 204].includes(response.status)) {
-        resetOrigOrder({ ...originalOrder, watch, city, master, startDate, status });
-        enqueueSnackbar('Order updated', { variant: 'success' });
-      }
+
+      await updateOrderById({ id, order });
+      resetOrigOrder({ ...originalOrder, watch, city, master, startDate, status });
+      enqueueSnackbar('Order updated', { variant: 'success' });
     } catch (e) {
       if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
       resetOrigOrder(originalOrder);

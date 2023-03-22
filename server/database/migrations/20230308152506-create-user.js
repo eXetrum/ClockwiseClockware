@@ -21,7 +21,7 @@ module.exports = {
                 type: Sequelize.DataTypes.STRING
             },
             role: {
-                type: Sequelize.DataTypes.ENUM([...Object.values(USER_ROLES)]),
+                type: Sequelize.DataTypes.ENUM(Object.values(USER_ROLES)),
                 allowNull: false
             },
             isEnabled: {
@@ -40,6 +40,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.sequelize.query('DROP TYPE "enum_users_status"; DROP TABLE users;');
+        await queryInterface.sequelize.query('DROP TYPE "enum_users_role"; DROP TABLE users;');
     }
 };

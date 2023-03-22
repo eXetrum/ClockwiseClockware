@@ -8,7 +8,7 @@ import '@fontsource/roboto/700.css';
 import './App.css';
 import './logo.svg';
 
-import { HomePage, LoginPage, LogoutPage, RegisterPage, OrderPage, UserProfilePage } from './pages/common';
+import { HomePage, LoginPage, LogoutPage, RegisterPage, OrderPage, UserProfilePage, VerifyPage } from './pages/common';
 import {
   AdminDashboardCitiesPage,
   AdminDashboardMastersPage,
@@ -16,13 +16,18 @@ import {
   AdminDashboardOrdersPage,
 } from './pages/admin/dashboard';
 import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditOrderPage } from './pages/admin/edit';
-
-import { RouteGuard } from './providers';
-import { ACCESS_SCOPE } from './constants';
+import { MasterDashboardOrdersPage } from './pages/master/dashboard';
+import { ClientDashboardOrdersPage } from './pages/client/dashboard';
 
 import { AxiosInterceptor } from './api/axios.interceptor';
+import { RouteGuard } from './providers';
 
-const protect = (child, scope = ACCESS_SCOPE.AnyAuth) => <RouteGuard scope={scope}>{child}</RouteGuard>;
+import { ACCESS_SCOPE } from './constants';
+
+const AnyAuthRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.AnyAuth}>{child}</RouteGuard>;
+const AdminRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.AdminOnly}>{child}</RouteGuard>;
+const MasterRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.MasterOnly}>{child}</RouteGuard>;
+const ClientRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.ClientOnly}>{child}</RouteGuard>;
 
 const App = () => {
   return (
@@ -34,15 +39,18 @@ const App = () => {
           <Route exact path="/logout" element={<LogoutPage />} />
           <Route exact path="/register" element={<RegisterPage />} />
           <Route exact path="/order" element={<OrderPage />} />
-          <Route exact path="/profile" element={protect(<UserProfilePage />)} />
-          <Route exact path="/admin/cities" element={protect(<AdminDashboardCitiesPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/masters" element={protect(<AdminDashboardMastersPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/clients" element={protect(<AdminDashboardClientsPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/orders" element={protect(<AdminDashboardOrdersPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/cities/:id" element={protect(<AdminEditCityPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/masters/:id" element={protect(<AdminEditMasterPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/clients/:id" element={protect(<AdminEditClientPage />, ACCESS_SCOPE.AdminOnly)} />
-          <Route exact path="/admin/orders/:id" element={protect(<AdminEditOrderPage />, ACCESS_SCOPE.AdminOnly)} />
+          <Route exact path="/profile" element={AnyAuthRoute(<UserProfilePage />)} />
+          <Route exact path="/admin/cities" element={AdminRoute(<AdminDashboardCitiesPage />)} />
+          <Route exact path="/admin/masters" element={AdminRoute(<AdminDashboardMastersPage />)} />
+          <Route exact path="/admin/clients" element={AdminRoute(<AdminDashboardClientsPage />)} />
+          <Route exact path="/admin/orders" element={AdminRoute(<AdminDashboardOrdersPage />)} />
+          <Route exact path="/admin/cities/:id" element={AdminRoute(<AdminEditCityPage />)} />
+          <Route exact path="/admin/masters/:id" element={AdminRoute(<AdminEditMasterPage />)} />
+          <Route exact path="/admin/clients/:id" element={AdminRoute(<AdminEditClientPage />)} />
+          <Route exact path="/admin/orders/:id" element={AdminRoute(<AdminEditOrderPage />)} />
+          <Route exact path="/master/orders" element={MasterRoute(<MasterDashboardOrdersPage />)} />
+          <Route exact path="/client/orders" element={ClientRoute(<ClientDashboardOrdersPage />)} />
+          <Route exact path="/verify/:token" element={<VerifyPage />} />
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </AxiosInterceptor>
