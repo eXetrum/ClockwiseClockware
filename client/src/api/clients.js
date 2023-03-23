@@ -1,14 +1,11 @@
 import axios from 'axios';
 
-const getClients = ({ abortController = null }) => axios.get('/clients', { signal: abortController?.signal });
+export const getClients = () => axios.get('/clients');
 
-const createClient = ({ abortController = null, ...params }) => axios.post('/clients', { ...params }, { signal: abortController?.signal });
+export const createClient = ({ ...params }) => axios.post('/clients', { ...params });
 
-const deleteClientById = ({ id, abortController = null }) => axios.delete(`/clients/${id}`, { signal: abortController?.signal });
+export const deleteClientById = ({ id }) => axios.delete(`/clients/${id}`);
 
-const getClientById = ({ id, abortController = null }) => axios.get(`/clients/${id}`, { signal: abortController?.signal });
+export const getClientById = ({ id }) => axios.get(`/clients/${id}`);
 
-const updateClientById = ({ id, abortController = null, ...params }) =>
-  axios.put(`/clients/${id}`, { ...params }, { signal: abortController?.signal });
-
-export { getClients, createClient, deleteClientById, getClientById, updateClientById };
+export const updateClientById = ({ id, ...params }) => axios.put(`/clients/${id}`, { ...params });

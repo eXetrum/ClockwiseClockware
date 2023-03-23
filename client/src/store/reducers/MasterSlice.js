@@ -49,7 +49,11 @@ export const masterSlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(fetchMasters.fulfilled, (state, action) => {
-        state.masters = action.payload;
+        state.masters = action.payload.map((master) => {
+          master.isPendingResetPassword = false;
+          master.isPendingResendEmailConfirmation = false;
+          return master;
+        });
         state.isInitialLoading = false;
         state.error = initEmptyError();
       }),
@@ -64,7 +68,7 @@ export const masterSlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(addMaster.fulfilled, (state, action) => {
-        state.masters = [action.payload, ...state.masters];
+        state.masters = [{ ...action.payload, isPendingResetPassword: false, isPendingResendEmailConfirmation: false }, ...state.masters];
         state.isPending = false;
         state.isShowAddForm = false;
         state.newMaster = initEmptyMaster();
@@ -154,7 +158,10 @@ export const masterSlice = createSlice({
         const master = state.masters[idx];
         state.masters[idx].isPendingResetPassword = false;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `Password for ${master.email} has been successfully reset`, variant: 'success' });
+        state.notification = createNotification({
+          text: `Password for master ${master.email} has been successfully reset`,
+          variant: 'success',
+        });
       }),
       builder.addCase(resetPasswordMaster.rejected, (state, action) => {
         const idx = state.masters.map((master) => master.id).indexOf(action.payload.id);

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Container, Spinner } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { Header, ErrorContainer, MasterForm } from '../../../components';
@@ -60,15 +61,15 @@ const AdminEditMasterPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterForm onSubmit={onFormSubmit} isHidePassword={true} />}
+        {isComponentReady ? <MasterForm onSubmit={onFormSubmit} isHidePassword={true} /> : null}
 
         <hr />
       </Container>

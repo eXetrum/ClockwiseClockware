@@ -1,17 +1,25 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchCities, addCity, deleteCity, fetchCity, updateCity } from './ActionCreators';
+import {
+  fetchClients,
+  addClient,
+  deleteClient,
+  fetchClient,
+  updateClient,
+  resetPasswordClient,
+  resendEmailConfirmationClient,
+} from './ActionCreators';
 import { isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE } from '../../constants';
 
-const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
+const initEmptyClient = () => ({ email: '', password: '', name: '' });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
 const createNotification = ({ text = '', variant = '' }) => ({ text, variant });
 
 const initialState = {
-  cities: [],
-  newCity: initEmptyCity(),
-  oldCity: initEmptyCity(),
+  clients: [],
+  newClient: initEmptyClient(),
+  oldClient: initEmptyClient(),
   error: initEmptyError(),
   isInitialLoading: false,
   isShowAddForm: false,
@@ -25,110 +33,161 @@ export const clientSlice = createSlice({
   reducers: {
     changeVisibilityAddForm(state, action) {
       state.isShowAddForm = action.payload;
-      if (action.payload === false) state.newCity = initEmptyCity();
+      state.newClient = initEmptyClient();
     },
-    changeNewCityField(state, action) {
-      state.newCity[action.payload.name] = action.payload.value;
+    changeNewClientField(state, action) {
+      state.newClient[action.payload.name] = action.payload.value;
     },
     clearNotification(state, _) {
       state.notification = createNotification({});
     },
   },
   extraReducers: (builder) => {
-    //#region Fetch all cities
-    builder.addCase(fetchCities.pending, (state, _) => {
+    //#region Fetch all clients
+    builder.addCase(fetchClients.pending, (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
     }),
-      builder.addCase(fetchCities.fulfilled, (state, action) => {
-        state.cities = action.payload;
+      builder.addCase(fetchClients.fulfilled, (state, action) => {
+        state.clients = action.payload;
         state.isInitialLoading = false;
         state.error = initEmptyError();
       }),
-      builder.addCase(fetchCities.rejected, (state, action) => {
+      builder.addCase(fetchClients.rejected, (state, action) => {
         state.isInitialLoading = false;
         state.error = action.payload;
       });
     //#endregion
-    //#region Create new city
-    builder.addCase(addCity.pending, (state, _) => {
+    //#region Create new client
+    builder.addCase(addClient.pending, (state, _) => {
       state.isPending = true;
       state.error = initEmptyError();
     }),
-      builder.addCase(addCity.fulfilled, (state, action) => {
-        state.cities = [action.payload, ...state.cities];
+      builder.addCase(addClient.fulfilled, (state, action) => {
+        state.clients = [action.payload, ...state.clients];
         state.isPending = false;
         state.isShowAddForm = false;
-        state.newCity = initEmptyCity();
+        state.newClient = initEmptyClient();
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${action.payload.name}" created`, variant: 'success' });
+        state.notification = createNotification({ text: `Client "${action.payload.email}" created`, variant: 'success' });
       }),
-      builder.addCase(addCity.rejected, (state, action) => {
+      builder.addCase(addClient.rejected, (state, action) => {
         state.isPending = false;
         if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
-    //#region Delete city by id
-    builder.addCase(deleteCity.pending, (state, _) => {
+    //#region Delete client by id
+    builder.addCase(deleteClient.pending, (state, _) => {
       state.isPending = true;
       state.error = initEmptyError();
     }),
-      builder.addCase(deleteCity.fulfilled, (state, action) => {
-        const removedCity = state.cities.find((city) => city.id === action.payload);
-        state.cities = state.cities.filter((city) => city.id !== action.payload);
+      builder.addCase(deleteClient.fulfilled, (state, action) => {
+        const removedClient = state.clients.find((client) => client.id === action.payload);
+        state.clients = state.clients.filter((client) => client.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${removedCity.name}" removed`, variant: 'success' });
+        state.notification = createNotification({ text: `Client "${removedClient.email}" removed`, variant: 'success' });
       }),
-      builder.addCase(deleteCity.rejected, (state, action) => {
+      builder.addCase(deleteClient.rejected, (state, action) => {
         state.isPending = false;
 
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-          state.cities = state.cities.filter((city) => city.id !== action.payload.id);
+          state.clients = state.clients.filter((client) => client.id !== action.payload.id);
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
-    //#region Get city by id
-    builder.addCase(fetchCity.pending, (state, _) => {
+    //#region Get client by id
+    builder.addCase(fetchClient.pending, (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
-      state.newCity = initEmptyCity();
-      state.oldCity = initEmptyCity();
+      state.newClient = initEmptyClient();
+      state.oldClient = initEmptyClient();
     }),
-      builder.addCase(fetchCity.fulfilled, (state, action) => {
+      builder.addCase(fetchClient.fulfilled, (state, action) => {
         state.isInitialLoading = false;
         state.error = initEmptyError();
-        state.newCity = action.payload;
-        state.oldCity = action.payload;
+        state.newClient = action.payload;
+        state.oldClient = action.payload;
       }),
-      builder.addCase(fetchCity.rejected, (state, action) => {
+      builder.addCase(fetchClient.rejected, (state, action) => {
         state.isInitialLoading = false;
         state.error = action.payload;
       });
     //#endregion
-    //#region Update city by id
-    builder.addCase(updateCity.pending, (state, _) => {
+    //#region Update client by id
+    builder.addCase(updateClient.pending, (state, _) => {
       state.isPending = true;
       state.error = initEmptyError();
     }),
-      builder.addCase(updateCity.fulfilled, (state, action) => {
+      builder.addCase(updateClient.fulfilled, (state, action) => {
         state.isPending = false;
         state.error = initEmptyError();
-        state.newCity = action.payload;
-        state.oldCity = action.payload;
-        state.notification = createNotification({ text: 'City updated', variant: 'success' });
+        state.newClient = action.payload;
+        state.oldClient = action.payload;
+        state.notification = createNotification({ text: 'Client updated', variant: 'success' });
       }),
-      builder.addCase(updateCity.rejected, (state, action) => {
+      builder.addCase(updateClient.rejected, (state, action) => {
         state.isPending = false;
-        state.newCity = state.oldCity;
+        state.newClient = state.oldClient;
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
+
+    //#region Reset password client
+    builder.addCase(resetPasswordClient.pending, (state, action) => {
+      const userId = action.meta.arg;
+      const idx = state.clients.map((client) => client.id).indexOf(userId);
+      state.clients[idx].isPendingResetPassword = true;
+      state.error = initEmptyError();
+    }),
+      builder.addCase(resetPasswordClient.fulfilled, (state, action) => {
+        const userId = action.payload;
+        const idx = state.clients.map((client) => client.id).indexOf(userId);
+        const client = state.clients[idx];
+        state.clients[idx].isPendingResetPassword = false;
+        state.error = initEmptyError();
+        state.notification = createNotification({
+          text: `Password for client ${client.email} has been successfully reset`,
+          variant: 'success',
+        });
+      }),
+      builder.addCase(resetPasswordClient.rejected, (state, action) => {
+        const idx = state.clients.map((client) => client.id).indexOf(action.payload.id);
+        state.clients[idx].isPendingResetPassword = false;
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter((client) => client.id !== action.payload.id);
+        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+      });
+    //#endregion
+
+    //#region Resend email confirmation client
+    builder.addCase(resendEmailConfirmationClient.pending, (state, action) => {
+      const userId = action.meta.arg;
+      const idx = state.clients.map((client) => client.id).indexOf(userId);
+      state.clients[idx].isPendingResendEmailConfirmation = true;
+      state.error = initEmptyError();
+    }),
+      builder.addCase(resendEmailConfirmationClient.fulfilled, (state, action) => {
+        const userId = action.payload;
+        const idx = state.clients.map((client) => client.id).indexOf(userId);
+        const client = state.clients[idx];
+        state.clients[idx].isPendingResendEmailConfirmation = false;
+        state.error = initEmptyError();
+        state.notification = createNotification({
+          text: `Email confirmation for client ${client.email} has been sent`,
+          variant: 'success',
+        });
+      }),
+      builder.addCase(resendEmailConfirmationClient.rejected, (state, action) => {
+        const idx = state.clients.map((client) => client.id).indexOf(action.payload.id);
+        state.clients[idx].isPendingResendEmailConfirmation = false;
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter((client) => client.id !== action.payload.id);
+        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+      });
   },
 });
 

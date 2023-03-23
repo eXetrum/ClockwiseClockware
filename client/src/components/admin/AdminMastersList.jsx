@@ -81,8 +81,8 @@ const MasterTableList = ({ masters, onRemove }) => {
                   <Button
                     size="sm"
                     variant="outline-warning"
-                    onClick={() => onResetPassword(master)}
                     disabled={master.isPendingResetPassword}
+                    onClick={() => onResetPassword(master)}
                   >
                     {master.isPendingResetPassword ? (
                       <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
@@ -93,8 +93,8 @@ const MasterTableList = ({ masters, onRemove }) => {
                     <Button
                       size="sm"
                       variant="outline-primary"
-                      onClick={() => onResendEmailConfirmation(master)}
                       disabled={master.isPendingResendEmailConfirmation}
+                      onClick={() => onResendEmailConfirmation(master)}
                     >
                       {master.isPendingResendEmailConfirmation ? (
                         <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />

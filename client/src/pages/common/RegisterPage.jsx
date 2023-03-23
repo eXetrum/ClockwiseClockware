@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { PuffLoader } from 'react-spinners';
 import Multiselect from 'multiselect-react-dropdown';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
@@ -100,7 +101,7 @@ const RegisterPage = () => {
 
         {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
         ) : null}
 

@@ -1,79 +1,44 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Container, Spinner } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { Header, ErrorContainer, ClientForm } from '../../../components';
-import { getClientById, updateClientById } from '../../../api';
-import { isGlobalError, getErrorText } from '../../../utils';
 
-const initEmptyClient = () => ({ email: '', password: '', name: '' });
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchClient, updateClient } from '../../../store/reducers/ActionCreators';
+import { clientSlice } from '../../../store/reducers';
+
+import { ERROR_TYPE } from '../../../constants';
 
 const AdminEditClient = () => {
   const { id } = useParams();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  const [client, setClient] = useState(initEmptyClient());
-  const [originalClient, setOriginalClient] = useState(initEmptyClient());
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [isPending, setPending] = useState(false);
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-
-  const fetchClienyById = async (id, abortController) => {
-    setInitialLoading(true);
-    try {
-      const response = await getClientById({ id, abortController });
-      if (response?.data?.client) {
-        const { client } = response.data;
-        setClient(client);
-        setOriginalClient(client);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const doUpdateClientById = async (id, client) => {
-    setPending(true);
-    try {
-      await updateClientById({ id, client });
-      setClient(client);
-      setOriginalClient(client);
-      enqueueSnackbar('Cleint updated', { variant: 'success' });
-    } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      setClient(originalClient);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
+  const { clearNotification } = clientSlice.actions;
+  const { newClient, error, notification, isInitialLoading } = useSelector((state) => state.clientReducer);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchClienyById(id, abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [id, closeSnackbar]);
+    dispatch(fetchClient(id));
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    doUpdateClientById(id, client);
-  };
-
-  const onClientEmailChange = (event) => setClient((prev) => ({ ...prev, email: event.target.value }));
-  const onClientNameChange = (event) => setClient((prev) => ({ ...prev, name: event.target.value }));
-
-  const handlers = {
-    onFormSubmit,
-    onClientEmailChange,
-    onClientNameChange,
+    dispatch(updateClient(newClient));
   };
 
   return (
@@ -89,15 +54,15 @@ const AdminEditClient = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <ClientForm {...{ isPending, client, ...handlers }} />}
+        {isComponentReady ? <ClientForm onSubmit={onFormSubmit} isHidePassword={true} /> : null}
         <hr />
       </Container>
     </Container>

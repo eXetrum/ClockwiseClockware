@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Spinner } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
+import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, AdminOrdersList } from '../../../components';
 import { getOrders, deleteOrderById, patchOrderById } from '../../../api';
@@ -121,15 +122,15 @@ const AdminDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <AdminOrdersList
             orders={orders}
             onRemove={onOrderRemove}
@@ -137,7 +138,7 @@ const AdminDashboardOrdersPage = () => {
             onCancel={doOrderCancel}
             isPending={isPending}
           />
-        )}
+        ) : null}
         <hr />
       </Container>
     </Container>

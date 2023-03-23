@@ -1,131 +1,45 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Form, FormGroup, FormControl, Spinner } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
+import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import { Header, ErrorContainer, AdminClientsList, ModalForm } from '../../../components';
-import { createClient, deleteClientById, getClients, resetPassword, resendEmailConfirmation } from '../../../api';
-import { getErrorText, validateEmail } from '../../../utils';
+import { Header, ErrorContainer, AdminClientsList, ClientForm } from '../../../components';
 
-const initEmptyClient = () => ({ email: '', password: '', name: '' });
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchClients, addClient, deleteClient } from '../../../store/reducers/ActionCreators';
+import { clientSlice } from '../../../store/reducers';
+
+import { ERROR_TYPE } from '../../../constants';
 
 const AdminDashboardClientsPage = () => {
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  const [clients, setClients] = useState([]);
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [newClient, setNewClient] = useState(initEmptyClient());
-  const [isPending, setPending] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(
-    () => newClient && newClient?.name?.length >= 3 && newClient.email && validateEmail(newClient.email) && newClient.password,
-    [newClient],
-  );
-
-  const fetchInitialData = async (abortController) => {
-    setInitialLoading(true);
-    try {
-      const response = await getClients({ abortController });
-      if (response?.data?.clients) {
-        const { clients } = response.data;
-        setClients(clients);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const doCreateClient = async (client) => {
-    setPending(true);
-    try {
-      const response = await createClient({ client });
-      if (response?.data?.client) {
-        const { client } = response.data;
-        setClients([client, ...clients]);
-        setNewClient(initEmptyClient());
-        setShowAddForm(false);
-        enqueueSnackbar(`Client "${client.email}" created`, { variant: 'success' });
-      }
-    } catch (e) {
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const doDeleteClientById = async (id) => {
-    setPending(true);
-    try {
-      await deleteClientById({ id });
-      const removedClient = clients.find((item) => item.id === id);
-      setClients(clients.filter((item) => item.id !== id));
-      enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success' });
-    } catch (e) {
-      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== id));
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const doResetPassword = async (client) => {
-    try {
-      setPending(true);
-      const response = await resetPassword({ userId: client.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Password for ${client.email} has been successfully reset`, { variant: 'success' });
-      }
-    } catch (e) {
-      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const doResendEmailConfirmation = async (client) => {
-    try {
-      setPending(true);
-      const response = await resendEmailConfirmation({ userId: client.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
-      }
-    } catch (e) {
-      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
+  const { changeVisibilityAddForm, clearNotification } = clientSlice.actions;
+  const { clients, newClient, error, notification, isInitialLoading } = useSelector((state) => state.clientReducer);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [closeSnackbar]);
+    dispatch(fetchClients());
+  }, [dispatch]);
 
-  const onClientFormHide = () => {
-    setNewClient(initEmptyClient());
-    setShowAddForm(false);
-  };
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
 
-  const onClientFormSubmit = (event) => {
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
+
+  const onFormSubmit = (event) => {
     event.preventDefault();
-    doCreateClient(newClient);
+    dispatch(addClient(newClient));
   };
-  const onClientEmailChange = (event) => setNewClient((prev) => ({ ...prev, email: event.target.value }));
-  const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
-  const onClientPasswordChange = (event) => setNewClient((prev) => ({ ...prev, password: event.target.value }));
 
   const onClientRemove = async (clientId) => {
     const client = clients.find((item) => item.id === clientId);
@@ -136,11 +50,8 @@ const AdminDashboardClientsPage = () => {
       okButtonStyle: 'danger',
     });
 
-    if (result) doDeleteClientById(clientId);
+    if (result) dispatch(deleteClient(clientId));
   };
-
-  const onClientResetPassword = async (client) => doResetPassword(client);
-  const onClientResendEmailConfirmation = async (client) => doResendEmailConfirmation(client);
 
   return (
     <Container>
@@ -151,74 +62,30 @@ const AdminDashboardClientsPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
                 <Link to="#">
-                  <AddCircleOutlineOutlinedIcon onClick={() => setShowAddForm(true)} />
+                  <AddCircleOutlineOutlinedIcon onClick={() => dispatch(changeVisibilityAddForm(true))} />
                 </Link>
               </Col>
             </Row>
             <hr />
-            <AdminClientsList
-              clients={clients}
-              onRemove={onClientRemove}
-              onResetPassword={onClientResetPassword}
-              onResendEmailConfirmation={onClientResendEmailConfirmation}
-              isPending={isPending}
-            />
-          </>
-        )}
-        <hr />
+            <AdminClientsList clients={clients} onRemove={onClientRemove} />
 
-        <ModalForm
-          size="sm"
-          show={showAddForm}
-          title={'Add New Client'}
-          okText={'Create'}
-          onHide={onClientFormHide}
-          onSubmit={onClientFormSubmit}
-          pending={isPending}
-          isFormValid={isFormValid}
-          formContent={
-            <>
-              <FormGroup className="mb-3">
-                <Form.Label>Email:</Form.Label>
-                <FormControl
-                  type="text"
-                  name="clientEmail"
-                  autoFocus
-                  onChange={onClientEmailChange}
-                  value={newClient.email}
-                  disabled={isPending}
-                />
-              </FormGroup>
-              <FormGroup className="mb-3">
-                <Form.Label>Password:</Form.Label>
-                <FormControl
-                  type="password"
-                  name="clientPassword"
-                  onChange={onClientPasswordChange}
-                  value={newClient.password}
-                  disabled={isPending}
-                />
-              </FormGroup>
-              <FormGroup className="mb-3">
-                <Form.Label>Name:</Form.Label>
-                <FormControl type="text" name="clientName" onChange={onClientNameChange} value={newClient.name} disabled={isPending} />
-              </FormGroup>
-            </>
-          }
-        />
+            <ClientForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Client'} isModal={true} />
+          </>
+        ) : null}
+        <hr />
       </Container>
     </Container>
   );

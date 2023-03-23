@@ -234,7 +234,6 @@ const resendEmailConfirmation = [
     body('userId').exists().withMessage('userId required').isString().withMessage('userId should be of string type'),
     async (req, res) => {
         try {
-            console.log('resendEmailConfirmation');
             const { userId } = req.body;
             const user = await User.findOne({ where: { id: userId } });
             if (!user) return res.status(404).json({ message: 'User not found' }).end();
