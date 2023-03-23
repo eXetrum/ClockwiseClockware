@@ -25,7 +25,7 @@ export const citySlice = createSlice({
   reducers: {
     changeVisibilityAddForm(state, action) {
       state.isShowAddForm = action.payload;
-      if (action.payload === false) state.newCity = initEmptyCity();
+      state.newCity = initEmptyCity();
     },
     changeNewCityField(state, action) {
       state.newCity[action.payload.name] = action.payload.value;
