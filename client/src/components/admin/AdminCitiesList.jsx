@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
+import { formatDecimal } from '../../utils';
 
 const AdminCitiesList = ({ cities, onRemove }) => {
   if (cities == null) return null;
@@ -18,8 +19,6 @@ const AdminCitiesList = ({ cities, onRemove }) => {
       </Container>
     );
   }
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
 
   return (
     <Container>

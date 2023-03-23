@@ -164,6 +164,7 @@ const OrderForm = ({
                   onRemove={onOrderCityRemove}
                   options={cities}
                   selectedValues={selectedCities}
+                  singleSelect={true}
                   selectionLimit={1}
                   disable={isPending}
                 />

@@ -87,7 +87,7 @@ const AdminEditCityPage = () => {
                     name="pricePerHour"
                     min={0}
                     step={0.05}
-                    value={formatDecimal(newCity.pricePerHour, 2)}
+                    value={formatDecimal(newCity.pricePerHour)}
                     disabled={isPending}
                     onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
                   />

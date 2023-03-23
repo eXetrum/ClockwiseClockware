@@ -1,15 +1,11 @@
 import axios from 'axios';
 
-const login = ({ abortController = null, ...params }) => axios.post('/login', { ...params }, { signal: abortController?.signal });
+export const login = ({ ...params }) => axios.post('/login', { ...params });
 
-const register = ({ abortController = null, ...params }) => axios.post('/register', { ...params }, { signal: abortController?.signal });
+export const register = ({ ...params }) => axios.post('/register', { ...params });
 
-const resetPassword = ({ abortController = null, ...params }) =>
-  axios.post('/reset_password', { ...params }, { signal: abortController?.signal });
+export const resetPassword = ({ ...params }) => axios.post('/reset_password', { ...params });
 
-const resendEmailConfirmation = ({ abortController = null, ...params }) =>
-  axios.post('/resend_email_confirmation', { ...params }, { signal: abortController?.signal });
+export const resendEmailConfirmation = ({ ...params }) => axios.post('/resend_email_confirmation', { ...params });
 
-const verifyEmail = ({ token, abortController = null }) => axios.get(`/verify/${token}`, { signal: abortController?.signal });
-
-export { login, register, resetPassword, resendEmailConfirmation, verifyEmail };
+export const verifyEmail = ({ token }) => axios.get(`/verify/${token}`);

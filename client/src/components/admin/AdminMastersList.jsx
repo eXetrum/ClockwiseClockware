@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Button, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Alert, Badge, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
@@ -10,7 +11,32 @@ import Typography from '@mui/material/Typography';
 import ViewMasterCard from '../master/ViewMasterCard';
 import StarRating from '../common/StarRating';
 
-const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }) => {
+import { useDispatch } from 'react-redux';
+import { resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/reducers/ActionCreators';
+
+const MasterTableList = ({ masters, onRemove }) => {
+  const dispatch = useDispatch();
+
+  const onResetPassword = async (master) => {
+    const result = await confirm(`Do you want to reset password for "${master.email}" master ?`, {
+      title: 'Confirm',
+      okText: 'Yes',
+      okButtonStyle: 'danger',
+    });
+
+    if (result) dispatch(resetPasswordMaster(master.id));
+  };
+
+  const onResendEmailConfirmation = async (master) => {
+    const result = await confirm(`Do you want to resend email confirmation for "${master.email}" master ?`, {
+      title: 'Confirm',
+      okText: 'Yes',
+      okButtonStyle: 'danger',
+    });
+
+    if (result) dispatch(resendEmailConfirmationMaster(master.id));
+  };
+
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
@@ -52,11 +78,27 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
               </td>
               <td className="text-center p-2 m-0 col-2">
                 <Stack spacing={1}>
-                  <Button size="sm" variant="outline-warning" onClick={() => onResetPassword(master)} disabled={isPending}>
+                  <Button
+                    size="sm"
+                    variant="outline-warning"
+                    onClick={() => onResetPassword(master)}
+                    disabled={master.isPendingResetPassword}
+                  >
+                    {master.isPendingResetPassword ? (
+                      <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                    ) : null}
                     Reset password
                   </Button>
                   {!master.isEmailVerified ? (
-                    <Button size="sm" variant="outline-primary" onClick={() => onResendEmailConfirmation(master)} disabled={isPending}>
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      onClick={() => onResendEmailConfirmation(master)}
+                      disabled={master.isPendingResendEmailConfirmation}
+                    >
+                      {master.isPendingResendEmailConfirmation ? (
+                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                      ) : null}
                       Resend email confirmation
                     </Button>
                   ) : null}
@@ -98,7 +140,7 @@ const MasterCardList = ({ masters, onSelect }) => {
   );
 };
 
-const AdminMastersList = ({ masters, onSelect, onRemove, onResetPassword, onResendEmailConfirmation, isPending, isAdminView = true }) => {
+const AdminMastersList = ({ masters, onSelect, onRemove, isAdminView = true }) => {
   if (masters == null) return null;
   const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
 
@@ -114,8 +156,8 @@ const AdminMastersList = ({ masters, onSelect, onRemove, onResetPassword, onRese
     );
   }
 
-  if (isAdminView) return <MasterTableList {...{ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }} />;
-  return <MasterCardList {...{ masters, onSelect }} />;
+  if (isAdminView) return <MasterTableList masters={masters} onRemove={onRemove} />;
+  return <MasterCardList masters={masters} onSelect={onSelect} />;
 };
 
 export default AdminMastersList;

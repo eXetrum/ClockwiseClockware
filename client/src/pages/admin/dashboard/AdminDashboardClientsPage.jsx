@@ -203,10 +203,6 @@ const AdminDashboardClientsPage = () => {
                 />
               </FormGroup>
               <FormGroup className="mb-3">
-                <Form.Label>Name:</Form.Label>
-                <FormControl type="text" name="clientName" onChange={onClientNameChange} value={newClient.name} disabled={isPending} />
-              </FormGroup>
-              <FormGroup className="mb-3">
                 <Form.Label>Password:</Form.Label>
                 <FormControl
                   type="password"
@@ -215,6 +211,10 @@ const AdminDashboardClientsPage = () => {
                   value={newClient.password}
                   disabled={isPending}
                 />
+              </FormGroup>
+              <FormGroup className="mb-3">
+                <Form.Label>Name:</Form.Label>
+                <FormControl type="text" name="clientName" onChange={onClientNameChange} value={newClient.name} disabled={isPending} />
               </FormGroup>
             </>
           }

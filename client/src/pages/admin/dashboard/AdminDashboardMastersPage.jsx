@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Form, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -6,142 +6,57 @@ import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import Multiselect from 'multiselect-react-dropdown';
 import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
-import { getCities, getMasters, createMaster, deleteMasterById, resetPassword, resendEmailConfirmation } from '../../../api';
-import { getErrorText, validateEmail } from '../../../utils';
 
-const initEmptyMaster = () => ({
-  name: '',
-  email: '',
-  password: '',
-  rating: 0,
-  isApprovedByAdmin: false,
-  cities: [],
-});
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCities, fetchMasters, addMaster, deleteMaster } from '../../../store/reducers/ActionCreators';
+import { masterSlice } from '../../../store/reducers';
+
+import { validateEmail } from '../../../utils';
+import { ERROR_TYPE } from '../../../constants';
 
 const AdminDashboardMasters = () => {
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  const [cities, setCities] = useState([]);
-  const [masters, setMasters] = useState([]);
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { changeVisibilityAddForm, changeNewMasterField, clearNotification } = masterSlice.actions;
+  const {
+    masters,
+    newMaster,
+    error,
+    notification,
+    isInitialLoading: isInitialLoadingMasters,
+    isShowAddForm,
+    isPending,
+  } = useSelector((state) => state.masterReducer);
 
-  const [newMaster, setNewMaster] = useState(initEmptyMaster());
-  const [isPending, setPending] = useState(false);
-  const [showAddForm, setShowAddForm] = useState(false);
-
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(
-    () => newMaster.name && newMaster.email && validateEmail(newMaster.email) && newMaster.password && newMaster.cities.length > 0,
-    [newMaster],
-  );
-
-  const fetchInitialData = async (abortController) => {
-    setInitialLoading(true);
-    try {
-      let response = await getCities({ abortController });
-      if (response?.data?.cities) {
-        const { cities } = response.data;
-        setCities(cities);
-      }
-      response = await getMasters({ abortController });
-      if (response?.data?.masters) {
-        const { masters } = response.data;
-        setMasters(masters);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const doCreateMaster = async (master) => {
-    setPending(true);
-    try {
-      const response = await createMaster({ master });
-      if (response?.data?.master) {
-        const { master } = response.data;
-        setMasters([master, ...masters]);
-        setNewMaster(initEmptyMaster());
-        setShowAddForm(false);
-        enqueueSnackbar(`Master "${master.name}" created`, { variant: 'success' });
-      }
-    } catch (e) {
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const doDeleteMasterById = async (id) => {
-    setPending(true);
-    try {
-      await deleteMasterById({ id });
-      const removedMaster = masters.find((item) => item.id === id);
-      setMasters(masters.filter((item) => item.id !== id));
-      enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
-    } catch (e) {
-      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== id));
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const doResetPassword = async (master) => {
-    try {
-      setPending(true);
-      await resetPassword({ userId: master.id });
-      enqueueSnackbar(`Password for ${master.email} has been successfully reset`, { variant: 'success' });
-    } catch (e) {
-      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const doResendEmailConfirmation = async (master) => {
-    try {
-      setPending(true);
-      await resendEmailConfirmation({ userId: master.id });
-      enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
-    } catch (e) {
-      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
+  const { cities, isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [closeSnackbar]);
+    dispatch(fetchCities());
+    dispatch(fetchMasters());
+  }, [dispatch]);
 
-  const onFormHide = () => {
-    setNewMaster(initEmptyMaster());
-    setShowAddForm(false);
-  };
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    doCreateMaster(newMaster);
-  };
+  const isInitialLoading = useMemo(
+    () => isInitialLoadingCities || isInitialLoadingMasters,
+    [isInitialLoadingCities, isInitialLoadingMasters],
+  );
 
-  const onMasterEmailChange = (event) => setNewMaster((prev) => ({ ...prev, email: event.target.value }));
-  const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));
-  const onMasterPasswordChange = (event) => setNewMaster((prev) => ({ ...prev, password: event.target.value }));
-  const onMasterRatingChange = (value) => setNewMaster((prev) => ({ ...prev, rating: value }));
-  const onMasterIsApprovedByAdminChange = (event) => setNewMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
 
-  const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
-  const onMasterCityRemove = (selectedList, removedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
+  const isFormValid = useCallback(
+    () => newMaster.email && validateEmail(newMaster.email) && newMaster.password && newMaster.name && newMaster.cities.length > 0,
+    [newMaster],
+  );
 
   const onMasterRemove = async (masterId) => {
     const master = masters.find((item) => item.id === masterId);
@@ -152,11 +67,8 @@ const AdminDashboardMasters = () => {
       okButtonStyle: 'danger',
     });
 
-    if (result) doDeleteMasterById(masterId);
+    if (result) dispatch(deleteMaster(masterId));
   };
-
-  const onMasterResetPassword = async (master) => doResetPassword(master);
-  const onMasterResendEmailConfirmation = async (master) => doResendEmailConfirmation(master);
 
   return (
     <Container>
@@ -180,29 +92,26 @@ const AdminDashboardMasters = () => {
             <Row className="justify-content-md-center">
               <Col md="auto">
                 <Link to="#">
-                  <AddCircleOutlineOutlinedIcon onClick={() => setShowAddForm(true)} />
+                  <AddCircleOutlineOutlinedIcon onClick={() => dispatch(changeVisibilityAddForm(true))} />
                 </Link>
               </Col>
             </Row>
             <hr />
-            <AdminMastersList
-              masters={masters}
-              onRemove={onMasterRemove}
-              onResetPassword={onMasterResetPassword}
-              onResendEmailConfirmation={onMasterResendEmailConfirmation}
-              isPending={isPending}
-            />
+            <AdminMastersList masters={masters} onRemove={onMasterRemove} />
           </>
         )}
         <hr />
 
         <ModalForm
           size="sm"
-          show={showAddForm}
+          show={isShowAddForm}
           title={'Add New Master'}
           okText={'Create'}
-          onHide={onFormHide}
-          onSubmit={onFormSubmit}
+          onHide={() => dispatch(changeVisibilityAddForm(false))}
+          onSubmit={(event) => {
+            event.preventDefault();
+            dispatch(addMaster(newMaster));
+          }}
           isFormValid={isFormValid}
           pending={isPending}
           formContent={
@@ -211,22 +120,11 @@ const AdminDashboardMasters = () => {
                 <Form.Label>Email:</Form.Label>
                 <Form.Control
                   type="email"
-                  name="masterEmail"
+                  name="email"
                   autoFocus
                   required
-                  onChange={onMasterEmailChange}
+                  onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
                   value={newMaster.email}
-                  disabled={isPending}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Name:</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="masterName"
-                  required
-                  onChange={onMasterNameChange}
-                  value={newMaster.name}
                   disabled={isPending}
                 />
               </Form.Group>
@@ -234,18 +132,29 @@ const AdminDashboardMasters = () => {
                 <Form.Label>Password:</Form.Label>
                 <Form.Control
                   type="password"
-                  name="masterPassword"
+                  name="password"
                   required
-                  onChange={onMasterPasswordChange}
+                  onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
                   value={newMaster.password}
+                  disabled={isPending}
+                />
+              </Form.Group>
+              <Form.Group className="mb-3">
+                <Form.Label>Name:</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="name"
+                  required
+                  onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
+                  value={newMaster.name}
                   disabled={isPending}
                 />
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Rating:</Form.Label>
                 <StarRating
-                  onRatingChange={onMasterRatingChange}
-                  onRatingReset={onMasterRatingChange}
+                  onRatingChange={(value) => dispatch(changeNewMasterField({ name: 'rating', value }))}
+                  onRatingReset={(value) => dispatch(changeNewMasterField({ name: 'rating', value }))}
                   value={newMaster.rating}
                   total={5}
                   readonly={isPending}
@@ -255,8 +164,8 @@ const AdminDashboardMasters = () => {
               <Form.Group className="mb-3">
                 <Form.Label>Master cities:</Form.Label>
                 <Multiselect
-                  onSelect={onMasterCitySelect}
-                  onRemove={onMasterCityRemove}
+                  onSelect={(selectedList, selectedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList }))}
+                  onRemove={(selectedList, removedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList }))}
                   options={cities}
                   selectedValues={newMaster.cities}
                   displayValue="name"
@@ -267,9 +176,9 @@ const AdminDashboardMasters = () => {
               <Form.Group className="mb-3">
                 <Form.Check
                   type="checkbox"
-                  name="clientIsApprovedByAdmin"
+                  name="isApprovedByAdmin"
                   checked={newMaster.isApprovedByAdmin}
-                  onChange={onMasterIsApprovedByAdminChange}
+                  onChange={({ target: { name, checked: value } }) => dispatch(changeNewMasterField({ name, value }))}
                   disabled={isPending}
                   label="approved"
                 />

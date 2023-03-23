@@ -1,14 +1,11 @@
 import axios from 'axios';
 
-const getMasters = ({ abortController = null }) => axios.get('/masters', { signal: abortController?.signal });
+export const getMasters = () => axios.get('/masters');
 
-const createMaster = ({ abortController = null, ...params }) => axios.post('/masters', { ...params }, { signal: abortController?.signal });
+export const createMaster = ({ ...params }) => axios.post('/masters', { ...params });
 
-const deleteMasterById = ({ id, abortController = null }) => axios.delete(`/masters/${id}`, { signal: abortController?.signal });
+export const deleteMasterById = ({ id }) => axios.delete(`/masters/${id}`);
 
-const getMasterById = ({ id, abortController = null }) => axios.get(`/masters/${id}`, { signal: abortController?.signal });
+export const getMasterById = ({ id }) => axios.get(`/masters/${id}`);
 
-const updateMasterById = ({ id, abortController = null, ...params }) =>
-  axios.put(`/masters/${id}`, { ...params }, { signal: abortController?.signal });
-
-export { getMasters, createMaster, deleteMasterById, getMasterById, updateMasterById };
+export const updateMasterById = ({ id, ...params }) => axios.put(`/masters/${id}`, { ...params });

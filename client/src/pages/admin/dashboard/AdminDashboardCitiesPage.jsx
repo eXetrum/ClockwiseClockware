@@ -15,9 +15,9 @@ import { ERROR_TYPE } from '../../../constants';
 
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar } = useSnackbar();
-
   const dispatch = useDispatch();
-  const { changeVisibilityNewCityForm, changeNewCityField, clearNotification } = citySlice.actions;
+
+  const { changeVisibilityAddForm, changeNewCityField, clearNotification } = citySlice.actions;
   const { cities, newCity, error, notification, isInitialLoading, isShowAddForm, isPending } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
@@ -72,7 +72,7 @@ const AdminDashboardCitiesPage = () => {
             <Row className="justify-content-md-center">
               <Col md="auto">
                 <Link to="#">
-                  <AddCircleOutlineOutlinedIcon onClick={() => dispatch(changeVisibilityNewCityForm(true))} />
+                  <AddCircleOutlineOutlinedIcon onClick={() => dispatch(changeVisibilityAddForm(true))} />
                 </Link>
               </Col>
             </Row>
@@ -87,7 +87,7 @@ const AdminDashboardCitiesPage = () => {
           show={isShowAddForm}
           title={'Add New City'}
           okText={'Create'}
-          onHide={() => dispatch(changeVisibilityNewCityForm(false))}
+          onHide={() => dispatch(changeVisibilityAddForm(false))}
           onSubmit={(event) => {
             event.preventDefault();
             dispatch(addCity(newCity));
@@ -102,6 +102,7 @@ const AdminDashboardCitiesPage = () => {
                   type="text"
                   name="name"
                   autoFocus
+                  required
                   value={newCity.name}
                   disabled={isPending}
                   onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
@@ -112,9 +113,10 @@ const AdminDashboardCitiesPage = () => {
                 <Form.Control
                   type="number"
                   name="pricePerHour"
+                  required
                   min={0}
                   step={0.05}
-                  value={formatDecimal(newCity.pricePerHour, 2)}
+                  value={formatDecimal(newCity.pricePerHour)}
                   disabled={isPending}
                   onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
                 />

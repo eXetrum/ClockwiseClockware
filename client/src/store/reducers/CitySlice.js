@@ -16,28 +16,26 @@ const initialState = {
   isInitialLoading: false,
   isShowAddForm: false,
   isPending: false,
-  notification: {},
+  notification: createNotification({}),
 };
 
 export const citySlice = createSlice({
   name: 'city',
   initialState,
   reducers: {
-    changeVisibilityNewCityForm(state, action) {
+    changeVisibilityAddForm(state, action) {
       state.isShowAddForm = action.payload;
       if (action.payload === false) state.newCity = initEmptyCity();
     },
     changeNewCityField(state, action) {
       state.newCity[action.payload.name] = action.payload.value;
     },
-    clearNotification(state, action) {
+    clearNotification(state, _) {
       state.notification = createNotification({});
     },
-
-    /*getCityById(state, action) {},
-    updateCityById(state, action) {},*/
   },
   extraReducers: (builder) => {
+    //#region Fetch all cities
     builder.addCase(fetchCities.pending, (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
@@ -51,8 +49,9 @@ export const citySlice = createSlice({
         state.isInitialLoading = false;
         state.error = action.payload;
       });
-    ////
-    builder.addCase(addCity.pending, (state, action) => {
+    //#endregion
+    //#region Create new city
+    builder.addCase(addCity.pending, (state, _) => {
       state.isPending = true;
       state.error = initEmptyError();
     }),
@@ -69,8 +68,9 @@ export const citySlice = createSlice({
         if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
-    ////
-    builder.addCase(deleteCity.pending, (state, action) => {
+    //#endregion
+    //#region Delete city by id
+    builder.addCase(deleteCity.pending, (state, _) => {
       state.isPending = true;
       state.error = initEmptyError();
     }),
@@ -91,8 +91,9 @@ export const citySlice = createSlice({
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
-    /////
-    builder.addCase(fetchCity.pending, (state, action) => {
+    //#endregion
+    //#region Get city by id
+    builder.addCase(fetchCity.pending, (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
       state.newCity = initEmptyCity();
@@ -108,9 +109,9 @@ export const citySlice = createSlice({
         state.isInitialLoading = false;
         state.error = action.payload;
       });
-
-    /////
-    builder.addCase(updateCity.pending, (state, action) => {
+    //#endregion
+    //#region Update city by id
+    builder.addCase(updateCity.pending, (state, _) => {
       state.isPending = true;
       state.error = initEmptyError();
     }),
@@ -119,7 +120,7 @@ export const citySlice = createSlice({
         state.error = initEmptyError();
         state.newCity = action.payload;
         state.oldCity = action.payload;
-        state.notification = createNotification({ text: `City updated`, variant: 'success' });
+        state.notification = createNotification({ text: 'City updated', variant: 'success' });
       }),
       builder.addCase(updateCity.rejected, (state, action) => {
         state.isPending = false;
@@ -127,6 +128,7 @@ export const citySlice = createSlice({
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
+    //#endregion
   },
 });
 
