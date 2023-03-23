@@ -33,7 +33,7 @@ export const masterSlice = createSlice({
   reducers: {
     changeVisibilityAddForm(state, action) {
       state.isShowAddForm = action.payload;
-      if (action.payload === false) state.newMaster = initEmptyMaster();
+      state.newMaster = initEmptyMaster();
     },
     changeNewMasterField(state, action) {
       state.newMaster[action.payload.name] = action.payload.value;

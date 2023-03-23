@@ -1,101 +1,50 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container, Spinner } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { Header, ErrorContainer, MasterForm } from '../../../components';
-import { getCities, getMasterById, updateMasterById } from '../../../api';
-import { isGlobalError, getErrorText } from '../../../utils';
 
-const initEmptyMaster = () => ({
-  name: '',
-  email: '',
-  password: '',
-  rating: 0,
-  isApprovedByAdmin: false,
-  cities: [],
-});
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCities, fetchMaster, updateMaster } from '../../../store/reducers/ActionCreators';
+import { masterSlice } from '../../../store/reducers';
+
+import { ERROR_TYPE } from '../../../constants';
 
 const AdminEditMasterPage = () => {
   const { id } = useParams();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  const [cities, setCities] = useState([]);
-  const [master, setMaster] = useState(initEmptyMaster());
-  const [originalMaster, setOriginalMaster] = useState(initEmptyMaster());
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [isPending, setPending] = useState(false);
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-
-  const fetchInitialData = async (id, abortController) => {
-    setInitialLoading(true);
-    try {
-      let response = await getCities({ abortController });
-      if (response?.data?.cities) {
-        const { cities } = response.data;
-        setCities(cities);
-      }
-
-      response = await getMasterById({ id, abortController });
-      if (response?.data?.master) {
-        const { master } = response.data;
-        setMaster(master);
-        setOriginalMaster(master);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const doUpdateMasterById = async (id, master) => {
-    setPending(true);
-    try {
-      await updateMasterById({ id, master });
-      setMaster(master);
-      setOriginalMaster(master);
-      enqueueSnackbar('Master updated', { variant: 'success' });
-    } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      setMaster(originalMaster);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
+  const { clearNotification } = masterSlice.actions;
+  const { newMaster, error, notification, isInitialLoading: isInitialLoadingMaster } = useSelector((state) => state.masterReducer);
+  const { isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(id, abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [id, closeSnackbar]);
+    dispatch(fetchCities());
+    dispatch(fetchMaster(id));
+  }, [id, dispatch]);
+
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+
+  const isInitialLoading = useMemo(
+    () => isInitialLoadingCities || isInitialLoadingMaster,
+    [isInitialLoadingCities, isInitialLoadingMaster],
+  );
+
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
 
   const onFormSubmit = (event) => {
     event.preventDefault();
-    doUpdateMasterById(id, master);
-  };
-
-  const onMasterEmailChange = (event) => setMaster((prevState) => ({ ...prevState, email: event.target.value }));
-  const onMasterNameChange = (event) => setMaster((prevState) => ({ ...prevState, name: event.target.value }));
-  const onMasterRatingChange = (value) => setMaster((prevState) => ({ ...prevState, rating: value }));
-  const onMasterIsApprovedByAdminChange = (event) => setMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
-  const onMasterCitySelect = (selectedList, selectedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
-  const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
-
-  const handlers = {
-    onFormSubmit,
-    onMasterEmailChange,
-    onMasterNameChange,
-    onMasterRatingChange,
-    onMasterIsApprovedByAdminChange,
-    onMasterCitySelect,
-    onMasterCityRemove,
+    dispatch(updateMaster(newMaster));
   };
 
   return (
@@ -119,7 +68,8 @@ const AdminEditMasterPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterForm {...{ isPending, master, cities, ...handlers }} />}
+        {isComponentReady && <MasterForm onSubmit={onFormSubmit} isHidePassword={true} />}
+
         <hr />
       </Container>
     </Container>

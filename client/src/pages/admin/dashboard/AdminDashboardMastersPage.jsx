@@ -1,35 +1,31 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Form, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
-import Multiselect from 'multiselect-react-dropdown';
-import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
+import { Header, ErrorContainer, AdminMastersList, MasterForm } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, fetchMasters, addMaster, deleteMaster } from '../../../store/reducers/ActionCreators';
 import { masterSlice } from '../../../store/reducers';
 
-import { validateEmail } from '../../../utils';
 import { ERROR_TYPE } from '../../../constants';
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { changeVisibilityAddForm, changeNewMasterField, clearNotification } = masterSlice.actions;
+  const { changeVisibilityAddForm, clearNotification } = masterSlice.actions;
   const {
     masters,
     newMaster,
     error,
     notification,
     isInitialLoading: isInitialLoadingMasters,
-    isShowAddForm,
-    isPending,
   } = useSelector((state) => state.masterReducer);
 
-  const { cities, isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
+  const { isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
     dispatch(fetchCities());
@@ -53,10 +49,10 @@ const AdminDashboardMasters = () => {
     [isInitialLoading, error],
   );
 
-  const isFormValid = useCallback(
-    () => newMaster.email && validateEmail(newMaster.email) && newMaster.password && newMaster.name && newMaster.cities.length > 0,
-    [newMaster],
-  );
+  const onFormSubmit = (event) => {
+    event.preventDefault();
+    dispatch(addMaster(newMaster));
+  };
 
   const onMasterRemove = async (masterId) => {
     const master = masters.find((item) => item.id === masterId);
@@ -98,94 +94,11 @@ const AdminDashboardMasters = () => {
             </Row>
             <hr />
             <AdminMastersList masters={masters} onRemove={onMasterRemove} />
+
+            <MasterForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Master'} isModal={true} />
           </>
         )}
         <hr />
-
-        <ModalForm
-          size="sm"
-          show={isShowAddForm}
-          title={'Add New Master'}
-          okText={'Create'}
-          onHide={() => dispatch(changeVisibilityAddForm(false))}
-          onSubmit={(event) => {
-            event.preventDefault();
-            dispatch(addMaster(newMaster));
-          }}
-          isFormValid={isFormValid}
-          pending={isPending}
-          formContent={
-            <>
-              <Form.Group className="mb-3">
-                <Form.Label>Email:</Form.Label>
-                <Form.Control
-                  type="email"
-                  name="email"
-                  autoFocus
-                  required
-                  onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
-                  value={newMaster.email}
-                  disabled={isPending}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Password:</Form.Label>
-                <Form.Control
-                  type="password"
-                  name="password"
-                  required
-                  onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
-                  value={newMaster.password}
-                  disabled={isPending}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Name:</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="name"
-                  required
-                  onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
-                  value={newMaster.name}
-                  disabled={isPending}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Rating:</Form.Label>
-                <StarRating
-                  onRatingChange={(value) => dispatch(changeNewMasterField({ name: 'rating', value }))}
-                  onRatingReset={(value) => dispatch(changeNewMasterField({ name: 'rating', value }))}
-                  value={newMaster.rating}
-                  total={5}
-                  readonly={isPending}
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Label>Master cities:</Form.Label>
-                <Multiselect
-                  onSelect={(selectedList, selectedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList }))}
-                  onRemove={(selectedList, removedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList }))}
-                  options={cities}
-                  selectedValues={newMaster.cities}
-                  displayValue="name"
-                  disable={isPending}
-                />
-              </Form.Group>
-
-              <Form.Group className="mb-3">
-                <Form.Check
-                  type="checkbox"
-                  name="isApprovedByAdmin"
-                  checked={newMaster.isApprovedByAdmin}
-                  onChange={({ target: { name, checked: value } }) => dispatch(changeNewMasterField({ name, value }))}
-                  disabled={isPending}
-                  label="approved"
-                />
-              </Form.Group>
-            </>
-          }
-        />
       </Container>
     </Container>
   );

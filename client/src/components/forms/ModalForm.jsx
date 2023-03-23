@@ -1,11 +1,11 @@
 import React from 'react';
 import { Modal, Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 
-const ModalForm = ({ formContent, pending, onSubmit, isFormValid, title, okText = 'Ok', cancelText = 'Cancel', ...props }) => {
+const ModalForm = ({ formContent, isPending, onSubmit, isFormValid, title, okText = 'Ok', cancelText = 'Cancel', ...props }) => {
   return (
     <Modal {...props} aria-labelledby="contained-modal-title-vcenter" centered animation={true} backdrop="static" keyboard={false}>
       <>
-        <Form onSubmit={onSubmit} disabled={pending}>
+        <Form onSubmit={onSubmit} disabled={isPending}>
           <Modal.Header closeButton>
             <Modal.Title id="contained-modal-title-vcenter">{title}</Modal.Title>
           </Modal.Header>
@@ -20,8 +20,8 @@ const ModalForm = ({ formContent, pending, onSubmit, isFormValid, title, okText 
             <Container>
               <Row className="align-items-center">
                 <Col xs>
-                  <Button variant="success" type="submit" disabled={!isFormValid() || pending}>
-                    {pending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                  <Button variant="success" type="submit" disabled={!isFormValid() || isPending}>
+                    {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                     {okText}
                   </Button>
                 </Col>

@@ -15,8 +15,8 @@ import { ERROR_TYPE } from '../../../constants';
 const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
-
   const dispatch = useDispatch();
+
   const { changeNewCityField, clearNotification } = citySlice.actions;
   const { newCity, error, notification, isInitialLoading, isPending } = useSelector((state) => state.cityReducer);
 
