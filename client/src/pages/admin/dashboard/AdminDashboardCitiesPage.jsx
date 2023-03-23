@@ -1,24 +1,23 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Form, Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import { Header, ErrorContainer, AdminCitiesList, ModalForm } from '../../../components';
+import { Header, ErrorContainer, AdminCitiesList, CityForm } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, addCity, deleteCity } from '../../../store/reducers/ActionCreators';
 import { citySlice } from '../../../store/reducers';
 
-import { formatDecimal } from '../../../utils';
 import { ERROR_TYPE } from '../../../constants';
 
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { changeVisibilityAddForm, changeNewCityField, clearNotification } = citySlice.actions;
-  const { cities, newCity, error, notification, isInitialLoading, isShowAddForm, isPending } = useSelector((state) => state.cityReducer);
+  const { changeVisibilityAddForm, clearNotification } = citySlice.actions;
+  const { cities, newCity, error, notification, isInitialLoading } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
     dispatch(fetchCities());
@@ -36,7 +35,10 @@ const AdminDashboardCitiesPage = () => {
     [isInitialLoading, error],
   );
 
-  const isFormValid = useCallback(() => newCity.name, [newCity]);
+  const onFormSubmit = (event) => {
+    event.preventDefault();
+    dispatch(addCity(newCity));
+  };
 
   const onCityRemove = async (cityId) => {
     const city = cities.find((item) => item.id === cityId);
@@ -78,52 +80,11 @@ const AdminDashboardCitiesPage = () => {
             </Row>
             <hr />
             <AdminCitiesList cities={cities} onRemove={onCityRemove} />
+
+            <CityForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New City'} isModal={true} />
           </>
         )}
         <hr />
-
-        <ModalForm
-          size="sm"
-          show={isShowAddForm}
-          title={'Add New City'}
-          okText={'Create'}
-          onHide={() => dispatch(changeVisibilityAddForm(false))}
-          onSubmit={(event) => {
-            event.preventDefault();
-            dispatch(addCity(newCity));
-          }}
-          pending={isPending}
-          isFormValid={isFormValid}
-          formContent={
-            <>
-              <Form.Group className="mb-3">
-                <Form.Label>Name:</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="name"
-                  autoFocus
-                  required
-                  value={newCity.name}
-                  disabled={isPending}
-                  onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Price Per Hour (Employe rate):</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="pricePerHour"
-                  required
-                  min={0}
-                  step={0.05}
-                  value={formatDecimal(newCity.pricePerHour)}
-                  disabled={isPending}
-                  onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
-                />
-              </Form.Group>
-            </>
-          }
-        />
       </Container>
     </Container>
   );
