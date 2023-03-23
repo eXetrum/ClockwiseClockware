@@ -1,5 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { getCities, createCity, deleteCityById } from '../../api';
+import { getCities, createCity, deleteCityById, getCityById, updateCityById } from '../../api';
 import { getErrorType, getErrorText } from '../../utils';
 
 export const fetchCities = createAsyncThunk('city/fetchAll', async (_, thunkAPI) => {
@@ -20,11 +20,29 @@ export const addCity = createAsyncThunk('city/addCity', async (city, thunkAPI) =
   }
 });
 
-export const deleteCity = createAsyncThunk('city/deleteCity', async (city, thunkAPI) => {
+export const deleteCity = createAsyncThunk('city/deleteCity', async (id, thunkAPI) => {
   try {
-    await deleteCityById({ id: city.id });
+    await deleteCityById({ id });
+    return id;
+  } catch (error) {
+    return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
+  }
+});
+
+export const fetchCity = createAsyncThunk('city/fetchCity', async (id, thunkAPI) => {
+  try {
+    const response = await getCityById({ id });
+    return response.data.city;
+  } catch (error) {
+    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+  }
+});
+
+export const updateCity = createAsyncThunk('city/updateCity', async (city, thunkAPI) => {
+  try {
+    await updateCityById({ id: city.id, city });
     return city;
   } catch (error) {
-    return thunkAPI.rejectWithValue({ city, message: getErrorText(error), type: getErrorType(error) });
+    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }
 });

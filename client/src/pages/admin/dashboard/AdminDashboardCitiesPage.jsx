@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, addCity, deleteCity } from '../../../store/reducers/ActionCreators';
 import { citySlice } from '../../../store/reducers';
 
+import { formatDecimal } from '../../../utils';
 import { ERROR_TYPE } from '../../../constants';
 
 const AdminDashboardCitiesPage = () => {
@@ -46,7 +47,7 @@ const AdminDashboardCitiesPage = () => {
       okButtonStyle: 'danger',
     });
 
-    if (result) dispatch(deleteCity(city));
+    if (result) dispatch(deleteCity(cityId));
   };
 
   return (
@@ -101,9 +102,9 @@ const AdminDashboardCitiesPage = () => {
                   type="text"
                   name="name"
                   autoFocus
-                  onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
                   value={newCity.name}
                   disabled={isPending}
+                  onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
                 />
               </Form.Group>
               <Form.Group>
@@ -113,9 +114,9 @@ const AdminDashboardCitiesPage = () => {
                   name="pricePerHour"
                   min={0}
                   step={0.05}
-                  onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
-                  value={parseFloat(newCity.pricePerHour).toFixed(2)}
+                  value={formatDecimal(newCity.pricePerHour, 2)}
                   disabled={isPending}
+                  onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
                 />
               </Form.Group>
             </>

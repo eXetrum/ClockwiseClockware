@@ -1,76 +1,41 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../../components/common';
-import { getCityById, updateCityById } from '../../../api';
-import { isGlobalError, getErrorText } from '../../../utils';
 
-const formatDecimal = (value) => parseFloat(value).toFixed(2);
-const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCity, updateCity } from '../../../store/reducers/ActionCreators';
+import { citySlice } from '../../../store/reducers';
+
+import { formatDecimal } from '../../../utils';
+import { ERROR_TYPE } from '../../../constants';
 
 const AdminEditCityPage = () => {
   const { id } = useParams();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
-  const [city, setCity] = useState(initEmptyCity());
-  const [originalCity, setOriginalCity] = useState(initEmptyCity());
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
-
-  const [pending, setPending] = useState(false);
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(() => city.name, [city]);
-
-  const fetchCityById = async (id, abortController) => {
-    setInitialLoading(true);
-    try {
-      const response = await getCityById({ id, abortController });
-      if (response?.data?.city) {
-        const { city } = response.data;
-        setCity(city);
-        setOriginalCity(city);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
-
-  const doUpdateCityById = async (id, city) => {
-    setPending(true);
-    try {
-      await updateCityById({ id, city });
-      setCity(city);
-      setOriginalCity(city);
-      enqueueSnackbar('City updated', { variant: 'success' });
-    } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      setCity(originalCity);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
+  const dispatch = useDispatch();
+  const { changeNewCityField, clearNotification } = citySlice.actions;
+  const { newCity, error, notification, isInitialLoading, isPending } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchCityById(id, abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [id, closeSnackbar]);
+    dispatch(fetchCity(id));
+  }, [id, dispatch]);
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    doUpdateCityById(id, city);
-  };
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
 
-  const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
-  const onCityPricePerHourChange = (event) => setCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
+  const isFormValid = useCallback(() => newCity.name, [newCity]);
 
   return (
     <Container>
@@ -96,10 +61,24 @@ const AdminEditCityPage = () => {
         {isComponentReady && (
           <Row className="justify-content-md-center">
             <Col md="auto">
-              <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
+              <Form
+                inline="true"
+                className="d-flex align-items-end"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  dispatch(updateCity(newCity));
+                }}
+              >
                 <Form.Group className="me-3">
                   <Form.Label>Name:</Form.Label>
-                  <Form.Control type="text" name="city" autoFocus disabled={pending} value={city.name} onChange={onCityNameChange} />
+                  <Form.Control
+                    type="text"
+                    name="name"
+                    autoFocus
+                    value={newCity.name}
+                    disabled={isPending}
+                    onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
+                  />
                 </Form.Group>
                 <Form.Group className="me-3">
                   <Form.Label>Price Per Hour (Employe rate):</Form.Label>
@@ -107,13 +86,13 @@ const AdminEditCityPage = () => {
                     type="number"
                     name="pricePerHour"
                     min={0}
-                    step={0.25}
-                    onChange={onCityPricePerHourChange}
-                    value={formatDecimal(city.pricePerHour)}
-                    disabled={pending}
+                    step={0.05}
+                    value={formatDecimal(newCity.pricePerHour, 2)}
+                    disabled={isPending}
+                    onChange={({ target: { name, value } }) => dispatch(changeNewCityField({ name, value }))}
                   />
                 </Form.Group>
-                <Button className="ms-2" type="submit" variant="success" disabled={pending || !isFormValid()}>
+                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid()}>
                   Save
                 </Button>
               </Form>

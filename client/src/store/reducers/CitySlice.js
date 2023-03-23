@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchCities, addCity, deleteCity } from './ActionCreators';
+import { fetchCities, addCity, deleteCity, fetchCity, updateCity } from './ActionCreators';
 import { isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE } from '../../constants';
 
@@ -11,6 +11,7 @@ const createNotification = ({ text = '', variant = '' }) => ({ text, variant });
 const initialState = {
   cities: [],
   newCity: initEmptyCity(),
+  oldCity: initEmptyCity(),
   error: initEmptyError(),
   isInitialLoading: false,
   isShowAddForm: false,
@@ -74,19 +75,56 @@ export const citySlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteCity.fulfilled, (state, action) => {
-        state.cities = state.cities.filter((city) => city.id !== action.payload.id);
+        const removedCity = state.cities.find((city) => city.id === action.payload);
+        state.cities = state.cities.filter((city) => city.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${action.payload.name}" removed`, variant: 'success' });
+        state.notification = createNotification({ text: `City "${removedCity.name}" removed`, variant: 'success' });
       }),
       builder.addCase(deleteCity.rejected, (state, action) => {
         state.isPending = false;
 
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-          state.cities = state.cities.filter((item) => item.id !== action.payload.city.id);
+          state.cities = state.cities.filter((city) => city.id !== action.payload.id);
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
+        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+      });
+    /////
+    builder.addCase(fetchCity.pending, (state, action) => {
+      state.isInitialLoading = true;
+      state.error = initEmptyError();
+      state.newCity = initEmptyCity();
+      state.oldCity = initEmptyCity();
+    }),
+      builder.addCase(fetchCity.fulfilled, (state, action) => {
+        state.isInitialLoading = false;
+        state.error = initEmptyError();
+        state.newCity = action.payload;
+        state.oldCity = action.payload;
+      }),
+      builder.addCase(fetchCity.rejected, (state, action) => {
+        state.isInitialLoading = false;
+        state.error = action.payload;
+      });
+
+    /////
+    builder.addCase(updateCity.pending, (state, action) => {
+      state.isPending = true;
+      state.error = initEmptyError();
+    }),
+      builder.addCase(updateCity.fulfilled, (state, action) => {
+        state.isPending = false;
+        state.error = initEmptyError();
+        state.newCity = action.payload;
+        state.oldCity = action.payload;
+        state.notification = createNotification({ text: `City updated`, variant: 'success' });
+      }),
+      builder.addCase(updateCity.rejected, (state, action) => {
+        state.isPending = false;
+        state.newCity = state.oldCity;
+        if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
         else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
   },

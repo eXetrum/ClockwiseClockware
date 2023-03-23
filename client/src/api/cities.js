@@ -1,15 +1,11 @@
 import axios from 'axios';
 
-const getCities = () => axios.get('/cities');
-//const getCities = ({ abortController = null }) => axios.get('/cities', { signal: abortController?.signal });
+export const getCities = () => axios.get('/cities');
 
-const createCity = ({ abortController = null, ...params }) => axios.post('/cities', { ...params }, { signal: abortController?.signal });
+export const createCity = ({ ...params }) => axios.post('/cities', { ...params });
 
-const deleteCityById = ({ id, abortController = null }) => axios.delete(`/cities/${id}`, { signal: abortController?.signal });
+export const deleteCityById = ({ id }) => axios.delete(`/cities/${id}`);
 
-const getCityById = ({ id, abortController = null }) => axios.get(`/cities/${id}`, { signal: abortController?.signal });
+export const getCityById = ({ id }) => axios.get(`/cities/${id}`);
 
-const updateCityById = ({ id, abortController = null, ...params }) =>
-  axios.put(`/cities/${id}`, { ...params }, { signal: abortController?.signal });
-
-export { getCities, createCity, deleteCityById, getCityById, updateCityById };
+export const updateCityById = ({ id, ...params }) => axios.put(`/cities/${id}`, { ...params });

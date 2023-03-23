@@ -48,5 +48,3 @@ export const isGlobalErrorType = (errorType, exclude = []) =>
   [ERROR_TYPE.SERVICE_OFFLINE, ERROR_TYPE.ACCESS_DENIED, ERROR_TYPE.ENTRY_NOT_FOUND, ERROR_TYPE.BAD_REQUEST]
     .filter((item) => !exclude.includes(item))
     .includes(errorType);
-
-//export { getErrorType, getIconByError, getErrorText, isGlobalError };
