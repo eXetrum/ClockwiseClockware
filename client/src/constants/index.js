@@ -31,3 +31,5 @@ export const ERROR_TYPE = {
   UNKNOWN: 'UNKNOWN',
   NONE: 'NONE',
 };
+
+export const MAX_RATING_VALUE = 5;

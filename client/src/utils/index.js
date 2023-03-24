@@ -2,4 +2,4 @@ export { getIconByError, isGlobalError, getErrorText, getErrorType, getIconByErr
 export { dateToNearestHour, addHours, dateRangesOverlap } from './dateTime';
 export { parseToken } from './token';
 export { validateEmail } from './validators';
-export { formatDecimal } from './formatters';
+export { formatDecimal, formatDate } from './formatters';

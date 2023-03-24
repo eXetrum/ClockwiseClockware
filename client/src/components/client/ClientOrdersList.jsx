@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import { formatDecimal, formatDate } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
 const ClientOrdersList = ({ orders, onReview }) => {
@@ -18,14 +19,6 @@ const ClientOrdersList = ({ orders, onReview }) => {
       </Container>
     );
   }
-
-  const pad = (num) => num.toString().padStart(2, '0');
-  const formatDate = (date) =>
-    [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
-    ' ' +
-    [pad(date.getHours()), pad(date.getMinutes())].join(':');
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
 
   return (
     <Container>

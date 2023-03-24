@@ -6,6 +6,7 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../common/StarRating';
+import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
 const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) => {
@@ -22,14 +23,6 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
       </Container>
     );
   }
-
-  const pad = (num) => num.toString().padStart(2, '0');
-  const formatDate = (date) =>
-    [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
-    ' ' +
-    [pad(date.getHours()), pad(date.getMinutes())].join(':');
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
 
   return (
     <Container>
