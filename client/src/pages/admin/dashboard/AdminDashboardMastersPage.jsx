@@ -8,6 +8,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
 import { getCities, getMasters, createMaster, deleteMasterById, resetPassword, resendEmailConfirmation } from '../../../api';
 import { getErrorText, validateEmail } from '../../../utils';
+import { MAX_RATING_VALUE } from '../../../constants';
 
 const initEmptyMaster = () => ({
   name: '',
@@ -247,7 +248,7 @@ const AdminDashboardMasters = () => {
                   onRatingChange={onMasterRatingChange}
                   onRatingReset={onMasterRatingChange}
                   value={newMaster.rating}
-                  total={5}
+                  total={MAX_RATING_VALUE}
                   readonly={isPending}
                 />
               </Form.Group>

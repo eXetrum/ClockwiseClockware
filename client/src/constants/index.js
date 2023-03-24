@@ -21,4 +21,7 @@ export const ACCESS_SCOPE = {
 
 export const SNACKBAR_MAX_SNACKS = 5;
 export const SNACKBAR_AUTOHIDE_TIMEOUT = 6000;
+
 export const ACCESS_TOKEN_KEY_NAME = 'access_token';
+
+export const MAX_RATING_VALUE = 5;

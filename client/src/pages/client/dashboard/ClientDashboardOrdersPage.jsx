@@ -4,10 +4,9 @@ import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from '../../../components';
 import { getOrders, patchOrderById } from '../../../api';
 import { isGlobalError, getErrorText } from '../../../utils';
+import { MAX_RATING_VALUE } from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
-  const DEFAULT_RATING_VALUE = 5;
-
   const { enqueueSnackbar } = useSnackbar();
 
   const [orders, setOrders] = useState([]);
@@ -16,7 +15,7 @@ const ClientDashboardOrdersPage = () => {
   const [isPending, setPending] = useState(false);
   const [showRateForm, setShowRateForm] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [rating, setRating] = useState(DEFAULT_RATING_VALUE);
+  const [rating, setRating] = useState(MAX_RATING_VALUE);
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
@@ -50,7 +49,7 @@ const ClientDashboardOrdersPage = () => {
 
   const onFormHide = () => {
     setShowRateForm(false);
-    setRating(DEFAULT_RATING_VALUE);
+    setRating(MAX_RATING_VALUE);
   };
 
   const onFormSubmit = async (event) => {
@@ -109,7 +108,13 @@ const ClientDashboardOrdersPage = () => {
             <>
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
-                  <StarRating onRatingChange={onRatingChange} onRatingReset={onRatingChange} value={rating} total={5} pending={isPending} />
+                  <StarRating
+                    onRatingChange={onRatingChange}
+                    onRatingReset={onRatingChange}
+                    value={rating}
+                    total={MAX_RATING_VALUE}
+                    pending={isPending}
+                  />
                 </Row>
               </Form.Group>
             </>

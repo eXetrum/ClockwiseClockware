@@ -6,7 +6,10 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../common/StarRating';
+import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
+
+const COLUMN_HEADERS = ['id', 'Client', 'Master', 'City', 'Clock', 'Date Start', 'Date End', 'Status', 'Total Cost'];
 
 const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) => {
   if (orders == null) return null;
@@ -23,28 +26,14 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
     );
   }
 
-  const pad = (num) => num.toString().padStart(2, '0');
-  const formatDate = (date) =>
-    [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
-    ' ' +
-    [pad(date.getHours()), pad(date.getMinutes())].join(':');
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            <th className="text-center p-2 m-0">id</th>
-            <th className="text-center p-2 m-0">Client</th>
-            <th className="text-center p-2 m-0">Master</th>
-            <th className="text-center p-2 m-0">City</th>
-            <th className="text-center p-2 m-0">Clock</th>
-            <th className="text-center p-2 m-0">Date Start</th>
-            <th className="text-center p-2 m-0">Date End</th>
-            <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0">Total Cost</th>
+            {COLUMN_HEADERS.map((header) => (
+              <th className="text-center p-2 m-0">{header}</th>
+            ))}
             <th colSpan="2" className="text-center p-2 m-0"></th>
           </tr>
         </thead>

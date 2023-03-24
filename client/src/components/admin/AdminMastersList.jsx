@@ -9,6 +9,7 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ViewMasterCard from '../master/ViewMasterCard';
 import StarRating from '../common/StarRating';
+import { MAX_RATING_VALUE } from '../../constants';
 
 const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }) => {
   return (
@@ -44,8 +45,10 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
                 ))}
               </td>
               <td className="text-center p-2 m-0">
-                <StarRating total={5} value={master.rating} readonly={true} />
-                <b>{master.rating}/5</b>
+                <StarRating total={MAX_RATING_VALUE} value={master.rating} readonly={true} />
+                <b>
+                  {master.rating}/{MAX_RATING_VALUE}
+                </b>
               </td>
               <td className="text-center p-2 m-0">
                 {master.isApprovedByAdmin ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
