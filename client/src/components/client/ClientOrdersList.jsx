@@ -1,10 +1,16 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import { ORDER_STATUS } from '../../constants';
+import { formatDecimal, formatDate } from '../../utils';
+
+const COLUMN_HEADERS = ['Master Name', 'Service', 'City', 'Date Start', 'Date End', 'Total Cost', 'Status', 'Rate'];
 
 const ClientOrdersList = ({ orders, onReview }) => {
+  const toDateStr = useCallback((arg) => formatDate(arg), []);
+  const toDecimalStr = useCallback((arg) => formatDecimal(arg), []);
+
   if (orders == null) return null;
 
   if (orders.length === 0) {
@@ -19,27 +25,14 @@ const ClientOrdersList = ({ orders, onReview }) => {
     );
   }
 
-  const pad = (num) => num.toString().padStart(2, '0');
-  const formatDate = (date) =>
-    [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
-    ' ' +
-    [pad(date.getHours()), pad(date.getMinutes())].join(':');
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            <th className="text-center p-2 m-0">Master Name</th>
-            <th className="text-center p-2 m-0">Service</th>
-            <th className="text-center p-2 m-0">City</th>
-            <th className="text-center p-2 m-0">Date Start</th>
-            <th className="text-center p-2 m-0">Date End</th>
-            <th className="text-center p-2 m-0">Total Cost</th>
-            <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0">Rate</th>
+            {COLUMN_HEADERS.map((header) => (
+              <th className="text-center p-2 m-0">{header}</th>
+            ))}
           </tr>
         </thead>
         <tbody>
@@ -51,13 +44,13 @@ const ClientOrdersList = ({ orders, onReview }) => {
               </td>
               <td className="text-center p-2 m-0">{order.city.name}</td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.startDate))}</small>
+                <small className="text-muted">{toDateStr(order.startDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.endDate))}</small>
+                <small className="text-muted">{toDateStr(order.endDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDecimal(order.totalCost)}</small>
+                <small className="text-muted">{toDecimalStr(order.totalCost)}</small>
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>

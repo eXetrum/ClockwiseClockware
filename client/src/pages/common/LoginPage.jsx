@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -25,6 +25,11 @@ const LoginPage = () => {
   const [error, setError] = useState(null);
 
   const isFormValid = useCallback(() => validateEmail(formUser?.email) && formUser?.password, [formUser]);
+  const isOrderExists = useMemo(() => location?.state?.order, [location]);
+  const isOrderUserEqAuthUser = useCallback(
+    (orderUser, authUser) => orderUser.email === authUser.email && orderUser.name === authUser.name,
+    [],
+  );
 
   let abortController = null;
 
@@ -36,28 +41,28 @@ const LoginPage = () => {
       if (response?.data?.accessToken) {
         const { accessToken } = response.data;
         setAccessToken(accessToken);
-        const user = parseToken(accessToken);
+        const authUser = parseToken(accessToken);
 
         enqueueSnackbar('Success', { variant: 'success' });
 
         const fromPage = location.state?.from?.pathname || '/';
 
-        if (user.role === USER_ROLES.MASTER) return navigate('/master/orders');
-        else if (user.role === USER_ROLES.CLIENT && fromPage !== '/order') return navigate('/client/orders');
+        if (authUser.role === USER_ROLES.MASTER) return navigate('/master/orders');
+        else if (authUser.role === USER_ROLES.CLIENT && fromPage !== '/order') return navigate('/client/orders');
 
-        // is order exists and client email/name differs
-        const order = location?.state?.order;
-        if (order && user && (order.client?.email !== user.email || order.client?.name !== user.name)) {
+        const orderUser = location?.state?.order?.client;
+
+        if (isOrderExists && !isOrderUserEqAuthUser(orderUser, authUser)) {
           const result = await confirm(
             'Authenticated user data is different from prepared order details. Do you want to replace with current user data ?',
             {
-              title: 'User mismatch',
+              title: 'User details mismatch',
               okText: 'Update',
               cancelText: 'Do not update',
               okButtonStyle: 'success',
             },
           );
-          if (result) return navigate(fromPage, { state: { ...location.state, email: user.email, name: user.name } });
+          if (result) return navigate(fromPage, { state: { ...location.state, email: authUser.email, name: authUser.name } });
         }
 
         return navigate(fromPage, { state: location.state });
