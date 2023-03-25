@@ -1,80 +1,44 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Form, Spinner } from 'react-bootstrap';
+import { Container, Row, Form } from 'react-bootstrap';
+import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from '../../../components';
-import { getOrders, patchOrderById } from '../../../api';
-import { isGlobalError, getErrorText } from '../../../utils';
+
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchOrders, rateOrder } from '../../../store/reducers/ActionCreators';
+import { orderSlice } from '../../../store/reducers';
+
+import { ERROR_TYPE } from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
-  const DEFAULT_RATING_VALUE = 5;
-
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  const [orders, setOrders] = useState([]);
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [isPending, setPending] = useState(false);
-  const [showRateForm, setShowRateForm] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [rating, setRating] = useState(DEFAULT_RATING_VALUE);
-
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-
-  const fetchInitialData = async (abortController) => {
-    setInitialLoading(true);
-    try {
-      const response = await getOrders({ abortController });
-      if (response?.data?.orders) {
-        const { orders } = response.data;
-        setOrders(orders);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+  const { changeVisibilityRateForm, changeNewOrderField, clearNotification } = orderSlice.actions;
+  const { orders, newOrder, error, notification, isInitialLoading, isPending, isShowRateForm } = useSelector((state) => state.orderReducer);
 
   useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(abortController);
-    return () => {
-      abortController.abort();
-    };
-  }, []);
+    dispatch(fetchOrders());
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
+
+  const [orderId, setOrderId] = useState(null);
 
   const onReview = async (id) => {
-    setSelectedOrder(orders.find((item) => item.id === id));
-    setShowRateForm(true);
+    setOrderId(id);
+    dispatch(changeVisibilityRateForm(true));
   };
-
-  const onFormHide = () => {
-    setShowRateForm(false);
-    setRating(DEFAULT_RATING_VALUE);
-  };
-
-  const onFormSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const id = selectedOrder.id;
-      setPending(true);
-      await patchOrderById({
-        id,
-        status: orders.find((item) => item.id === id)?.status,
-        rating,
-      });
-      const idx = orders.map((item) => item.id).indexOf(id);
-      orders[idx].rating = rating;
-      setOrders(orders);
-      setShowRateForm(false);
-    } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-  const onRatingChange = (value) => setRating(value);
 
   return (
     <Container>
@@ -85,31 +49,39 @@ const ClientDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <ClientOrdersList orders={orders} onReview={onReview} isPending={isPending} />}
+        {isComponentReady ? <ClientOrdersList orders={orders} onReview={onReview} /> : null}
         <hr />
 
         <ModalForm
           size="sm"
-          show={showRateForm}
+          show={isShowRateForm}
           title={'Rate order'}
           okText={'Apply'}
-          onHide={onFormHide}
-          onSubmit={onFormSubmit}
+          onHide={() => dispatch(changeVisibilityRateForm(false))}
+          onSubmit={(event) => {
+            event.preventDefault();
+            dispatch(rateOrder({ id: orderId, rating: newOrder.rating }));
+          }}
           isFormValid={() => true}
-          pending={isPending}
+          isPending={isPending}
           formContent={
             <>
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
-                  <StarRating onRatingChange={onRatingChange} onRatingReset={onRatingChange} value={rating} total={5} pending={isPending} />
+                  <StarRating
+                    onRatingChange={(value) => dispatch(changeNewOrderField({ name: 'rating', value }))}
+                    onRatingReset={(value) => dispatch(changeNewOrderField({ name: 'rating', value }))}
+                    value={newOrder.rating}
+                    readonly={isPending}
+                  />
                 </Row>
               </Form.Group>
             </>

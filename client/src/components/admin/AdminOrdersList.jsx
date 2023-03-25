@@ -1,15 +1,53 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert, Badge, Button, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
 import Stack from '@mui/material/Stack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../common/StarRating';
+
+import { useDispatch } from 'react-redux';
+import { deleteOrder, completeOrder, cancelOrder } from '../../store/reducers/ActionCreators';
+
 import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
-const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) => {
+const COLUMN_HEADERS = ['id', 'Client', 'Master', 'City', 'Clock', 'Date Start', 'Date End', 'Status', 'Total Cost'];
+
+const AdminOrdersList = ({ orders }) => {
+  const dispatch = useDispatch();
+
+  const onRemove = async (id) => {
+    const result = await confirm(`Do you want to delete order ${id} ?`, {
+      title: 'Confirm',
+      okText: 'Delete',
+      okButtonStyle: 'danger',
+    });
+    if (result) dispatch(deleteOrder(id));
+  };
+
+  const onComplete = async (id) => {
+    const result = await confirm(`Do you want to mark order ${id} as completed ?`, {
+      title: 'Confirm',
+      okText: 'Apply',
+      okButtonStyle: 'success',
+    });
+
+    if (result) dispatch(completeOrder(id));
+  };
+
+  const onCancel = async (id) => {
+    const result = await confirm(`Do you want to mark order ${id} as canceled ?`, {
+      title: 'Confirm',
+      okText: 'Apply',
+      okButtonStyle: 'success',
+    });
+
+    if (result) dispatch(cancelOrder(id));
+  };
+
   if (orders == null) return null;
 
   if (orders.length === 0) {
@@ -29,15 +67,11 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            <th className="text-center p-2 m-0">id</th>
-            <th className="text-center p-2 m-0">Client</th>
-            <th className="text-center p-2 m-0">Master</th>
-            <th className="text-center p-2 m-0">City</th>
-            <th className="text-center p-2 m-0">Clock</th>
-            <th className="text-center p-2 m-0">Date Start</th>
-            <th className="text-center p-2 m-0">Date End</th>
-            <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0">Total Cost</th>
+            {COLUMN_HEADERS.map((header) => (
+              <th key={header} className="text-center p-2 m-0">
+                {header}
+              </th>
+            ))}
             <th colSpan="2" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
@@ -78,21 +112,35 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
                 </Badge>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.startDate))}</small>
+                <small className="text-muted">{formatDate(order.startDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.endDate))}</small>
+                <small className="text-muted">{formatDate(order.endDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>
                 {order.status === ORDER_STATUS.CONFIRMED ? (
                   <Stack spacing={1}>
-                    <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending} variant="success">
-                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                    <Button
+                      onClick={() => onComplete(order.id)}
+                      size="sm"
+                      disabled={order.isCompleting || order.isCanceling}
+                      variant="success"
+                    >
+                      {order.isCompleting ? (
+                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                      ) : null}
                       Complete
                     </Button>
-                    <Button onClick={() => onCancel(order.id)} size="sm" disabled={isPending} variant="secondary">
-                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                    <Button
+                      onClick={() => onCancel(order.id)}
+                      size="sm"
+                      disabled={order.isCompleting || order.isCanceling}
+                      variant="secondary"
+                    >
+                      {order.isCanceling ? (
+                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                      ) : null}
                       Cancel
                     </Button>
                   </Stack>

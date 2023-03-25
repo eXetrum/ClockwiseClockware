@@ -12,10 +12,20 @@ import ViewMasterCard from '../master/ViewMasterCard';
 import StarRating from '../common/StarRating';
 
 import { useDispatch } from 'react-redux';
-import { resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/reducers/ActionCreators';
+import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/reducers/ActionCreators';
 
-const MasterTableList = ({ masters, onRemove }) => {
+const MasterTableList = ({ masters }) => {
   const dispatch = useDispatch();
+
+  const onRemove = async (master) => {
+    const result = await confirm(`Do you want to delete "${master.email}" master ?`, {
+      title: 'Confirm',
+      okText: 'Delete',
+      okButtonStyle: 'danger',
+    });
+
+    if (result) dispatch(deleteMaster(master.id));
+  };
 
   const onResetPassword = async (master) => {
     const result = await confirm(`Do you want to reset password for "${master.email}" master ?`, {
@@ -112,7 +122,7 @@ const MasterTableList = ({ masters, onRemove }) => {
                 </td>
                 <td className="text-center p-3 m-0">
                   <Link to="#">
-                    <DeleteForeverIcon onClick={() => onRemove(master.id)} />
+                    <DeleteForeverIcon onClick={() => onRemove(master)} />
                   </Link>
                 </td>
               </>
@@ -140,7 +150,7 @@ const MasterCardList = ({ masters, onSelect }) => {
   );
 };
 
-const AdminMastersList = ({ masters, onSelect, onRemove, isAdminView = true }) => {
+const AdminMastersList = ({ masters, onSelect, isAdminView = true }) => {
   if (masters == null) return null;
   const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
 
@@ -156,7 +166,7 @@ const AdminMastersList = ({ masters, onSelect, onRemove, isAdminView = true }) =
     );
   }
 
-  if (isAdminView) return <MasterTableList masters={masters} onRemove={onRemove} />;
+  if (isAdminView) return <MasterTableList masters={masters} />;
   return <MasterCardList masters={masters} onSelect={onSelect} />;
 };
 

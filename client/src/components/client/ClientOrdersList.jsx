@@ -5,6 +5,8 @@ import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import { formatDecimal, formatDate } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
+const COLUMN_HEADERS = ['Master Name', 'Service', 'City', 'Date Start', 'Date End', 'Total Cost', 'Status', 'Rate'];
+
 const ClientOrdersList = ({ orders, onReview }) => {
   if (orders == null) return null;
 
@@ -25,14 +27,11 @@ const ClientOrdersList = ({ orders, onReview }) => {
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            <th className="text-center p-2 m-0">Master Name</th>
-            <th className="text-center p-2 m-0">Service</th>
-            <th className="text-center p-2 m-0">City</th>
-            <th className="text-center p-2 m-0">Date Start</th>
-            <th className="text-center p-2 m-0">Date End</th>
-            <th className="text-center p-2 m-0">Total Cost</th>
-            <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0">Rate</th>
+            {COLUMN_HEADERS.map((header) => (
+              <th key={header} className="text-center p-2 m-0">
+                {header}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody>

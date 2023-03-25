@@ -1,20 +1,15 @@
 import axios from 'axios';
 
-const getAvailableMasters = ({ abortController = null, ...params }) =>
-  axios.get('/available_masters', { params: { ...params } }, { signal: abortController?.signal });
+export const getAvailableMasters = ({ ...params }) => axios.get('/available_masters', { params: { ...params } });
 
-const createOrder = ({ abortController = null, ...params }) => axios.post('/orders', { ...params }, { signal: abortController?.signal });
+export const createOrder = ({ ...params }) => axios.post('/orders', { ...params });
 
-const getOrders = ({ abortController = null }) => axios.get('/orders', { signal: abortController?.signal });
+export const getOrders = () => axios.get('/orders');
 
-const deleteOrderById = ({ id, abortController = null }) => axios.delete(`/orders/${id}`, { signal: abortController?.signal });
+export const deleteOrderById = ({ id }) => axios.delete(`/orders/${id}`);
 
-const getOrderById = ({ id, abortController = null }) => axios.get(`/orders/${id}`, { signal: abortController?.signal });
+export const getOrderById = ({ id }) => axios.get(`/orders/${id}`);
 
-const updateOrderById = ({ id, abortController = null, ...params }) =>
-  axios.put(`/orders/${id}`, { ...params }, { signal: abortController?.signal });
+export const updateOrderById = ({ id, ...params }) => axios.put(`/orders/${id}`, { ...params });
 
-const patchOrderById = ({ id, abortController = null, ...params }) =>
-  axios.patch(`/orders/${id}`, { ...params }, { signal: abortController?.signal });
-
-export { getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById, patchOrderById };
+export const patchOrderById = ({ id, ...params }) => axios.patch(`/orders/${id}`, { ...params });

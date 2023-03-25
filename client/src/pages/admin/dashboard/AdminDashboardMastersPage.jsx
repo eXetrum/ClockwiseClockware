@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
-import { confirm } from 'react-bootstrap-confirmation';
 import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { Header, ErrorContainer, AdminMastersList, MasterForm } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCities, fetchMasters, addMaster, deleteMaster } from '../../../store/reducers/ActionCreators';
+import { fetchCities, fetchMasters, addMaster } from '../../../store/reducers/ActionCreators';
 import { masterSlice } from '../../../store/reducers';
 
 import { ERROR_TYPE } from '../../../constants';
@@ -55,18 +54,6 @@ const AdminDashboardMasters = () => {
     dispatch(addMaster(newMaster));
   };
 
-  const onMasterRemove = async (masterId) => {
-    const master = masters.find((item) => item.id === masterId);
-
-    const result = await confirm(`Do you want to delete "${master.email}" master ?`, {
-      title: 'Confirm',
-      okText: 'Delete',
-      okButtonStyle: 'danger',
-    });
-
-    if (result) dispatch(deleteMaster(masterId));
-  };
-
   return (
     <Container>
       <Header />
@@ -94,7 +81,7 @@ const AdminDashboardMasters = () => {
               </Col>
             </Row>
             <hr />
-            <AdminMastersList masters={masters} onRemove={onMasterRemove} />
+            <AdminMastersList masters={masters} />
 
             <MasterForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Master'} isModal={true} />
           </>
