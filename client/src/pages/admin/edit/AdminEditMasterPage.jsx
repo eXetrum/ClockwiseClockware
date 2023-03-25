@@ -111,15 +111,15 @@ const AdminEditMasterPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterForm {...{ isPending, master, cities, ...handlers }} />}
+        {isComponentReady ? <MasterForm {...{ isPending, master, cities, ...handlers }} /> : null}
         <hr />
       </Container>
     </Container>

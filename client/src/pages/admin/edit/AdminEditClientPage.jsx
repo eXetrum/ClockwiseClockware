@@ -89,15 +89,15 @@ const AdminEditClient = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <ClientForm {...{ isPending, client, ...handlers }} />}
+        {isComponentReady ? <ClientForm {...{ isPending, client, ...handlers }} /> : null}
         <hr />
       </Container>
     </Container>

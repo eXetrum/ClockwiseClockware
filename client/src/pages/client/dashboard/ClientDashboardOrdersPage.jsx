@@ -84,15 +84,15 @@ const ClientDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <ClientOrdersList orders={orders} onReview={onReview} isPending={isPending} />}
+        {isComponentReady ? <ClientOrdersList orders={orders} onReview={onReview} isPending={isPending} /> : null}
         <hr />
 
         <ModalForm

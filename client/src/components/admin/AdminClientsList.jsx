@@ -9,8 +9,6 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 const AdminClientsList = ({ clients, onRemove, onResetPassword, onResendEmailConfirmation, isPending }) => {
-  if (clients == null) return null;
-
   if (clients.length === 0) {
     return (
       <Container>

@@ -6,9 +6,8 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, AdminCitiesList, ModalForm } from '../../../components';
 import { getCities, createCity, deleteCityById } from '../../../api';
-import { getErrorText } from '../../../utils';
+import { getErrorText, formatDecimal } from '../../../utils';
 
-const formatDecimal = (value) => parseFloat(value).toFixed(2);
 const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
 const AdminDashboardCitiesPage = () => {
@@ -116,15 +115,15 @@ const AdminDashboardCitiesPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -136,7 +135,7 @@ const AdminDashboardCitiesPage = () => {
             <hr />
             <AdminCitiesList cities={cities} onRemove={onCityRemove} />
           </>
-        )}
+        ) : null}
         <hr />
 
         <ModalForm

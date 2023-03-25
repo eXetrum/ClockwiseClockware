@@ -102,7 +102,6 @@ const MasterCardList = ({ masters, onSelect }) => {
 };
 
 const AdminMastersList = ({ masters, onSelect, onRemove, onResetPassword, onResendEmailConfirmation, isPending, isAdminView = true }) => {
-  if (masters == null) return null;
   const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
 
   if (masters.length === 0) {

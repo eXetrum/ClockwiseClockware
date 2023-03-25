@@ -5,8 +5,6 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
 const AdminCitiesList = ({ cities, onRemove }) => {
-  if (cities == null) return null;
-
   if (cities.length === 0) {
     return (
       <Container>

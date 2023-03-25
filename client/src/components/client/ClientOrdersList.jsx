@@ -1,18 +1,13 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
-import { ORDER_STATUS } from '../../constants';
 import { formatDecimal, formatDate } from '../../utils';
+import { ORDER_STATUS } from '../../constants';
 
 const COLUMN_HEADERS = ['Master Name', 'Service', 'City', 'Date Start', 'Date End', 'Total Cost', 'Status', 'Rate'];
 
 const ClientOrdersList = ({ orders, onReview }) => {
-  const toDateStr = useCallback((arg) => formatDate(arg), []);
-  const toDecimalStr = useCallback((arg) => formatDecimal(arg), []);
-
-  if (orders == null) return null;
-
   if (orders.length === 0) {
     return (
       <Container>
@@ -31,7 +26,9 @@ const ClientOrdersList = ({ orders, onReview }) => {
         <thead>
           <tr>
             {COLUMN_HEADERS.map((header) => (
-              <th className="text-center p-2 m-0">{header}</th>
+              <th key={header} className="text-center p-2 m-0">
+                {header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -44,13 +41,13 @@ const ClientOrdersList = ({ orders, onReview }) => {
               </td>
               <td className="text-center p-2 m-0">{order.city.name}</td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{toDateStr(order.startDate)}</small>
+                <small className="text-muted">{formatDate(order.startDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{toDateStr(order.endDate)}</small>
+                <small className="text-muted">{formatDate(order.endDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{toDecimalStr(order.totalCost)}</small>
+                <small className="text-muted">{formatDecimal(order.totalCost)}</small>
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>

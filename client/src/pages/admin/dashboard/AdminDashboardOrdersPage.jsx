@@ -121,15 +121,15 @@ const AdminDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <AdminOrdersList
             orders={orders}
             onRemove={onOrderRemove}
@@ -137,7 +137,7 @@ const AdminDashboardOrdersPage = () => {
             onCancel={doOrderCancel}
             isPending={isPending}
           />
-        )}
+        ) : null}
         <hr />
       </Container>
     </Container>

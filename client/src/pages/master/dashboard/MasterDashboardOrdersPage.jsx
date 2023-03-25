@@ -75,15 +75,15 @@ const MasterDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterOrdersList orders={orders} onComplete={doOrderComplete} isPending={isPending} />}
+        {isComponentReady ? <MasterOrdersList orders={orders} onComplete={doOrderComplete} isPending={isPending} /> : null}
         <hr />
       </Container>
     </Container>

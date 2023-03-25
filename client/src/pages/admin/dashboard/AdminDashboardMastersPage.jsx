@@ -168,15 +168,15 @@ const AdminDashboardMasters = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -194,7 +194,7 @@ const AdminDashboardMasters = () => {
               isPending={isPending}
             />
           </>
-        )}
+        ) : null}
         <hr />
 
         <ModalForm

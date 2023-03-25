@@ -78,10 +78,8 @@ const AdminDashboardClientsPage = () => {
   const doResetPassword = async (client) => {
     try {
       setPending(true);
-      const response = await resetPassword({ userId: client.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Password for ${client.email} has been successfully reset`, { variant: 'success' });
-      }
+      await resetPassword({ userId: client.id });
+      enqueueSnackbar(`Password for ${client.email} has been successfully reset`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
@@ -93,10 +91,8 @@ const AdminDashboardClientsPage = () => {
   const doResendEmailConfirmation = async (client) => {
     try {
       setPending(true);
-      const response = await resendEmailConfirmation({ userId: client.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
-      }
+      await resendEmailConfirmation({ userId: client.id });
+      enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
     } catch (e) {
       if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
@@ -151,15 +147,15 @@ const AdminDashboardClientsPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -177,7 +173,7 @@ const AdminDashboardClientsPage = () => {
               isPending={isPending}
             />
           </>
-        )}
+        ) : null}
         <hr />
 
         <ModalForm

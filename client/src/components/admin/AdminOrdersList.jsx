@@ -12,8 +12,6 @@ import { ORDER_STATUS } from '../../constants';
 const COLUMN_HEADERS = ['id', 'Client', 'Master', 'City', 'Clock', 'Date Start', 'Date End', 'Status', 'Total Cost'];
 
 const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) => {
-  if (orders == null) return null;
-
   if (orders.length === 0) {
     return (
       <Container>
@@ -32,7 +30,9 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
         <thead>
           <tr>
             {COLUMN_HEADERS.map((header) => (
-              <th className="text-center p-2 m-0">{header}</th>
+              <th key={header} className="text-center p-2 m-0">
+                {header}
+              </th>
             ))}
             <th colSpan="2" className="text-center p-2 m-0"></th>
           </tr>
@@ -74,10 +74,10 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
                 </Badge>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.startDate))}</small>
+                <small className="text-muted">{formatDate(order.startDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.endDate))}</small>
+                <small className="text-muted">{formatDate(order.endDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>
