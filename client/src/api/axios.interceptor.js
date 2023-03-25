@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { ACCESS_TOKEN_KEY_NAME } from '../constants';
 import { useAuth } from '../hooks';
 import { parseToken } from '../utils';
+import { ACCESS_TOKEN_KEY_NAME } from '../constants';
 
 const AxiosInterceptor = ({ children }) => {
   const navigate = useNavigate();
