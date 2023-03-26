@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, ORDER_STATUS } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, ORDER_STATUS, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
 const { body, param, query, validationResult } = require('express-validator');
 const { sendOrderConfirmationMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
 const moment = require('moment');
@@ -8,7 +8,7 @@ const { Op } = require('sequelize');
 const db = require('../database/models/index');
 const { User, Client, Master, Watches, City, Order, Confirmations } = require('../database/models');
 const { dateToNearestHour, generatePassword, generateConfirmationToken } = require('../utils');
-const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { isDbErrorEntryNotFound } = require('../utils');
 
 const getFreeMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -453,24 +453,43 @@ const update = [
 const patch = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
     param('id').exists().withMessage('Order ID required').isString().withMessage('Order ID should be of type string'),
-    body('status')
-        .exists()
-        .withMessage('Order status required')
-        .isIn(Object.values(ORDER_STATUS))
-        .withMessage('Incorrect order status value'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { status } = req.body;
+            const { status, rating } = req.body;
 
             const originalOrder = await Order.findOne({ where: { id } });
             if (!originalOrder) return res.status(404).json({ message: 'Order not found' }).end();
 
-            // ==== Client ==== (clients cant change status but can rate order)
             const authUser = parseAuthToken(req.headers);
+            // Admin and Master require 'status' value
+            if (ACCESS_SCOPE.AdminOrMaster.includes(authUser.role)) {
+                const { status } = req.body;
+                if (status === undefined) return res.status(400).json({ message: 'Order status required' }).end();
+                if (!Object.values(ORDER_STATUS).includes(status)) {
+                    return res.status(400).json({ message: 'Incorrect order status value' }).end();
+                }
+            }
+
+            // For clients there should be rating field
+            if (authUser.role === USER_ROLES.CLIENT) {
+                const { rating } = req.body;
+                if (rating === undefined) return res.status(400).json({ message: 'Order rating required' }).end();
+                const ratingIntValue = parseInt(rating);
+                if (isNaN(ratingIntValue) || ratingIntValue < MIN_RATING_VALUE || ratingIntValue > MAX_RATING_VALUE) {
+                    return res
+                        .status(400)
+                        .json({
+                            message: `Incorrect rating value (expected integer value in range[${MIN_RATING_VALUE}; ${MAX_RATING_VALUE}])`
+                        })
+                        .end();
+                }
+            }
+
+            // ==== Client ==== (clients cant change status but can rate order)
             if (authUser.role === USER_ROLES.CLIENT) {
                 if (originalOrder.rating !== null) {
                     return res.status(409).json({ message: 'Order already rated' }).end();
@@ -480,11 +499,6 @@ const patch = [
                 }
                 if (originalOrder.status === ORDER_STATUS.CANCELED) {
                     return res.status(409).json({ message: 'Order is marked as canceled and cannot be rated' }).end();
-                }
-
-                const rating = parseInt(req.body.rating);
-                if (rating === undefined || rating === null || isNaN(rating) || rating < 0 || rating > 5) {
-                    return res.status(400).json({ message: 'Incorrect rating value (expected integer value in range[0; 5])' }).end();
                 }
 
                 const [affectedRowsOrder, affectedRowsMaster] = await db.sequelize.transaction(async (t) => {
