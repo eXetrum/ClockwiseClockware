@@ -1,7 +1,5 @@
 import axios from 'axios';
 
-export const getAvailableMasters = ({ ...params }) => axios.get('/available_masters', { params: { ...params } });
-
 export const createOrder = ({ ...params }) => axios.post('/orders', { ...params });
 
 export const getOrders = () => axios.get('/orders');

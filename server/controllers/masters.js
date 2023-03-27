@@ -1,9 +1,97 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
-const { body, param, validationResult } = require('express-validator');
-const { User, Master, City, MasterCityList, Order } = require('../database/models');
+const { body, query, param, validationResult } = require('express-validator');
+const { Op } = require('sequelize');
+const { User, Master, Watches, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
-const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { RequireAuth } = require('../middleware/RouteProtector');
+const { dateToNearestHour, isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
+
+const getAvailableMasters = [
+    query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
+    query('watchId').exists().withMessage('watchId required').isUUID().withMessage('watchId should be of type string'),
+    query('startDate')
+        .exists()
+        .withMessage('startDate required')
+        .isInt({ min: 0 })
+        .toInt()
+        .withMessage('startDate should be of type int')
+        .custom((value, { req }) => {
+            const curDate = Date.now();
+            if (new Date(value).toString() === 'Invalid Date') throw new Error('Invalid timestamp');
+            if (value < curDate) throw new Error('Past date time is not allowed');
+            return true;
+        }),
+
+    async (req, res) => {
+        try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ detail: errors[0].msg }).end();
+
+            let { cityId, watchId, startDate } = req.query;
+
+            const city = await City.findOne({ where: { id: cityId } });
+            if (!city) return res.status(400).json({ detail: 'Unknown city' }).end();
+
+            const watch = await Watches.findOne({ where: { id: watchId } });
+            if (!watch) return res.status(400).json({ detail: 'Unknown watch type' }).end();
+
+            /// ///////////////////////////////////////////////////
+            startDate = dateToNearestHour(startDate);
+            const orderRepairTime = watch.repairTime;
+            const orderStartDate = startDate;
+            const orderEndDate = startDate + orderRepairTime * MS_PER_HOUR;
+
+            let bussyMasters = await Order.findAll({
+                raw: true,
+                attributes: ['masterId'],
+                group: ['masterId'],
+                where: {
+                    startDate: { [Op.lt]: orderEndDate },
+                    endDate: { [Op.gt]: orderStartDate }
+                }
+            });
+            bussyMasters = bussyMasters.map((item) => item.masterId);
+
+            let masters = await Master.findAll({
+                where: {
+                    userId: { [Op.notIn]: bussyMasters }
+                },
+                include: [
+                    {
+                        model: User
+                    },
+                    { model: City, as: 'cities', through: { attributes: [] } },
+                    {
+                        model: Order,
+                        as: 'orders',
+                        include: [
+                            { model: Watches, as: 'watch' },
+                            { model: City, as: 'city' }
+                        ],
+                        attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
+                        order: [['createdAt', 'DESC']]
+                    }
+                ],
+                order: [
+                    ['rating', 'DESC'],
+                    ['createdAt', 'DESC']
+                ]
+            });
+
+            masters = masters.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
+
+            // No idea how to filter these on 'sequelize level' ([city])
+            masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
+
+            // Filter out masters accounts which is not verified/approved
+            masters = masters.filter((master) => master.isEmailVerified && master.isApprovedByAdmin);
+
+            res.status(200).json({ masters }).end();
+        } catch (error) {
+            res.status(400).json(error).end();
+        }
+    }
+];
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -137,7 +225,7 @@ const create = [
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('master ID required'),
+    param('id').exists().withMessage('master id required').isUUID().withMessage('master id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -173,7 +261,7 @@ const remove = [
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('master ID required'),
+    param('id').exists().withMessage('master id required').isUUID().withMessage('master id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -204,7 +292,7 @@ const get = [
 
 const update = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('master ID required'),
+    param('id').exists().withMessage('master id required').isUUID().withMessage('master id should be of type string'),
     body('master').notEmpty().withMessage('master object required'),
     body('master.name')
         .exists()
@@ -242,7 +330,7 @@ const update = [
     body('master.cities.*.id')
         .exists()
         .withMessage('each object of cities array should contains id field')
-        .isString()
+        .isUUID()
         .withMessage('city id should be of type string'),
     async (req, res) => {
         try {
@@ -308,6 +396,7 @@ const update = [
 ];
 
 module.exports = {
+    getAvailableMasters,
     getAll,
     create,
     remove,
