@@ -4,6 +4,8 @@ import {
   resendEmailConfirmation,
   patchOrderById,
   //
+  getWatches,
+  //
   getCities,
   createCity,
   deleteCityById,
@@ -27,9 +29,21 @@ import {
   deleteOrderById,
   getOrderById,
   updateOrderById,
+  getAvailableMasters,
 } from '../../api';
 import { ORDER_STATUS } from '../../constants';
 import { getErrorType, getErrorText } from '../../utils';
+
+//#region Watch
+export const fetchWatches = createAsyncThunk('watch/fetchAll', async (_, thunkAPI) => {
+  try {
+    const response = await getWatches();
+    return response.data.watches;
+  } catch (error) {
+    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+  }
+});
+//#endregion
 
 //#region City
 export const fetchCities = createAsyncThunk('city/fetchAll', async (_, thunkAPI) => {
@@ -82,6 +96,15 @@ export const updateCity = createAsyncThunk('city/updateCity', async (city, thunk
 export const fetchMasters = createAsyncThunk('master/fetchAll', async (_, thunkAPI) => {
   try {
     const response = await getMasters();
+    return response.data.masters;
+  } catch (error) {
+    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+  }
+});
+
+export const fetchAllAvailable = createAsyncThunk('master/fetchAllAvailable', async ({ cityId, watchId, startDate }, thunkAPI) => {
+  try {
+    const response = await getAvailableMasters({ cityId, watchId, startDate });
     return response.data.masters;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
