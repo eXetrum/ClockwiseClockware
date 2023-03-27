@@ -96,7 +96,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       dispatch(changeNewOrderField({ name: 'watch', value: watch }));
       dispatch(changeNewOrderField({ name: 'master', value: null }));
       dispatch(fetchAllAvailable({ ...newOrder, watch }));
-      //fetchAvailableMasters({ ...newOrder, watch: newWatch, master: null });
     },
     [newOrder, isMasterAssigned, dispatch, ensureMasterCanHandleOrder],
   );
@@ -129,8 +128,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       dispatch(changeNewOrderField({ name: 'master', value: null }));
       setSelectedCities([city]);
 
-      dispatch(fetchAllAvailable({ ...newOrder, city, master: null }));
-      //return fetchAvailableMasters({ ...newOrder, city, master: null });
+      dispatch(fetchAllAvailable({ ...newOrder, city }));
     },
     [newOrder, lastAssignedCity, isMasterAssigned, dispatch, ensureMasterCanHandleOrder],
   );
@@ -183,7 +181,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
     (order) => {
       setShowMasters(false);
       dispatch(resetNewOrder());
-      //dispatch(resetNewOrder(order));
+      //dispatch(resetNewOrder(order)); //TODO: reset to oldOrder (keep for order edit)
       setSelectedCities([]);
       setLastAssignedCity(null);
     },
