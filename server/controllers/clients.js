@@ -1,9 +1,9 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, Client, Order } = require('../database/models');
+const { RequireAuth } = require('../middleware/RouteProtector');
 const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -93,7 +93,7 @@ const create = [
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('client ID required'),
+    param('id').exists().withMessage('client id required').isUUID().withMessage('client id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -121,7 +121,7 @@ const remove = [
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('client ID required'),
+    param('id').exists().withMessage('client id required').isUUID().withMessage('client id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -149,7 +149,7 @@ const get = [
 
 const update = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().withMessage('client ID required').isUUID().withMessage('client ID should be of type string'),
+    param('id').exists().withMessage('client id required').isUUID().withMessage('client id should be of type string'),
     body('client').notEmpty().withMessage('client object required'),
     body('client.name')
         .exists()

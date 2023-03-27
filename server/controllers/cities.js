@@ -1,8 +1,8 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
+const { RequireAuth } = require('../middleware/RouteProtector');
 const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { ACCESS_SCOPE } = require('../constants');
 
 const getAll = async (req, res) => {
     try {
@@ -54,7 +54,7 @@ const create = [
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('city ID required'),
+    param('id').exists().withMessage('city id required').isUUID().withMessage('city id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -84,7 +84,7 @@ const remove = [
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('City ID required'),
+    param('id').exists().withMessage('city id required').isUUID().withMessage('city id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -105,6 +105,7 @@ const get = [
 
 const update = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
+    param('id').exists().withMessage('city id required').isUUID().withMessage('city id should be of type string'),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()

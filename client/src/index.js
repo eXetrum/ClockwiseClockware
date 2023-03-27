@@ -5,12 +5,11 @@ import './index.css';
 import App from './App';
 
 import { SnackbarProvider } from 'notistack';
-import { Provider } from 'react-redux';
 import { AuthProvider } from './hooks';
+import { Provider } from 'react-redux';
+import { store } from './store';
 
 import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
-
-import { store } from './store';
 
 import axios from 'axios';
 
