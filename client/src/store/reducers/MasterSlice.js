@@ -97,7 +97,6 @@ export const masterSlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteMaster.fulfilled, (state, action) => {
-        const removedMaster = state.masters.find((master) => master.id === action.payload);
         state.masters = state.masters.filter((master) => master.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
