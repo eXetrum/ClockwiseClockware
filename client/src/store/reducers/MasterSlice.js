@@ -2,6 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import {
   fetchMasters,
+  fetchAllAvailable,
   addMaster,
   deleteMaster,
   fetchMaster,
@@ -59,6 +60,21 @@ export const masterSlice = createSlice({
       }),
       builder.addCase(fetchMasters.rejected, (state, action) => {
         state.isInitialLoading = false;
+        state.error = action.payload;
+      });
+    //#endregion
+    //#region Fetch all but available masters
+    builder.addCase(fetchAllAvailable.pending, (state, _) => {
+      state.isPending = true;
+      state.error = initEmptyError();
+    }),
+      builder.addCase(fetchAllAvailable.fulfilled, (state, action) => {
+        state.masters = action.payload;
+        state.isPending = false;
+        state.error = initEmptyError();
+      }),
+      builder.addCase(fetchAllAvailable.rejected, (state, action) => {
+        state.isPending = false;
         state.error = action.payload;
       });
     //#endregion
