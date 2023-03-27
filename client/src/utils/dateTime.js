@@ -3,7 +3,8 @@ export const dateToNearestHour = (date = new Date()) => {
   return new Date(Math.ceil(date.getTime() / ms) * ms);
 };
 
-export const addHours = (date, hours) => {
+export const addHours = (value, hours) => {
+  const date = new Date(value);
   const newDate = new Date(date.getTime());
   newDate.setHours(newDate.getHours() + hours);
   return newDate;
