@@ -16,6 +16,7 @@
     "bootstrap": "^5.2.3",
     "dayjs": "^1.11.7",
     "jwt-decode": "^3.1.2",
+    "lodash.debounce": "^4.0.8",
     "multiselect-react-dropdown": "^2.0.25",
     "notistack": "^2.0.8",
     "react": "^16.14.0",
