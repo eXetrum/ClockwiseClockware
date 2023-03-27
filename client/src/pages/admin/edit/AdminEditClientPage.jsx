@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
@@ -6,9 +6,9 @@ import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { Header, ErrorContainer, ClientForm } from '../../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClient, updateClient } from '../../../store/reducers/ActionCreators';
-import { clientSlice } from '../../../store/reducers';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -17,29 +17,24 @@ const AdminEditClient = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { clearNotification } = clientSlice.actions;
-  const { newClient, error, notification, isInitialLoading } = useSelector((state) => state.clientReducer);
+  const { newClient, error, isInitialLoading } = useSelector((state) => state.clientReducer);
 
-  useEffect(() => {
-    dispatch(fetchClient(id));
-  }, [id, dispatch]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+  useEffect(() => dispatch(fetchClient(id)), [id, dispatch]);
 
   const isComponentReady = useMemo(
     () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    dispatch(updateClient(newClient));
-  };
+  const onFormSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const action = await dispatch(updateClient(newClient));
+      if (isFulfilled(action)) enqueueSnackbar('Client updated', { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, newClient],
+  );
 
   return (
     <Container>

@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Button, Alert, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
@@ -9,31 +10,61 @@ import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import { resetPasswordClient, resendEmailConfirmationClient } from '../../store/reducers/ActionCreators';
+import { deleteClient, resetPasswordClient, resendEmailConfirmationClient } from '../../store/reducers/ActionCreators';
 
-const AdminClientsList = ({ clients, onRemove }) => {
+const AdminClientsList = ({ clients }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const onResetPassword = async (client) => {
-    const result = await confirm(`Do you want to reset password for "${client.email}" client ?`, {
-      title: 'Confirm',
-      okText: 'Yes',
-      okButtonStyle: 'danger',
-    });
+  const onRemove = useCallback(
+    async (client) => {
+      const result = await confirm(`Do you want to delete "${client.email}" client ?`, {
+        title: 'Confirm',
+        okText: 'Delete',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-    if (result) dispatch(resetPasswordClient(client.id));
-  };
+      const action = await dispatch(deleteClient(client.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Client "${client.email}" removed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
-  const onResendEmailConfirmation = async (client) => {
-    const result = await confirm(`Do you want to resend email confirmation for "${client.email}" client ?`, {
-      title: 'Confirm',
-      okText: 'Yes',
-      okButtonStyle: 'danger',
-    });
+  const onResetPassword = useCallback(
+    async (client) => {
+      const result = await confirm(`Do you want to reset password for "${client.email}" client ?`, {
+        title: 'Confirm',
+        okText: 'Yes',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-    if (result) dispatch(resendEmailConfirmationClient(client.id));
-  };
+      const action = await dispatch(resetPasswordClient(client.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Password for client ${client.email} has been successfully reset`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
+
+  const onResendEmailConfirmation = useCallback(
+    async (client) => {
+      const result = await confirm(`Do you want to resend email confirmation for "${client.email}" client ?`, {
+        title: 'Confirm',
+        okText: 'Yes',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
+
+      const action = await dispatch(resendEmailConfirmationClient(client.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
   if (clients.length === 0) {
     return (
@@ -104,7 +135,7 @@ const AdminClientsList = ({ clients, onRemove }) => {
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">
-                  <DeleteForeverIcon onClick={() => onRemove(client.id)} />
+                  <DeleteForeverIcon onClick={() => onRemove(client)} />
                 </Link>
               </td>
             </tr>
