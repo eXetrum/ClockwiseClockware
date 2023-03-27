@@ -48,8 +48,6 @@ const AdminOrdersList = ({ orders }) => {
     if (result) dispatch(cancelOrder(id));
   };
 
-  if (orders == null) return null;
-
   if (orders.length === 0) {
     return (
       <Container>

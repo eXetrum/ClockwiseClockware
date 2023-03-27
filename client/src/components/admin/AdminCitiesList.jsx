@@ -6,8 +6,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import { formatDecimal } from '../../utils';
 
 const AdminCitiesList = ({ cities, onRemove }) => {
-  if (cities == null) return null;
-
   if (cities.length === 0) {
     return (
       <Container>

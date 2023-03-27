@@ -35,8 +35,6 @@ const AdminClientsList = ({ clients, onRemove }) => {
     if (result) dispatch(resendEmailConfirmationClient(client.id));
   };
 
-  if (clients == null) return null;
-
   if (clients.length === 0) {
     return (
       <Container>

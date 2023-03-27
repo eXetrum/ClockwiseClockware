@@ -8,8 +8,6 @@ import { ORDER_STATUS } from '../../constants';
 const COLUMN_HEADERS = ['Master Name', 'Service', 'City', 'Date Start', 'Date End', 'Total Cost', 'Status', 'Rate'];
 
 const ClientOrdersList = ({ orders, onReview }) => {
-  if (orders == null) return null;
-
   if (orders.length === 0) {
     return (
       <Container>
@@ -43,10 +41,10 @@ const ClientOrdersList = ({ orders, onReview }) => {
               </td>
               <td className="text-center p-2 m-0">{order.city.name}</td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.startDate))}</small>
+                <small className="text-muted">{formatDate(order.startDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.endDate))}</small>
+                <small className="text-muted">{formatDate(order.endDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{formatDecimal(order.totalCost)}</small>
