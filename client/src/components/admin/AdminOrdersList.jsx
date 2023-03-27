@@ -103,7 +103,9 @@ const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) 
                   <Link to={'/admin/orders/' + order.id}>
                     <EditIcon />
                   </Link>
-                ) : null}
+                ) : (
+                  <EditIcon sx={{ color: 'gray' }} />
+                )}
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">
