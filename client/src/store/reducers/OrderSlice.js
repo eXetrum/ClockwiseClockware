@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './ActionCreators';
-import { dateToNearestHour, isGlobalErrorType } from '../../utils';
+import { setThroughPath, dateToNearestHour, isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
 
 const initEmptyOrder = () => ({
@@ -9,7 +9,7 @@ const initEmptyOrder = () => ({
   master: null,
   city: null,
   watch: null,
-  startDate: String(dateToNearestHour()),
+  startDate: dateToNearestHour().getTime(),
   rating: MAX_RATING_VALUE,
 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
@@ -35,7 +35,13 @@ export const orderSlice = createSlice({
       state.newOrder = initEmptyOrder();
     },
     changeNewOrderField(state, action) {
-      state.newOrder[action.payload.name] = action.payload.value;
+      // Max one level depth
+      const [head, ...rest] = action.payload.name.split('.');
+      if (!rest.length) state.newOrder[head] = action.payload.value;
+      else state.newOrder[head][rest[0]] = action.payload.value;
+    },
+    resetNewOrder(state, action) {
+      state.newOrder = action.payload || initEmptyOrder();
     },
     clearNotification(state, _) {
       state.notification = createNotification({});
