@@ -202,7 +202,31 @@ const create = [
                 ...(autoRegistration.password && { autoRegistration })
             };
 
-            res.status(201).json({ confirmation }).end();
+            const order = await Order.findOne({
+                where: { id: dbOrder.id },
+                include: [
+                    { model: Client, include: [{ model: User }], as: 'client' },
+                    { model: Watches, as: 'watch' },
+                    { model: City, as: 'city' },
+                    {
+                        model: Master,
+                        as: 'master',
+                        include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }],
+                        attributes: { exclude: ['id', 'userId'] }
+                    }
+                ],
+                attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
+                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+            });
+
+            res.status(201)
+                .json({
+                    ...order.toJSON(),
+                    client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                    master: { ...order.master.toJSON(), ...order.master.User.toJSON() },
+                    ...(autoRegistration.password && { autoRegistration: true })
+                })
+                .end();
         } catch (error) {
             if (error.constraint === 'overlapping_times') {
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
@@ -368,10 +392,6 @@ const patch = [
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
-
-            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-            await delay(3000);
-            //return res.status(403).end();
 
             const { id } = req.params;
             const { status, rating } = req.body;
