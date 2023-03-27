@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
@@ -26,12 +26,15 @@ const AdminEditCityPage = () => {
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = async (event) => {
-    event.preventDefault();
-    const action = await dispatch(updateCity(newCity));
-    if (isFulfilled(action)) enqueueSnackbar('City updated', { variant: 'success' });
-    else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
-  };
+  const onFormSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const action = await dispatch(updateCity(newCity));
+      if (isFulfilled(action)) enqueueSnackbar('City updated', { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, newCity],
+  );
 
   return (
     <Container>
