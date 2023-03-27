@@ -60,8 +60,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
     [newOrder, currentDate],
   );
 
-  console.log('masters: ', masters);
-
   //////////////////////////////////////////////////////////////////////////
   const ensureMasterCanServeCity = useCallback((master, city) => master?.cities?.find((item) => item.id === city.id), []);
   const ensureMasterSchedule = useCallback(
@@ -151,8 +149,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
     (value) => {
       dispatch(changeNewOrderField({ name: 'startDate', value: new Date(value).getTime() }));
       setShowMasters(false);
-      //setNewOrder((prev) => ({ ...prev, startDate: new Date(newValue) }));
-      //resetMasterList();
     },
     [dispatch],
   );
@@ -160,7 +156,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   const onFindMasterBtnClick = useCallback(
     async (event) => {
       event.preventDefault();
-      console.log('onFindMasterBtnClick');
       setShowMasters(false);
       dispatch(changeNewOrderField({ name: 'master', value: null }));
       await dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
@@ -191,7 +186,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       //dispatch(resetNewOrder(order));
       setSelectedCities([]);
       setLastAssignedCity(null);
-      //setOrderConfirmationMessage(null);
     },
     [dispatch],
   );
