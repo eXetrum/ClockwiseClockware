@@ -13,16 +13,15 @@ import ViewMasterCard from '../master/ViewMasterCard';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/reducers/ActionCreators';
-import { orderSlice } from '../../store/reducers';
+import { resetNewOrder, changeNewOrderField } from '../../store/reducers/OrderSlice';
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
-const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successButtonText = 'Save' }) => {
+const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButtonText = 'Save' }) => {
   const dispatch = useDispatch();
 
-  const { resetNewOrder, changeNewOrderField } = orderSlice.actions;
-  const { error: ordersError, newOrder, isPending: isOrderPending } = useSelector((state) => state.orderReducer);
-  const { error: mastersError, masters, isPending: isMasterPending } = useSelector((state) => state.masterReducer);
+  const { newOrder, isPending: isOrderPending } = useSelector((state) => state.orderReducer);
+  const { masters, isPending: isMastersPending } = useSelector((state) => state.masterReducer);
 
   const currentDate = dateToNearestHour();
 
@@ -36,7 +35,7 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
     [dateTimeError],
   );
 
-  const isPending = useMemo(() => isMasterPending || isOrderPending, [isMasterPending, isOrderPending]);
+  const isPending = useMemo(() => isMastersPending || isOrderPending, [isMastersPending, isOrderPending]);
 
   const onOrderDateError = useCallback((reason) => {
     if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
@@ -101,7 +100,7 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
       dispatch(fetchAllAvailable({ ...newOrder, watch }));
       //fetchAvailableMasters({ ...newOrder, watch: newWatch, master: null });
     },
-    [newOrder, isMasterAssigned, dispatch, ensureMasterCanHandleOrder, changeNewOrderField],
+    [newOrder, isMasterAssigned, dispatch, ensureMasterCanHandleOrder],
   );
 
   const onOrderCitySelect = useCallback(
@@ -131,9 +130,11 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
       dispatch(changeNewOrderField({ name: 'city', value: city }));
       dispatch(changeNewOrderField({ name: 'master', value: null }));
       setSelectedCities([city]);
+
+      dispatch(fetchAllAvailable({ ...newOrder, city, master: null }));
       //return fetchAvailableMasters({ ...newOrder, city, master: null });
     },
-    [newOrder, lastAssignedCity, isMasterAssigned, dispatch, changeNewOrderField, ensureMasterCanHandleOrder],
+    [newOrder, lastAssignedCity, isMasterAssigned, dispatch, ensureMasterCanHandleOrder],
   );
 
   const onOrderCityRemove = useCallback(
@@ -143,54 +144,63 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
       setSelectedCities([]);
       setShowMasters(false);
     },
-    [dispatch, changeNewOrderField],
+    [dispatch],
   );
 
-  const onOrderDateChange = useCallback((value) => {
-    dispatch(changeNewOrderField({ name: 'startDate', value: new Date(value).getTime() }));
-    setShowMasters(false);
-    //setNewOrder((prev) => ({ ...prev, startDate: new Date(newValue) }));
-    //resetMasterList();
-  }, []);
+  const onOrderDateChange = useCallback(
+    (value) => {
+      dispatch(changeNewOrderField({ name: 'startDate', value: new Date(value).getTime() }));
+      setShowMasters(false);
+      //setNewOrder((prev) => ({ ...prev, startDate: new Date(newValue) }));
+      //resetMasterList();
+    },
+    [dispatch],
+  );
 
   const onFindMasterBtnClick = useCallback(
-    (event) => {
+    async (event) => {
       event.preventDefault();
       console.log('onFindMasterBtnClick');
+      setShowMasters(false);
       dispatch(changeNewOrderField({ name: 'master', value: null }));
-      dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
+      await dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
+      setShowMasters(true);
     },
-    [newOrder, dispatch, changeNewOrderField],
+    [newOrder, dispatch],
   );
 
-  const onSelectMaster = useCallback(async (master) => {
-    const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
-      title: 'Confirm',
-      okText: 'Accept',
-      okButtonStyle: 'success',
-    });
-    if (!result) return;
+  const onSelectMaster = useCallback(
+    async (master) => {
+      const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
+        title: 'Confirm',
+        okText: 'Accept',
+        okButtonStyle: 'success',
+      });
+      if (!result) return;
 
-    dispatch(changeNewOrderField({ name: 'master', value: master }));
-    setShowMasters(false);
-  }, []);
+      dispatch(changeNewOrderField({ name: 'master', value: master }));
+      setShowMasters(false);
+    },
+    [dispatch],
+  );
 
   const resetOrigOrder = useCallback(
     (order) => {
+      setShowMasters(false);
       dispatch(resetNewOrder());
       //dispatch(resetNewOrder(order));
       setSelectedCities([]);
       setLastAssignedCity(null);
       //setOrderConfirmationMessage(null);
     },
-    [dispatch, resetNewOrder],
+    [dispatch],
   );
 
   return (
     <>
       <Row className="justify-content-md-center">
         <Col xs lg="6">
-          <Form onSubmit={onFormSubmit}>
+          <Form onSubmit={onSubmit}>
             <hr />
             <Form.Group>
               <Row>
@@ -344,7 +354,10 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
                         onClick={onFindMasterBtnClick}
                         disabled={isPending || !isOrderPreparedForMasterSearch}
                       >
-                        {isMasterAssigned ? <HighlightOffOutlinedIcon fontSize="small" /> : null}
+                        {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" /> : null}
+                        {isMastersPending && (
+                          <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                        )}
                         Find New Master
                       </Button>
                     </Col>
@@ -367,7 +380,7 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
                 </Col>
                 <Col className="d-flex justify-content-md-end">
                   <Button className="mb-3 col-sm-4" type="submit" variant="success" disabled={isPending || !isOrderReady}>
-                    {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                    {isOrderPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                     {successButtonText}
                   </Button>
                 </Col>

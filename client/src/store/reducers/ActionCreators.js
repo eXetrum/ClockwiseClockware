@@ -244,7 +244,7 @@ export const fetchOrders = createAsyncThunk('order/fetchAll', async (_, thunkAPI
 export const addOrder = createAsyncThunk('order/addOrder', async (order, thunkAPI) => {
   try {
     const response = await createOrder({ order });
-    return response.data.order;
+    return { ...response.data };
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }
