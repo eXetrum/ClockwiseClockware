@@ -21,8 +21,8 @@ const OrderForm = ({ watches, cities, onFormSubmit, isEditForm = true, successBu
   const dispatch = useDispatch();
 
   const { resetNewOrder, changeNewOrderField } = orderSlice.actions;
-  const { newOrder, isPending: isOrderPending } = useSelector((state) => state.orderReducer);
-  const { masters, isPending: isMasterPending } = useSelector((state) => state.masterReducer);
+  const { error: ordersError, newOrder, isPending: isOrderPending } = useSelector((state) => state.orderReducer);
+  const { error: mastersError, masters, isPending: isMasterPending } = useSelector((state) => state.masterReducer);
 
   const currentDate = dateToNearestHour();
 
