@@ -1,7 +1,8 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import { cityReducer, masterReducer, clientReducer, orderReducer } from './reducers';
+import { watchReducer, cityReducer, masterReducer, clientReducer, orderReducer } from './reducers';
 
 const rootReducer = combineReducers({
+  watchReducer,
   cityReducer,
   masterReducer,
   clientReducer,
