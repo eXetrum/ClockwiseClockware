@@ -1,7 +1,7 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './ActionCreators';
-import { setThroughPath, dateToNearestHour, isGlobalErrorType } from '../../utils';
+import { dateToNearestHour, isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
 
 const initEmptyOrder = () => ({
@@ -13,7 +13,6 @@ const initEmptyOrder = () => ({
   rating: MAX_RATING_VALUE,
 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
-const createNotification = ({ text = '', variant = '' }) => ({ text, variant });
 
 const initialState = {
   orders: [],
@@ -23,7 +22,6 @@ const initialState = {
   isInitialLoading: false,
   isShowRateForm: false,
   isPending: false,
-  notification: createNotification({}),
 };
 
 export const orderSlice = createSlice({
@@ -42,9 +40,6 @@ export const orderSlice = createSlice({
     },
     resetNewOrder(state, action) {
       state.newOrder = action.payload || initEmptyOrder();
-    },
-    clearNotification(state, _) {
-      state.notification = createNotification({});
     },
   },
   extraReducers: (builder) => {
@@ -78,12 +73,12 @@ export const orderSlice = createSlice({
         state.isPending = false;
         state.newOrder = initEmptyOrder();
         state.error = initEmptyError();
-        state.notification = createNotification({ text: 'Order placed', variant: 'success' });
+        //state.notification = createNotification({ text: 'Order placed', variant: 'success' });
       }),
       builder.addCase(addOrder.rejected, (state, action) => {
         state.isPending = false;
         if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+        //else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -97,7 +92,7 @@ export const orderSlice = createSlice({
         state.orders = state.orders.filter((order) => order.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `Order "${removedOrder.id}" removed`, variant: 'success' });
+        //state.notification = createNotification({ text: `Order "${removedOrder.id}" removed`, variant: 'success' });
       }),
       builder.addCase(deleteOrder.rejected, (state, action) => {
         state.isPending = false;
@@ -107,7 +102,7 @@ export const orderSlice = createSlice({
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+        //else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -140,13 +135,13 @@ export const orderSlice = createSlice({
         state.error = initEmptyError();
         state.newOrder = action.payload;
         state.oldOrder = action.payload;
-        state.notification = createNotification({ text: `Order ${action.payload.id} updated`, variant: 'success' });
+        //state.notification = createNotification({ text: `Order ${action.payload.id} updated`, variant: 'success' });
       }),
       builder.addCase(updateOrder.rejected, (state, action) => {
         state.isPending = false;
         state.newOrder = state.oldOrder;
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+        //else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -162,13 +157,13 @@ export const orderSlice = createSlice({
         state.orders[idx].isCompleting = false;
         state.orders[idx].status = ORDER_STATUS.COMPLETED;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `Order ${action.payload} completed`, variant: 'success' });
+        //state.notification = createNotification({ text: `Order ${action.payload} completed`, variant: 'success' });
       }),
       builder.addCase(completeOrder.rejected, (state, action) => {
         const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
         state.orders[idx].isCompleting = false;
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter((order) => order.id !== action.payload.id);
-        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+        //state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -184,14 +179,14 @@ export const orderSlice = createSlice({
         state.orders[idx].isCanceling = false;
         state.orders[idx].status = ORDER_STATUS.CANCELED;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `Order ${action.payload} completed`, variant: 'success' });
+        //state.notification = createNotification({ text: `Order ${action.payload} completed`, variant: 'success' });
       }),
       builder.addCase(cancelOrder.rejected, (state, action) => {
         state.isPending = false;
         const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
         state.orders[idx].isCanceling = false;
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter((order) => order.id !== action.payload.id);
-        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+        //state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -206,16 +201,17 @@ export const orderSlice = createSlice({
         state.orders[idx].isEvaluating = false;
         state.orders[idx].rating = action.payload.rating;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `Order ${action.payload} completed`, variant: 'success' });
+        //state.notification = createNotification({ text: `Order ${action.payload} completed`, variant: 'success' });
       }),
       builder.addCase(rateOrder.rejected, (state, action) => {
         const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
         state.orders[idx].isEvaluating = false;
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter((order) => order.id !== action.payload.id);
-        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
+        //state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
   },
 });
 
+export const { changeVisibilityRateForm, changeNewOrderField, resetNewOrder } = orderSlice.actions;
 export default orderSlice.reducer;

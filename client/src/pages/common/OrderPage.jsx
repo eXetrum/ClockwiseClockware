@@ -25,21 +25,14 @@ const OrderPage = () => {
 
   const { watches, isInitialLoading: isInitialLoadingWatches } = useSelector((state) => state.watchReducer);
   const { cities, isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
-  const { resetNewOrder, clearNotification } = orderSlice.actions;
-  const { newOrder, error, notification } = useSelector((state) => state.orderReducer);
+  const { resetNewOrder } = orderSlice.actions;
+  const { newOrder, error } = useSelector((state) => state.orderReducer);
 
   useEffect(() => {
     dispatch(fetchWatches());
     dispatch(fetchCities());
     dispatch(resetNewOrder(location?.state?.order));
   }, [dispatch, location, resetNewOrder]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
 
   const isInitialLoading = useMemo(
     () => isInitialLoadingWatches || isInitialLoadingCities,

@@ -6,7 +6,8 @@ import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from 
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, rateOrder } from '../../../store/reducers/ActionCreators';
-import { orderSlice } from '../../../store/reducers';
+import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/OrderSlice';
+changeVisibilityRateForm, changeNewOrderField, resetNewOrder
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -14,19 +15,10 @@ const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { changeVisibilityRateForm, changeNewOrderField, clearNotification } = orderSlice.actions;
-  const { orders, newOrder, error, notification, isInitialLoading, isPending, isShowRateForm } = useSelector((state) => state.orderReducer);
+  const { ,  } = orderSlice.actions;
+  const { orders, newOrder, error, isInitialLoading, isPending, isShowRateForm } = useSelector((state) => state.orderReducer);
 
-  useEffect(() => {
-    dispatch(fetchOrders());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+  useEffect(() => dispatch(fetchOrders()), [dispatch]);
 
   const isComponentReady = useMemo(
     () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
