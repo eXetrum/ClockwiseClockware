@@ -38,9 +38,7 @@ const AdminDashboardCitiesPage = () => {
   );
 
   const onCityRemove = useCallback(
-    async (cityId) => {
-      const city = cities.find((item) => item.id === cityId);
-
+    async (city) => {
       const result = await confirm(`Do you want to delete "${city.name}" city ?`, {
         title: 'Confirm',
         okText: 'Delete',
@@ -48,11 +46,11 @@ const AdminDashboardCitiesPage = () => {
       });
       if (!result) return;
 
-      const action = await dispatch(deleteCity(cityId));
+      const action = await dispatch(deleteCity(city.id));
       if (isFulfilled(action)) enqueueSnackbar(`City "${city.name}" removed`, { variant: 'success' });
       else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
     },
-    [dispatch, enqueueSnackbar, cities],
+    [dispatch, enqueueSnackbar],
   );
 
   return (

@@ -42,7 +42,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
               </td>
               <td className="text-center p-2 m-0 col-1">
                 <Link to="#">
-                  <DeleteForeverIcon onClick={() => onRemove(city.id)} />
+                  <DeleteForeverIcon onClick={() => onRemove(city)} />
                 </Link>
               </td>
             </tr>
