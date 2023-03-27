@@ -5,26 +5,58 @@ import { PuffLoader } from 'react-spinners';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, OrderForm, AdminMastersList, ErrorContainer } from '../../components';
-import { getWatches, getCities, getAvailableMasters, createOrder } from '../../api';
-import { addHours, dateRangesOverlap, dateToNearestHour, isGlobalError, getErrorText } from '../../utils';
 
-const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, watch: null, startDate: dateToNearestHour() });
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchWatches, fetchCities, addOrder } from '../../store/reducers/ActionCreators';
+import { watchSlice, cityReducer, orderSlice } from '../../store/reducers';
+
+import { addHours, dateRangesOverlap, dateToNearestHour, isGlobalError, getErrorText } from '../../utils';
+import { ERROR_TYPE } from '../../constants';
+
+import { getAvailableMasters, createOrder } from '../../api';
+
+//const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, watch: null, startDate: dateToNearestHour() });
 
 const OrderPage = () => {
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [watches, setWatches] = useState([]);
-  const [cities, setCities] = useState([]);
+  const { watches, isInitialLoading: isInitialLoadingWatches } = useSelector((state) => state.watchReducer);
+  const { cities, isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
+  const { resetNewOrder, clearNotification } = orderSlice.actions;
+  const { newOrder, error, notification } = useSelector((state) => state.orderReducer);
 
-  const [newOrder, setNewOrder] = useState(location?.state?.order || initEmptyOrder());
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
+  useEffect(() => {
+    dispatch(fetchWatches());
+    dispatch(fetchCities());
+    dispatch(resetNewOrder(location?.state?.order));
+  }, [dispatch, location, resetNewOrder]);
 
-  const [selectedCities, setSelectedCities] = useState(location?.state?.order?.city ? [location?.state?.order?.city] : []);
-  const [lastAssignedCity, setLastAssignedCity] = useState(null);
+  useEffect(() => {
+    if (notification.text && notification.variant) {
+      enqueueSnackbar(notification.text, { variant: notification.variant });
+      dispatch(clearNotification());
+    }
+  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+
+  const isInitialLoading = useMemo(
+    () => isInitialLoadingWatches || isInitialLoadingCities,
+    [isInitialLoadingWatches, isInitialLoadingCities],
+  );
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
+
+  console.log(newOrder);
+
+  //const [watches, setWatches] = useState([]);
+  //const [cities, setCities] = useState([]);
+  //const [newOrder, setNewOrder] = useState(location?.state?.order || initEmptyOrder());
+  //const [isInitialLoading, setInitialLoading] = useState(false);
+  //const [error, setError] = useState(null);
 
   const [masters, setMasters] = useState([]);
   const [isShowMasters, setShowMasters] = useState(false);
@@ -34,53 +66,14 @@ const OrderPage = () => {
 
   const isOrderConfirmationMessageReceived = useMemo(() => orderConfirmationMessage !== null, [orderConfirmationMessage]);
   const isMasterAssigned = useMemo(() => newOrder?.master !== null, [newOrder]);
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
+  //const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
   const resetMasterList = () => {
     setShowMasters(false);
     setMasters([]);
   };
 
-  const resetOrigOrder = (order) => {
-    setNewOrder(order);
-    setSelectedCities([]);
-    setLastAssignedCity(null);
-    setOrderConfirmationMessage(null);
-  };
-
-  const ensureMasterCanServeCity = (master, city) => master?.cities?.find((item) => item.id === city.id);
-  const ensureMasterSchedule = (schedule, startDate, endDate) =>
-    schedule.some((item) => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate)));
-  const ensureMasterCanHandleOrder = ({ id, watch, city, master, startDate }) => {
-    // Master cant handle selected city
-    if (!ensureMasterCanServeCity(master, city)) return false;
-
-    const schedule = master.orders.filter((item) => item.id !== id);
-    return !ensureMasterSchedule(schedule, startDate, addHours(startDate, watch.repairTime));
-  };
-
-  const fetchInitialData = useCallback(async (id, abortController) => {
-    try {
-      setInitialLoading(true);
-      let response = await getWatches({ abortController });
-
-      if (response?.data?.watches) {
-        const { watches } = response.data;
-        setWatches(watches);
-      }
-
-      response = await getCities({ abortController });
-      if (response?.data?.cities) {
-        const { cities } = response.data;
-        setCities(cities);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  }, []);
-
+  /*
   const fetchAvailableMasters = async ({ id, city, watch, startDate }) => {
     setPending(true);
     resetMasterList();
@@ -142,22 +135,11 @@ const OrderPage = () => {
     }
   };
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(abortController);
-    return () => {
-      abortController.abort();
-      closeSnackbar();
-    };
-  }, [closeSnackbar, fetchInitialData]);
-
   const onFormSubmit = (event) => {
     event.preventDefault();
     doCreateOrder({ ...newOrder });
   };
 
-  const onClientEmailChange = (event) => setNewOrder((prev) => ({ ...prev, client: { ...prev.client, email: event.target.value } }));
-  const onClientNameChange = (event) => setNewOrder((prev) => ({ ...prev, client: { ...prev.client, name: event.target.value } }));
 
   const onOrderCitySelect = async (selectedList, newCity) => {
     if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, city: newCity })) {
@@ -253,6 +235,9 @@ const OrderPage = () => {
     onFindMasterBtnClick,
     onResetBtnClick,
   };
+  */
+
+  const onSelectMaster = () => {};
 
   return (
     <Container>
@@ -310,33 +295,14 @@ const OrderPage = () => {
                 <hr />
                 <Row className="justify-content-md-center">
                   <Col md="auto">
-                    <Button variant="primary" onClick={() => resetOrigOrder(initEmptyOrder())}>
+                    <Button variant="primary" onClick={() => dispatch(resetNewOrder())}>
                       Create new order
                     </Button>
                   </Col>
                 </Row>
               </>
             ) : (
-              <>
-                <OrderForm
-                  {...{
-                    order: newOrder,
-                    watches,
-                    cities,
-                    selectedCities,
-                    ...handlers,
-                    isPending,
-                    isEditForm: false,
-                    successButtonText: 'Create',
-                  }}
-                />
-                {isShowMasters ? (
-                  <>
-                    <hr />
-                    <AdminMastersList {...{ masters, onSelect: onSelectMaster, isAdminView: false }} />
-                  </>
-                ) : null}
-              </>
+              <OrderForm {...{ watches, cities, isEditForm: false, successButtonText: 'Create' }} />
             )}
           </>
         ) : null}
