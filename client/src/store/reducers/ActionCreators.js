@@ -298,7 +298,7 @@ export const cancelOrder = createAsyncThunk('order/cancelOrder', async (id, thun
 export const rateOrder = createAsyncThunk('order/rateOrder', async ({ id, rating }, thunkAPI) => {
   try {
     await patchOrderById({ id, rating });
-    return id;
+    return { id, rating };
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
   }

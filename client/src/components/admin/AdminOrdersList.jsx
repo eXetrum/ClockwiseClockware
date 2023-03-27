@@ -1,13 +1,15 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Alert, Badge, Button, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import Stack from '@mui/material/Stack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../common/StarRating';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { deleteOrder, completeOrder, cancelOrder } from '../../store/reducers/ActionCreators';
 
@@ -17,36 +19,56 @@ import { ORDER_STATUS } from '../../constants';
 const COLUMN_HEADERS = ['id', 'Client', 'Master', 'City', 'Clock', 'Date Start', 'Date End', 'Status', 'Total Cost'];
 
 const AdminOrdersList = ({ orders }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const onRemove = async (id) => {
-    const result = await confirm(`Do you want to delete order ${id} ?`, {
-      title: 'Confirm',
-      okText: 'Delete',
-      okButtonStyle: 'danger',
-    });
-    if (result) dispatch(deleteOrder(id));
-  };
+  const onRemove = useCallback(
+    async (order) => {
+      const result = await confirm(`Do you want to delete ${order.id} order ?`, {
+        title: 'Confirm',
+        okText: 'Delete',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-  const onComplete = async (id) => {
-    const result = await confirm(`Do you want to mark order ${id} as completed ?`, {
-      title: 'Confirm',
-      okText: 'Apply',
-      okButtonStyle: 'success',
-    });
+      const action = await dispatch(deleteOrder(order.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" removed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
-    if (result) dispatch(completeOrder(id));
-  };
+  const onComplete = useCallback(
+    async (order) => {
+      const result = await confirm(`Do you want to mark order with id=${order.id} as completed ?`, {
+        title: 'Confirm',
+        okText: 'Completed',
+        okButtonStyle: 'success',
+      });
+      if (!result) return;
 
-  const onCancel = async (id) => {
-    const result = await confirm(`Do you want to mark order ${id} as canceled ?`, {
-      title: 'Confirm',
-      okText: 'Apply',
-      okButtonStyle: 'success',
-    });
+      const action = await dispatch(completeOrder(order.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" maked as completed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
-    if (result) dispatch(cancelOrder(id));
-  };
+  const onCancel = useCallback(
+    async (order) => {
+      const result = await confirm(`Do you want to mark order with id=${order.id} as canceled ?`, {
+        title: 'Confirm',
+        okText: 'Completed',
+        okButtonStyle: 'success',
+      });
+      if (!result) return;
+
+      const action = await dispatch(cancelOrder(order.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" maked as canceled`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
   if (orders.length === 0) {
     return (
@@ -120,7 +142,7 @@ const AdminOrdersList = ({ orders }) => {
                 {order.status === ORDER_STATUS.CONFIRMED ? (
                   <Stack spacing={1}>
                     <Button
-                      onClick={() => onComplete(order.id)}
+                      onClick={() => onComplete(order)}
                       size="sm"
                       disabled={order.isCompleting || order.isCanceling}
                       variant="success"
@@ -131,7 +153,7 @@ const AdminOrdersList = ({ orders }) => {
                       Complete
                     </Button>
                     <Button
-                      onClick={() => onCancel(order.id)}
+                      onClick={() => onCancel(order)}
                       size="sm"
                       disabled={order.isCompleting || order.isCanceling}
                       variant="secondary"
@@ -159,7 +181,7 @@ const AdminOrdersList = ({ orders }) => {
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">
-                  <DeleteForeverIcon onClick={() => onRemove(order.id)} />
+                  <DeleteForeverIcon onClick={() => onRemove(order)} />
                 </Link>
               </td>
             </tr>

@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Row, Form } from 'react-bootstrap';
-import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
+import { PuffLoader } from 'react-spinners';
 import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from '../../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, rateOrder } from '../../../store/reducers/ActionCreators';
-import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/OrderSlice';
-changeVisibilityRateForm, changeNewOrderField, resetNewOrder
+import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/reducers/OrderSlice';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -15,7 +15,6 @@ const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { ,  } = orderSlice.actions;
   const { orders, newOrder, error, isInitialLoading, isPending, isShowRateForm } = useSelector((state) => state.orderReducer);
 
   useEffect(() => dispatch(fetchOrders()), [dispatch]);
@@ -27,10 +26,27 @@ const ClientDashboardOrdersPage = () => {
 
   const [orderId, setOrderId] = useState(null);
 
-  const onReview = async (id) => {
-    setOrderId(id);
-    dispatch(changeVisibilityRateForm(true));
-  };
+  const onReview = useCallback(
+    async (order) => {
+      setOrderId(order.id);
+      dispatch(changeVisibilityRateForm(true));
+    },
+    [dispatch],
+  );
+
+  const onFormSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const rating = newOrder.rating;
+      dispatch(changeVisibilityRateForm(false));
+      const action = await dispatch(rateOrder({ id: orderId, rating }));
+      setOrderId(null);
+
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${orderId}" rated with value=${newOrder.rating}`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, orderId, newOrder],
+  );
 
   return (
     <Container>
@@ -58,10 +74,7 @@ const ClientDashboardOrdersPage = () => {
           title={'Rate order'}
           okText={'Apply'}
           onHide={() => dispatch(changeVisibilityRateForm(false))}
-          onSubmit={(event) => {
-            event.preventDefault();
-            dispatch(rateOrder({ id: orderId, rating: newOrder.rating }));
-          }}
+          onSubmit={onFormSubmit}
           isFormValid={() => true}
           isPending={isPending}
           formContent={

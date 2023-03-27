@@ -1,12 +1,39 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Container, Row, Col, Table, Alert, Button, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import Stack from '@mui/material/Stack';
+
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
+import { useDispatch } from 'react-redux';
+import { completeOrder } from '../../store/reducers/ActionCreators';
+
 import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
 const COLUMN_HEADERS = ['Client Name', 'Service', 'City', 'Date Start', 'Date End', 'Total Cost', 'Status'];
 
-const MasterOrdersList = ({ orders, onComplete, isPending }) => {
+const MasterOrdersList = ({ orders }) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
+
+  const onComplete = useCallback(
+    async (order) => {
+      const result = await confirm(`Do you want to mark order with id=${order.id} as completed ?`, {
+        title: 'Confirm',
+        okText: 'Completed',
+        okButtonStyle: 'success',
+      });
+      if (!result) return;
+
+      const action = await dispatch(completeOrder(order.id));
+
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" maked as completed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
+
   if (orders.length === 0) {
     return (
       <Container>
@@ -25,7 +52,9 @@ const MasterOrdersList = ({ orders, onComplete, isPending }) => {
         <thead>
           <tr>
             {COLUMN_HEADERS.map((header) => (
-              <th className="text-center p-2 m-0">{header}</th>
+              <th key={header} className="text-center p-2 m-0">
+                {header}
+              </th>
             ))}
           </tr>
         </thead>
@@ -50,8 +79,10 @@ const MasterOrdersList = ({ orders, onComplete, isPending }) => {
                 <small className="text-muted">{order.status}</small>
                 {order.status === ORDER_STATUS.CONFIRMED ? (
                   <Stack spacing={1}>
-                    <Button onClick={() => onComplete(order.id)} size="sm" variant="success" disabled={isPending}>
-                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                    <Button onClick={() => onComplete(order)} size="sm" variant="success" disabled={order.isCompleting}>
+                      {order.isCompleting ? (
+                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                      ) : null}
                       Complete
                     </Button>
                   </Stack>

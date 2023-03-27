@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo } from 'react';
-import { Container, Spinner } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
+import { PuffLoader } from 'react-spinners';
 import { Header, ErrorContainer, MasterOrdersList } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -30,7 +31,7 @@ const MasterDashboardOrdersPage = () => {
 
         {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
         ) : null}
 

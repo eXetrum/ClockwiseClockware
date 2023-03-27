@@ -4,7 +4,7 @@ const { User, Master, Watches, City, MasterCityList, Order } = require('../datab
 const db = require('../database/models/index');
 const { RequireAuth } = require('../middleware/RouteProtector');
 const { dateToNearestHour, isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
-const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR } = require('../constants');
 
 const getAvailableMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert, Spinner } from 'react-bootstrap';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 import { formatDecimal, formatDate } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
@@ -56,9 +56,15 @@ const ClientOrdersList = ({ orders, onReview }) => {
                 {order.status === ORDER_STATUS.COMPLETED ? (
                   <>
                     {order.rating === null ? (
-                      <Link to="#">
-                        <ThumbUpOutlinedIcon onClick={() => onReview(order.id)} />
-                      </Link>
+                      <>
+                        {order.isEvaluating ? (
+                          <Spinner as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                        ) : (
+                          <Link to="#">
+                            <ThumbUpOutlinedIcon onClick={() => onReview(order)} />
+                          </Link>
+                        )}
+                      </>
                     ) : (
                       order.rating
                     )}

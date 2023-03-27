@@ -369,6 +369,10 @@ const patch = [
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
+            const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+            await delay(3000);
+            //return res.status(403).end();
+
             const { id } = req.params;
             const { status, rating } = req.body;
 
