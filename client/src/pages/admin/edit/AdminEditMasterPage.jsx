@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
@@ -6,9 +6,9 @@ import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { Header, ErrorContainer, MasterForm } from '../../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, fetchMaster, updateMaster } from '../../../store/reducers/ActionCreators';
-import { masterSlice } from '../../../store/reducers';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -17,21 +17,13 @@ const AdminEditMasterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { clearNotification } = masterSlice.actions;
-  const { newMaster, error, notification, isInitialLoading: isInitialLoadingMaster } = useSelector((state) => state.masterReducer);
+  const { newMaster, error, isInitialLoading: isInitialLoadingMaster } = useSelector((state) => state.masterReducer);
   const { isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
     dispatch(fetchCities());
     dispatch(fetchMaster(id));
   }, [id, dispatch]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
 
   const isInitialLoading = useMemo(
     () => isInitialLoadingCities || isInitialLoadingMaster,
@@ -43,10 +35,15 @@ const AdminEditMasterPage = () => {
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    dispatch(updateMaster(newMaster));
-  };
+  const onFormSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const action = await dispatch(updateMaster(newMaster));
+      if (isFulfilled(action)) enqueueSnackbar('Master updated', { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, newMaster],
+  );
 
   return (
     <Container>

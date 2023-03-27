@@ -15,7 +15,6 @@ import { ERROR_TYPE } from '../../constants';
 
 const initEmptyMaster = () => ({ name: '', email: '', password: '', rating: 0, isApprovedByAdmin: false, cities: [] });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
-const createNotification = ({ text = '', variant = '' }) => ({ text, variant });
 
 const initialState = {
   masters: [],
@@ -25,7 +24,6 @@ const initialState = {
   isInitialLoading: false,
   isShowAddForm: false,
   isPending: false,
-  notification: createNotification({}),
 };
 
 export const masterSlice = createSlice({
@@ -38,9 +36,6 @@ export const masterSlice = createSlice({
     },
     changeNewMasterField(state, action) {
       state.newMaster[action.payload.name] = action.payload.value;
-    },
-    clearNotification(state, _) {
-      state.notification = createNotification({});
     },
   },
   extraReducers: (builder) => {
@@ -89,12 +84,10 @@ export const masterSlice = createSlice({
         state.isShowAddForm = false;
         state.newMaster = initEmptyMaster();
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${action.payload.name}" created`, variant: 'success' });
       }),
       builder.addCase(addMaster.rejected, (state, action) => {
         state.isPending = false;
         if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -108,7 +101,6 @@ export const masterSlice = createSlice({
         state.masters = state.masters.filter((master) => master.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${removedMaster.email}" removed`, variant: 'success' });
       }),
       builder.addCase(deleteMaster.rejected, (state, action) => {
         state.isPending = false;
@@ -118,7 +110,6 @@ export const masterSlice = createSlice({
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -151,13 +142,11 @@ export const masterSlice = createSlice({
         state.error = initEmptyError();
         state.newMaster = action.payload;
         state.oldMaster = action.payload;
-        state.notification = createNotification({ text: 'Master updated', variant: 'success' });
       }),
       builder.addCase(updateMaster.rejected, (state, action) => {
         state.isPending = false;
         state.newMaster = state.oldMaster;
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -174,16 +163,11 @@ export const masterSlice = createSlice({
         const master = state.masters[idx];
         state.masters[idx].isPendingResetPassword = false;
         state.error = initEmptyError();
-        state.notification = createNotification({
-          text: `Password for master ${master.email} has been successfully reset`,
-          variant: 'success',
-        });
       }),
       builder.addCase(resetPasswordMaster.rejected, (state, action) => {
         const idx = state.masters.map((master) => master.id).indexOf(action.payload.id);
         state.masters[idx].isPendingResetPassword = false;
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter((master) => master.id !== action.payload.id);
-        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
 
@@ -200,19 +184,15 @@ export const masterSlice = createSlice({
         const master = state.masters[idx];
         state.masters[idx].isPendingResendEmailConfirmation = false;
         state.error = initEmptyError();
-        state.notification = createNotification({
-          text: `Email confirmation for master ${master.email} has been sent`,
-          variant: 'success',
-        });
       }),
       builder.addCase(resendEmailConfirmationMaster.rejected, (state, action) => {
         const idx = state.masters.map((master) => master.id).indexOf(action.payload.id);
         state.masters[idx].isPendingResendEmailConfirmation = false;
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter((master) => master.id !== action.payload.id);
-        state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
   },
 });
 
+export const { changeVisibilityAddForm, changeNewMasterField } = masterSlice.actions;
 export default masterSlice.reducer;

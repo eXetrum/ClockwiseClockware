@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col, Table, Button, Alert, Badge, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
@@ -11,41 +12,61 @@ import Typography from '@mui/material/Typography';
 import ViewMasterCard from '../master/ViewMasterCard';
 import StarRating from '../common/StarRating';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/reducers/ActionCreators';
 
 const MasterTableList = ({ masters }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const onRemove = async (master) => {
-    const result = await confirm(`Do you want to delete "${master.email}" master ?`, {
-      title: 'Confirm',
-      okText: 'Delete',
-      okButtonStyle: 'danger',
-    });
+  const onRemove = useCallback(
+    async (master) => {
+      const result = await confirm(`Do you want to delete "${master.email}" master ?`, {
+        title: 'Confirm',
+        okText: 'Delete',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-    if (result) dispatch(deleteMaster(master.id));
-  };
+      const action = await dispatch(deleteMaster(master.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Master "${master.email}" removed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
-  const onResetPassword = async (master) => {
-    const result = await confirm(`Do you want to reset password for "${master.email}" master ?`, {
-      title: 'Confirm',
-      okText: 'Yes',
-      okButtonStyle: 'danger',
-    });
+  const onResetPassword = useCallback(
+    async (master) => {
+      const result = await confirm(`Do you want to reset password for "${master.email}" master ?`, {
+        title: 'Confirm',
+        okText: 'Yes',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-    if (result) dispatch(resetPasswordMaster(master.id));
-  };
+      const action = await dispatch(resetPasswordMaster(master.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Password for master ${master.email} has been successfully reset`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
-  const onResendEmailConfirmation = async (master) => {
-    const result = await confirm(`Do you want to resend email confirmation for "${master.email}" master ?`, {
-      title: 'Confirm',
-      okText: 'Yes',
-      okButtonStyle: 'danger',
-    });
+  const onResendEmailConfirmation = useCallback(
+    async (master) => {
+      const result = await confirm(`Do you want to resend email confirmation for "${master.email}" master ?`, {
+        title: 'Confirm',
+        okText: 'Yes',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-    if (result) dispatch(resendEmailConfirmationMaster(master.id));
-  };
+      const action = await dispatch(resendEmailConfirmationMaster(master.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
 
   return (
     <Container>

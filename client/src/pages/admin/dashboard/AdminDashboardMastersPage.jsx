@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
@@ -6,9 +6,10 @@ import { useSnackbar } from 'notistack';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import { Header, ErrorContainer, AdminMastersList, MasterForm } from '../../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, fetchMasters, addMaster } from '../../../store/reducers/ActionCreators';
-import { masterSlice } from '../../../store/reducers';
+import { changeVisibilityAddForm } from '../../../store/reducers/MasterSlice';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -16,28 +17,13 @@ const AdminDashboardMasters = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { changeVisibilityAddForm, clearNotification } = masterSlice.actions;
-  const {
-    masters,
-    newMaster,
-    error,
-    notification,
-    isInitialLoading: isInitialLoadingMasters,
-  } = useSelector((state) => state.masterReducer);
-
+  const { masters, newMaster, error, isInitialLoading: isInitialLoadingMasters } = useSelector((state) => state.masterReducer);
   const { isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
 
   useEffect(() => {
     dispatch(fetchCities());
     dispatch(fetchMasters());
   }, [dispatch]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
 
   const isInitialLoading = useMemo(
     () => isInitialLoadingCities || isInitialLoadingMasters,
@@ -49,10 +35,15 @@ const AdminDashboardMasters = () => {
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    dispatch(addMaster(newMaster));
-  };
+  const onFormSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const action = await dispatch(addMaster(newMaster));
+      if (isFulfilled(action)) enqueueSnackbar(`Master "${action.payload.email}" created`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, newMaster],
+  );
 
   return (
     <Container>
