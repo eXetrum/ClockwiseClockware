@@ -76,7 +76,7 @@ export const orderSlice = createSlice({
       }),
       builder.addCase(addOrder.rejected, (state, action) => {
         state.isPending = false;
-        if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
+        if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ACCESS_DENIED])) state.error = action.payload;
       });
     //#endregion
 
