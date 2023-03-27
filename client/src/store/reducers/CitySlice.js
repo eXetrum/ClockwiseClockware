@@ -6,7 +6,6 @@ import { ERROR_TYPE } from '../../constants';
 
 const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
-const createNotification = ({ text = '', variant = '' }) => ({ text, variant });
 
 const initialState = {
   cities: [],
@@ -16,7 +15,6 @@ const initialState = {
   isInitialLoading: false,
   isShowAddForm: false,
   isPending: false,
-  notification: createNotification({}),
 };
 
 export const citySlice = createSlice({
@@ -29,9 +27,6 @@ export const citySlice = createSlice({
     },
     changeNewCityField(state, action) {
       state.newCity[action.payload.name] = action.payload.value;
-    },
-    clearNotification(state, _) {
-      state.notification = createNotification({});
     },
   },
   extraReducers: (builder) => {
@@ -61,12 +56,10 @@ export const citySlice = createSlice({
         state.isShowAddForm = false;
         state.newCity = initEmptyCity();
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${action.payload.name}" created`, variant: 'success' });
       }),
       builder.addCase(addCity.rejected, (state, action) => {
         state.isPending = false;
         if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
     //#region Delete city by id
@@ -75,11 +68,9 @@ export const citySlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteCity.fulfilled, (state, action) => {
-        const removedCity = state.cities.find((city) => city.id === action.payload);
         state.cities = state.cities.filter((city) => city.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
-        state.notification = createNotification({ text: `City "${removedCity.name}" removed`, variant: 'success' });
       }),
       builder.addCase(deleteCity.rejected, (state, action) => {
         state.isPending = false;
@@ -89,7 +80,6 @@ export const citySlice = createSlice({
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
     //#region Get city by id
@@ -120,16 +110,15 @@ export const citySlice = createSlice({
         state.error = initEmptyError();
         state.newCity = action.payload;
         state.oldCity = action.payload;
-        state.notification = createNotification({ text: 'City updated', variant: 'success' });
       }),
       builder.addCase(updateCity.rejected, (state, action) => {
         state.isPending = false;
         state.newCity = state.oldCity;
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
-        else state.notification = createNotification({ text: `Error: ${action.payload.message}`, variant: 'error' });
       });
     //#endregion
   },
 });
 
+export const { changeVisibilityAddForm, changeNewCityField } = citySlice.actions;
 export default citySlice.reducer;

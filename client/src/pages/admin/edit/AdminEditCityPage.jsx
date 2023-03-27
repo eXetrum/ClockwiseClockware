@@ -6,9 +6,9 @@ import { useSnackbar } from 'notistack';
 import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { Header, ErrorContainer, CityForm } from '../../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCity, updateCity } from '../../../store/reducers/ActionCreators';
-import { citySlice } from '../../../store/reducers';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -17,28 +17,20 @@ const AdminEditCityPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { clearNotification } = citySlice.actions;
-  const { newCity, error, notification, isInitialLoading } = useSelector((state) => state.cityReducer);
+  const { newCity, error, isInitialLoading } = useSelector((state) => state.cityReducer);
 
-  useEffect(() => {
-    dispatch(fetchCity(id));
-  }, [id, dispatch]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+  useEffect(() => dispatch(fetchCity(id)), [id, dispatch]);
 
   const isComponentReady = useMemo(
     () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = async (event) => {
     event.preventDefault();
-    dispatch(updateCity(newCity));
+    const action = await dispatch(updateCity(newCity));
+    if (isFulfilled(action)) enqueueSnackbar('City updated', { variant: 'success' });
+    else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
   };
 
   return (

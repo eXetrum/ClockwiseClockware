@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -7,9 +7,10 @@ import { PuffLoader } from 'react-spinners';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, AdminCitiesList, CityForm } from '../../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, addCity, deleteCity } from '../../../store/reducers/ActionCreators';
-import { citySlice } from '../../../store/reducers';
+import { changeVisibilityAddForm } from '../../../store/reducers/CitySlice';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -17,41 +18,42 @@ const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { changeVisibilityAddForm, clearNotification } = citySlice.actions;
-  const { cities, newCity, error, notification, isInitialLoading } = useSelector((state) => state.cityReducer);
+  const { cities, newCity, error, isInitialLoading } = useSelector((state) => state.cityReducer);
 
-  useEffect(() => {
-    dispatch(fetchCities());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (notification.text && notification.variant) {
-      enqueueSnackbar(notification.text, { variant: notification.variant });
-      dispatch(clearNotification());
-    }
-  }, [notification, enqueueSnackbar, dispatch, clearNotification]);
+  useEffect(() => dispatch(fetchCities()), [dispatch]);
 
   const isComponentReady = useMemo(
     () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = (event) => {
-    event.preventDefault();
-    dispatch(addCity(newCity));
-  };
+  const onFormSubmit = useCallback(
+    async (event) => {
+      event.preventDefault();
+      const action = await dispatch(addCity(newCity));
+      if (isFulfilled(action)) enqueueSnackbar(`City "${action.payload.name}" created`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, newCity],
+  );
 
-  const onCityRemove = async (cityId) => {
-    const city = cities.find((item) => item.id === cityId);
+  const onCityRemove = useCallback(
+    async (cityId) => {
+      const city = cities.find((item) => item.id === cityId);
 
-    const result = await confirm(`Do you want to delete "${city.name}" city ?`, {
-      title: 'Confirm',
-      okText: 'Delete',
-      okButtonStyle: 'danger',
-    });
+      const result = await confirm(`Do you want to delete "${city.name}" city ?`, {
+        title: 'Confirm',
+        okText: 'Delete',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
 
-    if (result) dispatch(deleteCity(cityId));
-  };
+      const action = await dispatch(deleteCity(cityId));
+      if (isFulfilled(action)) enqueueSnackbar(`City "${city.name}" removed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, cities],
+  );
 
   return (
     <Container>
