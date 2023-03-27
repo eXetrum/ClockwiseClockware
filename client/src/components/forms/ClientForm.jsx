@@ -5,7 +5,7 @@ import ModalForm from './ModalForm';
 import { useDispatch, useSelector } from 'react-redux';
 import { clientSlice } from '../../store/reducers';
 
-import { validateEmail } from '../../utils';
+import { validateEmail, validateClientName } from '../../utils';
 
 const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false }) => {
   const dispatch = useDispatch();
@@ -14,7 +14,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
   const { newClient, isShowAddForm, isPending } = useSelector((state) => state.clientReducer);
 
   const isFormValid = useCallback(
-    () => newClient.email && validateEmail(newClient.email) && (isHidePassword ? true : newClient.password) && newClient.name.length >= 3,
+    () => validateEmail(newClient.email) && validateClientName(newClient.name) && (isHidePassword ? true : newClient.password),
     [newClient, isHidePassword],
   );
 
