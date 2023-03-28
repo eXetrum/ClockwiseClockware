@@ -75,14 +75,14 @@ const LoginPage = () => {
     }
   };
 
-  const onFormFieldChange = (event) => {
+  const onFormFieldChange = event => {
     const inputField = event.target.name;
     const inputValue = event.target.value;
-    setFormUser((prev) => ({ ...prev, [inputField]: inputValue }));
+    setFormUser(prev => ({ ...prev, [inputField]: inputValue }));
     setError(null);
   };
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     abortController = new AbortController();
     doLogin({ ...formUser, abortController });

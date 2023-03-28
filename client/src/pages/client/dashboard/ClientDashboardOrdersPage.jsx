@@ -19,7 +19,7 @@ const ClientDashboardOrdersPage = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       const response = await getOrders({ abortController });
@@ -42,8 +42,8 @@ const ClientDashboardOrdersPage = () => {
     };
   }, []);
 
-  const onReview = async (id) => {
-    setSelectedOrder(orders.find((item) => item.id === id));
+  const onReview = async id => {
+    setSelectedOrder(orders.find(item => item.id === id));
     setShowRateForm(true);
   };
 
@@ -52,17 +52,17 @@ const ClientDashboardOrdersPage = () => {
     setRating(MAX_RATING_VALUE);
   };
 
-  const onFormSubmit = async (event) => {
+  const onFormSubmit = async event => {
     event.preventDefault();
     try {
       const id = selectedOrder.id;
       setPending(true);
       await patchOrderById({
         id,
-        status: orders.find((item) => item.id === id)?.status,
+        status: orders.find(item => item.id === id)?.status,
         rating,
       });
-      const idx = orders.map((item) => item.id).indexOf(id);
+      const idx = orders.map(item => item.id).indexOf(id);
       orders[idx].rating = rating;
       setOrders(orders);
       setShowRateForm(false);
@@ -73,7 +73,7 @@ const ClientDashboardOrdersPage = () => {
       setPending(false);
     }
   };
-  const onRatingChange = (value) => setRating(value);
+  const onRatingChange = value => setRating(value);
 
   return (
     <Container>

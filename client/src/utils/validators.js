@@ -1,5 +1,5 @@
 /* eslint-disable */
-export const validateEmail = (email) => {
+export const validateEmail = email => {
   return String(email)
     .toLowerCase()
     .match(

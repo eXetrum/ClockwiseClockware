@@ -62,13 +62,13 @@ const AdminEditClient = () => {
     };
   }, [id, closeSnackbar]);
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doUpdateClientById(id, client);
   };
 
-  const onClientEmailChange = (event) => setClient((prev) => ({ ...prev, email: event.target.value }));
-  const onClientNameChange = (event) => setClient((prev) => ({ ...prev, name: event.target.value }));
+  const onClientEmailChange = event => setClient(prev => ({ ...prev, email: event.target.value }));
+  const onClientNameChange = event => setClient(prev => ({ ...prev, name: event.target.value }));
 
   const handlers = {
     onFormSubmit,

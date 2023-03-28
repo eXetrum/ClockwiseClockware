@@ -17,7 +17,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
     );
   }
 
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
+  const formatDecimal = value => parseFloat(value).toFixed(2);
 
   return (
     <Container>
@@ -31,7 +31,7 @@ const AdminCitiesList = ({ cities, onRemove }) => {
           </tr>
         </thead>
         <tbody>
-          {cities.map((city) => (
+          {cities.map(city => (
             <tr key={city.id}>
               <td className="text-center p-2 m-0 col-2">{city.id}</td>
               <td className="text-center p-2 m-0">{city.name}</td>

@@ -25,7 +25,7 @@ const ClientOrdersList = ({ orders, onReview }) => {
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            {COLUMN_HEADERS.map((header) => (
+            {COLUMN_HEADERS.map(header => (
               <th key={header} className="text-center p-2 m-0">
                 {header}
               </th>
@@ -33,7 +33,7 @@ const ClientOrdersList = ({ orders, onReview }) => {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {orders.map(order => (
             <tr key={order.id} className="m-0">
               <td className="text-center p-2 m-0">{`${order.master.name}`}</td>
               <td className="text-center p-2 m-0">

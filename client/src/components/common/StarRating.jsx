@@ -9,7 +9,7 @@ const StarRating = ({ total = 5, value = 0, readonly = false, onRatingChange = n
     setHover(value);
   }, [value]);
 
-  const onClick = (value) => {
+  const onClick = value => {
     if (readonly) return;
     setRating(value);
     if (onRatingChange) onRatingChange(value);
@@ -20,7 +20,7 @@ const StarRating = ({ total = 5, value = 0, readonly = false, onRatingChange = n
     setHover(0);
     if (onRatingReset) onRatingReset(0);
   };
-  const onMouseEnter = (value) => {
+  const onMouseEnter = value => {
     if (!readonly) setHover(value);
   };
   const onMouseLeave = () => {

@@ -33,7 +33,7 @@ const AdminClientsList = ({ clients, onRemove, onResetPassword, onResendEmailCon
           </tr>
         </thead>
         <tbody>
-          {clients.map((client) => (
+          {clients.map(client => (
             <tr key={client.id} className="m-0">
               <td className="text-center p-3 m-0 col-2">{client.id}</td>
               <td className="p-3 m-0">

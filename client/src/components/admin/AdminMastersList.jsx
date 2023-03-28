@@ -27,7 +27,7 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
           </tr>
         </thead>
         <tbody>
-          {masters.map((master) => (
+          {masters.map(master => (
             <tr key={master.id}>
               <td className="text-center p-3 m-0 col-2">{master.id}</td>
               <td className="p-3 m-0">
@@ -38,7 +38,7 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
               </td>
               <td className="p-3 m-0">{master.name}</td>
               <td className="text-center  pt-2 m-0">
-                {master.cities.map((city) => (
+                {master.cities.map(city => (
                   <Badge bg="info" className="p-2 m-1" key={city.id}>
                     {city.name}
                   </Badge>
@@ -90,7 +90,7 @@ const MasterCardList = ({ masters, onSelect }) => {
     <Container>
       <Row className="justify-content-md-center mt-4">
         <>
-          {masters.map((master) => (
+          {masters.map(master => (
             <Col key={master.id} md="auto" onClick={() => onSelect(master)}>
               <ViewMasterCard master={master} />
             </Col>

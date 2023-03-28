@@ -3,7 +3,7 @@ import ErrorOutlineOutlinedIcon from '@mui/icons-material/ErrorOutlineOutlined';
 import BlockOutlinedIcon from '@mui/icons-material/BlockOutlined';
 import SyncProblemIcon from '@mui/icons-material/SyncProblem';
 
-const getIconByError = (error) => {
+const getIconByError = error => {
   if (error?.code === 'ERR_NETWORK') return <CloudOffIcon fontSize="large" />;
   if (error?.code !== 'ERR_BAD_REQUEST') return null;
   if (error?.response?.status === 403) return <BlockOutlinedIcon fontSize="large" />;
@@ -13,7 +13,7 @@ const getIconByError = (error) => {
 };
 
 // Returns true for, network error, and status code 404, 403, 400
-const isGlobalError = (error) => {
+const isGlobalError = error => {
   return (
     error?.code === 'ERR_NETWORK' ||
     (error?.code === 'ERR_BAD_REQUEST' &&
@@ -21,7 +21,7 @@ const isGlobalError = (error) => {
   );
 };
 
-const getErrorText = (error) =>
+const getErrorText = error =>
   error?.response?.data?.detail?.toString() ||
   error?.response?.data?.message?.toString() ||
   error?.response?.statusText ||

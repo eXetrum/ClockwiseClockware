@@ -12,7 +12,7 @@ const ViewMasterCard = ({ master }) => {
         <Card.Subtitle className="mb-2 text-muted">{master.email}</Card.Subtitle>
         <StarRating value={master.rating} readonly={true} />
         <Card.Text>
-          {master.cities.map((city) => (
+          {master.cities.map(city => (
             <Badge bg="info" className="p-2 m-1" key={city.id}>
               {city.name}
             </Badge>

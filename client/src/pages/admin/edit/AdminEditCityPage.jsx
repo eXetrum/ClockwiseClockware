@@ -63,13 +63,13 @@ const AdminEditCityPage = () => {
     };
   }, [id, closeSnackbar]);
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doUpdateCityById(id, city);
   };
 
-  const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
-  const onCityPricePerHourChange = (event) => setCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
+  const onCityNameChange = event => setCity(prev => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = event => setCity(prev => ({ ...prev, pricePerHour: event.target.value }));
 
   return (
     <Container>

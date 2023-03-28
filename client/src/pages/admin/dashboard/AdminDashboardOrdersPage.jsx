@@ -18,7 +18,7 @@ const AdminDashboardOrdersPage = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       const response = await getOrders({ abortController });
@@ -33,15 +33,15 @@ const AdminDashboardOrdersPage = () => {
     }
   };
 
-  const doDeleteOrderById = async (id) => {
+  const doDeleteOrderById = async id => {
     setPending(true);
     try {
       await deleteOrderById({ id });
-      const removedOrder = orders.find((item) => item.id === id);
-      setOrders(orders.filter((item) => item.id !== id));
+      const removedOrder = orders.find(item => item.id === id);
+      setOrders(orders.filter(item => item.id !== id));
       enqueueSnackbar(`Order with id=${removedOrder.id} removed`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setOrders(orders.filter((item) => item.id !== id));
+      if (e?.response?.status === 404) setOrders(orders.filter(item => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
@@ -57,8 +57,8 @@ const AdminDashboardOrdersPage = () => {
     };
   }, [closeSnackbar]);
 
-  const onOrderRemove = async (orderId) => {
-    const order = orders.find((item) => item.id === orderId);
+  const onOrderRemove = async orderId => {
+    const order = orders.find(item => item.id === orderId);
 
     const result = await confirm(`Do you want to delete order with id=${order.id} ?`, {
       title: 'Confirm',
@@ -68,7 +68,7 @@ const AdminDashboardOrdersPage = () => {
     if (result) doDeleteOrderById(orderId);
   };
 
-  const doOrderComplete = async (id) => {
+  const doOrderComplete = async id => {
     try {
       const result = await confirm(`Do you want to mark order with id=${id} as completed ?`, {
         title: 'Confirm',
@@ -80,7 +80,7 @@ const AdminDashboardOrdersPage = () => {
 
       setPending(true);
       await patchOrderById({ id, status: ORDER_STATUS.COMPLETED });
-      const idx = orders.map((item) => item.id).indexOf(id);
+      const idx = orders.map(item => item.id).indexOf(id);
       orders[idx].status = ORDER_STATUS.COMPLETED;
       setOrders(orders);
     } catch (e) {
@@ -90,7 +90,7 @@ const AdminDashboardOrdersPage = () => {
     }
   };
 
-  const doOrderCancel = async (id) => {
+  const doOrderCancel = async id => {
     try {
       const result = await confirm(`Do you want to mark order with id=${id} as canceled ?`, {
         title: 'Confirm',
@@ -102,7 +102,7 @@ const AdminDashboardOrdersPage = () => {
 
       setPending(true);
       await patchOrderById({ id, status: ORDER_STATUS.CANCELED });
-      const idx = orders.map((item) => item.id).indexOf(id);
+      const idx = orders.map(item => item.id).indexOf(id);
       orders[idx].status = ORDER_STATUS.CANCELED;
       setOrders(orders);
     } catch (e) {

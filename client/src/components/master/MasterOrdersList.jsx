@@ -24,7 +24,7 @@ const MasterOrdersList = ({ orders, onComplete, isPending }) => {
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            {COLUMN_HEADER.map((header) => (
+            {COLUMN_HEADER.map(header => (
               <th key={header} className="text-center p-2 m-0">
                 {header}
               </th>
@@ -32,7 +32,7 @@ const MasterOrdersList = ({ orders, onComplete, isPending }) => {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {orders.map(order => (
             <tr key={order.id} className="m-0">
               <td className="text-center p-2 m-0">{`${order.client.name}`}</td>
               <td className="text-center p-2 m-0">

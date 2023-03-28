@@ -17,7 +17,7 @@ const MasterDashboardOrdersPage = () => {
 
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       const response = await getOrders({ abortController });
@@ -40,7 +40,7 @@ const MasterDashboardOrdersPage = () => {
     };
   }, []);
 
-  const doOrderComplete = async (id) => {
+  const doOrderComplete = async id => {
     const result = await confirm(`Do you want to mark order with id=${id} as completed ?`, {
       title: 'Confirm',
       okText: 'Completed',
@@ -55,7 +55,7 @@ const MasterDashboardOrdersPage = () => {
         id,
         status: ORDER_STATUS.COMPLETED,
       });
-      const idx = orders.map((item) => item.id).indexOf(id);
+      const idx = orders.map(item => item.id).indexOf(id);
       orders[idx].status = ORDER_STATUS.COMPLETED;
       setOrders(orders);
     } catch (e) {

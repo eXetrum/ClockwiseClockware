@@ -35,7 +35,7 @@ const OrderForm = ({
     [dateTimeError],
   );
 
-  const onOrderDateError = useCallback((reason) => {
+  const onOrderDateError = useCallback(reason => {
     if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
     if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
     if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
@@ -49,8 +49,8 @@ const OrderForm = ({
     [order],
   );
 
-  const isValidEmail = (email) => validateEmail(email);
-  const isValidName = (name) => name?.length >= 3;
+  const isValidEmail = email => validateEmail(email);
+  const isValidName = name => name?.length >= 3;
 
   const currentDate = dateToNearestHour();
 
@@ -132,7 +132,7 @@ const OrderForm = ({
                 </Form.Label>
               </Col>
               <Col className="justify-content-md-center">
-                {watches.map((watch) => (
+                {watches.map(watch => (
                   <Form.Check
                     key={watch.id}
                     type="radio"
@@ -141,7 +141,7 @@ const OrderForm = ({
                     checked={order?.watch?.id === watch.id}
                     inline
                     required
-                    onChange={(event) => onOrderWatchTypeChange(event, watch)}
+                    onChange={event => onOrderWatchTypeChange(event, watch)}
                     disabled={isPending}
                   />
                 ))}
@@ -182,7 +182,7 @@ const OrderForm = ({
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DateTimePicker
                     label="DateTimePicker"
-                    renderInput={(props) => <TextField {...props} />}
+                    renderInput={props => <TextField {...props} />}
                     views={['year', 'month', 'day', 'hours']}
                     onChange={onOrderDateChange}
                     onError={onOrderDateError}

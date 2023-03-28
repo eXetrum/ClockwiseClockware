@@ -40,21 +40,21 @@ const OrderPage = () => {
     setMasters([]);
   };
 
-  const resetOrigOrder = (order) => {
+  const resetOrigOrder = order => {
     setNewOrder(order);
     setSelectedCities([]);
     setLastAssignedCity(null);
     setOrderConfirmationMessage(null);
   };
 
-  const ensureMasterCanServeCity = (master, city) => master?.cities?.find((item) => item.id === city.id);
+  const ensureMasterCanServeCity = (master, city) => master?.cities?.find(item => item.id === city.id);
   const ensureMasterSchedule = (schedule, startDate, endDate) =>
-    schedule.some((item) => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate)));
+    schedule.some(item => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate)));
   const ensureMasterCanHandleOrder = ({ id, watch, city, master, startDate }) => {
     // Master cant handle selected city
     if (!ensureMasterCanServeCity(master, city)) return false;
 
-    const schedule = master.orders.filter((item) => item.id !== id);
+    const schedule = master.orders.filter(item => item.id !== id);
     return !ensureMasterSchedule(schedule, startDate, addHours(startDate, watch.repairTime));
   };
 
@@ -150,17 +150,17 @@ const OrderPage = () => {
     };
   }, [closeSnackbar, fetchInitialData]);
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doCreateOrder({ ...newOrder });
   };
 
-  const onClientEmailChange = (event) => setNewOrder((prev) => ({ ...prev, client: { ...prev.client, email: event.target.value } }));
-  const onClientNameChange = (event) => setNewOrder((prev) => ({ ...prev, client: { ...prev.client, name: event.target.value } }));
+  const onClientEmailChange = event => setNewOrder(prev => ({ ...prev, client: { ...prev.client, email: event.target.value } }));
+  const onClientNameChange = event => setNewOrder(prev => ({ ...prev, client: { ...prev.client, name: event.target.value } }));
 
   const onOrderCitySelect = async (selectedList, newCity) => {
     if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, city: newCity })) {
-      setNewOrder((prev) => ({ ...prev, city: newCity }));
+      setNewOrder(prev => ({ ...prev, city: newCity }));
       setSelectedCities([newCity]);
       resetMasterList();
       return;
@@ -176,26 +176,26 @@ const OrderPage = () => {
     // Accept -> drop current master
     if (result) {
       resetMasterList();
-      setNewOrder((prev) => ({ ...prev, city: newCity, master: null }));
+      setNewOrder(prev => ({ ...prev, city: newCity, master: null }));
       setSelectedCities([newCity]);
       return fetchAvailableMasters({ ...newOrder, city: newCity, master: null });
     }
 
     // Cancel -> revert to prev city
-    setNewOrder((prev) => ({ ...prev, city: lastAssignedCity }));
+    setNewOrder(prev => ({ ...prev, city: lastAssignedCity }));
     setSelectedCities([lastAssignedCity]);
   };
 
   const onOrderCityRemove = (selectedList, removedItem) => {
     setLastAssignedCity(removedItem);
-    setNewOrder((prev) => ({ ...prev, city: null }));
+    setNewOrder(prev => ({ ...prev, city: null }));
     setSelectedCities([]);
     resetMasterList();
   };
 
   const onOrderWatchTypeChange = async (event, newWatch) => {
     if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, watch: newWatch })) {
-      setNewOrder((prev) => ({ ...prev, watch: newWatch }));
+      setNewOrder(prev => ({ ...prev, watch: newWatch }));
       resetMasterList();
       return;
     }
@@ -207,29 +207,29 @@ const OrderPage = () => {
     });
 
     if (result) {
-      setNewOrder((prev) => ({ ...prev, watch: newWatch, master: null }));
+      setNewOrder(prev => ({ ...prev, watch: newWatch, master: null }));
       fetchAvailableMasters({ ...newOrder, watch: newWatch, master: null });
     }
   };
 
-  const onOrderDateChange = (newValue) => {
-    setNewOrder((prev) => ({ ...prev, startDate: new Date(newValue) }));
+  const onOrderDateChange = newValue => {
+    setNewOrder(prev => ({ ...prev, startDate: new Date(newValue) }));
     resetMasterList();
   };
 
-  const onFindMasterBtnClick = (event) => {
+  const onFindMasterBtnClick = event => {
     event.preventDefault();
-    setNewOrder((prev) => ({ ...prev, master: null }));
+    setNewOrder(prev => ({ ...prev, master: null }));
     fetchAvailableMasters({ ...newOrder, master: null });
   };
 
-  const onResetBtnClick = (event) => {
+  const onResetBtnClick = event => {
     event.preventDefault();
     resetOrigOrder(initEmptyOrder());
     resetMasterList();
   };
 
-  const onSelectMaster = async (master) => {
+  const onSelectMaster = async master => {
     const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
       title: 'Confirm',
       okText: 'Accept',
@@ -237,7 +237,7 @@ const OrderPage = () => {
     });
     if (!result) return;
 
-    setNewOrder((prev) => ({ ...prev, master }));
+    setNewOrder(prev => ({ ...prev, master }));
     resetMasterList();
   };
 
