@@ -16,21 +16,21 @@ export const watchSlice = createSlice({
   name: 'watch',
   initialState,
   reducers: {},
-  extraReducers: builder => {
+  extraReducers: {
     //#region Fetch all watches
-    builder.addCase(fetchWatches.pending, (state, _) => {
+    [fetchWatches.pending]: (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
-    }),
-      builder.addCase(fetchWatches.fulfilled, (state, action) => {
-        state.watches = action.payload;
-        state.isInitialLoading = false;
-        state.error = initEmptyError();
-      }),
-      builder.addCase(fetchWatches.rejected, (state, action) => {
-        state.isInitialLoading = false;
-        state.error = action.payload;
-      });
+    },
+    [fetchWatches.fulfilled]: (state, action) => {
+      state.watches = action.payload;
+      state.isInitialLoading = false;
+      state.error = initEmptyError();
+    },
+    [fetchWatches.rejected]: (state, action) => {
+      state.isInitialLoading = false;
+      state.error = action.payload;
+    },
     //#endregion
   },
 });
