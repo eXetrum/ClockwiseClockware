@@ -1,22 +1,24 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { clientSlice } from '../../store/reducers';
+import { changeVisibilityAddForm, changeNewClientField } from '../../store/reducers/ClientSlice';
 
 import { validateEmail, validateClientName } from '../../utils';
 
 const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false }) => {
   const dispatch = useDispatch();
 
-  const { changeVisibilityAddForm, changeNewClientField } = clientSlice.actions;
   const { newClient, isShowAddForm, isPending } = useSelector(state => state.clientReducer);
 
-  const isFormValid = useCallback(
+  const isFormValid = useMemo(
     () => validateEmail(newClient.email) && validateClientName(newClient.name) && (isHidePassword ? true : newClient.password),
     [newClient, isHidePassword],
   );
+
+  const onHide = useCallback(() => dispatch(changeVisibilityAddForm(false)), [dispatch]);
+  const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewClientField({ name, value })), [dispatch]);
 
   const formBody = (
     <>
@@ -35,7 +37,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
               required
               value={newClient.email}
               disabled={isPending}
-              onChange={({ target: { name, value } }) => dispatch(changeNewClientField({ name, value }))}
+              onChange={onFormFieldChange}
             />
           </Col>
         </Row>
@@ -55,7 +57,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
                 required
                 value={newClient.password}
                 disabled={isPending}
-                onChange={({ target: { name, value } }) => dispatch(changeNewClientField({ name, value }))}
+                onChange={onFormFieldChange}
               />
             </Col>
           </Row>
@@ -69,14 +71,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             </Form.Label>
           </Col>
           <Col>
-            <Form.Control
-              type="text"
-              name="name"
-              required
-              value={newClient.name}
-              disabled={isPending}
-              onChange={({ target: { name, value } }) => dispatch(changeNewClientField({ name, value }))}
-            />
+            <Form.Control type="text" name="name" required value={newClient.name} disabled={isPending} onChange={onFormFieldChange} />
           </Col>
         </Row>
       </Form.Group>
@@ -92,7 +87,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
         isFormValid={isFormValid}
         isPending={isPending}
         formContent={formBody}
-        onHide={() => dispatch(changeVisibilityAddForm(false))}
+        onHide={onHide}
         onSubmit={onSubmit}
       />
     );
@@ -107,7 +102,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             <Row className="mt-2">
               <Col sm={4}></Col>
               <Col className="d-flex justify-content-md-end">
-                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid()}>
+                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid}>
                   {okButtonText}
                 </Button>
               </Col>

@@ -20,7 +20,7 @@ const ModalForm = ({ formContent, isPending, onSubmit, isFormValid, title, okTex
             <Container>
               <Row className="align-items-center">
                 <Col xs>
-                  <Button variant="success" type="submit" disabled={!isFormValid() || isPending}>
+                  <Button variant="success" type="submit" disabled={isPending || !isFormValid}>
                     {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                     {okText}
                   </Button>

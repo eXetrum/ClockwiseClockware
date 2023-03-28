@@ -1,23 +1,21 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
 import { StarRating } from '../common';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { masterSlice } from '../../store/reducers';
+import { changeVisibilityAddForm, changeNewMasterField } from '../../store/reducers/MasterSlice';
 
 import { validateEmail } from '../../utils';
 
 const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false }) => {
   const dispatch = useDispatch();
 
-  const { changeVisibilityAddForm, changeNewMasterField } = masterSlice.actions;
   const { newMaster, isShowAddForm, isPending } = useSelector(state => state.masterReducer);
-
   const { cities } = useSelector(state => state.cityReducer);
 
-  const isFormValid = useCallback(
+  const isFormValid = useMemo(
     () =>
       newMaster.email &&
       validateEmail(newMaster.email) &&
@@ -25,6 +23,18 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
       newMaster.name &&
       newMaster.cities.length > 0,
     [newMaster, isHidePassword],
+  );
+
+  const onHide = useCallback(() => dispatch(changeVisibilityAddForm(false)), [dispatch]);
+  const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value })), [dispatch]);
+  const onFormFieldChangeRating = useCallback(value => dispatch(changeNewMasterField({ name: 'rating', value })), [dispatch]);
+  const onFormFieldChangeCityList = useCallback(
+    (selectedList, selectedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList })),
+    [dispatch],
+  );
+  const onFormFieldChangeApproved = useCallback(
+    ({ target: { name, checked: value } }) => dispatch(changeNewMasterField({ name, value })),
+    [dispatch],
   );
 
   const formBody = (
@@ -44,7 +54,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
               required
               value={newMaster.email}
               disabled={isPending}
-              onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
+              onChange={onFormFieldChange}
             />
           </Col>
         </Row>
@@ -64,7 +74,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
                 required
                 value={newMaster.password}
                 disabled={isPending}
-                onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
+                onChange={onFormFieldChange}
               />
             </Col>
           </Row>
@@ -78,14 +88,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             </Form.Label>
           </Col>
           <Col>
-            <Form.Control
-              type="text"
-              name="name"
-              required
-              value={newMaster.name}
-              disabled={isPending}
-              onChange={({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value }))}
-            />
+            <Form.Control type="text" name="name" required value={newMaster.name} disabled={isPending} onChange={onFormFieldChange} />
           </Col>
         </Row>
       </Form.Group>
@@ -102,8 +105,8 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
               total={5}
               value={newMaster.rating}
               readonly={isPending}
-              onRatingChange={value => dispatch(changeNewMasterField({ name: 'rating', value }))}
-              onRatingReset={value => dispatch(changeNewMasterField({ name: 'rating', value }))}
+              onRatingChange={onFormFieldChangeRating}
+              onRatingReset={onFormFieldChangeRating}
             />
           </Col>
         </Row>
@@ -122,8 +125,8 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
               selectedValues={newMaster.cities}
               displayValue="name"
               disable={isPending}
-              onSelect={(selectedList, selectedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList }))}
-              onRemove={(selectedList, removedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList }))}
+              onSelect={onFormFieldChangeCityList}
+              onRemove={onFormFieldChangeCityList}
             />
           </Col>
         </Row>
@@ -142,7 +145,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
               name="isApprovedByAdmin"
               checked={newMaster.isApprovedByAdmin}
               disabled={isPending}
-              onChange={({ target: { name, checked: value } }) => dispatch(changeNewMasterField({ name, value }))}
+              onChange={onFormFieldChangeApproved}
             />
           </Col>
         </Row>
@@ -159,7 +162,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
         isFormValid={isFormValid}
         isPending={isPending}
         formContent={formBody}
-        onHide={() => dispatch(changeVisibilityAddForm(false))}
+        onHide={onHide}
         onSubmit={onSubmit}
       />
     );
@@ -174,7 +177,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             <Row>
               <Col sm={4}></Col>
               <Col className="d-flex justify-content-md-end">
-                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid()}>
+                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid}>
                   {okButtonText}
                 </Button>
               </Col>
