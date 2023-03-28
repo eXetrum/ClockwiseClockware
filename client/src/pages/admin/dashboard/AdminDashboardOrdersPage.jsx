@@ -4,7 +4,7 @@ import { PuffLoader } from 'react-spinners';
 import { Header, ErrorContainer, AdminOrdersList } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchOrders } from '../../../store/reducers/ActionCreators';
+import { fetchOrders } from '../../../store/thunks';
 
 import { ERROR_TYPE } from '../../../constants';
 

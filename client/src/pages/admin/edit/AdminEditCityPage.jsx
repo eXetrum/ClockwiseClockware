@@ -8,7 +8,7 @@ import { Header, ErrorContainer, CityForm } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCity, updateCity } from '../../../store/reducers/ActionCreators';
+import { fetchCity, updateCity } from '../../../store/thunks';
 
 import { ERROR_TYPE } from '../../../constants';
 

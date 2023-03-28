@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchWatches } from './ActionCreators';
+import { fetchWatches } from '../thunks';
 import { ERROR_TYPE } from '../../constants';
 
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });

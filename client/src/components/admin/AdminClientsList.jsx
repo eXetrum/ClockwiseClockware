@@ -12,7 +12,7 @@ import Typography from '@mui/material/Typography';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import { deleteClient, resetPasswordClient, resendEmailConfirmationClient } from '../../store/reducers/ActionCreators';
+import { deleteClient, resetPasswordClient, resendEmailConfirmationClient } from '../../store/thunks';
 
 const AdminClientsList = ({ clients }) => {
   const { enqueueSnackbar } = useSnackbar();

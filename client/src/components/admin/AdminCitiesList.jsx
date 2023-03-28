@@ -8,7 +8,7 @@ import EditIcon from '@mui/icons-material/Edit';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import { deleteCity } from '../../store/reducers/ActionCreators';
+import { deleteCity } from '../../store/thunks';
 
 import { formatDecimal } from '../../utils';
 

@@ -14,7 +14,7 @@ import StarRating from '../common/StarRating';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/reducers/ActionCreators';
+import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/thunks';
 
 const MasterTableList = ({ masters }) => {
   const { enqueueSnackbar } = useSnackbar();

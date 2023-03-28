@@ -8,7 +8,7 @@ import { Header, OrderForm, ErrorContainer } from '../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchWatches, fetchCities, addOrder } from '../../store/reducers/ActionCreators';
+import { fetchWatches, fetchCities, addOrder } from '../../store/thunks';
 import { resetNewOrder } from '../../store/reducers/OrderSlice';
 
 import { ERROR_TYPE } from '../../constants';

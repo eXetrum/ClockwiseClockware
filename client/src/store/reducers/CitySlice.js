@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchCities, addCity, deleteCity, fetchCity, updateCity } from './ActionCreators';
+import { fetchCities, addCity, deleteCity, fetchCity, updateCity } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE } from '../../constants';
 

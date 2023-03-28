@@ -11,7 +11,7 @@ import StarRating from '../common/StarRating';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import { deleteOrder, completeOrder, cancelOrder } from '../../store/reducers/ActionCreators';
+import { deleteOrder, completeOrder, cancelOrder } from '../../store/thunks';
 
 import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';

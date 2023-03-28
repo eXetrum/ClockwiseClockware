@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './ActionCreators';
+import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from '../thunks';
 import { dateToNearestHour, isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
 

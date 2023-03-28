@@ -8,7 +8,7 @@ import { Header, ErrorContainer, ClientForm } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchClient, updateClient } from '../../../store/reducers/ActionCreators';
+import { fetchClient, updateClient } from '../../../store/thunks';
 
 import { ERROR_TYPE } from '../../../constants';
 

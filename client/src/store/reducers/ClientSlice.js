@@ -8,7 +8,7 @@ import {
   updateClient,
   resetPasswordClient,
   resendEmailConfirmationClient,
-} from './ActionCreators';
+} from '../thunks';
 import { isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE } from '../../constants';
 

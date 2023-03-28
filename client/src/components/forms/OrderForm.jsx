@@ -12,7 +12,7 @@ import { AdminMastersList } from '../../components';
 import ViewMasterCard from '../master/ViewMasterCard';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAllAvailable } from '../../store/reducers/ActionCreators';
+import { fetchAllAvailable } from '../../store/thunks';
 import { resetNewOrder, changeNewOrderField } from '../../store/reducers/OrderSlice';
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';

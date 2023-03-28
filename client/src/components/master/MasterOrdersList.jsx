@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
-import { completeOrder } from '../../store/reducers/ActionCreators';
+import { completeOrder } from '../../store/thunks';
 
 import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';

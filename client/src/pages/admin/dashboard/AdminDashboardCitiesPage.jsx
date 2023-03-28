@@ -8,7 +8,7 @@ import { Header, ErrorContainer, AdminCitiesList, CityForm } from '../../../comp
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCities, addCity } from '../../../store/reducers/ActionCreators';
+import { fetchCities, addCity } from '../../../store/thunks';
 import { changeVisibilityAddForm } from '../../../store/reducers/CitySlice';
 
 import { ERROR_TYPE } from '../../../constants';
