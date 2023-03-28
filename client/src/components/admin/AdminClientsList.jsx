@@ -19,7 +19,7 @@ const AdminClientsList = ({ clients }) => {
   const dispatch = useDispatch();
 
   const onRemove = useCallback(
-    async (client) => {
+    async client => {
       const result = await confirm(`Do you want to delete "${client.email}" client ?`, {
         title: 'Confirm',
         okText: 'Delete',
@@ -35,7 +35,7 @@ const AdminClientsList = ({ clients }) => {
   );
 
   const onResetPassword = useCallback(
-    async (client) => {
+    async client => {
       const result = await confirm(`Do you want to reset password for "${client.email}" client ?`, {
         title: 'Confirm',
         okText: 'Yes',
@@ -51,7 +51,7 @@ const AdminClientsList = ({ clients }) => {
   );
 
   const onResendEmailConfirmation = useCallback(
-    async (client) => {
+    async client => {
       const result = await confirm(`Do you want to resend email confirmation for "${client.email}" client ?`, {
         title: 'Confirm',
         okText: 'Yes',
@@ -90,7 +90,7 @@ const AdminClientsList = ({ clients }) => {
           </tr>
         </thead>
         <tbody>
-          {clients.map((client) => (
+          {clients.map(client => (
             <tr key={client.id} className="m-0">
               <td className="text-center p-3 m-0 col-2">{client.id}</td>
               <td className="p-3 m-0">

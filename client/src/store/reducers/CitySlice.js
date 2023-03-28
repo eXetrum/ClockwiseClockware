@@ -29,7 +29,7 @@ export const citySlice = createSlice({
       state.newCity[action.payload.name] = action.payload.value;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     //#region Fetch all cities
     builder.addCase(fetchCities.pending, (state, _) => {
       state.isInitialLoading = true;
@@ -68,7 +68,7 @@ export const citySlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteCity.fulfilled, (state, action) => {
-        state.cities = state.cities.filter((city) => city.id !== action.payload);
+        state.cities = state.cities.filter(city => city.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
       }),
@@ -76,7 +76,7 @@ export const citySlice = createSlice({
         state.isPending = false;
 
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-          state.cities = state.cities.filter((city) => city.id !== action.payload.id);
+          state.cities = state.cities.filter(city => city.id !== action.payload.id);
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;

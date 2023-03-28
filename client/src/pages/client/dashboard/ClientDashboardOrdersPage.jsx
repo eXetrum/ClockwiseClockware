@@ -15,7 +15,7 @@ const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { orders, newOrder, error, isInitialLoading, isPending, isShowRateForm } = useSelector((state) => state.orderReducer);
+  const { orders, newOrder, error, isInitialLoading, isPending, isShowRateForm } = useSelector(state => state.orderReducer);
 
   useEffect(() => dispatch(fetchOrders()), [dispatch]);
 
@@ -27,7 +27,7 @@ const ClientDashboardOrdersPage = () => {
   const [orderId, setOrderId] = useState(null);
 
   const onReview = useCallback(
-    async (order) => {
+    async order => {
       setOrderId(order.id);
       dispatch(changeVisibilityRateForm(true));
     },
@@ -35,7 +35,7 @@ const ClientDashboardOrdersPage = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const rating = newOrder.rating;
       dispatch(changeVisibilityRateForm(false));
@@ -82,8 +82,8 @@ const ClientDashboardOrdersPage = () => {
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
                   <StarRating
-                    onRatingChange={(value) => dispatch(changeNewOrderField({ name: 'rating', value }))}
-                    onRatingReset={(value) => dispatch(changeNewOrderField({ name: 'rating', value }))}
+                    onRatingChange={value => dispatch(changeNewOrderField({ name: 'rating', value }))}
+                    onRatingReset={value => dispatch(changeNewOrderField({ name: 'rating', value }))}
                     value={newOrder.rating}
                     readonly={isPending}
                   />

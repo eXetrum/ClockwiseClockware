@@ -17,8 +17,8 @@ const AdminEditMasterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { newMaster, error, isInitialLoading: isInitialLoadingMaster } = useSelector((state) => state.masterReducer);
-  const { isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
+  const { newMaster, error, isInitialLoading: isInitialLoadingMaster } = useSelector(state => state.masterReducer);
+  const { isInitialLoading: isInitialLoadingCities } = useSelector(state => state.cityReducer);
 
   useEffect(() => {
     dispatch(fetchCities());
@@ -36,7 +36,7 @@ const AdminEditMasterPage = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const action = await dispatch(updateMaster(newMaster));
       if (isFulfilled(action)) enqueueSnackbar('Master updated', { variant: 'success' });

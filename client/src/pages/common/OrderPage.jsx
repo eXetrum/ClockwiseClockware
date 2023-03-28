@@ -19,10 +19,10 @@ const OrderPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { error: errorWatches, watches, isInitialLoading: isInitialLoadingWatches } = useSelector((state) => state.watchReducer);
-  const { error: errorCities, cities, isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
+  const { error: errorWatches, watches, isInitialLoading: isInitialLoadingWatches } = useSelector(state => state.watchReducer);
+  const { error: errorCities, cities, isInitialLoading: isInitialLoadingCities } = useSelector(state => state.cityReducer);
 
-  const { newOrder } = useSelector((state) => state.orderReducer);
+  const { newOrder } = useSelector(state => state.orderReducer);
 
   const error = errorWatches || errorCities;
 
@@ -44,7 +44,7 @@ const OrderPage = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
 
       const order = {

@@ -24,10 +24,10 @@ import { RouteGuard } from './providers';
 
 import { ACCESS_SCOPE } from './constants';
 
-const AnyAuthRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.AnyAuth}>{child}</RouteGuard>;
-const AdminRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.AdminOnly}>{child}</RouteGuard>;
-const MasterRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.MasterOnly}>{child}</RouteGuard>;
-const ClientRoute = (child) => <RouteGuard scope={ACCESS_SCOPE.ClientOnly}>{child}</RouteGuard>;
+const AnyAuthRoute = child => <RouteGuard scope={ACCESS_SCOPE.AnyAuth}>{child}</RouteGuard>;
+const AdminRoute = child => <RouteGuard scope={ACCESS_SCOPE.AdminOnly}>{child}</RouteGuard>;
+const MasterRoute = child => <RouteGuard scope={ACCESS_SCOPE.MasterOnly}>{child}</RouteGuard>;
+const ClientRoute = child => <RouteGuard scope={ACCESS_SCOPE.ClientOnly}>{child}</RouteGuard>;
 
 const App = () => {
   return (

@@ -23,7 +23,7 @@ const AdminOrdersList = ({ orders }) => {
   const dispatch = useDispatch();
 
   const onRemove = useCallback(
-    async (order) => {
+    async order => {
       const result = await confirm(`Do you want to delete ${order.id} order ?`, {
         title: 'Confirm',
         okText: 'Delete',
@@ -39,7 +39,7 @@ const AdminOrdersList = ({ orders }) => {
   );
 
   const onComplete = useCallback(
-    async (order) => {
+    async order => {
       const result = await confirm(`Do you want to mark order with id=${order.id} as completed ?`, {
         title: 'Confirm',
         okText: 'Completed',
@@ -55,7 +55,7 @@ const AdminOrdersList = ({ orders }) => {
   );
 
   const onCancel = useCallback(
-    async (order) => {
+    async order => {
       const result = await confirm(`Do you want to mark order with id=${order.id} as canceled ?`, {
         title: 'Confirm',
         okText: 'Completed',
@@ -87,7 +87,7 @@ const AdminOrdersList = ({ orders }) => {
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            {COLUMN_HEADERS.map((header) => (
+            {COLUMN_HEADERS.map(header => (
               <th key={header} className="text-center p-2 m-0">
                 {header}
               </th>
@@ -96,7 +96,7 @@ const AdminOrdersList = ({ orders }) => {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {orders.map(order => (
             <tr key={order.id} className="m-0">
               <td className="text-center p-2 m-0 col-1">{order.id}</td>
               <td className="text-center p-2 m-0">

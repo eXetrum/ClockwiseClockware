@@ -11,7 +11,7 @@ const CityForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = f
   const dispatch = useDispatch();
 
   const { changeVisibilityAddForm, changeNewCityField } = citySlice.actions;
-  const { newCity, isShowAddForm, isPending } = useSelector((state) => state.cityReducer);
+  const { newCity, isShowAddForm, isPending } = useSelector(state => state.cityReducer);
 
   const isFormValid = useCallback(() => newCity.name, [newCity]);
 

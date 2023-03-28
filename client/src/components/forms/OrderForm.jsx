@@ -20,8 +20,8 @@ import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToN
 const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButtonText = 'Save' }) => {
   const dispatch = useDispatch();
 
-  const { newOrder, isPending: isOrderPending } = useSelector((state) => state.orderReducer);
-  const { masters, isPending: isMastersPending } = useSelector((state) => state.masterReducer);
+  const { newOrder, isPending: isOrderPending } = useSelector(state => state.orderReducer);
+  const { masters, isPending: isMastersPending } = useSelector(state => state.masterReducer);
 
   const currentDate = dateToNearestHour();
 
@@ -37,7 +37,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
 
   const isPending = useMemo(() => isMastersPending || isOrderPending, [isMastersPending, isOrderPending]);
 
-  const onOrderDateError = useCallback((reason) => {
+  const onOrderDateError = useCallback(reason => {
     if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
     if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
     if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
@@ -61,10 +61,10 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   );
 
   //////////////////////////////////////////////////////////////////////////
-  const ensureMasterCanServeCity = useCallback((master, city) => master?.cities?.find((item) => item.id === city.id), []);
+  const ensureMasterCanServeCity = useCallback((master, city) => master?.cities?.find(item => item.id === city.id), []);
   const ensureMasterSchedule = useCallback(
     (schedule, startDate, endDate) =>
-      schedule.some((item) => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate))),
+      schedule.some(item => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate))),
     [],
   );
   const ensureMasterCanHandleOrder = useCallback(
@@ -72,7 +72,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       // Master cant handle selected city
       if (!ensureMasterCanServeCity(master, city)) return false;
 
-      const schedule = master.orders.filter((item) => item.id !== id);
+      const schedule = master.orders.filter(item => item.id !== id);
       return !ensureMasterSchedule(schedule, startDate, addHours(startDate, watch.repairTime));
     },
     [ensureMasterCanServeCity, ensureMasterSchedule],
@@ -144,7 +144,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   );
 
   const onOrderDateChange = useCallback(
-    (value) => {
+    value => {
       dispatch(changeNewOrderField({ name: 'startDate', value: new Date(value).getTime() }));
       setShowMasters(false);
     },
@@ -152,7 +152,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   );
 
   const onFindMasterBtnClick = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       setShowMasters(false);
       dispatch(changeNewOrderField({ name: 'master', value: null }));
@@ -163,7 +163,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   );
 
   const onSelectMaster = useCallback(
-    async (master) => {
+    async master => {
       const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
         title: 'Confirm',
         okText: 'Accept',
@@ -178,7 +178,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   );
 
   const resetOrigOrder = useCallback(
-    (order) => {
+    order => {
       setShowMasters(false);
       dispatch(resetNewOrder());
       //dispatch(resetNewOrder(order)); //TODO: reset to oldOrder (keep for order edit)
@@ -257,7 +257,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                   </Form.Label>
                 </Col>
                 <Col className="justify-content-md-center">
-                  {watches.map((watch) => (
+                  {watches.map(watch => (
                     <Form.Check
                       key={watch.id}
                       type="radio"
@@ -266,7 +266,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                       checked={newOrder?.watch?.id === watch.id}
                       inline
                       required
-                      onChange={(event) => onOrderWatchTypeChange(event, watch)}
+                      onChange={event => onOrderWatchTypeChange(event, watch)}
                       disabled={isPending}
                     />
                   ))}
@@ -308,7 +308,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DateTimePicker
                       label="DateTimePicker"
-                      renderInput={(props) => <TextField {...props} />}
+                      renderInput={props => <TextField {...props} />}
                       views={['year', 'month', 'day', 'hours']}
                       onChange={onOrderDateChange}
                       onError={onOrderDateError}

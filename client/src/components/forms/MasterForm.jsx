@@ -13,9 +13,9 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
   const dispatch = useDispatch();
 
   const { changeVisibilityAddForm, changeNewMasterField } = masterSlice.actions;
-  const { newMaster, isShowAddForm, isPending } = useSelector((state) => state.masterReducer);
+  const { newMaster, isShowAddForm, isPending } = useSelector(state => state.masterReducer);
 
-  const { cities } = useSelector((state) => state.cityReducer);
+  const { cities } = useSelector(state => state.cityReducer);
 
   const isFormValid = useCallback(
     () =>
@@ -102,8 +102,8 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
               total={5}
               value={newMaster.rating}
               readonly={isPending}
-              onRatingChange={(value) => dispatch(changeNewMasterField({ name: 'rating', value }))}
-              onRatingReset={(value) => dispatch(changeNewMasterField({ name: 'rating', value }))}
+              onRatingChange={value => dispatch(changeNewMasterField({ name: 'rating', value }))}
+              onRatingReset={value => dispatch(changeNewMasterField({ name: 'rating', value }))}
             />
           </Col>
         </Row>

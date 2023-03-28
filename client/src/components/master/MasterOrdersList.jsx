@@ -18,7 +18,7 @@ const MasterOrdersList = ({ orders }) => {
   const dispatch = useDispatch();
 
   const onComplete = useCallback(
-    async (order) => {
+    async order => {
       const result = await confirm(`Do you want to mark order with id=${order.id} as completed ?`, {
         title: 'Confirm',
         okText: 'Completed',
@@ -51,7 +51,7 @@ const MasterOrdersList = ({ orders }) => {
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            {COLUMN_HEADERS.map((header) => (
+            {COLUMN_HEADERS.map(header => (
               <th key={header} className="text-center p-2 m-0">
                 {header}
               </th>
@@ -59,7 +59,7 @@ const MasterOrdersList = ({ orders }) => {
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {orders.map(order => (
             <tr key={order.id} className="m-0">
               <td className="text-center p-2 m-0">{`${order.client.name}`}</td>
               <td className="text-center p-2 m-0">

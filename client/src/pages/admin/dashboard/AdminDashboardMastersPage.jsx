@@ -17,8 +17,8 @@ const AdminDashboardMasters = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { masters, newMaster, error, isInitialLoading: isInitialLoadingMasters } = useSelector((state) => state.masterReducer);
-  const { isInitialLoading: isInitialLoadingCities } = useSelector((state) => state.cityReducer);
+  const { masters, newMaster, error, isInitialLoading: isInitialLoadingMasters } = useSelector(state => state.masterReducer);
+  const { isInitialLoading: isInitialLoadingCities } = useSelector(state => state.cityReducer);
 
   useEffect(() => {
     dispatch(fetchCities());
@@ -36,7 +36,7 @@ const AdminDashboardMasters = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const action = await dispatch(addMaster(newMaster));
       if (isFulfilled(action)) enqueueSnackbar(`Master "${action.payload.email}" created`, { variant: 'success' });

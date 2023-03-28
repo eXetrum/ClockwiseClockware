@@ -13,7 +13,7 @@ const AxiosInterceptor = ({ children }) => {
   const { setAccessToken } = useAuth();
 
   const reqInterceptor = useCallback(
-    (request) => {
+    request => {
       const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY_NAME);
       const user = parseToken(accessToken);
       if (user === null && accessToken !== null) setAccessToken(null);
@@ -23,11 +23,11 @@ const AxiosInterceptor = ({ children }) => {
     [setAccessToken],
   );
 
-  const reqErrInterceptor = useCallback((error) => Promise.reject(error), []);
-  const resInterceptor = useCallback((response) => response, []);
+  const reqErrInterceptor = useCallback(error => Promise.reject(error), []);
+  const resInterceptor = useCallback(response => response, []);
 
   const resErrInterceptor = useCallback(
-    (error) => {
+    error => {
       if (error?.response?.status === 401 && location.pathname !== '/login' && !error?.request?.responseURL?.endsWith('api/login')) {
         localStorage.removeItem(ACCESS_TOKEN_KEY_NAME);
         setAccessToken(null);

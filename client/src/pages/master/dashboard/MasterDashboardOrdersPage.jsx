@@ -11,7 +11,7 @@ import { ERROR_TYPE } from '../../../constants';
 const MasterDashboardOrdersPage = () => {
   const dispatch = useDispatch();
 
-  const { orders, error, isInitialLoading } = useSelector((state) => state.orderReducer);
+  const { orders, error, isInitialLoading } = useSelector(state => state.orderReducer);
 
   useEffect(() => dispatch(fetchOrders()), [dispatch]);
 

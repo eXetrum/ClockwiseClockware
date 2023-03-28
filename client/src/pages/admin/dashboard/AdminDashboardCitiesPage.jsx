@@ -17,7 +17,7 @@ const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { cities, newCity, error, isInitialLoading } = useSelector((state) => state.cityReducer);
+  const { cities, newCity, error, isInitialLoading } = useSelector(state => state.cityReducer);
 
   useEffect(() => dispatch(fetchCities()), [dispatch]);
 
@@ -27,7 +27,7 @@ const AdminDashboardCitiesPage = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const action = await dispatch(addCity(newCity));
       if (isFulfilled(action)) enqueueSnackbar(`City "${action.payload.name}" created`, { variant: 'success' });

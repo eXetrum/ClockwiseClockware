@@ -37,7 +37,7 @@ export const clientSlice = createSlice({
       state.newClient[action.payload.name] = action.payload.value;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     //#region Fetch all clients
     builder.addCase(fetchClients.pending, (state, _) => {
       state.isInitialLoading = true;
@@ -76,7 +76,7 @@ export const clientSlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteClient.fulfilled, (state, action) => {
-        state.clients = state.clients.filter((client) => client.id !== action.payload);
+        state.clients = state.clients.filter(client => client.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
       }),
@@ -84,7 +84,7 @@ export const clientSlice = createSlice({
         state.isPending = false;
 
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-          state.clients = state.clients.filter((client) => client.id !== action.payload.id);
+          state.clients = state.clients.filter(client => client.id !== action.payload.id);
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
@@ -129,40 +129,40 @@ export const clientSlice = createSlice({
     //#region Reset password client
     builder.addCase(resetPasswordClient.pending, (state, action) => {
       const userId = action.meta.arg;
-      const idx = state.clients.map((client) => client.id).indexOf(userId);
+      const idx = state.clients.map(client => client.id).indexOf(userId);
       state.clients[idx].isPendingResetPassword = true;
       state.error = initEmptyError();
     }),
       builder.addCase(resetPasswordClient.fulfilled, (state, action) => {
         const userId = action.payload;
-        const idx = state.clients.map((client) => client.id).indexOf(userId);
+        const idx = state.clients.map(client => client.id).indexOf(userId);
         state.clients[idx].isPendingResetPassword = false;
         state.error = initEmptyError();
       }),
       builder.addCase(resetPasswordClient.rejected, (state, action) => {
-        const idx = state.clients.map((client) => client.id).indexOf(action.payload.id);
+        const idx = state.clients.map(client => client.id).indexOf(action.payload.id);
         state.clients[idx].isPendingResetPassword = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter((client) => client.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter(client => client.id !== action.payload.id);
       });
     //#endregion
 
     //#region Resend email confirmation client
     builder.addCase(resendEmailConfirmationClient.pending, (state, action) => {
       const userId = action.meta.arg;
-      const idx = state.clients.map((client) => client.id).indexOf(userId);
+      const idx = state.clients.map(client => client.id).indexOf(userId);
       state.clients[idx].isPendingResendEmailConfirmation = true;
       state.error = initEmptyError();
     }),
       builder.addCase(resendEmailConfirmationClient.fulfilled, (state, action) => {
         const userId = action.payload;
-        const idx = state.clients.map((client) => client.id).indexOf(userId);
+        const idx = state.clients.map(client => client.id).indexOf(userId);
         state.clients[idx].isPendingResendEmailConfirmation = false;
         state.error = initEmptyError();
       }),
       builder.addCase(resendEmailConfirmationClient.rejected, (state, action) => {
-        const idx = state.clients.map((client) => client.id).indexOf(action.payload.id);
+        const idx = state.clients.map(client => client.id).indexOf(action.payload.id);
         state.clients[idx].isPendingResendEmailConfirmation = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter((client) => client.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter(client => client.id !== action.payload.id);
       });
   },
 });

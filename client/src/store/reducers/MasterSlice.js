@@ -38,14 +38,14 @@ export const masterSlice = createSlice({
       state.newMaster[action.payload.name] = action.payload.value;
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     //#region Fetch all masters
     builder.addCase(fetchMasters.pending, (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
     }),
       builder.addCase(fetchMasters.fulfilled, (state, action) => {
-        state.masters = action.payload.map((master) => {
+        state.masters = action.payload.map(master => {
           master.isPendingResetPassword = false;
           master.isPendingResendEmailConfirmation = false;
           return master;
@@ -97,7 +97,7 @@ export const masterSlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteMaster.fulfilled, (state, action) => {
-        state.masters = state.masters.filter((master) => master.id !== action.payload);
+        state.masters = state.masters.filter(master => master.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
       }),
@@ -105,7 +105,7 @@ export const masterSlice = createSlice({
         state.isPending = false;
 
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-          state.masters = state.masters.filter((master) => master.id !== action.payload.id);
+          state.masters = state.masters.filter(master => master.id !== action.payload.id);
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
@@ -152,42 +152,42 @@ export const masterSlice = createSlice({
     //#region Reset password master
     builder.addCase(resetPasswordMaster.pending, (state, action) => {
       const userId = action.meta.arg;
-      const idx = state.masters.map((master) => master.id).indexOf(userId);
+      const idx = state.masters.map(master => master.id).indexOf(userId);
       state.masters[idx].isPendingResetPassword = true;
       state.error = initEmptyError();
     }),
       builder.addCase(resetPasswordMaster.fulfilled, (state, action) => {
         const userId = action.payload;
-        const idx = state.masters.map((master) => master.id).indexOf(userId);
+        const idx = state.masters.map(master => master.id).indexOf(userId);
         const master = state.masters[idx];
         state.masters[idx].isPendingResetPassword = false;
         state.error = initEmptyError();
       }),
       builder.addCase(resetPasswordMaster.rejected, (state, action) => {
-        const idx = state.masters.map((master) => master.id).indexOf(action.payload.id);
+        const idx = state.masters.map(master => master.id).indexOf(action.payload.id);
         state.masters[idx].isPendingResetPassword = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter((master) => master.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter(master => master.id !== action.payload.id);
       });
     //#endregion
 
     //#region Resend master email confirmation
     builder.addCase(resendEmailConfirmationMaster.pending, (state, action) => {
       const userId = action.meta.arg;
-      const idx = state.masters.map((master) => master.id).indexOf(userId);
+      const idx = state.masters.map(master => master.id).indexOf(userId);
       state.masters[idx].isPendingResendEmailConfirmation = true;
       state.error = initEmptyError();
     }),
       builder.addCase(resendEmailConfirmationMaster.fulfilled, (state, action) => {
         const userId = action.payload;
-        const idx = state.masters.map((master) => master.id).indexOf(userId);
+        const idx = state.masters.map(master => master.id).indexOf(userId);
         const master = state.masters[idx];
         state.masters[idx].isPendingResendEmailConfirmation = false;
         state.error = initEmptyError();
       }),
       builder.addCase(resendEmailConfirmationMaster.rejected, (state, action) => {
-        const idx = state.masters.map((master) => master.id).indexOf(action.payload.id);
+        const idx = state.masters.map(master => master.id).indexOf(action.payload.id);
         state.masters[idx].isPendingResendEmailConfirmation = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter((master) => master.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter(master => master.id !== action.payload.id);
       });
     //#endregion
   },

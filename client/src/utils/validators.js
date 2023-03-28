@@ -1,5 +1,5 @@
 /* eslint-disable */
-export const validateEmail = (email) => {
+export const validateEmail = email => {
   return String(email)
     .toLowerCase()
     .match(
@@ -7,4 +7,4 @@ export const validateEmail = (email) => {
     );
 };
 
-export const validateClientName = (name) => name?.length >= 3;
+export const validateClientName = name => name?.length >= 3;

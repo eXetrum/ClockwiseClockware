@@ -12,7 +12,7 @@ const VerifyPage = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
-  const doVerification = async (token) => {
+  const doVerification = async token => {
     try {
       const response = await verifyEmail({ token });
       enqueueSnackbar(`${response?.data?.message}`, {

@@ -17,7 +17,7 @@ const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { clients, newClient, error, isInitialLoading } = useSelector((state) => state.clientReducer);
+  const { clients, newClient, error, isInitialLoading } = useSelector(state => state.clientReducer);
 
   useEffect(() => dispatch(fetchClients()), [dispatch]);
 
@@ -27,7 +27,7 @@ const AdminDashboardClientsPage = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const action = await dispatch(addClient(newClient));
       if (isFulfilled(action)) enqueueSnackbar(`Client "${action.payload.email}" created`, { variant: 'success' });

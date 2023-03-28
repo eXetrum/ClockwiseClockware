@@ -16,7 +16,7 @@ export const watchSlice = createSlice({
   name: 'watch',
   initialState,
   reducers: {},
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     //#region Fetch all watches
     builder.addCase(fetchWatches.pending, (state, _) => {
       state.isInitialLoading = true;

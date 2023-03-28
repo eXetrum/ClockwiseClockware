@@ -17,7 +17,7 @@ const AdminEditClient = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { newClient, error, isInitialLoading } = useSelector((state) => state.clientReducer);
+  const { newClient, error, isInitialLoading } = useSelector(state => state.clientReducer);
 
   useEffect(() => dispatch(fetchClient(id)), [id, dispatch]);
 
@@ -27,7 +27,7 @@ const AdminEditClient = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const action = await dispatch(updateClient(newClient));
       if (isFulfilled(action)) enqueueSnackbar('Client updated', { variant: 'success' });

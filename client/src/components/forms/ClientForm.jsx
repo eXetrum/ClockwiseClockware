@@ -11,7 +11,7 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
   const dispatch = useDispatch();
 
   const { changeVisibilityAddForm, changeNewClientField } = clientSlice.actions;
-  const { newClient, isShowAddForm, isPending } = useSelector((state) => state.clientReducer);
+  const { newClient, isShowAddForm, isPending } = useSelector(state => state.clientReducer);
 
   const isFormValid = useCallback(
     () => validateEmail(newClient.email) && validateClientName(newClient.name) && (isHidePassword ? true : newClient.password),

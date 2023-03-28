@@ -17,7 +17,7 @@ const AdminEditCityPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { newCity, error, isInitialLoading } = useSelector((state) => state.cityReducer);
+  const { newCity, error, isInitialLoading } = useSelector(state => state.cityReducer);
 
   useEffect(() => dispatch(fetchCity(id)), [id, dispatch]);
 
@@ -27,7 +27,7 @@ const AdminEditCityPage = () => {
   );
 
   const onFormSubmit = useCallback(
-    async (event) => {
+    async event => {
       event.preventDefault();
       const action = await dispatch(updateCity(newCity));
       if (isFulfilled(action)) enqueueSnackbar('City updated', { variant: 'success' });

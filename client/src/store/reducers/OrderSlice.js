@@ -42,14 +42,14 @@ export const orderSlice = createSlice({
       state.newOrder = action.payload || initEmptyOrder();
     },
   },
-  extraReducers: (builder) => {
+  extraReducers: builder => {
     //#region Fetch all orders
     builder.addCase(fetchOrders.pending, (state, _) => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
     }),
       builder.addCase(fetchOrders.fulfilled, (state, action) => {
-        state.orders = action.payload.map((order) => {
+        state.orders = action.payload.map(order => {
           order.isCompleting = false;
           order.isCanceling = false;
           order.isEvaluating = false;
@@ -86,7 +86,7 @@ export const orderSlice = createSlice({
       state.error = initEmptyError();
     }),
       builder.addCase(deleteOrder.fulfilled, (state, action) => {
-        state.orders = state.orders.filter((order) => order.id !== action.payload);
+        state.orders = state.orders.filter(order => order.id !== action.payload);
         state.isPending = false;
         state.error = initEmptyError();
       }),
@@ -94,7 +94,7 @@ export const orderSlice = createSlice({
         state.isPending = false;
 
         if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-          state.orders = state.orders.filter((order) => order.id !== action.payload.id);
+          state.orders = state.orders.filter(order => order.id !== action.payload.id);
         }
 
         if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
@@ -141,60 +141,60 @@ export const orderSlice = createSlice({
     //#region complete order by id
     builder.addCase(completeOrder.pending, (state, action) => {
       const orderId = action.meta.arg;
-      const idx = state.orders.map((order) => order.id).indexOf(orderId);
+      const idx = state.orders.map(order => order.id).indexOf(orderId);
       state.orders[idx].isCompleting = true;
       state.error = initEmptyError();
     }),
       builder.addCase(completeOrder.fulfilled, (state, action) => {
-        const idx = state.orders.map((order) => order.id).indexOf(action.payload);
+        const idx = state.orders.map(order => order.id).indexOf(action.payload);
         state.orders[idx].isCompleting = false;
         state.orders[idx].status = ORDER_STATUS.COMPLETED;
         state.error = initEmptyError();
       }),
       builder.addCase(completeOrder.rejected, (state, action) => {
-        const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
+        const idx = state.orders.map(order => order.id).indexOf(action.payload.id);
         state.orders[idx].isCompleting = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter((order) => order.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter(order => order.id !== action.payload.id);
       });
     //#endregion
 
     //#region cancel order by id
     builder.addCase(cancelOrder.pending, (state, action) => {
       const orderId = action.meta.arg;
-      const idx = state.orders.map((order) => order.id).indexOf(orderId);
+      const idx = state.orders.map(order => order.id).indexOf(orderId);
       state.orders[idx].isCanceling = true;
       state.error = initEmptyError();
     }),
       builder.addCase(cancelOrder.fulfilled, (state, action) => {
-        const idx = state.orders.map((order) => order.id).indexOf(action.payload);
+        const idx = state.orders.map(order => order.id).indexOf(action.payload);
         state.orders[idx].isCanceling = false;
         state.orders[idx].status = ORDER_STATUS.CANCELED;
         state.error = initEmptyError();
       }),
       builder.addCase(cancelOrder.rejected, (state, action) => {
         state.isPending = false;
-        const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
+        const idx = state.orders.map(order => order.id).indexOf(action.payload.id);
         state.orders[idx].isCanceling = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter((order) => order.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter(order => order.id !== action.payload.id);
       });
     //#endregion
 
     //#region rate order by id
     builder.addCase(rateOrder.pending, (state, action) => {
-      const idx = state.orders.map((order) => order.id).indexOf(action.meta.arg.id);
+      const idx = state.orders.map(order => order.id).indexOf(action.meta.arg.id);
       state.orders[idx].isEvaluating = true;
       state.error = initEmptyError();
     }),
       builder.addCase(rateOrder.fulfilled, (state, action) => {
-        const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
+        const idx = state.orders.map(order => order.id).indexOf(action.payload.id);
         state.orders[idx].isEvaluating = false;
         state.orders[idx].rating = action.payload.rating;
         state.error = initEmptyError();
       }),
       builder.addCase(rateOrder.rejected, (state, action) => {
-        const idx = state.orders.map((order) => order.id).indexOf(action.payload.id);
+        const idx = state.orders.map(order => order.id).indexOf(action.payload.id);
         state.orders[idx].isEvaluating = false;
-        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter((order) => order.id !== action.payload.id);
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter(order => order.id !== action.payload.id);
       });
     //#endregion
   },

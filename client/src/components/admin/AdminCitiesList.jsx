@@ -17,7 +17,7 @@ const AdminCitiesList = ({ cities }) => {
   const dispatch = useDispatch();
 
   const onRemove = useCallback(
-    async (city) => {
+    async city => {
       const result = await confirm(`Do you want to delete "${city.name}" city ?`, {
         title: 'Confirm',
         okText: 'Delete',
@@ -56,7 +56,7 @@ const AdminCitiesList = ({ cities }) => {
           </tr>
         </thead>
         <tbody>
-          {cities.map((city) => (
+          {cities.map(city => (
             <tr key={city.id}>
               <td className="text-center p-2 m-0 col-2">{city.id}</td>
               <td className="text-center p-2 m-0">{city.name}</td>
