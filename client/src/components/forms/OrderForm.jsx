@@ -1,8 +1,7 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Form, Row, Col, Button, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
-import Multiselect from 'multiselect-react-dropdown';
 import dayjs from 'dayjs';
 import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -17,6 +16,8 @@ import { resetNewOrder, changeNewOrderField } from '../../store/reducers/OrderSl
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
+const MASTER_PROPS_DEPENDENCY = ['city', 'watch', 'startDate'];
+
 const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButtonText = 'Save' }) => {
   const dispatch = useDispatch();
 
@@ -25,8 +26,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
 
   const currentDate = dateToNearestHour();
 
-  const [selectedCities, setSelectedCities] = useState(newOrder?.city ? [newOrder?.city] : []);
-  const [lastAssignedCity, setLastAssignedCity] = useState(null);
   const [isShowMasters, setShowMasters] = useState(false);
 
   const [dateTimeError, setDateTimeError] = useState(null);
@@ -60,7 +59,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
     [newOrder, currentDate],
   );
 
-  //////////////////////////////////////////////////////////////////////////
   const ensureMasterCanServeCity = useCallback((master, city) => master?.cities?.find(item => item.id === city.id), []);
   const ensureMasterSchedule = useCallback(
     (schedule, startDate, endDate) =>
@@ -78,33 +76,18 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
     [ensureMasterCanServeCity, ensureMasterSchedule],
   );
 
-  const onOrderWatchTypeChange = useCallback(
-    async (event, watch) => {
-      if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, watch })) {
-        dispatch(changeNewOrderField({ name: 'watch', value: watch }));
-        setShowMasters(false);
-        return;
-      }
+  const onFormFieldChange = useCallback(
+    async ({ target: { name, value } }) => {
+      if (!MASTER_PROPS_DEPENDENCY.includes(name)) return dispatch(changeNewOrderField({ name, value }));
 
-      const result = await confirm(`"${newOrder.master.email}" master cant handle your order. Do you want to search new master ?`, {
-        title: 'Confirm',
-        okText: 'Search',
-        okButtonStyle: 'warning',
-      });
-      if (!result) return;
+      if (name === 'city') value = cities.find(item => item.id === value);
+      else if (name === 'watch') value = watches.find(item => item.id === value);
+      //else if (name === 'startDate') value = new Date(value).getTime();
 
-      dispatch(changeNewOrderField({ name: 'watch', value: watch }));
-      dispatch(changeNewOrderField({ name: 'master', value: null }));
-      dispatch(fetchAllAvailable({ ...newOrder, watch }));
-    },
-    [newOrder, isMasterAssigned, dispatch, ensureMasterCanHandleOrder],
-  );
+      const newParams = { ...newOrder, [name]: value };
 
-  const onOrderCitySelect = useCallback(
-    async (selectedList, city) => {
-      if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, city })) {
-        dispatch(changeNewOrderField({ name: 'city', value: city }));
-        setSelectedCities([city]);
+      if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newParams })) {
+        dispatch(changeNewOrderField({ name, value }));
         setShowMasters(false);
         return;
       }
@@ -116,31 +99,20 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
         okButtonStyle: 'warning',
       });
 
-      // Cancel -> revert to prev city
-      if (!result) {
-        dispatch(changeNewOrderField({ name: 'city', value: lastAssignedCity }));
-        setSelectedCities([lastAssignedCity]);
-      }
+      // Cancel -> do nothing
+      if (!result) return;
 
-      // Accept -> drop current master
-      setShowMasters(false);
-      dispatch(changeNewOrderField({ name: 'city', value: city }));
+      // Update field
+      dispatch(changeNewOrderField({ name, value }));
+
+      // Drop current master
       dispatch(changeNewOrderField({ name: 'master', value: null }));
-      setSelectedCities([city]);
 
-      dispatch(fetchAllAvailable({ ...newOrder, city }));
-    },
-    [newOrder, lastAssignedCity, isMasterAssigned, dispatch, ensureMasterCanHandleOrder],
-  );
-
-  const onOrderCityRemove = useCallback(
-    (selectedList, removedItem) => {
-      setLastAssignedCity(removedItem);
-      dispatch(changeNewOrderField({ name: 'city', value: null }));
-      setSelectedCities([]);
       setShowMasters(false);
+      await dispatch(fetchAllAvailable({ watchId: newParams.watch.id, cityId: newParams.city.id, startDate: newParams.startDate }));
+      setShowMasters(true);
     },
-    [dispatch],
+    [newOrder, isMasterAssigned, watches, cities, dispatch, ensureMasterCanHandleOrder],
   );
 
   const onOrderDateChange = useCallback(
@@ -154,8 +126,9 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   const onFindMasterBtnClick = useCallback(
     async event => {
       event.preventDefault();
-      setShowMasters(false);
+      // Drop current master
       dispatch(changeNewOrderField({ name: 'master', value: null }));
+      setShowMasters(false);
       await dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
       setShowMasters(true);
     },
@@ -177,16 +150,14 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
     [dispatch],
   );
 
-  const resetOrigOrder = useCallback(
-    order => {
-      setShowMasters(false);
-      dispatch(resetNewOrder());
-      //dispatch(resetNewOrder(order)); //TODO: reset to oldOrder (keep for order edit)
-      setSelectedCities([]);
-      setLastAssignedCity(null);
-    },
-    [dispatch],
-  );
+  const resetOrigOrder = useCallback(async () => {
+    dispatch(resetNewOrder());
+    setShowMasters(false);
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!isEditForm && newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
+  }, [newOrder, cities, isEditForm, dispatch]);
 
   return (
     <>
@@ -212,7 +183,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                         autoFocus
                         required
                         placeholder="Email"
-                        onChange={({ target: { name, value } }) => dispatch(changeNewOrderField({ name, value }))}
+                        onChange={onFormFieldChange}
                         value={newOrder.client.email}
                         isValid={validateEmail(newOrder.client.email)}
                         isInvalid={!validateEmail(newOrder.client.email)}
@@ -234,7 +205,7 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                         name="client.name"
                         required
                         placeholder="Name"
-                        onChange={({ target: { name, value } }) => dispatch(changeNewOrderField({ name, value }))}
+                        onChange={onFormFieldChange}
                         value={newOrder.client.name}
                         isValid={validateClientName(newOrder.client.name)}
                         isInvalid={!validateClientName(newOrder.client.name)}
@@ -264,9 +235,10 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                       name="watch"
                       label={watch.name}
                       checked={newOrder?.watch?.id === watch.id}
+                      value={watch.id}
                       inline
                       required
-                      onChange={event => onOrderWatchTypeChange(event, watch)}
+                      onChange={onFormFieldChange}
                       disabled={isPending}
                     />
                   ))}
@@ -282,17 +254,13 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                   </Form.Label>
                 </Col>
                 <Col>
-                  <Multiselect
-                    placeholder="City"
-                    displayValue="name"
-                    options={cities}
-                    selectedValues={selectedCities}
-                    singleSelect={true}
-                    selectionLimit={1}
-                    disable={isPending}
-                    onSelect={onOrderCitySelect}
-                    onRemove={onOrderCityRemove}
-                  />
+                  <Form.Select name="city" disabled={isPending} value={newOrder?.city?.id} onChange={onFormFieldChange}>
+                    {cities.map(city => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </Form.Select>
                 </Col>
               </Row>
             </Form.Group>

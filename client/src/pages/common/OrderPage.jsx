@@ -43,7 +43,7 @@ const OrderPage = () => {
     [isInitialLoading, error],
   );
 
-  const onFormSubmit = useCallback(
+  const onSubmit = useCallback(
     async event => {
       event.preventDefault();
 
@@ -83,7 +83,7 @@ const OrderPage = () => {
     [dispatch, enqueueSnackbar, newOrder, navigate, location],
   );
 
-  const resetForm = useCallback(async () => {
+  const onReset = useCallback(async () => {
     dispatch(resetNewOrder());
     setOrderPlaced(false);
   }, [dispatch]);
@@ -121,14 +121,14 @@ const OrderPage = () => {
                 <hr />
                 <Row className="justify-content-md-center">
                   <Col md="auto">
-                    <Button variant="primary" onClick={() => resetForm()}>
+                    <Button variant="primary" onClick={onReset}>
                       Create new order
                     </Button>
                   </Col>
                 </Row>
               </>
             ) : (
-              <OrderForm {...{ watches, cities, onSubmit: onFormSubmit, isEditForm: false, successButtonText: 'Create' }} />
+              <OrderForm {...{ watches, cities, onSubmit, isEditForm: false, successButtonText: 'Create' }} />
             )}
           </>
         ) : null}

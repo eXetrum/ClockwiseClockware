@@ -4,12 +4,13 @@ import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOr
 import { dateToNearestHour, isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
 
-const initEmptyOrder = () => ({
-  client: { name: '', email: '' },
-  master: null,
-  city: null,
-  watch: null,
-  startDate: dateToNearestHour().getTime(),
+const initEmptyOrder = (order = null) => ({
+  id: order?.id || -1,
+  client: { name: order?.client?.name || '', email: order?.client?.email || '' },
+  master: order?.master || null,
+  city: order?.city || null,
+  watch: order?.watch || null,
+  startDate: new Date(order?.startDate || dateToNearestHour()).getTime(),
   rating: MAX_RATING_VALUE,
 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
@@ -31,6 +32,7 @@ export const orderSlice = createSlice({
     changeVisibilityRateForm(state, action) {
       state.isShowRateForm = action.payload;
       state.newOrder = initEmptyOrder();
+      state.oldOrder = initEmptyOrder();
     },
     changeNewOrderField(state, action) {
       // Max one level depth
@@ -39,7 +41,7 @@ export const orderSlice = createSlice({
       else state.newOrder[head][rest[0]] = action.payload.value;
     },
     resetNewOrder(state, action) {
-      state.newOrder = action.payload || initEmptyOrder();
+      state.newOrder = action.payload || initEmptyOrder(state.oldOrder);
     },
   },
   extraReducers: {
@@ -109,10 +111,10 @@ export const orderSlice = createSlice({
       state.oldOrder = initEmptyOrder();
     },
     [fetchOrder.fulfilled]: (state, action) => {
-      state.isInitialLoading = false;
       state.error = initEmptyError();
-      state.newOrder = action.payload;
-      state.oldOrder = action.payload;
+      state.newOrder = initEmptyOrder(action.payload);
+      state.oldOrder = initEmptyOrder(action.payload); //{ ...action.payload.client, startDate: new Date(action.payload.startDate).getTime() };
+      state.isInitialLoading = false;
     },
     [fetchOrder.rejected]: (state, action) => {
       state.isInitialLoading = false;

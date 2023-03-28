@@ -12,7 +12,7 @@ import {
 import { isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE } from '../../constants';
 
-const initEmptyClient = () => ({ email: '', password: '', name: '' });
+const initEmptyClient = (client = null) => ({ id: client?.id || -1, email: client?.email || '', password: '', name: client?.name || '' });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
 
 const initialState = {
@@ -100,8 +100,8 @@ export const clientSlice = createSlice({
     [fetchClient.fulfilled]: (state, action) => {
       state.isInitialLoading = false;
       state.error = initEmptyError();
-      state.newClient = action.payload;
-      state.oldClient = action.payload;
+      state.newClient = initEmptyClient(action.payload);
+      state.oldClient = initEmptyClient(action.payload);
     },
     [fetchClient.rejected]: (state, action) => {
       state.isInitialLoading = false;
@@ -116,8 +116,8 @@ export const clientSlice = createSlice({
     [updateClient.fulfilled]: (state, action) => {
       state.isPending = false;
       state.error = initEmptyError();
-      state.newClient = action.payload;
-      state.oldClient = action.payload;
+      state.newClient = initEmptyClient(action.payload);
+      state.oldClient = initEmptyClient(action.payload);
     },
     [updateClient.rejected]: (state, action) => {
       state.isPending = false;

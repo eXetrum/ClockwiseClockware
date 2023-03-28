@@ -13,7 +13,15 @@ import {
 import { isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE } from '../../constants';
 
-const initEmptyMaster = () => ({ name: '', email: '', password: '', rating: 0, isApprovedByAdmin: false, cities: [] });
+const initEmptyMaster = (master = null) => ({
+  id: master?.id || -1,
+  name: master?.name || '',
+  email: master?.email || '',
+  password: '',
+  rating: parseInt(master?.rating || 0),
+  isApprovedByAdmin: master?.isApprovedByAdmin || false,
+  cities: master?.cities || [],
+});
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
 
 const initialState = {
@@ -122,8 +130,8 @@ export const masterSlice = createSlice({
     [fetchMaster.fulfilled]: (state, action) => {
       state.isInitialLoading = false;
       state.error = initEmptyError();
-      state.newMaster = action.payload;
-      state.oldMaster = action.payload;
+      state.newMaster = initEmptyMaster(action.payload);
+      state.oldMaster = initEmptyMaster(action.payload);
     },
     [fetchMaster.rejected]: (state, action) => {
       state.isInitialLoading = false;
@@ -139,8 +147,8 @@ export const masterSlice = createSlice({
     [updateMaster.fulfilled]: (state, action) => {
       state.isPending = false;
       state.error = initEmptyError();
-      state.newMaster = action.payload;
-      state.oldMaster = action.payload;
+      state.newMaster = initEmptyMaster(action.payload);
+      state.oldMaster = initEmptyMaster(action.payload);
     },
     [updateMaster.rejected]: (state, action) => {
       state.isPending = false;
@@ -180,7 +188,6 @@ export const masterSlice = createSlice({
     [resendEmailConfirmationMaster.fulfilled]: (state, action) => {
       const userId = action.payload;
       const idx = state.masters.map(master => master.id).indexOf(userId);
-      const master = state.masters[idx];
       state.masters[idx].isPendingResendEmailConfirmation = false;
       state.error = initEmptyError();
     },

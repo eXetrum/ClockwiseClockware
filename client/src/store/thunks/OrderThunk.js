@@ -42,7 +42,15 @@ export const fetchOrder = createAsyncThunk('order/fetchOrder', async (id, thunkA
 
 export const updateOrder = createAsyncThunk('order/updateOrder', async (order, thunkAPI) => {
   try {
-    await updateOrderById({ id: order.id, order });
+    await updateOrderById({
+      id: order.id,
+      order: {
+        watchId: order?.watch?.id,
+        cityId: order?.city.id,
+        masterId: order?.master.id,
+        startDate: order?.startDate,
+      },
+    });
     return order;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });

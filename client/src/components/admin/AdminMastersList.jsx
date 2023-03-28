@@ -16,6 +16,8 @@ import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/thunks';
 
+import { formatDecimal } from '../../utils';
+
 const MasterTableList = ({ masters }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
@@ -102,7 +104,7 @@ const MasterTableList = ({ masters }) => {
               </td>
               <td className="text-center p-2 m-0">
                 <StarRating total={5} value={master.rating} readonly={true} />
-                <b>{master.rating}/5</b>
+                <b>{formatDecimal(master.rating, 1)}/5</b>
               </td>
               <td className="text-center p-2 m-0">
                 {master.isApprovedByAdmin ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
