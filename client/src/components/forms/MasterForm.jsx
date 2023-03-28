@@ -3,6 +3,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
 import { StarRating } from '../common';
 import { validateEmail } from '../../utils';
+import { MAX_RATING_VALUE } from '../../constants';
 
 const MasterForm = ({
   master,
@@ -60,7 +61,7 @@ const MasterForm = ({
                   onRatingChange={onMasterRatingChange}
                   onRatingReset={onMasterRatingChange}
                   value={master.rating}
-                  total={5}
+                  total={MAX_RATING_VALUE}
                   readonly={isPending}
                 />
               </Col>

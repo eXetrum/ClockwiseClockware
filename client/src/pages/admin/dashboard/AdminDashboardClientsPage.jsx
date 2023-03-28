@@ -27,7 +27,7 @@ const AdminDashboardClientsPage = () => {
     [newClient],
   );
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       const response = await getClients({ abortController });
@@ -42,7 +42,7 @@ const AdminDashboardClientsPage = () => {
     }
   };
 
-  const doCreateClient = async (client) => {
+  const doCreateClient = async client => {
     setPending(true);
     try {
       const response = await createClient({ client });
@@ -60,45 +60,41 @@ const AdminDashboardClientsPage = () => {
     }
   };
 
-  const doDeleteClientById = async (id) => {
+  const doDeleteClientById = async id => {
     setPending(true);
     try {
       await deleteClientById({ id });
-      const removedClient = clients.find((item) => item.id === id);
-      setClients(clients.filter((item) => item.id !== id));
+      const removedClient = clients.find(item => item.id === id);
+      setClients(clients.filter(item => item.id !== id));
       enqueueSnackbar(`Client "${removedClient.email}" removed`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== id));
+      if (e?.response?.status === 404) setClients(clients.filter(item => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
-  const doResetPassword = async (client) => {
+  const doResetPassword = async client => {
     try {
       setPending(true);
-      const response = await resetPassword({ userId: client.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Password for ${client.email} has been successfully reset`, { variant: 'success' });
-      }
+      await resetPassword({ userId: client.id });
+      enqueueSnackbar(`Password for ${client.email} has been successfully reset`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
+      if (e?.response?.status === 404) setClients(clients.filter(item => item.id !== client.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
-  const doResendEmailConfirmation = async (client) => {
+  const doResendEmailConfirmation = async client => {
     try {
       setPending(true);
-      const response = await resendEmailConfirmation({ userId: client.id });
-      if ([200, 204].includes(response?.status)) {
-        enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
-      }
+      await resendEmailConfirmation({ userId: client.id });
+      enqueueSnackbar(`Email confirmation for client ${client.email} has been sent`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setClients(clients.filter((item) => item.id !== client.id));
+      if (e?.response?.status === 404) setClients(clients.filter(item => item.id !== client.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
@@ -119,16 +115,16 @@ const AdminDashboardClientsPage = () => {
     setShowAddForm(false);
   };
 
-  const onClientFormSubmit = (event) => {
+  const onClientFormSubmit = event => {
     event.preventDefault();
     doCreateClient(newClient);
   };
-  const onClientEmailChange = (event) => setNewClient((prev) => ({ ...prev, email: event.target.value }));
-  const onClientNameChange = (event) => setNewClient((prev) => ({ ...prev, name: event.target.value }));
-  const onClientPasswordChange = (event) => setNewClient((prev) => ({ ...prev, password: event.target.value }));
+  const onClientEmailChange = event => setNewClient(prev => ({ ...prev, email: event.target.value }));
+  const onClientNameChange = event => setNewClient(prev => ({ ...prev, name: event.target.value }));
+  const onClientPasswordChange = event => setNewClient(prev => ({ ...prev, password: event.target.value }));
 
-  const onClientRemove = async (clientId) => {
-    const client = clients.find((item) => item.id === clientId);
+  const onClientRemove = async clientId => {
+    const client = clients.find(item => item.id === clientId);
 
     const result = await confirm(`Do you want to delete "${client.email}" client ?`, {
       title: 'Confirm',
@@ -139,8 +135,8 @@ const AdminDashboardClientsPage = () => {
     if (result) doDeleteClientById(clientId);
   };
 
-  const onClientResetPassword = async (client) => doResetPassword(client);
-  const onClientResendEmailConfirmation = async (client) => doResendEmailConfirmation(client);
+  const onClientResetPassword = async client => doResetPassword(client);
+  const onClientResendEmailConfirmation = async client => doResendEmailConfirmation(client);
 
   return (
     <Container>
@@ -151,15 +147,15 @@ const AdminDashboardClientsPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -177,7 +173,7 @@ const AdminDashboardClientsPage = () => {
               isPending={isPending}
             />
           </>
-        )}
+        ) : null}
         <hr />
 
         <ModalForm

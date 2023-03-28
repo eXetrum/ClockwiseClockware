@@ -8,7 +8,7 @@ const { sendPasswordResetMail, sendEmailConfirmationMail } = require('../middlew
 const { generatePassword, generateConfirmationToken } = require('../utils');
 const { isDbErrorEntryAlreadyExists } = require('../utils');
 
-const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)].filter(item => item !== 'admin');
+const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)].filter((item) => item !== 'admin');
 
 const create = [
     body('email')
@@ -39,7 +39,7 @@ const create = [
             const { cities } = req.body;
             if (cities === undefined) throw new Error('For master role, cities required');
             if (!Array.isArray(cities)) throw new Error('cities must be of array type');
-            cities.forEach(city => {
+            cities.forEach((city) => {
                 if (!('id' in city)) throw new Error('Each object of cities array should contains id field');
             });
             return true;
@@ -52,7 +52,7 @@ const create = [
 
             const { email, password, name, role } = req.body;
 
-            const user = await db.sequelize.transaction(async t => {
+            const user = await db.sequelize.transaction(async (t) => {
                 if (role === USER_ROLES.CLIENT) {
                     const user = await User.create({ email: email.trim(), password: password.trim(), role }, { transaction: t });
                     await user.createClient({ name: name.trim() }, { transaction: t });
@@ -61,16 +61,16 @@ const create = [
                     let { cities } = req.body;
 
                     const dbCities = await City.findAll();
-                    const dbCityIds = dbCities.map(city => city.id);
+                    const dbCityIds = dbCities.map((city) => city.id);
 
-                    cities = cities.map(city => city.id);
+                    cities = cities.map((city) => city.id);
                     // filter out id's which does not exists in the database
-                    cities = cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
+                    cities = cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
 
                     // Collect city 'model' objects
                     const masterCities = [];
-                    cities.forEach(cityId => {
-                        const dbCityObj = dbCities.find(city => city.id === cityId);
+                    cities.forEach((cityId) => {
+                        const dbCityObj = dbCities.find((city) => city.id === cityId);
                         if (dbCityObj) masterCities.push(dbCityObj);
                     });
 
@@ -93,7 +93,7 @@ const create = [
 
             // Send confirmation message to user email
             const token = generateConfirmationToken();
-            const verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
+            const verificationLink = `${process.env.FRONTEND_ROOT_URL}/verify/${token}`;
 
             await Confirmations.create({ userId: user.id, token });
 
@@ -169,7 +169,7 @@ const login = [
 
 const verify = async (req, res) => {
     try {
-        const { token } = req.query;
+        const { token } = req.params;
 
         const confirmation = await Confirmations.findOne({ where: { token } });
         if (!confirmation) return res.status(400).json({ message: 'Invalid token' }).end();
@@ -179,14 +179,14 @@ const verify = async (req, res) => {
 
         const account = await user.getDetails();
         if (account.isEmailVerified === true) {
-            return res.status(409).json({ message: 'User has been already verified. Please Login' }).end();
+            return res.status(409).json({ message: 'User has been already verified' }).end();
         }
 
         await account.setEmailVerified(true);
         await account.save();
 
         await Confirmations.destroy({ where: { token } });
-        // TODO: send "congratz" letter ???
+
         res.status(200).json({ message: 'Your account has been successfully verified' }).end();
     } catch (error) {
         res.status(400).json(error).end();
@@ -248,8 +248,9 @@ const resendEmailConfirmation = [
             }
 
             const token = generateConfirmationToken();
-            const verificationLink = `http://${req.get('host')}/api/verify?token=${token}`;
+            const verificationLink = `${process.env.FRONTEND_ROOT_URL}/verify/${token}`;
 
+            await Confirmations.destroy({ where: { userId: user.id } });
             await Confirmations.create({ userId: user.id, token });
 
             const result = await sendEmailConfirmationMail({ email: user.email, password: null, verificationLink });

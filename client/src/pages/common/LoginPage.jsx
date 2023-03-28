@@ -1,28 +1,35 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { NavLink, Navigate, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
-import { validateEmail, getErrorText } from '../../utils';
+import { validateEmail, getErrorText, parseToken } from '../../utils';
 import { login } from '../../api';
 import { useAuth } from '../../hooks';
+import { USER_ROLES } from '../../constants';
+
+const initEmptyUser = () => ({ email: '', password: '' });
 
 const LoginPage = () => {
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   const location = useLocation();
-  const fromPage = location.state?.from?.pathname || '/';
+  const navigate = useNavigate();
 
-  const initEmptyUser = () => ({ email: '', password: '' });
   const [formUser, setFormUser] = useState(initEmptyUser());
 
   const { setAccessToken } = useAuth();
 
   const [pending, setPending] = useState(false);
-  const [redirect, setRedirect] = useState(false);
   const [error, setError] = useState(null);
 
   const isFormValid = useCallback(() => validateEmail(formUser?.email) && formUser?.password, [formUser]);
+  const isOrderExists = useMemo(() => location?.state?.order, [location]);
+  const isOrderUserEqAuthUser = useCallback(
+    (orderUser, authUser) => orderUser.email === authUser.email && orderUser.name === authUser.name,
+    [],
+  );
 
   let abortController = null;
 
@@ -34,8 +41,31 @@ const LoginPage = () => {
       if (response?.data?.accessToken) {
         const { accessToken } = response.data;
         setAccessToken(accessToken);
+        const authUser = parseToken(accessToken);
+
         enqueueSnackbar('Success', { variant: 'success' });
-        setRedirect(true);
+
+        const fromPage = location.state?.from?.pathname || '/';
+
+        if (authUser.role === USER_ROLES.MASTER) return navigate('/master/orders');
+        else if (authUser.role === USER_ROLES.CLIENT && fromPage !== '/order') return navigate('/client/orders');
+
+        const orderUser = location?.state?.order?.client;
+
+        if (isOrderExists && !isOrderUserEqAuthUser(orderUser, authUser)) {
+          const result = await confirm(
+            'Authenticated user data is different from prepared order details. Do you want to replace with current user data ?',
+            {
+              title: 'User details mismatch',
+              okText: 'Update',
+              cancelText: 'Do not update',
+              okButtonStyle: 'success',
+            },
+          );
+          if (result) return navigate(fromPage, { state: { ...location.state, email: authUser.email, name: authUser.name } });
+        }
+
+        return navigate(fromPage, { state: location.state });
       }
     } catch (e) {
       setError(e);
@@ -45,14 +75,14 @@ const LoginPage = () => {
     }
   };
 
-  const onFormFieldChange = (event) => {
+  const onFormFieldChange = event => {
     const inputField = event.target.name;
     const inputValue = event.target.value;
-    setFormUser((prev) => ({ ...prev, [inputField]: inputValue }));
+    setFormUser(prev => ({ ...prev, [inputField]: inputValue }));
     setError(null);
   };
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     abortController = new AbortController();
     doLogin({ ...formUser, abortController });
@@ -61,11 +91,8 @@ const LoginPage = () => {
   useEffect(() => {
     return () => {
       abortController?.abort();
-      closeSnackbar();
     };
-  }, [abortController, closeSnackbar]);
-
-  if (redirect) return <Navigate to={fromPage} />;
+  }, [abortController]);
 
   return (
     <Container>

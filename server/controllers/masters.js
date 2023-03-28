@@ -21,7 +21,7 @@ const getAll = [
                 order: [['createdAt', 'DESC']]
             });
 
-            const masters = records.map(master => ({ ...master.toJSON(), ...master.User.toJSON() }));
+            const masters = records.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
 
             res.status(200).json({ masters }).end();
         } catch (error) {
@@ -90,16 +90,16 @@ const create = [
             let { cities } = req.body.master;
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map(city => city.id);
+            const dbCityIds = dbCities.map((city) => city.id);
 
-            cities = cities.map(city => city.id);
+            cities = cities.map((city) => city.id);
             // filter out id's which does not exists in the database
-            cities = cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
+            cities = cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            cities.forEach(cityId => {
-                const dbCityObj = dbCities.find(city => city.id === cityId);
+            cities.forEach((cityId) => {
+                const dbCityObj = dbCities.find((city) => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
@@ -107,12 +107,15 @@ const create = [
                 return res.status(409).json({ message: 'master must be associated at least with one city' }).end();
             }
 
-            const [user, details] = await db.sequelize.transaction(async t => {
+            const [user, details] = await db.sequelize.transaction(async (t) => {
                 const user = await User.create(
                     { email: email.trim(), password: password.trim(), role: USER_ROLES.MASTER },
                     { transaction: t }
                 );
-                const details = await user.createMaster({ name: name.trim(), rating, isApprovedByAdmin }, { transaction: t });
+                const details = await user.createMaster(
+                    { name: name.trim(), rating, countOfReview: 1, isApprovedByAdmin },
+                    { transaction: t }
+                );
                 await details.setCities(masterCities, { transaction: t });
 
                 return [user, details];
@@ -142,7 +145,7 @@ const remove = [
 
             const { id } = req.params;
 
-            await db.sequelize.transaction(async t => {
+            await db.sequelize.transaction(async (t) => {
                 const resultMasterDetails = await Master.destroy({ where: { userId: id } }, { transaction: t });
                 const resultUserDetails = await User.destroy({ where: { id } }, { transaction: t });
                 if (resultMasterDetails === 0 || resultUserDetails === 0) throw new Error('EntryNotFound');
@@ -251,16 +254,16 @@ const update = [
             let { cities } = req.body.master;
 
             const dbCities = await City.findAll();
-            const dbCityIds = dbCities.map(city => city.id);
+            const dbCityIds = dbCities.map((city) => city.id);
             // master.cities contains id's now
-            cities = cities.map(city => city.id);
+            cities = cities.map((city) => city.id);
             // filter out id's which does not exists in the database, at this moment
-            cities = cities.filter(cityId => dbCityIds.indexOf(cityId) !== -1);
+            cities = cities.filter((cityId) => dbCityIds.indexOf(cityId) !== -1);
 
             // Collect city 'model' objects
             const masterCities = [];
-            cities.forEach(cityId => {
-                const dbCityObj = dbCities.find(city => city.id === cityId);
+            cities.forEach((cityId) => {
+                const dbCityObj = dbCities.find((city) => city.id === cityId);
                 if (dbCityObj) masterCities.push(dbCityObj);
             });
 
@@ -268,9 +271,9 @@ const update = [
                 return res.status(409).json({ message: 'master must be associated at least with one city' }).end();
             }
 
-            await db.sequelize.transaction(async t => {
+            await db.sequelize.transaction(async (t) => {
                 const [affectedRowsMaster, resultMaster] = await Master.update(
-                    { name: name.trim(), rating, isApprovedByAdmin },
+                    { name: name.trim(), rating, countOfReview: 1, isApprovedByAdmin },
                     {
                         where: { userId: id },
                         include: [{ model: City, as: 'cities', through: MasterCityList, required: true }],

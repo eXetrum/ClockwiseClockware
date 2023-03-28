@@ -1,10 +1,11 @@
 'use strict';
 const { Model } = require('sequelize');
 
+const { ORDER_STATUS } = require('../../constants');
+
 module.exports = (sequelize, DataTypes) => {
     class Order extends Model {
         static associate(models) {
-            // define association here
             Order.belongsTo(models.Client, { as: 'client', foreignKey: 'clientId', targetKey: 'userId' });
             Order.belongsTo(models.Watches, { as: 'watch', foreignKey: 'watchId' });
             Order.belongsTo(models.City, { as: 'city', foreignKey: 'cityId' });
@@ -65,7 +66,7 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false
             },
             status: {
-                type: DataTypes.ENUM(['confirmed', 'completed', 'canceled']),
+                type: DataTypes.ENUM(Object.values(ORDER_STATUS)),
                 allowNull: false,
                 defaultValue: 'confirmed'
             },
@@ -79,6 +80,11 @@ module.exports = (sequelize, DataTypes) => {
                 set(value) {
                     this.setDataValue('totalCost', value * 100);
                 }
+            },
+            rating: {
+                allowNull: true,
+                type: DataTypes.INTEGER,
+                defaultValue: null
             }
         },
         {

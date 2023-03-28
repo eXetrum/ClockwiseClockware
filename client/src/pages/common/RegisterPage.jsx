@@ -33,7 +33,7 @@ const RegisterPage = () => {
     );
   }, [user]);
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       const response = await getCities({ abortController });
@@ -48,7 +48,7 @@ const RegisterPage = () => {
     }
   };
 
-  const doRegister = async (user) => {
+  const doRegister = async user => {
     setPending(true);
     setError(null);
     try {
@@ -64,22 +64,22 @@ const RegisterPage = () => {
     }
   };
 
-  const onFormFieldChange = (event) => {
+  const onFormFieldChange = event => {
     const inputField = event.target.name;
     const inputValue = event.target.value;
-    setUser((prev) => ({ ...prev, [inputField]: inputValue }));
+    setUser(prev => ({ ...prev, [inputField]: inputValue }));
     setError(null);
   };
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doRegister({ ...user });
   };
 
-  const onUserRoleChanged = (event, newRole) => setUser((prev) => ({ ...prev, role: newRole }));
-  const onUserTosAcceptedChanged = (event) => setUser((prev) => ({ ...prev, isTosAccepted: event.target.checked }));
-  const onUserCitySelect = (selectedList, selectedItem) => setUser((prev) => ({ ...prev, cities: selectedList }));
-  const onUserCityRemove = (selectedList, removedItem) => setUser((prev) => ({ ...prev, cities: selectedList }));
+  const onUserRoleChanged = (event, newRole) => setUser(prev => ({ ...prev, role: newRole }));
+  const onUserTosAcceptedChanged = event => setUser(prev => ({ ...prev, isTosAccepted: event.target.checked }));
+  const onUserCitySelect = (selectedList, selectedItem) => setUser(prev => ({ ...prev, cities: selectedList }));
+  const onUserCityRemove = (selectedList, removedItem) => setUser(prev => ({ ...prev, cities: selectedList }));
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -150,9 +150,9 @@ const RegisterPage = () => {
 
                 <Form.Group className="mb-3">
                   {Object.values(USER_ROLES)
-                    .filter((item) => item !== USER_ROLES.ADMIN)
+                    .filter(item => item !== USER_ROLES.ADMIN)
                     .sort()
-                    .map((roleName) => (
+                    .map(roleName => (
                       <Form.Check
                         key={roleName}
                         type="radio"
@@ -161,7 +161,7 @@ const RegisterPage = () => {
                         checked={user.role === roleName}
                         inline
                         required
-                        onChange={(event) => onUserRoleChanged(event, roleName)}
+                        onChange={event => onUserRoleChanged(event, roleName)}
                         disabled={isPending}
                       />
                     ))}

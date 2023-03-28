@@ -14,4 +14,7 @@ const getOrderById = ({ id, abortController = null }) => axios.get(`/orders/${id
 const updateOrderById = ({ id, abortController = null, ...params }) =>
   axios.put(`/orders/${id}`, { ...params }, { signal: abortController?.signal });
 
-export { getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById };
+const patchOrderById = ({ id, abortController = null, ...params }) =>
+  axios.patch(`/orders/${id}`, { ...params }, { signal: abortController?.signal });
+
+export { getAvailableMasters, createOrder, getOrders, deleteOrderById, getOrderById, updateOrderById, patchOrderById };

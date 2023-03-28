@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Button, Alert, Spinner } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
@@ -6,19 +7,22 @@ import { Header, OrderForm, AdminMastersList, ErrorContainer } from '../../compo
 import { getWatches, getCities, getAvailableMasters, createOrder } from '../../api';
 import { addHours, dateRangesOverlap, dateToNearestHour, isGlobalError, getErrorText } from '../../utils';
 
+const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, watch: null, startDate: dateToNearestHour() });
+
 const OrderPage = () => {
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const initEmptyOrder = () => ({ client: { name: '', email: '' }, master: null, city: null, watch: null, startDate: dateToNearestHour() });
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [watches, setWatches] = useState([]);
   const [cities, setCities] = useState([]);
 
-  const [newOrder, setNewOrder] = useState(initEmptyOrder());
+  const [newOrder, setNewOrder] = useState(location?.state?.order || initEmptyOrder());
   const [isInitialLoading, setInitialLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedCities, setSelectedCities] = useState(location?.state?.order?.city ? [location?.state?.order?.city] : []);
   const [lastAssignedCity, setLastAssignedCity] = useState(null);
 
   const [masters, setMasters] = useState([]);
@@ -36,21 +40,21 @@ const OrderPage = () => {
     setMasters([]);
   };
 
-  const resetOrigOrder = (order) => {
+  const resetOrigOrder = order => {
     setNewOrder(order);
     setSelectedCities([]);
     setLastAssignedCity(null);
     setOrderConfirmationMessage(null);
   };
 
-  const ensureMasterCanServeCity = (master, city) => master?.cities?.find((item) => item.id === city.id);
+  const ensureMasterCanServeCity = (master, city) => master?.cities?.find(item => item.id === city.id);
   const ensureMasterSchedule = (schedule, startDate, endDate) =>
-    schedule.some((item) => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate)));
+    schedule.some(item => dateRangesOverlap(startDate, endDate, new Date(item.startDate), new Date(item.endDate)));
   const ensureMasterCanHandleOrder = ({ id, watch, city, master, startDate }) => {
     // Master cant handle selected city
     if (!ensureMasterCanServeCity(master, city)) return false;
 
-    const schedule = master.orders.filter((item) => item.id !== id);
+    const schedule = master.orders.filter(item => item.id !== id);
     return !ensureMasterSchedule(schedule, startDate, addHours(startDate, watch.repairTime));
   };
 
@@ -116,8 +120,22 @@ const OrderPage = () => {
         enqueueSnackbar('Order placed', { variant: 'success' });
       }
     } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+      if (isGlobalError(e) && e?.response?.status !== 403) return setError(e);
+
+      if (e?.response?.status === 403) {
+        const result = await confirm(
+          `User with specified email already exists. To continue you need to login with ${client.email} first. Proceed ?`,
+          {
+            title: 'User already exists',
+            okText: 'Yes',
+            cancelText: 'No',
+            okButtonStyle: 'success',
+          },
+        );
+        if (result) navigate('/login', { state: { from: location, order: newOrder } });
+      } else {
+        enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
+      }
     } finally {
       setPending(false);
     }
@@ -132,17 +150,17 @@ const OrderPage = () => {
     };
   }, [closeSnackbar, fetchInitialData]);
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doCreateOrder({ ...newOrder });
   };
 
-  const onClientEmailChange = (event) => setNewOrder((prev) => ({ ...prev, client: { ...prev.client, email: event.target.value } }));
-  const onClientNameChange = (event) => setNewOrder((prev) => ({ ...prev, client: { ...prev.client, name: event.target.value } }));
+  const onClientEmailChange = event => setNewOrder(prev => ({ ...prev, client: { ...prev.client, email: event.target.value } }));
+  const onClientNameChange = event => setNewOrder(prev => ({ ...prev, client: { ...prev.client, name: event.target.value } }));
 
   const onOrderCitySelect = async (selectedList, newCity) => {
     if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, city: newCity })) {
-      setNewOrder((prev) => ({ ...prev, city: newCity }));
+      setNewOrder(prev => ({ ...prev, city: newCity }));
       setSelectedCities([newCity]);
       resetMasterList();
       return;
@@ -158,26 +176,26 @@ const OrderPage = () => {
     // Accept -> drop current master
     if (result) {
       resetMasterList();
-      setNewOrder((prev) => ({ ...prev, city: newCity, master: null }));
+      setNewOrder(prev => ({ ...prev, city: newCity, master: null }));
       setSelectedCities([newCity]);
       return fetchAvailableMasters({ ...newOrder, city: newCity, master: null });
     }
 
     // Cancel -> revert to prev city
-    setNewOrder((prev) => ({ ...prev, city: lastAssignedCity }));
+    setNewOrder(prev => ({ ...prev, city: lastAssignedCity }));
     setSelectedCities([lastAssignedCity]);
   };
 
   const onOrderCityRemove = (selectedList, removedItem) => {
     setLastAssignedCity(removedItem);
-    setNewOrder((prev) => ({ ...prev, city: null }));
+    setNewOrder(prev => ({ ...prev, city: null }));
     setSelectedCities([]);
     resetMasterList();
   };
 
   const onOrderWatchTypeChange = async (event, newWatch) => {
     if (!isMasterAssigned || ensureMasterCanHandleOrder({ ...newOrder, watch: newWatch })) {
-      setNewOrder((prev) => ({ ...prev, watch: newWatch }));
+      setNewOrder(prev => ({ ...prev, watch: newWatch }));
       resetMasterList();
       return;
     }
@@ -189,29 +207,29 @@ const OrderPage = () => {
     });
 
     if (result) {
-      setNewOrder((prev) => ({ ...prev, watch: newWatch, master: null }));
+      setNewOrder(prev => ({ ...prev, watch: newWatch, master: null }));
       fetchAvailableMasters({ ...newOrder, watch: newWatch, master: null });
     }
   };
 
-  const onOrderDateChange = (newValue) => {
-    setNewOrder((prev) => ({ ...prev, startDate: new Date(newValue) }));
+  const onOrderDateChange = newValue => {
+    setNewOrder(prev => ({ ...prev, startDate: new Date(newValue) }));
     resetMasterList();
   };
 
-  const onFindMasterBtnClick = (event) => {
+  const onFindMasterBtnClick = event => {
     event.preventDefault();
-    setNewOrder((prev) => ({ ...prev, master: null }));
+    setNewOrder(prev => ({ ...prev, master: null }));
     fetchAvailableMasters({ ...newOrder, master: null });
   };
 
-  const onResetBtnClick = (event) => {
+  const onResetBtnClick = event => {
     event.preventDefault();
     resetOrigOrder(initEmptyOrder());
     resetMasterList();
   };
 
-  const onSelectMaster = async (master) => {
+  const onSelectMaster = async master => {
     const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
       title: 'Confirm',
       okText: 'Accept',
@@ -219,7 +237,7 @@ const OrderPage = () => {
     });
     if (!result) return;
 
-    setNewOrder((prev) => ({ ...prev, master }));
+    setNewOrder(prev => ({ ...prev, master }));
     resetMasterList();
   };
 

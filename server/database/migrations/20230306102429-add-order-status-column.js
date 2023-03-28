@@ -1,9 +1,11 @@
 'use strict';
+const { ORDER_STATUS } = require('../../constants');
+
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.addColumn('orders', 'status', {
-            type: Sequelize.DataTypes.ENUM(['confirmed', 'completed', 'canceled']),
+            type: Sequelize.DataTypes.ENUM(Object.values(ORDER_STATUS)),
             defaultValue: 'confirmed',
             allowNull: false
         });

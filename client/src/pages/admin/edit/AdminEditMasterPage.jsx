@@ -76,17 +76,17 @@ const AdminEditMasterPage = () => {
     };
   }, [id, closeSnackbar]);
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doUpdateMasterById(id, master);
   };
 
-  const onMasterEmailChange = (event) => setMaster((prevState) => ({ ...prevState, email: event.target.value }));
-  const onMasterNameChange = (event) => setMaster((prevState) => ({ ...prevState, name: event.target.value }));
-  const onMasterRatingChange = (value) => setMaster((prevState) => ({ ...prevState, rating: value }));
-  const onMasterIsApprovedByAdminChange = (event) => setMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
-  const onMasterCitySelect = (selectedList, selectedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
-  const onMasterCityRemove = (selectedList, removedItem) => setMaster((prevState) => ({ ...prevState, cities: selectedList }));
+  const onMasterEmailChange = event => setMaster(prevState => ({ ...prevState, email: event.target.value }));
+  const onMasterNameChange = event => setMaster(prevState => ({ ...prevState, name: event.target.value }));
+  const onMasterRatingChange = value => setMaster(prevState => ({ ...prevState, rating: value }));
+  const onMasterIsApprovedByAdminChange = event => setMaster(prev => ({ ...prev, isApprovedByAdmin: event.target.checked }));
+  const onMasterCitySelect = (selectedList, selectedItem) => setMaster(prevState => ({ ...prevState, cities: selectedList }));
+  const onMasterCityRemove = (selectedList, removedItem) => setMaster(prevState => ({ ...prevState, cities: selectedList }));
 
   const handlers = {
     onFormSubmit,
@@ -111,15 +111,15 @@ const AdminEditMasterPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && <MasterForm {...{ isPending, master, cities, ...handlers }} />}
+        {isComponentReady ? <MasterForm {...{ isPending, master, cities, ...handlers }} /> : null}
         <hr />
       </Container>
     </Container>

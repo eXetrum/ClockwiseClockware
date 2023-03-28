@@ -1,14 +1,17 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert, Badge, Button, Spinner } from 'react-bootstrap';
+import Stack from '@mui/material/Stack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import StarRating from '../common/StarRating';
+import { formatDate, formatDecimal } from '../../utils';
+import { ORDER_STATUS } from '../../constants';
 
-const AdminOrdersList = ({ orders, onRemove }) => {
-  if (orders == null) return null;
+const COLUMN_HEADERS = ['id', 'Client', 'Master', 'City', 'Clock', 'Date Start', 'Date End', 'Status', 'Total Cost'];
 
+const AdminOrdersList = ({ orders, onRemove, onComplete, onCancel, isPending }) => {
   if (orders.length === 0) {
     return (
       <Container>
@@ -21,33 +24,21 @@ const AdminOrdersList = ({ orders, onRemove }) => {
     );
   }
 
-  const pad = (num) => num.toString().padStart(2, '0');
-  const formatDate = (date) =>
-    [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
-    ' ' +
-    [pad(date.getHours()), pad(date.getMinutes())].join(':');
-
-  const formatDecimal = (value) => parseFloat(value).toFixed(2);
-
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
         <thead>
           <tr>
-            <th className="text-center p-2 m-0">id</th>
-            <th className="text-center p-2 m-0">Client</th>
-            <th className="text-center p-2 m-0">Master</th>
-            <th className="text-center p-2 m-0">City</th>
-            <th className="text-center p-2 m-0">Clock</th>
-            <th className="text-center p-2 m-0">Date Start</th>
-            <th className="text-center p-2 m-0">Date End</th>
-            <th className="text-center p-2 m-0">Status</th>
-            <th className="text-center p-2 m-0">Total Cost</th>
+            {COLUMN_HEADERS.map(header => (
+              <th key={header} className="text-center p-2 m-0">
+                {header}
+              </th>
+            ))}
             <th colSpan="2" className="text-center p-2 m-0"></th>
           </tr>
         </thead>
         <tbody>
-          {orders.map((order) => (
+          {orders.map(order => (
             <tr key={order.id} className="m-0">
               <td className="text-center p-2 m-0 col-1">{order.id}</td>
               <td className="text-center p-2 m-0">
@@ -83,24 +74,38 @@ const AdminOrdersList = ({ orders, onRemove }) => {
                 </Badge>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.startDate))}</small>
+                <small className="text-muted">{formatDate(order.startDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{formatDate(new Date(order.endDate))}</small>
+                <small className="text-muted">{formatDate(order.endDate)}</small>
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{order.status}</small>
+                {order.status === ORDER_STATUS.CONFIRMED ? (
+                  <Stack spacing={1}>
+                    <Button onClick={() => onComplete(order.id)} size="sm" disabled={isPending} variant="success">
+                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                      Complete
+                    </Button>
+                    <Button onClick={() => onCancel(order.id)} size="sm" disabled={isPending} variant="secondary">
+                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
+                      Cancel
+                    </Button>
+                  </Stack>
+                ) : null}
               </td>
               <td className="text-center p-2 m-0">
                 <small className="text-muted">{formatDecimal(order.totalCost)}</small>
               </td>
 
               <td className="text-center p-2 m-0">
-                {new Date() < new Date(order.startDate) ? (
+                {order.status === ORDER_STATUS.CONFIRMED ? (
                   <Link to={'/admin/orders/' + order.id}>
                     <EditIcon />
                   </Link>
-                ) : null}
+                ) : (
+                  <EditIcon sx={{ color: 'gray' }} />
+                )}
               </td>
               <td className="text-center p-2 m-0">
                 <Link to="#">

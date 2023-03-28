@@ -11,8 +11,6 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import ViewMasterCard from '../master/ViewMasterCard';
 import { validateEmail, dateToNearestHour } from '../../utils';
 
-import { ORDER_STATUS_ENUM } from '../../constants';
-
 const OrderForm = ({
   order,
   watches,
@@ -23,7 +21,6 @@ const OrderForm = ({
   onOrderCitySelect,
   onOrderCityRemove,
   onOrderDateChange,
-  onOrderStatusChange,
   onFindMasterBtnClick,
   onResetBtnClick,
   onClientEmailChange,
@@ -38,7 +35,7 @@ const OrderForm = ({
     [dateTimeError],
   );
 
-  const onOrderDateError = useCallback((reason) => {
+  const onOrderDateError = useCallback(reason => {
     if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
     if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
     if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
@@ -52,8 +49,8 @@ const OrderForm = ({
     [order],
   );
 
-  const isValidEmail = (email) => validateEmail(email);
-  const isValidName = (name) => name?.length >= 3;
+  const isValidEmail = email => validateEmail(email);
+  const isValidName = name => name?.length >= 3;
 
   const currentDate = dateToNearestHour();
 
@@ -71,36 +68,6 @@ const OrderForm = ({
     <Row className="justify-content-md-center">
       <Col xs lg="6">
         <Form onSubmit={onFormSubmit}>
-          {isEditForm ? (
-            <>
-              <hr />
-              <Form.Group>
-                <Row>
-                  <Col sm={4}>
-                    <Form.Label>
-                      <b>Status:</b>
-                    </Form.Label>
-                  </Col>
-                  <Col>
-                    {ORDER_STATUS_ENUM.map((status) => (
-                      <Form.Check
-                        key={status}
-                        type="radio"
-                        name="status"
-                        label={status}
-                        checked={order?.status === status}
-                        inline
-                        required
-                        onChange={(event) => onOrderStatusChange(event, status)}
-                        disabled={isPending}
-                      />
-                    ))}
-                  </Col>
-                </Row>
-              </Form.Group>
-            </>
-          ) : null}
-
           <hr />
           <Form.Group>
             <Row>
@@ -165,7 +132,7 @@ const OrderForm = ({
                 </Form.Label>
               </Col>
               <Col className="justify-content-md-center">
-                {watches.map((watch) => (
+                {watches.map(watch => (
                   <Form.Check
                     key={watch.id}
                     type="radio"
@@ -174,7 +141,7 @@ const OrderForm = ({
                     checked={order?.watch?.id === watch.id}
                     inline
                     required
-                    onChange={(event) => onOrderWatchTypeChange(event, watch)}
+                    onChange={event => onOrderWatchTypeChange(event, watch)}
                     disabled={isPending}
                   />
                 ))}
@@ -215,7 +182,7 @@ const OrderForm = ({
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <DateTimePicker
                     label="DateTimePicker"
-                    renderInput={(props) => <TextField {...props} />}
+                    renderInput={props => <TextField {...props} />}
                     views={['year', 'month', 'day', 'hours']}
                     onChange={onOrderDateChange}
                     onError={onOrderDateError}

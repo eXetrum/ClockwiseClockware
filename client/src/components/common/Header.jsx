@@ -33,6 +33,20 @@ const Header = () => {
               </Nav.Link>
             </Nav>
           ) : null}
+          {user && user.role === USER_ROLES.MASTER ? (
+            <Nav className="navbar-nav me-auto">
+              <Nav.Link as={Link} to="/master/orders">
+                Orders
+              </Nav.Link>
+            </Nav>
+          ) : null}
+          {user && user.role === USER_ROLES.CLIENT ? (
+            <Nav className="navbar-nav me-auto">
+              <Nav.Link as={Link} to="/client/orders">
+                Orders
+              </Nav.Link>
+            </Nav>
+          ) : null}
 
           <Nav className="navbar-nav ms-auto">
             <Nav.Link as={Link} to="/order">

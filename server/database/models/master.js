@@ -36,9 +36,14 @@ module.exports = (sequelize, DataTypes) => {
                 allowNull: false,
                 type: DataTypes.STRING
             },
+            countOfReview: {
+                allowNull: false,
+                type: DataTypes.INTEGER,
+                defaultValue: 1
+            },
             rating: {
                 allowNull: false,
-                type: DataTypes.INTEGER
+                type: DataTypes.DOUBLE
             },
             isEmailVerified: {
                 allowNull: false,

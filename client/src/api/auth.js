@@ -10,4 +10,6 @@ const resetPassword = ({ abortController = null, ...params }) =>
 const resendEmailConfirmation = ({ abortController = null, ...params }) =>
   axios.post('/resend_email_confirmation', { ...params }, { signal: abortController?.signal });
 
-export { login, register, resetPassword, resendEmailConfirmation };
+const verifyEmail = ({ token, abortController = null }) => axios.get(`/verify/${token}`, { signal: abortController?.signal });
+
+export { login, register, resetPassword, resendEmailConfirmation, verifyEmail };

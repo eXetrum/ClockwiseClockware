@@ -5,9 +5,8 @@ import ArrowLeftIcon from '@mui/icons-material/ArrowLeft';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../../components/common';
 import { getCityById, updateCityById } from '../../../api';
-import { isGlobalError, getErrorText } from '../../../utils';
+import { isGlobalError, getErrorText, formatDecimal } from '../../../utils';
 
-const formatDecimal = (value) => parseFloat(value).toFixed(2);
 const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
 const AdminEditCityPage = () => {
@@ -64,13 +63,13 @@ const AdminEditCityPage = () => {
     };
   }, [id, closeSnackbar]);
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doUpdateCityById(id, city);
   };
 
-  const onCityNameChange = (event) => setCity((prev) => ({ ...prev, name: event.target.value }));
-  const onCityPricePerHourChange = (event) => setCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
+  const onCityNameChange = event => setCity(prev => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = event => setCity(prev => ({ ...prev, pricePerHour: event.target.value }));
 
   return (
     <Container>
@@ -85,15 +84,15 @@ const AdminEditCityPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <Row className="justify-content-md-center">
             <Col md="auto">
               <Form inline="true" className="d-flex align-items-end" onSubmit={onFormSubmit}>
@@ -119,7 +118,7 @@ const AdminEditCityPage = () => {
               </Form>
             </Col>
           </Row>
-        )}
+        ) : null}
         <hr />
       </Container>
     </Container>

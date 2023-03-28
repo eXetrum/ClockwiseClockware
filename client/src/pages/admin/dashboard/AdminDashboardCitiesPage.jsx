@@ -6,9 +6,8 @@ import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer, AdminCitiesList, ModalForm } from '../../../components';
 import { getCities, createCity, deleteCityById } from '../../../api';
-import { getErrorText } from '../../../utils';
+import { getErrorText, formatDecimal } from '../../../utils';
 
-const formatDecimal = (value) => parseFloat(value).toFixed(2);
 const initEmptyCity = () => ({ name: '', pricePerHour: 0.0 });
 
 const AdminDashboardCitiesPage = () => {
@@ -25,7 +24,7 @@ const AdminDashboardCitiesPage = () => {
   const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
   const isFormValid = useCallback(() => newCity.name, [newCity]);
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       const response = await getCities({ abortController });
@@ -40,7 +39,7 @@ const AdminDashboardCitiesPage = () => {
     }
   };
 
-  const doCreateCity = async (city) => {
+  const doCreateCity = async city => {
     setPending(true);
     try {
       const response = await createCity({ city });
@@ -58,15 +57,15 @@ const AdminDashboardCitiesPage = () => {
     }
   };
 
-  const doDeleteCityById = async (id) => {
+  const doDeleteCityById = async id => {
     setPending(true);
     try {
       await deleteCityById({ id });
-      const removedCity = cities.find((item) => item.id === id);
-      setCities(cities.filter((item) => item.id !== id));
+      const removedCity = cities.find(item => item.id === id);
+      setCities(cities.filter(item => item.id !== id));
       enqueueSnackbar(`City "${removedCity.name}" removed`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setCities(cities.filter((item) => item.id !== id));
+      if (e?.response?.status === 404) setCities(cities.filter(item => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
@@ -87,16 +86,16 @@ const AdminDashboardCitiesPage = () => {
     setShowAddForm(false);
   };
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doCreateCity(newCity);
   };
 
-  const onCityNameChange = (event) => setNewCity((prev) => ({ ...prev, name: event.target.value }));
-  const onCityPricePerHourChange = (event) => setNewCity((prev) => ({ ...prev, pricePerHour: event.target.value }));
+  const onCityNameChange = event => setNewCity(prev => ({ ...prev, name: event.target.value }));
+  const onCityPricePerHourChange = event => setNewCity(prev => ({ ...prev, pricePerHour: event.target.value }));
 
-  const onCityRemove = async (cityId) => {
-    const city = cities.find((item) => item.id === cityId);
+  const onCityRemove = async cityId => {
+    const city = cities.find(item => item.id === cityId);
 
     const result = await confirm(`Do you want to delete "${city.name}" city ?`, {
       title: 'Confirm',
@@ -116,15 +115,15 @@ const AdminDashboardCitiesPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -136,7 +135,7 @@ const AdminDashboardCitiesPage = () => {
             <hr />
             <AdminCitiesList cities={cities} onRemove={onCityRemove} />
           </>
-        )}
+        ) : null}
         <hr />
 
         <ModalForm

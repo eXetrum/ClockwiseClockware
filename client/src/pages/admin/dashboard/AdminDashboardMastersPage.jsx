@@ -8,6 +8,7 @@ import Multiselect from 'multiselect-react-dropdown';
 import { Header, ErrorContainer, StarRating, AdminMastersList, ModalForm } from '../../../components';
 import { getCities, getMasters, createMaster, deleteMasterById, resetPassword, resendEmailConfirmation } from '../../../api';
 import { getErrorText, validateEmail } from '../../../utils';
+import { MAX_RATING_VALUE } from '../../../constants';
 
 const initEmptyMaster = () => ({
   name: '',
@@ -36,7 +37,7 @@ const AdminDashboardMasters = () => {
     [newMaster],
   );
 
-  const fetchInitialData = async (abortController) => {
+  const fetchInitialData = async abortController => {
     setInitialLoading(true);
     try {
       let response = await getCities({ abortController });
@@ -56,7 +57,7 @@ const AdminDashboardMasters = () => {
     }
   };
 
-  const doCreateMaster = async (master) => {
+  const doCreateMaster = async master => {
     setPending(true);
     try {
       const response = await createMaster({ master });
@@ -74,41 +75,41 @@ const AdminDashboardMasters = () => {
     }
   };
 
-  const doDeleteMasterById = async (id) => {
+  const doDeleteMasterById = async id => {
     setPending(true);
     try {
       await deleteMasterById({ id });
-      const removedMaster = masters.find((item) => item.id === id);
-      setMasters(masters.filter((item) => item.id !== id));
+      const removedMaster = masters.find(item => item.id === id);
+      setMasters(masters.filter(item => item.id !== id));
       enqueueSnackbar(`Master "${removedMaster.email}" removed`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== id));
+      if (e?.response?.status === 404) setMasters(masters.filter(item => item.id !== id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
-  const doResetPassword = async (master) => {
+  const doResetPassword = async master => {
     try {
       setPending(true);
       await resetPassword({ userId: master.id });
       enqueueSnackbar(`Password for ${master.email} has been successfully reset`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
+      if (e?.response?.status === 404) setMasters(masters.filter(item => item.id !== master.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
     }
   };
 
-  const doResendEmailConfirmation = async (master) => {
+  const doResendEmailConfirmation = async master => {
     try {
       setPending(true);
       await resendEmailConfirmation({ userId: master.id });
       enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
     } catch (e) {
-      if (e?.response?.status === 404) setMasters(masters.filter((item) => item.id !== master.id));
+      if (e?.response?.status === 404) setMasters(masters.filter(item => item.id !== master.id));
       enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
     } finally {
       setPending(false);
@@ -129,22 +130,22 @@ const AdminDashboardMasters = () => {
     setShowAddForm(false);
   };
 
-  const onFormSubmit = (event) => {
+  const onFormSubmit = event => {
     event.preventDefault();
     doCreateMaster(newMaster);
   };
 
-  const onMasterEmailChange = (event) => setNewMaster((prev) => ({ ...prev, email: event.target.value }));
-  const onMasterNameChange = (event) => setNewMaster((prev) => ({ ...prev, name: event.target.value }));
-  const onMasterPasswordChange = (event) => setNewMaster((prev) => ({ ...prev, password: event.target.value }));
-  const onMasterRatingChange = (value) => setNewMaster((prev) => ({ ...prev, rating: value }));
-  const onMasterIsApprovedByAdminChange = (event) => setNewMaster((prev) => ({ ...prev, isApprovedByAdmin: event.target.checked }));
+  const onMasterEmailChange = event => setNewMaster(prev => ({ ...prev, email: event.target.value }));
+  const onMasterNameChange = event => setNewMaster(prev => ({ ...prev, name: event.target.value }));
+  const onMasterPasswordChange = event => setNewMaster(prev => ({ ...prev, password: event.target.value }));
+  const onMasterRatingChange = value => setNewMaster(prev => ({ ...prev, rating: value }));
+  const onMasterIsApprovedByAdminChange = event => setNewMaster(prev => ({ ...prev, isApprovedByAdmin: event.target.checked }));
 
-  const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
-  const onMasterCityRemove = (selectedList, removedItem) => setNewMaster((prevState) => ({ ...prevState, cities: selectedList }));
+  const onMasterCitySelect = (selectedList, selectedItem) => setNewMaster(prevState => ({ ...prevState, cities: selectedList }));
+  const onMasterCityRemove = (selectedList, removedItem) => setNewMaster(prevState => ({ ...prevState, cities: selectedList }));
 
-  const onMasterRemove = async (masterId) => {
-    const master = masters.find((item) => item.id === masterId);
+  const onMasterRemove = async masterId => {
+    const master = masters.find(item => item.id === masterId);
 
     const result = await confirm(`Do you want to delete "${master.email}" master ?`, {
       title: 'Confirm',
@@ -155,8 +156,8 @@ const AdminDashboardMasters = () => {
     if (result) doDeleteMasterById(masterId);
   };
 
-  const onMasterResetPassword = async (master) => doResetPassword(master);
-  const onMasterResendEmailConfirmation = async (master) => doResendEmailConfirmation(master);
+  const onMasterResetPassword = async master => doResetPassword(master);
+  const onMasterResendEmailConfirmation = async master => doResendEmailConfirmation(master);
 
   return (
     <Container>
@@ -167,15 +168,15 @@ const AdminDashboardMasters = () => {
         </center>
         <hr />
 
-        {isInitialLoading && (
+        {isInitialLoading ? (
           <center>
             <Spinner animation="grow" />
           </center>
-        )}
+        ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady && (
+        {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
               <Col md="auto">
@@ -193,7 +194,7 @@ const AdminDashboardMasters = () => {
               isPending={isPending}
             />
           </>
-        )}
+        ) : null}
         <hr />
 
         <ModalForm
@@ -247,7 +248,7 @@ const AdminDashboardMasters = () => {
                   onRatingChange={onMasterRatingChange}
                   onRatingReset={onMasterRatingChange}
                   value={newMaster.rating}
-                  total={5}
+                  total={MAX_RATING_VALUE}
                   readonly={isPending}
                 />
               </Form.Group>
