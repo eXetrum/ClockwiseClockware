@@ -5,7 +5,7 @@ import { getErrorType, getErrorText } from '../../utils';
 //#region Auth
 export const loginAuth = createAsyncThunk('auth/login', async ({ email, password }, thunkAPI) => {
   try {
-    const response = await api.login({ email, password });
+    const response = await api.post('/login', { email, password });
     return response.data.accessToken;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -14,7 +14,7 @@ export const loginAuth = createAsyncThunk('auth/login', async ({ email, password
 
 export const registerAuth = createAsyncThunk('auth/register', async ({ ...params }, thunkAPI) => {
   try {
-    await api.register({ ...params });
+    await api.post('/register', { ...params });
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }
