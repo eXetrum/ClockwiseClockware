@@ -12,13 +12,13 @@ import ViewMasterCard from '../master/ViewMasterCard';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
-import { resetNewOrder, changeNewOrderField } from '../../store/actions/orderActions';
+import { changeNewOrderField } from '../../store/actions/orderActions';
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
 const MASTER_PROPS_DEPENDENCY = ['city', 'watch', 'startDate'];
 
-const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButtonText = 'Save' }) => {
+const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, successButtonText = 'Save' }) => {
   const dispatch = useDispatch();
 
   const { newOrder, isPending: isOrderPending } = useSelector(state => state.orderReducer);
@@ -151,12 +151,12 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
   );
 
   const resetOrigOrder = useCallback(async () => {
-    dispatch(resetNewOrder());
+    onReset();
     setShowMasters(false);
-  }, [dispatch]);
+  }, [onReset]);
 
   useEffect(() => {
-    if (!isEditForm && newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
+    if (newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
   }, [newOrder, cities, isEditForm, dispatch]);
 
   return (
@@ -333,15 +333,15 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
             <hr />
             <Form.Group>
               <Row className="justify-content-md-center mt-4">
-                <Col className="d-flex justify-content-md-end">
-                  <Button className="mb-3 col-sm-4" onClick={() => resetOrigOrder()} disabled={isPending}>
+                <Col className="d-flex justify-content-start">
+                  <Button className="mb-3 col-sm-5" onClick={() => resetOrigOrder()} disabled={isPending}>
                     Reset
                   </Button>
                 </Col>
-                <Col className="d-flex justify-content-md-end">
-                  <Button className="mb-3 col-sm-4" type="submit" variant="success" disabled={isPending || !isOrderReady}>
+                <Col className="d-flex justify-content-end">
+                  <Button className="mb-3 col-sm-5" type="submit" variant="success" disabled={isPending || !isOrderReady}>
                     {isOrderPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                    {successButtonText}
+                    <span>{successButtonText}</span>
                   </Button>
                 </Col>
               </Row>

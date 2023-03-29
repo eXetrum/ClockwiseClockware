@@ -9,6 +9,7 @@ import { Header, ErrorContainer, OrderForm } from '../../../components';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchWatches, fetchCities, fetchOrder, updateOrder } from '../../../store/thunks';
+import { resetNewOrder } from '../../../store/actions/orderActions';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -48,6 +49,13 @@ const AdminEditOrderPage = () => {
     [dispatch, enqueueSnackbar, newOrder],
   );
 
+  const onReset = useCallback(
+    async event => {
+      dispatch(resetNewOrder());
+    },
+    [dispatch],
+  );
+
   return (
     <Container>
       <Header />
@@ -69,7 +77,7 @@ const AdminEditOrderPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady ? <OrderForm {...{ watches, cities, onSubmit }} /> : null}
+        {isComponentReady ? <OrderForm {...{ watches, cities, onSubmit, onReset }} /> : null}
         <hr />
       </Container>
     </Container>
