@@ -1,21 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
 import { Header } from '../../components';
-import { useAuth } from '../../hooks';
-import { parseToken } from '../../utils';
+import { useSelector } from 'react-redux';
 
 const UserProfilePage = () => {
-  const { accessToken } = useAuth();
-  const [user, setUser] = useState();
-
-  useEffect(() => {
-    setUser(parseToken(accessToken));
-  }, [accessToken]);
+  const { authUser: auth } = useSelector(state => state.authReducer);
 
   return (
     <Container>
       <Header />
-      {user && (
+      {auth.user ? (
         <Container>
           <center>
             <h1>User Profile</h1>
@@ -23,14 +17,13 @@ const UserProfilePage = () => {
           <hr />
           <Row className="justify-content-md-center">
             <Col md="auto">
-              <div>Email: {user.email}</div>
-              <div>Password: {user.password}</div>
-              <div>Role: {user.role}</div>
+              <div>Email: {auth.user.email}</div>
+              <div>Role: {auth.user.role}</div>
             </Col>
           </Row>
           <hr />
         </Container>
-      )}
+      ) : null}
     </Container>
   );
 };

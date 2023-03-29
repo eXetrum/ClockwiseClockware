@@ -1,24 +1,30 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import Container from 'react-bootstrap/Container';
+import { PuffLoader } from 'react-spinners';
 import { Header } from '../../components/common';
-import { useAuth } from '../../hooks';
+
+import { useDispatch } from 'react-redux';
+import { destroyAuth } from '../../store/actions/DestroyAuthAction';
 
 const LogOutPage = () => {
+  const dispatch = useDispatch();
+
   const [redirect, setRedirect] = useState(false);
-  const { setAccessToken } = useAuth();
 
   useEffect(() => {
-    setAccessToken(null);
+    dispatch(destroyAuth());
     setRedirect(true);
-  }, [setAccessToken]);
+  }, [dispatch]);
 
   if (redirect) return <Navigate to="/" />;
 
   return (
     <Container>
       <Header />
-      <p>Logout...</p>
+      <center>
+        <PuffLoader color="#36d7b7" />
+      </center>
     </Container>
   );
 };
