@@ -11,7 +11,7 @@ import { store, persistor } from './store';
 
 import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
 
-import { injectStore } from './api/axios.interceptor';
+import { injectStore } from './axios/axios.interceptor';
 injectStore(store);
 
 ReactDOM.render(

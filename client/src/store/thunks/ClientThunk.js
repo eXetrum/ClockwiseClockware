@@ -1,19 +1,11 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import {
-  resetPassword,
-  resendEmailConfirmation,
-  getClients,
-  createClient,
-  deleteClientById,
-  getClientById,
-  updateClientById,
-} from '../../api';
+import { apiSecure } from '../../axios/axios.interceptor';
 import { getErrorType, getErrorText } from '../../utils';
 
 //#region Client
 export const fetchClients = createAsyncThunk('client/fetchAll', async (_, thunkAPI) => {
   try {
-    const response = await getClients();
+    const response = await apiSecure.get('/clients');
     return response.data.clients;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -22,7 +14,7 @@ export const fetchClients = createAsyncThunk('client/fetchAll', async (_, thunkA
 
 export const addClient = createAsyncThunk('client/addClient', async (client, thunkAPI) => {
   try {
-    const response = await createClient({ client });
+    const response = await apiSecure.post('/clients', { client });
     return response.data.client;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -31,7 +23,7 @@ export const addClient = createAsyncThunk('client/addClient', async (client, thu
 
 export const deleteClient = createAsyncThunk('client/deleteClient', async (id, thunkAPI) => {
   try {
-    await deleteClientById({ id });
+    await apiSecure.delete(`/clients/${id}`);
     return id;
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
@@ -40,7 +32,7 @@ export const deleteClient = createAsyncThunk('client/deleteClient', async (id, t
 
 export const fetchClient = createAsyncThunk('client/fetchClient', async (id, thunkAPI) => {
   try {
-    const response = await getClientById({ id });
+    const response = await apiSecure.get(`/clients/${id}`);
     return response.data.client;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -49,7 +41,7 @@ export const fetchClient = createAsyncThunk('client/fetchClient', async (id, thu
 
 export const updateClient = createAsyncThunk('client/updateClient', async (client, thunkAPI) => {
   try {
-    await updateClientById({ id: client.id, client });
+    await apiSecure.put(`/clients/${client.id}`, { client });
     return client;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -58,7 +50,7 @@ export const updateClient = createAsyncThunk('client/updateClient', async (clien
 
 export const resetPasswordClient = createAsyncThunk('client/resetPassword', async (userId, thunkAPI) => {
   try {
-    await resetPassword({ userId });
+    await apiSecure.post('/reset_password', { userId });
     return userId;
   } catch (error) {
     return thunkAPI.rejectWithValue({ id: userId, message: getErrorText(error), type: getErrorType(error) });
@@ -67,7 +59,7 @@ export const resetPasswordClient = createAsyncThunk('client/resetPassword', asyn
 
 export const resendEmailConfirmationClient = createAsyncThunk('client/resendEmailConfirmation', async (userId, thunkAPI) => {
   try {
-    await resendEmailConfirmation({ userId });
+    await apiSecure.post('/resend_email_confirmation', { userId });
     return userId;
   } catch (error) {
     return thunkAPI.rejectWithValue({ id: userId, message: getErrorText(error), type: getErrorType(error) });

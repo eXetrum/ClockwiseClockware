@@ -1,12 +1,12 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { getOrders, createOrder, deleteOrderById, getOrderById, updateOrderById, patchOrderById } from '../../api';
+import { apiSecure } from '../../axios/axios.interceptor';
 import { getErrorType, getErrorText } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
 //#region Order
 export const fetchOrders = createAsyncThunk('order/fetchAll', async (_, thunkAPI) => {
   try {
-    const response = await getOrders();
+    const response = await apiSecure.get('/orders');
     return response.data.orders;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -15,7 +15,7 @@ export const fetchOrders = createAsyncThunk('order/fetchAll', async (_, thunkAPI
 
 export const addOrder = createAsyncThunk('order/addOrder', async (order, thunkAPI) => {
   try {
-    const response = await createOrder({ order });
+    const response = await apiSecure.post('/orders', { order });
     return { ...response.data };
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -24,7 +24,7 @@ export const addOrder = createAsyncThunk('order/addOrder', async (order, thunkAP
 
 export const deleteOrder = createAsyncThunk('order/deleteOrder', async (id, thunkAPI) => {
   try {
-    await deleteOrderById({ id });
+    await apiSecure.delete(`/orders/${id}`);
     return id;
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
@@ -33,7 +33,7 @@ export const deleteOrder = createAsyncThunk('order/deleteOrder', async (id, thun
 
 export const fetchOrder = createAsyncThunk('order/fetchOrder', async (id, thunkAPI) => {
   try {
-    const response = await getOrderById({ id });
+    const response = await apiSecure.get(`/orders/${id}`);
     return response.data.order;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -42,7 +42,7 @@ export const fetchOrder = createAsyncThunk('order/fetchOrder', async (id, thunkA
 
 export const updateOrder = createAsyncThunk('order/updateOrder', async (order, thunkAPI) => {
   try {
-    await updateOrderById({
+    await apiSecure.put(`/orders/${order.id}`, {
       id: order.id,
       order: {
         watchId: order?.watch?.id,
@@ -59,7 +59,7 @@ export const updateOrder = createAsyncThunk('order/updateOrder', async (order, t
 
 export const completeOrder = createAsyncThunk('order/completeOrder', async (id, thunkAPI) => {
   try {
-    await patchOrderById({ id, status: ORDER_STATUS.COMPLETED });
+    await apiSecure.patch(`/orders/${id}`, { status: ORDER_STATUS.COMPLETED });
     return id;
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
@@ -68,7 +68,7 @@ export const completeOrder = createAsyncThunk('order/completeOrder', async (id, 
 
 export const cancelOrder = createAsyncThunk('order/cancelOrder', async (id, thunkAPI) => {
   try {
-    await patchOrderById({ id, status: ORDER_STATUS.CANCELED });
+    await apiSecure.patch(`/orders/${id}`, { status: ORDER_STATUS.CANCELED });
     return id;
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
@@ -77,7 +77,7 @@ export const cancelOrder = createAsyncThunk('order/cancelOrder', async (id, thun
 
 export const rateOrder = createAsyncThunk('order/rateOrder', async ({ id, rating }, thunkAPI) => {
   try {
-    await patchOrderById({ id, rating });
+    await apiSecure.patch(`/orders/${id}`, { rating });
     return { id, rating };
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });

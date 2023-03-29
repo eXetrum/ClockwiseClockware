@@ -1,5 +1,5 @@
-export { fetchWatches } from './WatchThunk';
-export { fetchCities, addCity, deleteCity, fetchCity, updateCity } from './CityThunk';
+export { fetchWatches } from './watchThunk';
+export { fetchCities, addCity, deleteCity, fetchCity, updateCity } from './cityThunk';
 export {
   fetchMasters,
   fetchAllAvailable,
@@ -9,7 +9,7 @@ export {
   updateMaster,
   resetPasswordMaster,
   resendEmailConfirmationMaster,
-} from './MasterThunk';
+} from './masterThunk';
 
 export {
   fetchClients,
@@ -19,8 +19,8 @@ export {
   updateClient,
   resetPasswordClient,
   resendEmailConfirmationClient,
-} from './ClientThunk';
+} from './clientThunk';
 
-export { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './OrderThunk';
+export { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './orderThunk';
 
-export { loginAuth, registerAuth } from './AuthThunk';
+export { loginAuth, registerAuth } from './authThunk';

@@ -4,8 +4,11 @@ import { Container, Row, Col } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header } from '../../components';
 import { PuffLoader } from 'react-spinners';
-import { verifyEmail } from '../../api';
+
+import { api } from '../../axios/axios.interceptor';
 import { getErrorText } from '../../utils';
+
+export const verifyEmail = ({ token }) => api.get(`/verify/${token}`);
 
 const VerifyPage = () => {
   const { token } = useParams();
