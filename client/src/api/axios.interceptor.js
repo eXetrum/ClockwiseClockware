@@ -35,8 +35,8 @@ apiSecure.interceptors.response.use(
     const { authUser } = store.getState().authReducer;
     if (error.response.status === 401 && authUser.accessToken) {
       store.dispatch(destroyAuth());
-      //return ResetTokenAndReattemptRequest(error);
     } else {
+      // eslint-disable-next-line
       console.error(error);
     }
     return Promise.reject(error);
