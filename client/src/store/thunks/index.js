@@ -22,3 +22,5 @@ export {
 } from './ClientThunk';
 
 export { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './OrderThunk';
+
+export { loginAuth, registerAuth } from './AuthThunk';
