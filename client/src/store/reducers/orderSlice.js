@@ -41,7 +41,10 @@ export const orderSlice = createSlice({
       else state.newOrder[head][rest[0]] = action.payload.value;
     },
     resetNewOrder(state, action) {
-      state.newOrder = action.payload || initEmptyOrder(state.oldOrder);
+      console.log('resetNewOrder: ', action.payload);
+      console.log('resetNewOrder: ', initEmptyOrder(state.oldOrder));
+      if (action.payload) state.newOrder = initEmptyOrder(action.payload);
+      else state.newOrder = initEmptyOrder(state.oldOrder);
     },
   },
   extraReducers: {
