@@ -1,13 +1,13 @@
-import axios from 'axios';
+import { apiSecure } from './axios.interceptor';
 
-export const createOrder = ({ ...params }) => axios.post('/orders', { ...params });
+export const createOrder = ({ ...params }) => apiSecure.post('/orders', { ...params });
 
-export const getOrders = () => axios.get('/orders');
+export const getOrders = () => apiSecure.get('/orders');
 
-export const deleteOrderById = ({ id }) => axios.delete(`/orders/${id}`);
+export const deleteOrderById = ({ id }) => apiSecure.delete(`/orders/${id}`);
 
-export const getOrderById = ({ id }) => axios.get(`/orders/${id}`);
+export const getOrderById = ({ id }) => apiSecure.get(`/orders/${id}`);
 
-export const updateOrderById = ({ id, ...params }) => axios.put(`/orders/${id}`, { ...params });
+export const updateOrderById = ({ id, ...params }) => apiSecure.put(`/orders/${id}`, { ...params });
 
-export const patchOrderById = ({ id, ...params }) => axios.patch(`/orders/${id}`, { ...params });
+export const patchOrderById = ({ id, ...params }) => apiSecure.patch(`/orders/${id}`, { ...params });

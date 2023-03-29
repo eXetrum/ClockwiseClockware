@@ -1,11 +1,11 @@
-import axios from 'axios';
+import { api, apiSecure } from './axios.interceptor';
 
-export const getCities = () => axios.get('/cities');
+export const getCities = () => api.get('/cities');
 
-export const createCity = ({ ...params }) => axios.post('/cities', { ...params });
+export const createCity = ({ ...params }) => apiSecure.post('/cities', { ...params });
 
-export const deleteCityById = ({ id }) => axios.delete(`/cities/${id}`);
+export const deleteCityById = ({ id }) => apiSecure.delete(`/cities/${id}`);
 
-export const getCityById = ({ id }) => axios.get(`/cities/${id}`);
+export const getCityById = ({ id }) => apiSecure.get(`/cities/${id}`);
 
-export const updateCityById = ({ id, ...params }) => axios.put(`/cities/${id}`, { ...params });
+export const updateCityById = ({ id, ...params }) => apiSecure.put(`/cities/${id}`, { ...params });

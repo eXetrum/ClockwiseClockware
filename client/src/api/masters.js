@@ -1,13 +1,13 @@
-import axios from 'axios';
+import { api, apiSecure } from './axios.interceptor';
 
-export const getAvailableMasters = ({ ...params }) => axios.get('/masters/available', { params: { ...params } });
+export const getAvailableMasters = ({ ...params }) => api.get('/masters/available', { params: { ...params } });
 
-export const getMasters = () => axios.get('/masters');
+export const getMasters = () => apiSecure.get('/masters');
 
-export const createMaster = ({ ...params }) => axios.post('/masters', { ...params });
+export const createMaster = ({ ...params }) => apiSecure.post('/masters', { ...params });
 
-export const deleteMasterById = ({ id }) => axios.delete(`/masters/${id}`);
+export const deleteMasterById = ({ id }) => apiSecure.delete(`/masters/${id}`);
 
-export const getMasterById = ({ id }) => axios.get(`/masters/${id}`);
+export const getMasterById = ({ id }) => apiSecure.get(`/masters/${id}`);
 
-export const updateMasterById = ({ id, ...params }) => axios.put(`/masters/${id}`, { ...params });
+export const updateMasterById = ({ id, ...params }) => apiSecure.put(`/masters/${id}`, { ...params });

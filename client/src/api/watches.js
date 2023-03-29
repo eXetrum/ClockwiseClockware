@@ -1,3 +1,3 @@
-import axios from 'axios';
+import { api } from './axios.interceptor';
 
-export const getWatches = () => axios.get('/watches');
+export const getWatches = () => api.get('/watches');
