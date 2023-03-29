@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
-import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
 
@@ -39,19 +38,10 @@ const LoginPage = () => {
         if (user.role === USER_ROLES.MASTER) return navigate('/master/orders');
         else if (user.role === USER_ROLES.CLIENT && fromPage !== '/order') return navigate('/client/orders');
 
-        // is order exists and client email/name differs
+        // is order exists and authenticated user is client
         const order = location?.state?.order;
-        if (order && user && (order.client?.email !== user.email || order.client?.name !== user.name)) {
-          const result = await confirm(
-            'Authenticated user data is different from prepared order details. Do you want to replace with current user data ?',
-            {
-              title: 'User mismatch',
-              okText: 'Update',
-              cancelText: 'Do not update',
-              okButtonStyle: 'success',
-            },
-          );
-          if (result) return navigate(fromPage, { state: { ...location.state, email: user.email, name: user.name } });
+        if (order && user.role === USER_ROLES.CLIENT) {
+          return navigate(fromPage, { state: { ...location.state, email: user.email, name: user.name } });
         }
 
         return navigate(fromPage, { state: location.state });
