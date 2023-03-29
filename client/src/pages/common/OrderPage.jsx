@@ -9,7 +9,7 @@ import { Header, OrderForm, ErrorContainer } from '../../components';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchWatches, fetchCities, addOrder } from '../../store/thunks';
-import { resetNewOrder } from '../../store/reducers/OrderSlice';
+import { resetNewOrder } from '../../store/actions/OrderActions';
 
 import { ERROR_TYPE } from '../../constants';
 

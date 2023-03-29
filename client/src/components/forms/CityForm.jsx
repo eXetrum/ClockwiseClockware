@@ -3,7 +3,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { changeVisibilityAddForm, changeNewCityField } from '../../store/reducers/CitySlice';
+import { changeVisibilityAddForm, changeNewCityField } from '../../store/actions/CityActions';
 
 import { formatDecimal } from '../../utils';
 

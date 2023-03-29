@@ -7,7 +7,7 @@ import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, rateOrder } from '../../../store/thunks';
-import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/reducers/OrderSlice';
+import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions/OrderActions';
 
 import { ERROR_TYPE } from '../../../constants';
 
@@ -34,7 +34,7 @@ const ClientDashboardOrdersPage = () => {
     [dispatch],
   );
 
-  const onFormSubmit = useCallback(
+  const onSubmit = useCallback(
     async event => {
       event.preventDefault();
       const rating = newOrder.rating;
@@ -47,6 +47,10 @@ const ClientDashboardOrdersPage = () => {
     },
     [dispatch, enqueueSnackbar, orderId, newOrder],
   );
+
+  const onHide = useCallback(() => dispatch(changeVisibilityRateForm(false)), [dispatch]);
+
+  const onRatingChange = useCallback(value => dispatch(changeNewOrderField({ name: 'rating', value })), [dispatch]);
 
   return (
     <Container>
@@ -73,20 +77,15 @@ const ClientDashboardOrdersPage = () => {
           show={isShowRateForm}
           title={'Rate order'}
           okText={'Apply'}
-          onHide={() => dispatch(changeVisibilityRateForm(false))}
-          onSubmit={onFormSubmit}
+          onHide={onHide}
+          onSubmit={onSubmit}
           isFormValid={() => true}
           isPending={isPending}
           formContent={
             <>
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
-                  <StarRating
-                    onRatingChange={value => dispatch(changeNewOrderField({ name: 'rating', value }))}
-                    onRatingReset={value => dispatch(changeNewOrderField({ name: 'rating', value }))}
-                    value={newOrder.rating}
-                    readonly={isPending}
-                  />
+                  <StarRating onRatingChange={onRatingChange} onRatingReset={onRatingChange} value={newOrder.rating} readonly={isPending} />
                 </Row>
               </Form.Group>
             </>
