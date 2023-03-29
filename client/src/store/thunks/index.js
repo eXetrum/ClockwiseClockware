@@ -1,4 +1,4 @@
-/*export { fetchWatches } from './watchThunk';
+export { fetchWatches } from './watchThunk';
 export { fetchCities, addCity, deleteCity, fetchCity, updateCity } from './cityThunk';
 export {
   fetchMasters,
@@ -24,4 +24,3 @@ export {
 export { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from './orderThunk';
 
 export { loginAuth, registerAuth } from './authThunk';
-*/
