@@ -197,11 +197,6 @@ const create = [
                 totalCost
             });
 
-            const confirmation = {
-                orderId: dbOrder.id,
-                ...(autoRegistration.password && { autoRegistration })
-            };
-
             const order = await Order.findOne({
                 where: { id: dbOrder.id },
                 include: [
