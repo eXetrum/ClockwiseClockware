@@ -5,7 +5,11 @@ import { isGlobalErrorType, parseToken } from '../../utils';
 import { USER_ROLES, ERROR_TYPE } from '../../constants';
 
 const initEmptyUser = () => ({ email: '', password: '', name: '', role: USER_ROLES.CLIENT, isTosAccepted: false, cities: [] });
-const initEmptyAuth = (token = null) => ({ user: parseToken(token), accessToken: token });
+const initEmptyAuth = (token = null) => ({
+  user: { ...(token ? parseToken(token) : { role: USER_ROLES.GUEST }) },
+  accessToken: token,
+});
+
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
 
 const initialState = {
@@ -35,6 +39,7 @@ export const authSlice = createSlice({
     },
     [loginAuth.fulfilled]: (state, action) => {
       state.authUser = initEmptyAuth(action.payload);
+      console.log('auth user: ', initEmptyAuth(action.payload));
       state.newUser = initEmptyUser();
       state.error = initEmptyError();
       state.isPending = false;
