@@ -15,6 +15,7 @@
     "axios": "^1.2.6",
     "bootstrap": "^5.2.3",
     "dayjs": "^1.11.7",
+    "history": "^5.3.0",
     "jwt-decode": "^3.1.2",
     "lodash.debounce": "^4.0.8",
     "multiselect-react-dropdown": "^2.0.25",
@@ -27,7 +28,8 @@
     "react-router-dom": "^6.8.0",
     "react-scripts": "^5.0.1",
     "react-spinners": "^0.13.8",
-    "react-toast-notifications": "^2.5.1"
+    "react-toast-notifications": "^2.5.1",
+    "redux-persist": "^6.0.0"
   },
   "scripts": {
     "predeploy": "npm run build",
