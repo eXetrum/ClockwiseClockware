@@ -8,6 +8,7 @@ export const USER_ROLES = {
   ADMIN: 'admin',
   MASTER: 'master',
   CLIENT: 'client',
+  GUEST: 'guest',
 };
 
 export const ACCESS_SCOPE = {
@@ -17,6 +18,7 @@ export const ACCESS_SCOPE = {
   ClientOnly: [USER_ROLES.CLIENT],
   MasterOrClient: [USER_ROLES.MASTER, USER_ROLES.CLIENT],
   AdminOrMaster: [USER_ROLES.ADMIN, USER_ROLES.MASTER],
+  GuestOrClient: [USER_ROLES.GUEST, USER_ROLES.CLIENT],
 };
 
 export const SNACKBAR_MAX_SNACKS = 5;
