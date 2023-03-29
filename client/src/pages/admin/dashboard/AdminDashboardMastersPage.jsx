@@ -9,7 +9,7 @@ import { Header, ErrorContainer, AdminMastersList, MasterForm } from '../../../c
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, fetchMasters, addMaster } from '../../../store/thunks';
-import { changeVisibilityAddForm } from '../../../store/actions/MasterActions';
+import { changeVisibilityAddForm } from '../../../store/actions/masterActions';
 
 import { ERROR_TYPE } from '../../../constants';
 

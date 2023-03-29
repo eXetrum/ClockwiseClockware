@@ -7,7 +7,7 @@ import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, rateOrder } from '../../../store/thunks';
-import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions/OrderActions';
+import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions/orderActions';
 
 import { ERROR_TYPE } from '../../../constants';
 

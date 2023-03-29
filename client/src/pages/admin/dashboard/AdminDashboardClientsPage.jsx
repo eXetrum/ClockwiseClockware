@@ -9,7 +9,7 @@ import { Header, ErrorContainer, AdminClientsList, ClientForm } from '../../../c
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClients, addClient } from '../../../store/thunks';
-import { changeVisibilityAddForm } from '../../../store/reducers/ClientSlice';
+import { changeVisibilityAddForm } from '../../../store/reducers/clientSlice';
 
 import { ERROR_TYPE } from '../../../constants';
 

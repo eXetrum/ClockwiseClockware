@@ -9,7 +9,7 @@ import { Header, ErrorContainer, AdminCitiesList, CityForm } from '../../../comp
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, addCity } from '../../../store/thunks';
-import { changeVisibilityAddForm } from '../../../store/actions/CityActions';
+import { changeVisibilityAddForm } from '../../../store/actions/cityActions';
 
 import { ERROR_TYPE } from '../../../constants';
 

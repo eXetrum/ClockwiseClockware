@@ -1,1 +1,1 @@
-export { changeVisibilityAddForm, changeNewCityField } from '../reducers/CitySlice';
+export { changeVisibilityAddForm, changeNewCityField } from '../reducers/citySlice';

@@ -5,7 +5,7 @@ import { StarRating } from '../common';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { changeVisibilityAddForm, changeNewMasterField } from '../../store/actions/MasterActions';
+import { changeVisibilityAddForm, changeNewMasterField } from '../../store/actions/masterActions';
 
 import { validateEmail } from '../../utils';
 

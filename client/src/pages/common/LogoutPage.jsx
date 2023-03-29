@@ -5,7 +5,7 @@ import { PuffLoader } from 'react-spinners';
 import { Header } from '../../components/common';
 
 import { useDispatch } from 'react-redux';
-import { destroyAuth } from '../../store/actions/DestroyAuthAction';
+import { destroyAuth } from '../../store/actions/destroyAuthAction';
 
 const LogOutPage = () => {
   const dispatch = useDispatch();

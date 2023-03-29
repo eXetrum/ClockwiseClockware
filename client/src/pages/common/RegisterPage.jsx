@@ -9,7 +9,7 @@ import { Header, ErrorContainer } from '../../components/common';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerAuth, fetchCities } from '../../store/thunks';
-import { changeNewUserField } from '../../store/actions/AuthActions';
+import { changeNewUserField } from '../../store/actions/authActions';
 
 import { validateEmail } from '../../utils';
 import { USER_ROLES, ERROR_TYPE } from '../../constants';

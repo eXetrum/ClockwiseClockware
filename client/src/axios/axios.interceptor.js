@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { destroyAuth } from '../store/actions/DestroyAuthAction';
+import { destroyAuth } from '../store/actions/destroyAuthAction';
 
 let store;
 

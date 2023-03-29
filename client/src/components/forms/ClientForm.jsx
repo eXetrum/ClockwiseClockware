@@ -3,7 +3,7 @@ import { Form, Row, Col, Button } from 'react-bootstrap';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { changeVisibilityAddForm, changeNewClientField } from '../../store/actions/ClientActions';
+import { changeVisibilityAddForm, changeNewClientField } from '../../store/actions/clientActions';
 
 import { validateEmail, validateClientName } from '../../utils';
 
