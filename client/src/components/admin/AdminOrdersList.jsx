@@ -58,7 +58,7 @@ const AdminOrdersList = ({ orders }) => {
     async order => {
       const result = await confirm(`Do you want to mark order with id=${order.id} as canceled ?`, {
         title: 'Confirm',
-        okText: 'Completed',
+        okText: 'Canceled',
         okButtonStyle: 'success',
       });
       if (!result) return;
