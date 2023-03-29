@@ -5,7 +5,14 @@ const db = require('../database/models/index');
 const { User, Client, Master, Watches, City, Order, Confirmations } = require('../database/models');
 const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
 const { sendOrderConfirmationMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
-const { dateToNearestHour, generatePassword, generateConfirmationToken, isDbErrorEntryNotFound } = require('../utils');
+const {
+    dateToNearestHour,
+    generatePassword,
+    generateConfirmationToken,
+    isDbErrorEntryNotFound,
+    formatDate,
+    formatDecimal
+} = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, ORDER_STATUS, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
 
 const getAll = [
@@ -192,9 +199,9 @@ const create = [
                 master: { ...master.toJSON(), ...master.User.toJSON() },
                 watch,
                 city,
-                startDate: clientDateTimeStart.toString(),
-                endDate: clientDateTimeEnd.toString(),
-                totalCost
+                startDate: formatDate(clientDateTimeStart).toString(),
+                endDate: formatDate(clientDateTimeEnd).toString(),
+                totalCost: formatDecimal(totalCost)
             });
 
             const order = await Order.findOne({
