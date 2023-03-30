@@ -29,140 +29,140 @@ export const clientSlice = createSlice({
   name: 'client',
   initialState,
   reducers: {
-    changeVisibilityAddForm(state, action) {
-      state.isShowAddForm = action.payload;
+    changeVisibilityAddForm(state, { payload }) {
+      state.isShowAddForm = payload;
       state.newClient = initEmptyClient();
     },
-    changeNewClientField(state, action) {
-      state.newClient[action.payload.name] = action.payload.value;
+    changeNewClientField(state, { payload }) {
+      state.newClient[payload.name] = payload.value;
     },
   },
   extraReducers: {
     //#region Fetch all clients
-    [fetchClients.pending]: (state, _) => {
+    [fetchClients.pending]: state => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchClients.fulfilled]: (state, action) => {
-      state.clients = action.payload;
+    [fetchClients.fulfilled]: (state, { payload }) => {
+      state.clients = payload.map(client => {
+        client.isPendingResetPassword = false;
+        client.isPendingResendEmailConfirmation = false;
+        return client;
+      });
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
-    [fetchClients.rejected]: (state, action) => {
+    [fetchClients.rejected]: (state, { payload }) => {
       state.isInitialLoading = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
     //#region Create new client
-    [addClient.pending]: (state, _) => {
+    [addClient.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [addClient.fulfilled]: (state, action) => {
-      state.clients = [action.payload, ...state.clients];
+    [addClient.fulfilled]: (state, { payload }) => {
+      state.clients.unshift({ ...payload, isPendingResetPassword: false, isPendingResendEmailConfirmation: false });
       state.isPending = false;
       state.isShowAddForm = false;
       state.newClient = initEmptyClient();
       state.error = initEmptyError();
     },
-    [addClient.rejected]: (state, action) => {
+    [addClient.rejected]: (state, { payload }) => {
       state.isPending = false;
-      if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
+      if (isGlobalErrorType(payload.type)) state.error = payload;
     },
     //#endregion
     //#region Delete client by id
-    [deleteClient.pending]: (state, _) => {
+    [deleteClient.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [deleteClient.fulfilled]: (state, action) => {
-      state.clients = state.clients.filter(client => client.id !== action.payload);
+    [deleteClient.fulfilled]: (state, { payload }) => {
+      state.clients = state.clients.filter(client => client.id !== payload);
       state.isPending = false;
       state.error = initEmptyError();
     },
-    [deleteClient.rejected]: (state, action) => {
+    [deleteClient.rejected]: (state, { payload }) => {
       state.isPending = false;
 
-      if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-        state.clients = state.clients.filter(client => client.id !== action.payload.id);
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
+        state.clients = state.clients.filter(client => client.id !== payload.id);
       }
 
-      if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
+      if (isGlobalErrorType(payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = payload;
     },
     //#endregion
     //#region Get client by id
-    [fetchClient.pending]: (state, _) => {
+    [fetchClient.pending]: state => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
       state.newClient = initEmptyClient();
       state.oldClient = initEmptyClient();
     },
-    [fetchClient.fulfilled]: (state, action) => {
+    [fetchClient.fulfilled]: (state, { payload }) => {
       state.isInitialLoading = false;
       state.error = initEmptyError();
-      state.newClient = initEmptyClient(action.payload);
-      state.oldClient = initEmptyClient(action.payload);
+      state.newClient = initEmptyClient(payload);
+      state.oldClient = initEmptyClient(payload);
     },
-    [fetchClient.rejected]: (state, action) => {
+    [fetchClient.rejected]: (state, { payload }) => {
       state.isInitialLoading = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
     //#region Update client by id
-    [updateClient.pending]: (state, _) => {
+    [updateClient.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [updateClient.fulfilled]: (state, action) => {
+    [updateClient.fulfilled]: (state, { payload }) => {
       state.isPending = false;
       state.error = initEmptyError();
-      state.newClient = initEmptyClient(action.payload);
-      state.oldClient = initEmptyClient(action.payload);
+      state.newClient = initEmptyClient(payload);
+      state.oldClient = initEmptyClient(payload);
     },
-    [updateClient.rejected]: (state, action) => {
+    [updateClient.rejected]: (state, { payload }) => {
       state.isPending = false;
       state.newClient = state.oldClient;
-      if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
+      if (isGlobalErrorType(payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = payload;
     },
     //#endregion
 
     //#region Reset password client
-    [resetPasswordClient.pending]: (state, action) => {
-      const userId = action.meta.arg;
-      const idx = state.clients.map(client => client.id).indexOf(userId);
+    [resetPasswordClient.pending]: (state, { meta }) => {
+      const idx = state.clients.map(client => client.id).indexOf(meta.arg);
       state.clients[idx].isPendingResetPassword = true;
       state.error = initEmptyError();
     },
-    [resetPasswordClient.fulfilled]: (state, action) => {
-      const userId = action.payload;
-      const idx = state.clients.map(client => client.id).indexOf(userId);
+    [resetPasswordClient.fulfilled]: (state, { payload }) => {
+      const idx = state.clients.map(client => client.id).indexOf(payload);
       state.clients[idx].isPendingResetPassword = false;
       state.error = initEmptyError();
     },
-    [resetPasswordClient.rejected]: (state, action) => {
-      const idx = state.clients.map(client => client.id).indexOf(action.payload.id);
+    [resetPasswordClient.rejected]: (state, { payload }) => {
+      const idx = state.clients.map(client => client.id).indexOf(payload.id);
       state.clients[idx].isPendingResetPassword = false;
-      if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter(client => client.id !== action.payload.id);
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter(client => client.id !== payload.id);
     },
     //#endregion
 
     //#region Resend email confirmation client
-    [resendEmailConfirmationClient.pending]: (state, action) => {
-      const userId = action.meta.arg;
-      const idx = state.clients.map(client => client.id).indexOf(userId);
+    [resendEmailConfirmationClient.pending]: (state, { meta }) => {
+      const idx = state.clients.map(client => client.id).indexOf(meta.arg);
       state.clients[idx].isPendingResendEmailConfirmation = true;
       state.error = initEmptyError();
     },
-    [resendEmailConfirmationClient.fulfilled]: (state, action) => {
-      const userId = action.payload;
-      const idx = state.clients.map(client => client.id).indexOf(userId);
+    [resendEmailConfirmationClient.fulfilled]: (state, { payload }) => {
+      const idx = state.clients.map(client => client.id).indexOf(payload);
       state.clients[idx].isPendingResendEmailConfirmation = false;
       state.error = initEmptyError();
     },
-    [resendEmailConfirmationClient.rejected]: (state, action) => {
-      const idx = state.clients.map(client => client.id).indexOf(action.payload.id);
+    [resendEmailConfirmationClient.rejected]: (state, { payload }) => {
+      const idx = state.clients.map(client => client.id).indexOf(payload.id);
       state.clients[idx].isPendingResendEmailConfirmation = false;
-      if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter(client => client.id !== action.payload.id);
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.clients.filter(client => client.id !== payload.id);
     },
   },
 });

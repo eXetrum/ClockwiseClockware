@@ -18,18 +18,18 @@ export const watchSlice = createSlice({
   reducers: {},
   extraReducers: {
     //#region Fetch all watches
-    [fetchWatches.pending]: (state, _) => {
+    [fetchWatches.pending]: state => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchWatches.fulfilled]: (state, action) => {
-      state.watches = action.payload;
+    [fetchWatches.fulfilled]: (state, { payload }) => {
+      state.watches = payload;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
-    [fetchWatches.rejected]: (state, action) => {
+    [fetchWatches.rejected]: (state, { payload }) => {
       state.isInitialLoading = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
   },

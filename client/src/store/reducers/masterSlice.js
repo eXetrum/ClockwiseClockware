@@ -38,22 +38,22 @@ export const masterSlice = createSlice({
   name: 'master',
   initialState,
   reducers: {
-    changeVisibilityAddForm(state, action) {
-      state.isShowAddForm = action.payload;
+    changeVisibilityAddForm(state, { payload }) {
+      state.isShowAddForm = payload;
       state.newMaster = initEmptyMaster();
     },
-    changeNewMasterField(state, action) {
-      state.newMaster[action.payload.name] = action.payload.value;
+    changeNewMasterField(state, { payload }) {
+      state.newMaster[payload.name] = payload.value;
     },
   },
   extraReducers: {
     //#region Fetch all masters
-    [fetchMasters.pending]: (state, _) => {
+    [fetchMasters.pending]: state => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchMasters.fulfilled]: (state, action) => {
-      state.masters = action.payload.map(master => {
+    [fetchMasters.fulfilled]: (state, { payload }) => {
+      state.masters = payload.map(master => {
         master.isPendingResetPassword = false;
         master.isPendingResendEmailConfirmation = false;
         return master;
@@ -61,140 +61,135 @@ export const masterSlice = createSlice({
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
-    [fetchMasters.rejected]: (state, action) => {
+    [fetchMasters.rejected]: (state, { payload }) => {
       state.isInitialLoading = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
     //#region Fetch all but available masters
-    [fetchAllAvailable.pending]: (state, _) => {
+    [fetchAllAvailable.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [fetchAllAvailable.fulfilled]: (state, action) => {
-      state.masters = action.payload;
+    [fetchAllAvailable.fulfilled]: (state, { payload }) => {
+      state.masters = payload;
       state.isPending = false;
       state.error = initEmptyError();
     },
-    [fetchAllAvailable.rejected]: (state, action) => {
+    [fetchAllAvailable.rejected]: (state, { payload }) => {
       state.isPending = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
     //#region Create new master
-    [addMaster.pending]: (state, _) => {
+    [addMaster.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [addMaster.fulfilled]: (state, action) => {
-      state.masters = [{ ...action.payload, isPendingResetPassword: false, isPendingResendEmailConfirmation: false }, ...state.masters];
+    [addMaster.fulfilled]: (state, { payload }) => {
+      state.masters.unshift({ ...payload, isPendingResetPassword: false, isPendingResendEmailConfirmation: false });
       state.isPending = false;
       state.isShowAddForm = false;
       state.newMaster = initEmptyMaster();
       state.error = initEmptyError();
     },
-    [addMaster.rejected]: (state, action) => {
+    [addMaster.rejected]: (state, { payload }) => {
       state.isPending = false;
-      if (isGlobalErrorType(action.payload.type)) state.error = action.payload;
+      if (isGlobalErrorType(payload.type)) state.error = payload;
     },
     //#endregion
 
     //#region Delete master by id
-    [deleteMaster.pending]: (state, _) => {
+    [deleteMaster.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [deleteMaster.fulfilled]: (state, action) => {
-      state.masters = state.masters.filter(master => master.id !== action.payload);
+    [deleteMaster.fulfilled]: (state, { payload }) => {
+      state.masters = state.masters.filter(master => master.id !== payload);
       state.isPending = false;
       state.error = initEmptyError();
     },
-    [deleteMaster.rejected]: (state, action) => {
+    [deleteMaster.rejected]: (state, { payload }) => {
       state.isPending = false;
 
-      if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
-        state.masters = state.masters.filter(master => master.id !== action.payload.id);
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) {
+        state.masters = state.masters.filter(master => master.id !== payload.id);
       }
 
-      if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = action.payload;
+      if (isGlobalErrorType(payload.type, [ERROR_TYPE.ENTRY_NOT_FOUND])) state.error = payload;
     },
     //#endregion
 
     //#region Get master by id
-    [fetchMaster.pending]: (state, _) => {
+    [fetchMaster.pending]: state => {
       state.isInitialLoading = true;
       state.error = initEmptyError();
       state.newMaster = initEmptyMaster();
       state.oldMaster = initEmptyMaster();
     },
-    [fetchMaster.fulfilled]: (state, action) => {
+    [fetchMaster.fulfilled]: (state, { payload }) => {
       state.isInitialLoading = false;
       state.error = initEmptyError();
-      state.newMaster = initEmptyMaster(action.payload);
-      state.oldMaster = initEmptyMaster(action.payload);
+      state.newMaster = initEmptyMaster(payload);
+      state.oldMaster = initEmptyMaster(payload);
     },
-    [fetchMaster.rejected]: (state, action) => {
+    [fetchMaster.rejected]: (state, { payload }) => {
       state.isInitialLoading = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
 
     //#region Update master by id
-    [updateMaster.pending]: (state, _) => {
+    [updateMaster.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
-    [updateMaster.fulfilled]: (state, action) => {
+    [updateMaster.fulfilled]: (state, { payload }) => {
       state.isPending = false;
       state.error = initEmptyError();
-      state.newMaster = initEmptyMaster(action.payload);
-      state.oldMaster = initEmptyMaster(action.payload);
+      state.newMaster = initEmptyMaster(payload);
+      state.oldMaster = initEmptyMaster(payload);
     },
-    [updateMaster.rejected]: (state, action) => {
+    [updateMaster.rejected]: (state, { payload }) => {
       state.isPending = false;
       state.newMaster = state.oldMaster;
-      if (isGlobalErrorType(action.payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = action.payload;
+      if (isGlobalErrorType(payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = payload;
     },
     //#endregion
 
     //#region Reset password master
-    [resetPasswordMaster.pending]: (state, action) => {
-      const userId = action.meta.arg;
-      const idx = state.masters.map(master => master.id).indexOf(userId);
+    [resetPasswordMaster.pending]: (state, { meta }) => {
+      const idx = state.masters.map(master => master.id).indexOf(meta.arg);
       state.masters[idx].isPendingResetPassword = true;
       state.error = initEmptyError();
     },
-    [resetPasswordMaster.fulfilled]: (state, action) => {
-      const userId = action.payload;
-      const idx = state.masters.map(master => master.id).indexOf(userId);
-      const master = state.masters[idx];
+    [resetPasswordMaster.fulfilled]: (state, { payload }) => {
+      const idx = state.masters.map(master => master.id).indexOf(payload);
       state.masters[idx].isPendingResetPassword = false;
       state.error = initEmptyError();
     },
-    [resetPasswordMaster.rejected]: (state, action) => {
-      const idx = state.masters.map(master => master.id).indexOf(action.payload.id);
+    [resetPasswordMaster.rejected]: (state, { payload }) => {
+      const idx = state.masters.map(master => master.id).indexOf(payload.id);
       state.masters[idx].isPendingResetPassword = false;
-      if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter(master => master.id !== action.payload.id);
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter(master => master.id !== payload.id);
     },
     //#endregion
 
     //#region Resend master email confirmation
-    [resendEmailConfirmationMaster.pending]: (state, action) => {
-      const userId = action.meta.arg;
-      const idx = state.masters.map(master => master.id).indexOf(userId);
+    [resendEmailConfirmationMaster.pending]: (state, { meta }) => {
+      const idx = state.masters.map(master => master.id).indexOf(meta.arg);
       state.masters[idx].isPendingResendEmailConfirmation = true;
       state.error = initEmptyError();
     },
-    [resendEmailConfirmationMaster.fulfilled]: (state, action) => {
-      const userId = action.payload;
-      const idx = state.masters.map(master => master.id).indexOf(userId);
+    [resendEmailConfirmationMaster.fulfilled]: (state, { payload }) => {
+      const idx = state.masters.map(master => master.id).indexOf(payload);
       state.masters[idx].isPendingResendEmailConfirmation = false;
       state.error = initEmptyError();
     },
-    [resendEmailConfirmationMaster.rejected]: (state, action) => {
-      const idx = state.masters.map(master => master.id).indexOf(action.payload.id);
+    [resendEmailConfirmationMaster.rejected]: (state, { payload }) => {
+      const idx = state.masters.map(master => master.id).indexOf(payload.id);
       state.masters[idx].isPendingResendEmailConfirmation = false;
-      if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter(master => master.id !== action.payload.id);
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.masters.filter(master => master.id !== payload.id);
     },
     //#endregion
   },

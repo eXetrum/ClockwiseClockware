@@ -19,43 +19,43 @@ export const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    changeNewUserField(state, action) {
-      state.newUser[action.payload.name] = action.payload.value;
+    changeNewUserField(state, { payload }) {
+      state.newUser[payload.name] = payload.value;
     },
-    destroyAuth(state, _) {
+    destroyAuth(state) {
       state.authUser = initEmptyAuth();
     },
   },
   extraReducers: {
     //#region Login
-    [loginAuth.pending]: (state, _) => {
+    [loginAuth.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
       state.authUser = initEmptyAuth();
     },
-    [loginAuth.fulfilled]: (state, action) => {
-      state.authUser = initEmptyAuth(action.payload);
+    [loginAuth.fulfilled]: (state, { payload }) => {
+      state.authUser = initEmptyAuth(payload);
       state.newUser = initEmptyUser();
       state.error = initEmptyError();
       state.isPending = false;
     },
-    [loginAuth.rejected]: (state, action) => {
+    [loginAuth.rejected]: (state, { payload }) => {
       state.isPending = false;
-      state.error = action.payload;
+      state.error = payload;
     },
     //#endregion
     //#region Register
-    [registerAuth.pending]: (state, _) => {
+    [registerAuth.pending]: state => {
       state.error = initEmptyError();
       state.isPending = true;
     },
-    [registerAuth.fulfilled]: (state, action) => {
+    [registerAuth.fulfilled]: state => {
+      state.newUser = initEmptyUser();
       state.error = initEmptyError();
       state.isPending = false;
-      state.newUser = initEmptyUser();
     },
-    [registerAuth.rejected]: (state, action) => {
-      state.error = action.payload;
+    [registerAuth.rejected]: (state, { payload }) => {
+      state.error = payload;
       state.isPending = false;
     },
     //#endregion
