@@ -42,7 +42,7 @@ export const fetchOrder = createAsyncThunk('order/fetchOrder', async (id, thunkA
 
 export const updateOrder = createAsyncThunk('order/updateOrder', async (order, thunkAPI) => {
   try {
-    await apiSecure.put(`/orders/${order.id}`, {
+    const response = await apiSecure.put(`/orders/${order.id}`, {
       id: order.id,
       order: {
         watchId: order?.watch?.id,
@@ -51,7 +51,7 @@ export const updateOrder = createAsyncThunk('order/updateOrder', async (order, t
         startDate: order?.startDate,
       },
     });
-    return order;
+    return response.data.order;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }

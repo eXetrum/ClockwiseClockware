@@ -41,8 +41,8 @@ export const fetchClient = createAsyncThunk('client/fetchClient', async (id, thu
 
 export const updateClient = createAsyncThunk('client/updateClient', async (client, thunkAPI) => {
   try {
-    await apiSecure.put(`/clients/${client.id}`, { client });
-    return client;
+    const response = await apiSecure.put(`/clients/${client.id}`, { client });
+    return response.data.client;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }
