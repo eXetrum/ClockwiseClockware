@@ -50,8 +50,8 @@ export const fetchMaster = createAsyncThunk('master/fetchMaster', async (id, thu
 
 export const updateMaster = createAsyncThunk('master/updateMaster', async (master, thunkAPI) => {
   try {
-    await apiSecure.put(`/masters/${master.id}`, { master });
-    return master;
+    const response = await apiSecure.put(`/masters/${master.id}`, { master });
+    return response.data.master;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }

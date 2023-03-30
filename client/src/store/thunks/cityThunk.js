@@ -42,8 +42,8 @@ export const fetchCity = createAsyncThunk('city/fetchCity', async (id, thunkAPI)
 
 export const updateCity = createAsyncThunk('city/updateCity', async (city, thunkAPI) => {
   try {
-    await apiSecure.put(`/cities/${city.id}`, { id: city.id, city });
-    return city;
+    const response = await apiSecure.put(`/cities/${city.id}`, { id: city.id, city });
+    return response.data.city;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
   }
