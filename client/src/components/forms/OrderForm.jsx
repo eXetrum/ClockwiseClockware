@@ -25,7 +25,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
   const { newOrder, isPending: isOrderPending } = useSelector(state => state.orderReducer);
   const { masters, isPending: isMastersPending } = useSelector(state => state.masterReducer);
 
-  const currentDate = dateToNearestHour();
+  const [currentDate, setCurrentDate] = useState(dateToNearestHour());
 
   const [isShowMasters, setShowMasters] = useState(false);
 
@@ -149,6 +149,8 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
     if (newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
     if (newOrder.watch === null && watches.length) dispatch(changeNewOrderField({ name: 'watch', value: watches[0] }));
   }, [newOrder, cities, watches, dispatch]);
+
+  useEffect(() => setCurrentDate(dateToNearestHour()), []);
 
   return (
     <>
