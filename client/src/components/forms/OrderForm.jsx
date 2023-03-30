@@ -13,6 +13,7 @@ import ViewMasterCard from '../master/ViewMasterCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
 import { changeNewOrderField } from '../../store/actions/orderActions';
+import { resetMasters } from '../../store/actions/masterActions';
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
@@ -46,7 +47,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
 
   const isMasterAssigned = useMemo(() => newOrder?.master !== null, [newOrder]);
   const isOrderPreparedForMasterSearch = useMemo(
-    () => newOrder?.city !== null && newOrder?.watch !== null && newOrder?.startDate !== null,
+    () => newOrder?.city !== null && newOrder?.watch !== null && newOrder?.startDate !== null && !isNaN(newOrder.startDate),
     [newOrder],
   );
   const isOrderReady = useMemo(
@@ -109,16 +110,17 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
       dispatch(changeNewOrderField({ name: 'master', value: null }));
 
       setShowMasters(false);
-      await dispatch(fetchAllAvailable({ watchId: newParams.watch.id, cityId: newParams.city.id, startDate: newParams.startDate }));
-      setShowMasters(true);
     },
     [newOrder, isMasterAssigned, watches, cities, dispatch, ensureMasterCanHandleOrder],
   );
 
   const onOrderDateChange = useCallback(
-    value => {
-      dispatch(changeNewOrderField({ name: 'startDate', value: new Date(value).getTime() }));
-      setShowMasters(false);
+    async value => {
+      const newStartDate = new Date(value).getTime();
+      if (!isNaN(newStartDate)) {
+        dispatch(changeNewOrderField({ name: 'startDate', value: newStartDate }));
+        setShowMasters(false);
+      }
     },
     [dispatch],
   );
@@ -132,32 +134,21 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
       await dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
       setShowMasters(true);
     },
-    [newOrder, dispatch],
+    [dispatch, newOrder],
   );
 
-  const onSelectMaster = useCallback(
-    async master => {
-      const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
-        title: 'Confirm',
-        okText: 'Accept',
-        okButtonStyle: 'success',
-      });
-      if (!result) return;
-
-      dispatch(changeNewOrderField({ name: 'master', value: master }));
-      setShowMasters(false);
-    },
-    [dispatch],
-  );
+  const onSelectMaster = useCallback(master => dispatch(changeNewOrderField({ name: 'master', value: master })), [dispatch]);
 
   const resetOrigOrder = useCallback(async () => {
     onReset();
+    dispatch(resetMasters());
     setShowMasters(false);
-  }, [onReset]);
+  }, [dispatch, onReset]);
 
   useEffect(() => {
     if (newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
-  }, [newOrder, cities, isEditForm, dispatch]);
+    if (newOrder.watch === null && watches.length) dispatch(changeNewOrderField({ name: 'watch', value: watches[0] }));
+  }, [newOrder, cities, watches, dispatch]);
 
   return (
     <>
@@ -284,7 +275,6 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                       disablePast={true}
                       minDateTime={dayjs(currentDate)}
                       value={newOrder.startDate}
-                      disabled={isPending}
                     />
                   </LocalizationProvider>
                   {isDateTimeError && (
@@ -352,9 +342,18 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
       {isShowMasters ? (
         <>
           <hr />
-          <AdminMastersList {...{ masters, onSelect: onSelectMaster, isAdminView: false }} />
+          <AdminMastersList {...{ masters, onSelect: onSelectMaster, currentSelectedMaster: newOrder.master, isAdminView: false }} />
         </>
-      ) : null}
+      ) : (
+        <>
+          {!isMasterAssigned ? (
+            <>
+              <hr />
+              <center>you should search free masters to complete order</center>
+            </>
+          ) : null}
+        </>
+      )}
     </>
   );
 };
