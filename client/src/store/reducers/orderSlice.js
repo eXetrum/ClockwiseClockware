@@ -136,7 +136,7 @@ export const orderSlice = createSlice({
     },
     [updateOrder.rejected]: (state, { payload }) => {
       state.isPending = false;
-      state.newOrder = state.oldOrder;
+      state.newOrder = initEmptyOrder(state.oldOrder);
       if (isGlobalErrorType(payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = payload;
     },
     //#endregion
