@@ -157,13 +157,36 @@ const MasterTableList = ({ masters }) => {
   );
 };
 
-const MasterCardList = ({ masters, onSelect }) => {
+const MasterCardList = ({ masters, currentSelectedMaster, onSelect }) => {
+  const onClick = useCallback(
+    master => {
+      onSelect(master);
+    },
+    [onSelect],
+  );
+
+  const getStyle = useCallback(
+    master => {
+      if (master.id === currentSelectedMaster?.id)
+        return {
+          border: 'solid 1px #ccc',
+          backgroundColor: '#eee',
+          color: '#333',
+          padding: '5px',
+          margin: '10px',
+          borderRadius: '25px 25px 25px 25px',
+          boxShadow: '0 1px 1px rgba(0,0,0,0.08),0 2px 2px rgba(0,0,0,0.12),0 4px 4px rgba(0,0,0,0.16),0 8px 8px rgba(0,0,0,0.2)',
+        };
+    },
+    [currentSelectedMaster],
+  );
+
   return (
     <Container>
-      <Row className="justify-content-md-center mt-4">
+      <Row className="d-flex justify-content-md-center mt-4">
         <>
           {masters.map(master => (
-            <Col key={master.id} md="auto" onClick={() => onSelect(master)}>
+            <Col key={master.id} md="auto" onClick={() => onClick(master)} style={getStyle(master)}>
               <ViewMasterCard master={master} />
             </Col>
           ))}
@@ -173,9 +196,8 @@ const MasterCardList = ({ masters, onSelect }) => {
   );
 };
 
-const AdminMastersList = ({ masters, onSelect, isAdminView = true }) => {
-  if (masters == null) return null;
-  const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
+const AdminMastersList = ({ masters, currentSelectedMaster, onSelect, isAdminView = true }) => {
+  const collectionIsEmptyText = isAdminView ? 'No records yet' : 'No masters available';
 
   if (masters.length === 0) {
     return (
@@ -190,7 +212,7 @@ const AdminMastersList = ({ masters, onSelect, isAdminView = true }) => {
   }
 
   if (isAdminView) return <MasterTableList masters={masters} />;
-  return <MasterCardList masters={masters} onSelect={onSelect} />;
+  return <MasterCardList masters={masters} currentSelectedMaster={currentSelectedMaster} onSelect={onSelect} />;
 };
 
 export default AdminMastersList;
