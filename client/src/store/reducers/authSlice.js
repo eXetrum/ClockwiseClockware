@@ -39,7 +39,6 @@ export const authSlice = createSlice({
     },
     [loginAuth.fulfilled]: (state, action) => {
       state.authUser = initEmptyAuth(action.payload);
-      console.log('auth user: ', initEmptyAuth(action.payload));
       state.newUser = initEmptyUser();
       state.error = initEmptyError();
       state.isPending = false;
