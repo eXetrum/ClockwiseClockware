@@ -137,7 +137,7 @@ const update = [
             const [affectedRows, result] = await City.update({ name: name.trim(), pricePerHour }, { where: { id }, returning: true });
             if (affectedRows === 0) return res.status(404).json({ message: 'City not found' }).end();
 
-            res.status(204).end();
+            res.status(200).json({ city: result[0] }).end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
             if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();

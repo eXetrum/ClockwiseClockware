@@ -359,7 +359,7 @@ const update = [
                 return res.status(409).json({ message: 'master must be associated at least with one city' }).end();
             }
 
-            await db.sequelize.transaction(async (t) => {
+            const [master, details] = await db.sequelize.transaction(async (t) => {
                 const [affectedRowsMaster, resultMaster] = await Master.update(
                     { name: name.trim(), rating, countOfReview: 1, isApprovedByAdmin },
                     {
@@ -381,9 +381,14 @@ const update = [
                 if (affectedRowsUser === 0) throw new Error('EntryNotFound');
 
                 await resultMaster[0].setCities(masterCities, { transaction: t });
+
+                return [resultMaster[0], resultUser[0]];
             });
 
-            res.status(204).end();
+            const newMasterCities = await master.getCities({ raw: true, through: { attributes: [] } });
+            res.status(200)
+                .json({ master: { ...master.toJSON(), ...details.toJSON(), cities: newMasterCities } })
+                .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Master not found' }).end();
             if (isDbErrorEntryAlreadyExists(error)) {

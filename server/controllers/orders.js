@@ -375,7 +375,33 @@ const update = [
                 { where: { id }, returning: true, limit: 1 }
             );
             if (!affectedRows) return res.status(404).json({ message: '~Order not found~' }).end();
-            res.status(204).end();
+
+            const newOrder = await Order.findOne({
+                where: { id },
+                include: [
+                    { model: Client, include: [{ model: User }], as: 'client' },
+                    { model: Watches, as: 'watch' },
+                    { model: City, as: 'city' },
+                    {
+                        model: Master,
+                        as: 'master',
+                        include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }],
+                        attributes: { exclude: ['id', 'userId'] }
+                    }
+                ],
+                attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
+                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+            });
+
+            res.status(200)
+                .json({
+                    order: {
+                        ...newOrder.toJSON(),
+                        client: { ...newOrder.client.toJSON(), ...newOrder.client.User.toJSON() },
+                        master: { ...newOrder.master.toJSON(), ...newOrder.master.User.toJSON() }
+                    }
+                })
+                .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Order not found' }).end();
             if (error.constraint === 'overlapping_times') {

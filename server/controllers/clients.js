@@ -181,7 +181,7 @@ const update = [
             const { id } = req.params;
             const { name, email } = req.body.client;
 
-            await db.sequelize.transaction(async (t) => {
+            const [client, details] = await db.sequelize.transaction(async (t) => {
                 const [affectedRowsClient, resultClient] = await Client.update(
                     { name: name.trim() },
                     {
@@ -199,9 +199,13 @@ const update = [
                     { transaction: t }
                 );
                 if (affectedRowsUser === 0) throw new Error('EntryNotFound');
+
+                return [resultClient[0], resultUser[0]];
             });
 
-            res.status(204).end();
+            res.status(200)
+                .json({ client: { ...client.toJSON(), ...details.toJSON() } })
+                .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Client not found' }).end();
             if (isDbErrorEntryAlreadyExists(error)) {
