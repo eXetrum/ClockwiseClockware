@@ -1,8 +1,8 @@
 import React, { useCallback, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
-import { Header, ErrorContainer } from '../../components/common';
+import { Header, SpinnerButton, ErrorContainer } from '../../components/common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -89,10 +89,7 @@ const LoginPage = () => {
                 <Row>
                   <Col sm={4}>&nbsp;</Col>
                   <Col className="d-flex justify-content-md-end">
-                    <Button variant="primary" type="submit" disabled={isPending || !isFormValid}>
-                      {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                      Login
-                    </Button>
+                    <SpinnerButton variant="primary" type="submit" disabled={isPending || !isFormValid} loading={isPending} text="Login" />
                   </Col>
                 </Row>
               </Form.Group>

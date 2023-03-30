@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
-import { Form, Row, Col, Button } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
-import { StarRating } from '../common';
+import { StarRating, SpinnerButton } from '../common';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -177,9 +177,14 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             <Row>
               <Col sm={4}></Col>
               <Col className="d-flex justify-content-md-end">
-                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid}>
-                  {okButtonText}
-                </Button>
+                <SpinnerButton
+                  className="ms-2"
+                  type="submit"
+                  variant="success"
+                  loading={isPending}
+                  disabled={isPending || !isFormValid}
+                  text={okButtonText}
+                />
               </Col>
             </Row>
           </Form.Group>

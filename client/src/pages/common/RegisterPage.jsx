@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
 import Multiselect from 'multiselect-react-dropdown';
 import { useSnackbar } from 'notistack';
-import { Header, ErrorContainer } from '../../components/common';
+import { Header, SpinnerButton, ErrorContainer } from '../../components/common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +12,7 @@ import { registerAuth, fetchCities } from '../../store/thunks';
 import { changeNewUserField } from '../../store/actions/authActions';
 
 import { validateEmail } from '../../utils';
-import { USER_ROLES, ERROR_TYPE } from '../../constants';
+import { USER_ROLES, ERROR_TYPE, ACCESS_SCOPE } from '../../constants';
 
 const RegisterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -128,23 +128,20 @@ const RegisterPage = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  {Object.values(USER_ROLES)
-                    .filter(item => item !== USER_ROLES.ADMIN)
-                    .sort()
-                    .map(roleName => (
-                      <Form.Check
-                        key={roleName}
-                        type="radio"
-                        name="role"
-                        label={roleName}
-                        checked={newUser.role === roleName}
-                        value={roleName}
-                        inline
-                        required
-                        onChange={onFormFieldChange}
-                        disabled={isPending}
-                      />
-                    ))}
+                  {ACCESS_SCOPE.MasterOrClient.sort().map(roleName => (
+                    <Form.Check
+                      key={roleName}
+                      type="radio"
+                      name="role"
+                      label={roleName}
+                      checked={newUser.role === roleName}
+                      value={roleName}
+                      inline
+                      required
+                      onChange={onFormFieldChange}
+                      disabled={isPending}
+                    />
+                  ))}
                 </Form.Group>
 
                 {newUser.role === USER_ROLES.MASTER ? (
@@ -182,10 +179,13 @@ const RegisterPage = () => {
                   <Row>
                     <Col sm={4}>&nbsp;</Col>
                     <Col className="d-flex justify-content-md-end">
-                      <Button variant="primary" type="submit" disabled={isPending || !isFormValid}>
-                        {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                        Register
-                      </Button>
+                      <SpinnerButton
+                        variant="primary"
+                        type="submit"
+                        disabled={isPending || !isFormValid}
+                        loading={isPending}
+                        text="Register"
+                      />
                     </Col>
                   </Row>
                 </Form.Group>

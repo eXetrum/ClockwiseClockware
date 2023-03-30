@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from 'react';
-import { Form, Row, Col, Button } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 import ModalForm from './ModalForm';
+import SpinnerButton from '../common/SpinnerButton';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { changeVisibilityAddForm, changeNewClientField } from '../../store/actions/clientActions';
@@ -102,9 +103,14 @@ const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             <Row className="mt-2">
               <Col sm={4}></Col>
               <Col className="d-flex justify-content-md-end">
-                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid}>
-                  {okButtonText}
-                </Button>
+                <SpinnerButton
+                  className="ms-2"
+                  type="submit"
+                  variant="success"
+                  loading={isPending}
+                  disabled={isPending || !isFormValid}
+                  text={okButtonText}
+                />
               </Col>
             </Row>
           </Form.Group>

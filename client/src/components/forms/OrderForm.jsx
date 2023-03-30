@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Form, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Form, Row, Col, Button } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
 import dayjs from 'dayjs';
@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { AdminMastersList } from '../../components';
+import { AdminMastersList, SpinnerButton } from '../../components';
 import ViewMasterCard from '../master/ViewMasterCard';
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -300,18 +300,19 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   </Row>
                   <Row>
                     <Col>
-                      <Button
+                      <SpinnerButton
                         className="mb-2 btn btn-sm"
                         variant="warning"
                         onClick={onFindMasterBtnClick}
                         disabled={isPending || !isOrderPreparedForMasterSearch}
-                      >
-                        {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" /> : null}
-                        {isMastersPending && (
-                          <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                        )}
-                        Find New Master
-                      </Button>
+                        text={
+                          <>
+                            {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" className="me-1" /> : null}
+                            <span>Find Master</span>
+                          </>
+                        }
+                        loading={isMastersPending}
+                      />
                     </Col>
                   </Row>
                 </Col>
@@ -331,10 +332,14 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   </Button>
                 </Col>
                 <Col className="d-flex justify-content-end">
-                  <Button className="mb-3 col-sm-5" type="submit" variant="success" disabled={isPending || !isOrderReady}>
-                    {isOrderPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                    <span>{successButtonText}</span>
-                  </Button>
+                  <SpinnerButton
+                    className="mb-3 col-sm-5"
+                    type="submit"
+                    variant="success"
+                    loading={isOrderPending}
+                    disabled={isPending || !isOrderReady}
+                    text={successButtonText}
+                  />
                 </Col>
               </Row>
             </Form.Group>
