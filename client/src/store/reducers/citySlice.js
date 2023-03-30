@@ -35,8 +35,8 @@ export const citySlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchCities.fulfilled]: (state, action) => {
-      state.cities = action.payload;
+    [fetchCities.fulfilled]: (state, { payload }) => {
+      state.cities = payload;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
