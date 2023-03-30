@@ -1,1 +1,1 @@
-export { changeVisibilityAddForm, changeNewMasterField } from '../reducers/masterSlice';
+export { changeVisibilityAddForm, changeNewMasterField, resetMasters } from '../reducers/masterSlice';

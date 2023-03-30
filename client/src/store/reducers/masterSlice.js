@@ -45,6 +45,10 @@ export const masterSlice = createSlice({
     changeNewMasterField(state, action) {
       state.newMaster[action.payload.name] = action.payload.value;
     },
+    resetMasters(state, action) {
+      if (!action.payload) state.masters = [];
+      else state.masters = action.payload;
+    },
   },
   extraReducers: {
     //#region Fetch all masters
@@ -200,5 +204,5 @@ export const masterSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddForm, changeNewMasterField } = masterSlice.actions;
+export const { changeVisibilityAddForm, changeNewMasterField, resetMasters } = masterSlice.actions;
 export default masterSlice.reducer;
