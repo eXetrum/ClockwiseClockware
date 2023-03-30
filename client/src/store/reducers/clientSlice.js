@@ -44,7 +44,11 @@ export const clientSlice = createSlice({
       state.error = initEmptyError();
     },
     [fetchClients.fulfilled]: (state, { payload }) => {
-      state.clients = payload;
+      state.clients = payload.map(client => {
+        client.isPendingResetPassword = false;
+        client.isPendingResendEmailConfirmation = false;
+        return client;
+      });
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
@@ -54,7 +58,7 @@ export const clientSlice = createSlice({
     },
     //#endregion
     //#region Create new client
-    [addClient.pending]: (state, _) => {
+    [addClient.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
     },
