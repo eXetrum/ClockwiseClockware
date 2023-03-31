@@ -11,25 +11,24 @@ import { useDispatch, useSelector } from 'react-redux';
 import { registerAuth, fetchCities } from '../../store/thunks';
 import { changeNewUserField } from '../../store/actions/authActions';
 
-import { validateEmail } from '../../utils';
-import { USER_ROLES, ERROR_TYPE, ACCESS_SCOPE } from '../../constants';
+import { validateEmail, isUnknownOrNoErrorType } from '../../utils';
+import { USER_ROLES, ACCESS_SCOPE } from '../../constants';
+import { selectNewUser, selectUserPending, selectAllCities, selectCityError, selectCityInitialLoading } from '../../store/selectors';
 
 const RegisterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { newUser, isPending } = useSelector(state => state.authReducer);
-  const { cities, error, isInitialLoading } = useSelector(state => state.cityReducer);
+  const newUser = useSelector(selectNewUser);
+  const isPending = useSelector(selectUserPending);
+  const cities = useSelector(selectAllCities);
+  const error = useSelector(selectCityError);
+  const isInitialLoading = useSelector(selectCityInitialLoading);
 
-  useEffect(() => {
-    dispatch(fetchCities());
-  }, [dispatch]);
+  useEffect(() => dispatch(fetchCities()), [dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
   const isFormValid = useMemo(() => {
     const { email, password, name, role, isTosAccepted, cities } = newUser;
     return (

@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
@@ -15,33 +15,35 @@ const VerifyPage = () => {
   const navigate = useNavigate();
   const { enqueueSnackbar } = useSnackbar();
 
-  const doVerification = async token => {
-    try {
-      const response = await verifyEmail({ token });
-      enqueueSnackbar(`${response?.data?.message}`, {
-        anchorOrigin: {
-          vertical: 'bottom',
-          horizontal: 'center',
-        },
-        variant: 'success',
-      });
-    } catch (error) {
-      enqueueSnackbar(`Error: ${getErrorText(error)}`, {
-        anchorOrigin: {
-          vertical: 'bottom',
-          horizontal: 'center',
-        },
-        variant: 'error',
-      });
-    } finally {
-      return navigate('/');
-    }
-  };
+  const doVerification = useCallback(
+    async token => {
+      try {
+        const response = await verifyEmail({ token });
+        enqueueSnackbar(`${response?.data?.message}`, {
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'center',
+          },
+          variant: 'success',
+        });
+      } catch (error) {
+        enqueueSnackbar(`Error: ${getErrorText(error)}`, {
+          anchorOrigin: {
+            vertical: 'bottom',
+            horizontal: 'center',
+          },
+          variant: 'error',
+        });
+      } finally {
+        return navigate('/');
+      }
+    },
+    [enqueueSnackbar, navigate],
+  );
 
   useEffect(() => {
-    doVerification(token);
-    // eslint-disable-next-line
-  }, [token]);
+    if (token) doVerification(token);
+  }, [token, doVerification]);
 
   return (
     <Container>

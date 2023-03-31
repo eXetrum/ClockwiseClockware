@@ -1,11 +1,13 @@
 import React, { useCallback } from 'react';
-import { Container, Row, Col, Table, Alert, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import Stack from '@mui/material/Stack';
+import { SpinnerButton } from '../common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
+
 import { completeOrder } from '../../store/thunks';
 
 import { formatDate, formatDecimal } from '../../utils';
@@ -76,17 +78,19 @@ const MasterOrdersList = ({ orders }) => {
                 <small className="text-muted">{formatDecimal(order.totalCost)}</small>
               </td>
               <td className="text-center p-2 m-0">
-                <small className="text-muted">{order.status}</small>
-                {order.status === ORDER_STATUS.CONFIRMED ? (
-                  <Stack spacing={1}>
-                    <Button onClick={() => onComplete(order)} size="sm" variant="success" disabled={order.isCompleting}>
-                      {order.isCompleting ? (
-                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                      ) : null}
-                      Complete
-                    </Button>
-                  </Stack>
-                ) : null}
+                <Stack spacing={1}>
+                  <small className="text-muted">{order.status}</small>
+                  {order.status === ORDER_STATUS.CONFIRMED ? (
+                    <SpinnerButton
+                      onClick={() => onComplete(order)}
+                      size="sm"
+                      variant="success"
+                      disabled={order.isCompleting}
+                      loading={order.isCompleting}
+                      text={'Complete'}
+                    />
+                  ) : null}
+                </Stack>
               </td>
             </tr>
           ))}

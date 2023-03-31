@@ -21,15 +21,15 @@ const initialState = {
   oldClient: initEmptyClient(),
   error: initEmptyError(),
   isInitialLoading: false,
-  isShowAddForm: false,
   isPending: false,
+  isShowAddForm: false,
 };
 
 export const clientSlice = createSlice({
   name: 'client',
   initialState,
   reducers: {
-    changeVisibilityAddForm(state, { payload }) {
+    changeVisibilityAddClientForm(state, { payload }) {
       state.isShowAddForm = payload;
       state.newClient = initEmptyClient();
     },
@@ -167,5 +167,5 @@ export const clientSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddForm, changeNewClientField } = clientSlice.actions;
+export const { changeVisibilityAddClientForm, changeNewClientField } = clientSlice.actions;
 export default clientSlice.reducer;

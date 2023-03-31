@@ -5,20 +5,20 @@ import { Header, ErrorContainer, AdminOrdersList } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders } from '../../../store/thunks';
+import { selectAllOrders, selectOrderError, selectOrderInitialLoading } from '../../../store/selectors';
 
-import { ERROR_TYPE } from '../../../constants';
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminDashboardOrdersPage = () => {
   const dispatch = useDispatch();
 
-  const { orders, error, isInitialLoading } = useSelector(state => state.orderReducer);
+  const orders = useSelector(selectAllOrders);
+  const error = useSelector(selectOrderError);
+  const isInitialLoading = useSelector(selectOrderInitialLoading);
 
   useEffect(() => dispatch(fetchOrders()), [dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   return (
     <Container>

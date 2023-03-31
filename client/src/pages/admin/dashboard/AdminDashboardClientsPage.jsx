@@ -8,23 +8,25 @@ import { Header, ErrorContainer, AdminClientsList, ClientForm } from '../../../c
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchClients, addClient } from '../../../store/thunks';
-import { changeVisibilityAddForm } from '../../../store/reducers/clientSlice';
 
-import { ERROR_TYPE } from '../../../constants';
+import { fetchClients, addClient } from '../../../store/thunks';
+import { changeVisibilityAddClientForm } from '../../../store/actions';
+import { selectAllClients, selectNewClient, selectClientError, selectClientInitialLoading } from '../../../store/selectors';
+
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { clients, newClient, error, isInitialLoading } = useSelector(state => state.clientReducer);
+  const clients = useSelector(selectAllClients);
+  const newClient = useSelector(selectNewClient);
+  const error = useSelector(selectClientError);
+  const isInitialLoading = useSelector(selectClientInitialLoading);
 
   useEffect(() => dispatch(fetchClients()), [dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const onFormSubmit = useCallback(
     async event => {
@@ -35,6 +37,8 @@ const AdminDashboardClientsPage = () => {
     },
     [dispatch, enqueueSnackbar, newClient],
   );
+
+  const onFormShow = useCallback(() => dispatch(changeVisibilityAddClientForm(true)), [dispatch]);
 
   return (
     <Container>
@@ -58,7 +62,7 @@ const AdminDashboardClientsPage = () => {
             <Row className="justify-content-md-center">
               <Col md="auto">
                 <Link to="#">
-                  <AddCircleOutlineOutlinedIcon onClick={() => dispatch(changeVisibilityAddForm(true))} />
+                  <AddCircleOutlineOutlinedIcon onClick={onFormShow} />
                 </Link>
               </Col>
             </Row>

@@ -21,8 +21,8 @@ const initialState = {
   oldOrder: initEmptyOrder(),
   error: initEmptyError(),
   isInitialLoading: false,
-  isShowRateForm: false,
   isPending: false,
+  isShowRateForm: false,
 };
 
 export const orderSlice = createSlice({

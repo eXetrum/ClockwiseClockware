@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -9,6 +9,8 @@ import CheckIcon from '@mui/icons-material/Check';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+
+import { SpinnerButton } from '../common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
@@ -102,29 +104,23 @@ const AdminClientsList = ({ clients }) => {
               <td className="p-3 m-0">{client.name}</td>
               <td className="text-center p-2 m-0 col-2">
                 <Stack spacing={1}>
-                  <Button
+                  <SpinnerButton
                     size="sm"
                     variant="outline-warning"
                     disabled={client.isPendingResetPassword}
+                    loading={client.isPendingResetPassword}
                     onClick={() => onResetPassword(client)}
-                  >
-                    {client.isPendingResetPassword ? (
-                      <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                    ) : null}
-                    Reset password
-                  </Button>
+                    text={'Reset password'}
+                  />
                   {!client.isEmailVerified ? (
-                    <Button
+                    <SpinnerButton
                       size="sm"
                       variant="outline-primary"
                       onClick={() => onResendEmailConfirmation(client)}
                       disabled={client.isPendingResendEmailConfirmation}
-                    >
-                      {client.isPendingResendEmailConfirmation ? (
-                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                      ) : null}
-                      Resend email confirmation
-                    </Button>
+                      loading={client.isPendingResendEmailConfirmation}
+                      text={'Resend email confirmation'}
+                    />
                   ) : null}
                 </Stack>
               </td>

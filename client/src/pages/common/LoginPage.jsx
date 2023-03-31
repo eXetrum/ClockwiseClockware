@@ -11,6 +11,7 @@ import { changeNewUserField } from '../../store/actions/authActions';
 
 import { validateEmail, parseToken } from '../../utils';
 import { USER_ROLES } from '../../constants';
+import { selectNewUser, selectUserError, selectUserPending } from '../../store/selectors';
 
 const LoginPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -19,7 +20,9 @@ const LoginPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { newUser, error, isPending } = useSelector(state => state.authReducer);
+  const newUser = useSelector(selectNewUser);
+  const error = useSelector(selectUserError);
+  const isPending = useSelector(selectUserPending);
 
   const isFormValid = useMemo(() => validateEmail(newUser?.email) && newUser?.password, [newUser]);
 

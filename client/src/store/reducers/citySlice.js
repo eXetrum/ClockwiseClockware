@@ -13,15 +13,15 @@ const initialState = {
   oldCity: initEmptyCity(),
   error: initEmptyError(),
   isInitialLoading: false,
-  isShowAddForm: false,
   isPending: false,
+  isShowAddForm: false,
 };
 
 export const citySlice = createSlice({
   name: 'city',
   initialState,
   reducers: {
-    changeVisibilityAddForm(state, { payload }) {
+    changeVisibilityAddCityForm(state, { payload }) {
       state.isShowAddForm = payload;
       state.newCity = initEmptyCity();
     },
@@ -121,5 +121,5 @@ export const citySlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddForm, changeNewCityField } = citySlice.actions;
+export const { changeVisibilityAddCityForm, changeNewCityField } = citySlice.actions;
 export default citySlice.reducer;

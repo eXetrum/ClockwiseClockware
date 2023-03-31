@@ -30,21 +30,9 @@ export const getIconByErrorType = errorType => {
   return null;
 };
 
-export const getIconByError = error => {
-  if (error?.code === 'ERR_NETWORK') if (error?.code !== 'ERR_BAD_REQUEST') return null;
-  if (error?.response?.status === 403) return <BlockOutlinedIcon fontSize="large" />;
-  if (error?.response?.status === 404) return <ErrorOutlineOutlinedIcon fontSize="large" />;
-  if (error?.response?.status === 400) return <SyncProblemIcon fontSize="large" />;
-  return null;
-};
-
-// Returns true for, network error, and status code 404, 403, 400
-export const isGlobalError = (error, exclude = []) => {
-  const statusCodes = [400, 403, 404].filter(code => !exclude.includes(code));
-  return error?.code === 'ERR_NETWORK' || (error?.code === 'ERR_BAD_REQUEST' && statusCodes.includes(error?.response?.status));
-};
-
 export const isGlobalErrorType = (errorType, exclude = []) =>
   [ERROR_TYPE.SERVICE_OFFLINE, ERROR_TYPE.ACCESS_DENIED, ERROR_TYPE.ENTRY_NOT_FOUND, ERROR_TYPE.BAD_REQUEST]
     .filter(item => !exclude.includes(item))
     .includes(errorType);
+
+export const isUnknownOrNoErrorType = error => error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN;

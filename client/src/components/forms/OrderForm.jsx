@@ -12,8 +12,8 @@ import ViewMasterCard from '../master/ViewMasterCard';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
-import { changeNewOrderField } from '../../store/actions/orderActions';
-import { resetMasters } from '../../store/actions/masterActions';
+import { changeNewOrderField, resetMasters } from '../../store/actions';
+import { selectNewOrder, selectOrderPending, selectAllMasters, selectMasterPending } from '../../store/selectors';
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
@@ -22,29 +22,20 @@ const MASTER_PROPS_DEPENDENCY = ['city', 'watch', 'startDate'];
 const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, successButtonText = 'Save' }) => {
   const dispatch = useDispatch();
 
-  const { newOrder, isPending: isOrderPending } = useSelector(state => state.orderReducer);
-  const { masters, isPending: isMastersPending } = useSelector(state => state.masterReducer);
+  const newOrder = useSelector(selectNewOrder);
+  const isOrderPending = useSelector(selectOrderPending);
+  const masters = useSelector(selectAllMasters);
+  const isMastersPending = useSelector(selectMasterPending);
 
   const [currentDate, setCurrentDate] = useState(dateToNearestHour());
-
   const [isShowMasters, setShowMasters] = useState(false);
-
   const [dateTimeError, setDateTimeError] = useState(null);
+
   const isDateTimeError = useMemo(
     () => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason),
     [dateTimeError],
   );
-
   const isPending = useMemo(() => isMastersPending || isOrderPending, [isMastersPending, isOrderPending]);
-
-  const onOrderDateError = useCallback(reason => {
-    if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
-    if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
-    if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
-    if (reason === 'disablePast') return setDateTimeError({ reason, detail: 'Date is past' });
-    setDateTimeError(null);
-  }, []);
-
   const isMasterAssigned = useMemo(() => newOrder?.master !== null, [newOrder]);
   const isOrderPreparedForMasterSearch = useMemo(
     () => newOrder?.city !== null && newOrder?.watch !== null && newOrder?.startDate !== null && !isNaN(newOrder.startDate),
@@ -59,6 +50,14 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
       validateClientName(newOrder?.client?.name),
     [newOrder, currentDate],
   );
+
+  const onOrderDateError = useCallback(reason => {
+    if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
+    if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
+    if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
+    if (reason === 'disablePast') return setDateTimeError({ reason, detail: 'Date is past' });
+    setDateTimeError(null);
+  }, []);
 
   const ensureMasterCanServeCity = useCallback((master, city) => master?.cities?.find(item => item.id === city.id), []);
   const ensureMasterSchedule = useCallback(

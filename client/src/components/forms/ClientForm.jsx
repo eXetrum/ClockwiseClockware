@@ -4,21 +4,24 @@ import ModalForm from './ModalForm';
 import SpinnerButton from '../common/SpinnerButton';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { changeVisibilityAddForm, changeNewClientField } from '../../store/actions/clientActions';
+import { changeVisibilityAddClientForm, changeNewClientField } from '../../store/actions';
+import { selectNewClient, selectClientPending, selectClientShowAddForm } from '../../store/selectors';
 
 import { validateEmail, validateClientName } from '../../utils';
 
 const ClientForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false }) => {
   const dispatch = useDispatch();
 
-  const { newClient, isShowAddForm, isPending } = useSelector(state => state.clientReducer);
+  const newClient = useSelector(selectNewClient);
+  const isPending = useSelector(selectClientPending);
+  const isShowAddForm = useSelector(selectClientShowAddForm);
 
   const isFormValid = useMemo(
     () => validateEmail(newClient.email) && validateClientName(newClient.name) && (isHidePassword ? true : newClient.password),
     [newClient, isHidePassword],
   );
 
-  const onHide = useCallback(() => dispatch(changeVisibilityAddForm(false)), [dispatch]);
+  const onHide = useCallback(() => dispatch(changeVisibilityAddClientForm(false)), [dispatch]);
   const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewClientField({ name, value })), [dispatch]);
 
   const formBody = (

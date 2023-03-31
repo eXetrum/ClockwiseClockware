@@ -9,7 +9,6 @@ const initialState = {
   watches: [],
   error: initEmptyError(),
   isInitialLoading: false,
-  isPending: false,
 };
 
 export const watchSlice = createSlice({

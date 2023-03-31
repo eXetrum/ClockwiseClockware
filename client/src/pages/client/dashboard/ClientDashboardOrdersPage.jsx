@@ -7,22 +7,32 @@ import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, rateOrder } from '../../../store/thunks';
-import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions/orderActions';
+import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions';
+import {
+  selectAllOrders,
+  selectNewOrder,
+  selectOrderError,
+  selectOrderInitialLoading,
+  selectOrderPending,
+  selectOrderShowRateForm,
+} from '../../../store/selectors';
 
-import { ERROR_TYPE } from '../../../constants';
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { orders, newOrder, error, isInitialLoading, isPending, isShowRateForm } = useSelector(state => state.orderReducer);
+  const orders = useSelector(selectAllOrders);
+  const newOrder = useSelector(selectNewOrder);
+  const error = useSelector(selectOrderError);
+  const isInitialLoading = useSelector(selectOrderInitialLoading);
+  const isPending = useSelector(selectOrderPending);
+  const isShowRateForm = useSelector(selectOrderShowRateForm);
 
   useEffect(() => dispatch(fetchOrders()), [dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const [orderId, setOrderId] = useState(null);
 

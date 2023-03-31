@@ -9,23 +9,39 @@ import { Header, ErrorContainer, OrderForm } from '../../../components';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchWatches, fetchCities, fetchOrder, updateOrder } from '../../../store/thunks';
-import { resetNewOrder } from '../../../store/actions/orderActions';
+import { resetNewOrder } from '../../../store/actions';
+import {
+  selectAllWatches,
+  selectAllCities,
+  selectNewOrder,
+  selectWatchError,
+  selectCityError,
+  selectOrderError,
+  selectWatchInitialLoading,
+  selectCityInitialLoading,
+  selectOrderInitialLoading,
+} from '../../../store/selectors';
 
-import { ERROR_TYPE } from '../../../constants';
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminEditOrderPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { error: errorWatches, watches, isInitialLoading: isInitialLoadingWatches } = useSelector(state => state.watchReducer);
-  const { error: errorCities, cities, isInitialLoading: isInitialLoadingCities } = useSelector(state => state.cityReducer);
+  const watches = useSelector(selectAllWatches);
+  const cities = useSelector(selectAllCities);
+  const newOrder = useSelector(selectNewOrder);
 
-  const { error: errorOrder, newOrder, isInitialLoading: isInitialLoadingOrder } = useSelector(state => state.orderReducer);
+  const errorWatch = useSelector(selectWatchError);
+  const errorCity = useSelector(selectCityError);
+  const errorOrder = useSelector(selectOrderError);
 
-  const isWeakError = useCallback(error => error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN, []);
+  const isInitialLoadingWatches = useSelector(selectWatchInitialLoading);
+  const isInitialLoadingCities = useSelector(selectCityInitialLoading);
+  const isInitialLoadingOrder = useSelector(selectOrderInitialLoading);
 
-  const error = !isWeakError(errorWatches) ? errorWatches : !isWeakError(errorCities) ? errorCities : errorOrder;
+  const error = !isUnknownOrNoErrorType(errorWatch) ? errorWatch : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorOrder;
 
   useEffect(() => {
     dispatch(fetchWatches());
@@ -37,7 +53,7 @@ const AdminEditOrderPage = () => {
     () => isInitialLoadingWatches || isInitialLoadingCities || isInitialLoadingOrder,
     [isInitialLoadingWatches, isInitialLoadingCities, isInitialLoadingOrder],
   );
-  const isComponentReady = useMemo(() => !isInitialLoading && isWeakError(error), [isInitialLoading, error, isWeakError]);
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const onSubmit = useCallback(
     async event => {

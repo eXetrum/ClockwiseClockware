@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
 
 import { useSelector } from 'react-redux';
+import { selectAuthenticatedUser } from '../../store/selectors/authSelector';
 
 import { ACCESS_SCOPE, USER_ROLES } from '../../constants';
 
 const Header = () => {
-  const { authUser: auth } = useSelector(state => state.authReducer);
+  const auth = useSelector(selectAuthenticatedUser);
   return (
     <Navbar bg="light" variant="light" expand="lg" className="mb-3">
       <Container>

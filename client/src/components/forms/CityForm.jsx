@@ -4,18 +4,21 @@ import ModalForm from './ModalForm';
 import SpinnerButton from '../common/SpinnerButton';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { changeVisibilityAddForm, changeNewCityField } from '../../store/actions/cityActions';
+import { changeVisibilityAddCityForm, changeNewCityField } from '../../store/actions';
+import { selectNewCity, selectCityPending, selectCityShowAddForm } from '../../store/selectors';
 
 import { formatDecimal } from '../../utils';
 
 const CityForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false }) => {
   const dispatch = useDispatch();
 
-  const { newCity, isShowAddForm, isPending } = useSelector(state => state.cityReducer);
+  const newCity = useSelector(selectNewCity);
+  const isPending = useSelector(selectCityPending);
+  const isShowAddForm = useSelector(selectCityShowAddForm);
 
   const isFormValid = useMemo(() => newCity.name, [newCity]);
 
-  const onHide = useCallback(() => dispatch(changeVisibilityAddForm(false)), [dispatch]);
+  const onHide = useCallback(() => dispatch(changeVisibilityAddCityForm(false)), [dispatch]);
   const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewCityField({ name, value })), [dispatch]);
 
   const formBody = (
