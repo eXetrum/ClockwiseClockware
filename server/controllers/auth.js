@@ -1,14 +1,12 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
-const { generateAccessToken } = require('../middleware/RouteProtector');
 const { body, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, City, Confirmations } = require('../database/models');
+const { RequireAuth, generateAccessToken } = require('../middleware/RouteProtector');
 const { sendPasswordResetMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
-const { generatePassword, generateConfirmationToken } = require('../utils');
-const { isDbErrorEntryAlreadyExists } = require('../utils');
+const { generatePassword, generateConfirmationToken, isDbErrorEntryAlreadyExists } = require('../utils');
+const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
 
-const REGISTRABLE_ENTITIES = [...Object.values(USER_ROLES)].filter((item) => item !== 'admin');
+const REGISTRABLE_ENTITIES = Object.values(USER_ROLES).filter((item) => item !== 'admin');
 
 const create = [
     body('email')

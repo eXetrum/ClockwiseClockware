@@ -19,9 +19,7 @@ import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditO
 import { MasterDashboardOrdersPage } from './pages/master/dashboard';
 import { ClientDashboardOrdersPage } from './pages/client/dashboard';
 
-import { AxiosInterceptor } from './api/axios.interceptor';
 import { RouteGuard } from './providers';
-
 import { ACCESS_SCOPE } from './constants';
 
 const AnyAuthRoute = child => <RouteGuard scope={ACCESS_SCOPE.AnyAuth}>{child}</RouteGuard>;
@@ -32,28 +30,26 @@ const ClientRoute = child => <RouteGuard scope={ACCESS_SCOPE.ClientOnly}>{child}
 const App = () => {
   return (
     <BrowserRouter>
-      <AxiosInterceptor>
-        <Routes>
-          <Route exact path="/" element={<HomePage />} />
-          <Route exact path="/login" element={<LoginPage />} />
-          <Route exact path="/logout" element={<LogoutPage />} />
-          <Route exact path="/register" element={<RegisterPage />} />
-          <Route exact path="/order" element={<OrderPage />} />
-          <Route exact path="/profile" element={AnyAuthRoute(<UserProfilePage />)} />
-          <Route exact path="/admin/cities" element={AdminRoute(<AdminDashboardCitiesPage />)} />
-          <Route exact path="/admin/masters" element={AdminRoute(<AdminDashboardMastersPage />)} />
-          <Route exact path="/admin/clients" element={AdminRoute(<AdminDashboardClientsPage />)} />
-          <Route exact path="/admin/orders" element={AdminRoute(<AdminDashboardOrdersPage />)} />
-          <Route exact path="/admin/cities/:id" element={AdminRoute(<AdminEditCityPage />)} />
-          <Route exact path="/admin/masters/:id" element={AdminRoute(<AdminEditMasterPage />)} />
-          <Route exact path="/admin/clients/:id" element={AdminRoute(<AdminEditClientPage />)} />
-          <Route exact path="/admin/orders/:id" element={AdminRoute(<AdminEditOrderPage />)} />
-          <Route exact path="/master/orders" element={MasterRoute(<MasterDashboardOrdersPage />)} />
-          <Route exact path="/client/orders" element={ClientRoute(<ClientDashboardOrdersPage />)} />
-          <Route exact path="/verify/:token" element={<VerifyPage />} />
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </AxiosInterceptor>
+      <Routes>
+        <Route exact path="/" element={<HomePage />} />
+        <Route exact path="/login" element={<LoginPage />} />
+        <Route exact path="/logout" element={<LogoutPage />} />
+        <Route exact path="/register" element={<RegisterPage />} />
+        <Route exact path="/order" element={<OrderPage />} />
+        <Route exact path="/profile" element={AnyAuthRoute(<UserProfilePage />)} />
+        <Route exact path="/admin/cities" element={AdminRoute(<AdminDashboardCitiesPage />)} />
+        <Route exact path="/admin/masters" element={AdminRoute(<AdminDashboardMastersPage />)} />
+        <Route exact path="/admin/clients" element={AdminRoute(<AdminDashboardClientsPage />)} />
+        <Route exact path="/admin/orders" element={AdminRoute(<AdminDashboardOrdersPage />)} />
+        <Route exact path="/admin/cities/:id" element={AdminRoute(<AdminEditCityPage />)} />
+        <Route exact path="/admin/masters/:id" element={AdminRoute(<AdminEditMasterPage />)} />
+        <Route exact path="/admin/clients/:id" element={AdminRoute(<AdminEditClientPage />)} />
+        <Route exact path="/admin/orders/:id" element={AdminRoute(<AdminEditOrderPage />)} />
+        <Route exact path="/master/orders" element={MasterRoute(<MasterDashboardOrdersPage />)} />
+        <Route exact path="/client/orders" element={ClientRoute(<ClientDashboardOrdersPage />)} />
+        <Route exact path="/verify/:token" element={<VerifyPage />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
     </BrowserRouter>
   );
 };

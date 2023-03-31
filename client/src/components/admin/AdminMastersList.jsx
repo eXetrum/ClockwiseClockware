@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Button, Alert, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Table, Button, Alert, Badge, Spinner } from 'react-bootstrap';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import CheckIcon from '@mui/icons-material/Check';
@@ -9,9 +11,65 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 import ViewMasterCard from '../master/ViewMasterCard';
 import StarRating from '../common/StarRating';
-import { MAX_RATING_VALUE } from '../../constants';
 
-const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }) => {
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
+import { useDispatch } from 'react-redux';
+import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/thunks';
+
+import { formatDecimal } from '../../utils';
+
+const MasterTableList = ({ masters }) => {
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
+
+  const onRemove = useCallback(
+    async master => {
+      const result = await confirm(`Do you want to delete "${master.email}" master ?`, {
+        title: 'Confirm',
+        okText: 'Delete',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
+
+      const action = await dispatch(deleteMaster(master.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Master "${master.email}" removed`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
+
+  const onResetPassword = useCallback(
+    async master => {
+      const result = await confirm(`Do you want to reset password for "${master.email}" master ?`, {
+        title: 'Confirm',
+        okText: 'Yes',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
+
+      const action = await dispatch(resetPasswordMaster(master.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Password for master ${master.email} has been successfully reset`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
+
+  const onResendEmailConfirmation = useCallback(
+    async master => {
+      const result = await confirm(`Do you want to resend email confirmation for "${master.email}" master ?`, {
+        title: 'Confirm',
+        okText: 'Yes',
+        okButtonStyle: 'danger',
+      });
+      if (!result) return;
+
+      const action = await dispatch(resendEmailConfirmationMaster(master.id));
+      if (isFulfilled(action)) enqueueSnackbar(`Email confirmation for master ${master.email} has been sent`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar],
+  );
+
   return (
     <Container>
       <Table striped bordered responsive size="sm" className="mt-3">
@@ -45,21 +103,35 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
                 ))}
               </td>
               <td className="text-center p-2 m-0">
-                <StarRating total={MAX_RATING_VALUE} value={master.rating} readonly={true} />
-                <b>
-                  {master.rating}/{MAX_RATING_VALUE}
-                </b>
+                <StarRating total={5} value={master.rating} readonly={true} />
+                <b>{formatDecimal(master.rating, 1)}/5</b>
               </td>
               <td className="text-center p-2 m-0">
                 {master.isApprovedByAdmin ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
               </td>
               <td className="text-center p-2 m-0 col-2">
                 <Stack spacing={1}>
-                  <Button size="sm" variant="outline-warning" onClick={() => onResetPassword(master)} disabled={isPending}>
+                  <Button
+                    size="sm"
+                    variant="outline-warning"
+                    disabled={master.isPendingResetPassword}
+                    onClick={() => onResetPassword(master)}
+                  >
+                    {master.isPendingResetPassword ? (
+                      <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                    ) : null}
                     Reset password
                   </Button>
                   {!master.isEmailVerified ? (
-                    <Button size="sm" variant="outline-primary" onClick={() => onResendEmailConfirmation(master)} disabled={isPending}>
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      disabled={master.isPendingResendEmailConfirmation}
+                      onClick={() => onResendEmailConfirmation(master)}
+                    >
+                      {master.isPendingResendEmailConfirmation ? (
+                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
+                      ) : null}
                       Resend email confirmation
                     </Button>
                   ) : null}
@@ -73,7 +145,7 @@ const MasterTableList = ({ masters, onRemove, onResetPassword, onResendEmailConf
                 </td>
                 <td className="text-center p-3 m-0">
                   <Link to="#">
-                    <DeleteForeverIcon onClick={() => onRemove(master.id)} />
+                    <DeleteForeverIcon onClick={() => onRemove(master)} />
                   </Link>
                 </td>
               </>
@@ -101,7 +173,8 @@ const MasterCardList = ({ masters, onSelect }) => {
   );
 };
 
-const AdminMastersList = ({ masters, onSelect, onRemove, onResetPassword, onResendEmailConfirmation, isPending, isAdminView = true }) => {
+const AdminMastersList = ({ masters, onSelect, isAdminView = true }) => {
+  if (masters == null) return null;
   const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
 
   if (masters.length === 0) {
@@ -116,8 +189,8 @@ const AdminMastersList = ({ masters, onSelect, onRemove, onResetPassword, onRese
     );
   }
 
-  if (isAdminView) return <MasterTableList {...{ masters, onRemove, onResetPassword, onResendEmailConfirmation, isPending }} />;
-  return <MasterCardList {...{ masters, onSelect }} />;
+  if (isAdminView) return <MasterTableList masters={masters} />;
+  return <MasterCardList masters={masters} onSelect={onSelect} />;
 };
 
 export default AdminMastersList;

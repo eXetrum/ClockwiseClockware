@@ -1,9 +1,9 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, Client, Order } = require('../database/models');
+const { RequireAuth } = require('../middleware/RouteProtector');
 const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -93,7 +93,7 @@ const create = [
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('client ID required'),
+    param('id').exists().withMessage('client id required').isUUID().withMessage('client id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -121,7 +121,7 @@ const remove = [
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('client ID required'),
+    param('id').exists().withMessage('client id required').isUUID().withMessage('client id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -149,7 +149,7 @@ const get = [
 
 const update = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().withMessage('client ID required').isUUID().withMessage('client ID should be of type string'),
+    param('id').exists().withMessage('client id required').isUUID().withMessage('client id should be of type string'),
     body('client').notEmpty().withMessage('client object required'),
     body('client.name')
         .exists()
@@ -181,7 +181,7 @@ const update = [
             const { id } = req.params;
             const { name, email } = req.body.client;
 
-            await db.sequelize.transaction(async (t) => {
+            const [client, details] = await db.sequelize.transaction(async (t) => {
                 const [affectedRowsClient, resultClient] = await Client.update(
                     { name: name.trim() },
                     {
@@ -199,9 +199,13 @@ const update = [
                     { transaction: t }
                 );
                 if (affectedRowsUser === 0) throw new Error('EntryNotFound');
+
+                return [resultClient[0], resultUser[0]];
             });
 
-            res.status(204).end();
+            res.status(200)
+                .json({ client: { ...client.toJSON(), ...details.toJSON() } })
+                .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Client not found' }).end();
             if (isDbErrorEntryAlreadyExists(error)) {

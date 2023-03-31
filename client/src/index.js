@@ -5,21 +5,23 @@ import './index.css';
 import App from './App';
 
 import { SnackbarProvider } from 'notistack';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './store';
+
 import { SNACKBAR_MAX_SNACKS, SNACKBAR_AUTOHIDE_TIMEOUT } from './constants';
 
-import { AuthProvider } from './hooks';
-
-import axios from 'axios';
-
-axios.defaults.baseURL = process.env.REACT_APP_API_URL;
-axios.defaults.headers.post['Content-Type'] = 'application/json';
+import { injectStore } from './axios/axios.interceptor';
+injectStore(store);
 
 ReactDOM.render(
   <React.StrictMode>
     <SnackbarProvider maxSnack={SNACKBAR_MAX_SNACKS} autoHideDuration={SNACKBAR_AUTOHIDE_TIMEOUT}>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <App />
+        </PersistGate>
+      </Provider>
     </SnackbarProvider>
   </React.StrictMode>,
   document.getElementById('root'),

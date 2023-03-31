@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { MAX_RATING_VALUE } from '../../constants';
 import './StarRating.css';
 
-const StarRating = ({ total = 5, value = 0, readonly = false, onRatingChange = null, onRatingReset = null }) => {
+const StarRating = ({ total = MAX_RATING_VALUE, value = 0, readonly = false, onRatingChange = null, onRatingReset = null }) => {
   const [rating, setRating] = useState(value);
   const [hover, setHover] = useState(value);
   useEffect(() => {

@@ -1,79 +1,56 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { Container, Row, Form, Spinner } from 'react-bootstrap';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { Container, Row, Form } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
+import { PuffLoader } from 'react-spinners';
 import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from '../../../components';
-import { getOrders, patchOrderById } from '../../../api';
-import { isGlobalError, getErrorText } from '../../../utils';
-import { MAX_RATING_VALUE } from '../../../constants';
+
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchOrders, rateOrder } from '../../../store/thunks';
+import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions/orderActions';
+
+import { ERROR_TYPE } from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
-  const [orders, setOrders] = useState([]);
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [isPending, setPending] = useState(false);
-  const [showRateForm, setShowRateForm] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [rating, setRating] = useState(MAX_RATING_VALUE);
+  const { orders, newOrder, error, isInitialLoading, isPending, isShowRateForm } = useSelector(state => state.orderReducer);
 
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
+  useEffect(() => dispatch(fetchOrders()), [dispatch]);
 
-  const fetchInitialData = async abortController => {
-    setInitialLoading(true);
-    try {
-      const response = await getOrders({ abortController });
-      if (response?.data?.orders) {
-        const { orders } = response.data;
-        setOrders(orders);
-      }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
 
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(abortController);
-    return () => {
-      abortController.abort();
-    };
-  }, []);
+  const [orderId, setOrderId] = useState(null);
 
-  const onReview = async id => {
-    setSelectedOrder(orders.find(item => item.id === id));
-    setShowRateForm(true);
-  };
+  const onReview = useCallback(
+    async order => {
+      setOrderId(order.id);
+      dispatch(changeVisibilityRateForm(true));
+    },
+    [dispatch],
+  );
 
-  const onFormHide = () => {
-    setShowRateForm(false);
-    setRating(MAX_RATING_VALUE);
-  };
+  const onSubmit = useCallback(
+    async event => {
+      event.preventDefault();
+      const rating = newOrder.rating;
+      dispatch(changeVisibilityRateForm(false));
+      const action = await dispatch(rateOrder({ id: orderId, rating }));
+      setOrderId(null);
 
-  const onFormSubmit = async event => {
-    event.preventDefault();
-    try {
-      const id = selectedOrder.id;
-      setPending(true);
-      await patchOrderById({
-        id,
-        status: orders.find(item => item.id === id)?.status,
-        rating,
-      });
-      const idx = orders.map(item => item.id).indexOf(id);
-      orders[idx].rating = rating;
-      setOrders(orders);
-      setShowRateForm(false);
-    } catch (e) {
-      if (isGlobalError(e) && e?.response?.status !== 400) return setError(e);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-  const onRatingChange = value => setRating(value);
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${orderId}" rated with value=${newOrder.rating}`, { variant: 'success' });
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+    },
+    [dispatch, enqueueSnackbar, orderId, newOrder],
+  );
+
+  const onHide = useCallback(() => dispatch(changeVisibilityRateForm(false)), [dispatch]);
+
+  const onRatingChange = useCallback(value => dispatch(changeNewOrderField({ name: 'rating', value })), [dispatch]);
 
   return (
     <Container>
@@ -86,35 +63,29 @@ const ClientDashboardOrdersPage = () => {
 
         {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
         ) : null}
 
         <ErrorContainer error={error} />
 
-        {isComponentReady ? <ClientOrdersList orders={orders} onReview={onReview} isPending={isPending} /> : null}
+        {isComponentReady ? <ClientOrdersList orders={orders} onReview={onReview} /> : null}
         <hr />
 
         <ModalForm
           size="sm"
-          show={showRateForm}
+          show={isShowRateForm}
           title={'Rate order'}
           okText={'Apply'}
-          onHide={onFormHide}
-          onSubmit={onFormSubmit}
+          onHide={onHide}
+          onSubmit={onSubmit}
           isFormValid={() => true}
-          pending={isPending}
+          isPending={isPending}
           formContent={
             <>
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
-                  <StarRating
-                    onRatingChange={onRatingChange}
-                    onRatingReset={onRatingChange}
-                    value={rating}
-                    total={MAX_RATING_VALUE}
-                    pending={isPending}
-                  />
+                  <StarRating onRatingChange={onRatingChange} onRatingReset={onRatingChange} value={newOrder.rating} readonly={isPending} />
                 </Row>
               </Form.Group>
             </>

@@ -54,7 +54,8 @@ const RequireAuth =
         RouteProtector(req, res, next, scope);
 
 const generateAccessToken = (user) => {
-    return jwt.sign(user, process.env.JWT_TOKEN_SECRET, { expiresIn: process.env.JWT_TOKEN_EXPIRES });
+    const { password, ...rest } = user;
+    return jwt.sign({ ...rest }, process.env.JWT_TOKEN_SECRET, { expiresIn: process.env.JWT_TOKEN_EXPIRES });
 };
 
 module.exports = { RequireAuth, generateAccessToken, parseAuthToken };

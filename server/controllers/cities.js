@@ -1,12 +1,12 @@
-const { RequireAuth } = require('../middleware/RouteProtector');
-const { ACCESS_SCOPE } = require('../constants');
 const { body, param, validationResult } = require('express-validator');
 const { City } = require('../database/models');
+const { RequireAuth } = require('../middleware/RouteProtector');
 const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const { ACCESS_SCOPE } = require('../constants');
 
 const getAll = async (req, res) => {
     try {
-        const cities = await City.findAll({ order: [['createdAt']] });
+        const cities = await City.findAll({ order: [['createdAt', 'DESC']] });
         res.status(200).json({ cities }).end();
     } catch (error) {
         res.status(400).json(error).end();
@@ -54,7 +54,7 @@ const create = [
 
 const remove = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('city ID required'),
+    param('id').exists().withMessage('city id required').isUUID().withMessage('city id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -84,7 +84,7 @@ const remove = [
 
 const get = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
-    param('id').exists().notEmpty().withMessage('City ID required'),
+    param('id').exists().withMessage('city id required').isUUID().withMessage('city id should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -105,6 +105,7 @@ const get = [
 
 const update = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
+    param('id').exists().withMessage('city id required').isUUID().withMessage('city id should be of type string'),
     body('city').notEmpty().withMessage('city object required'),
     body('city.name')
         .exists()
@@ -136,7 +137,7 @@ const update = [
             const [affectedRows, result] = await City.update({ name: name.trim(), pricePerHour }, { where: { id }, returning: true });
             if (affectedRows === 0) return res.status(404).json({ message: 'City not found' }).end();
 
-            res.status(204).end();
+            res.status(200).json({ city: result[0] }).end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
             if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();

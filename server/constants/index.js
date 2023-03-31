@@ -21,9 +21,14 @@ const ACCESS_SCOPE = {
 
 const MS_PER_HOUR = 60 * 60 * 1000;
 
+const MIN_RATING_VALUE = 0;
+const MAX_RATING_VALUE = 5;
+
 module.exports = {
     ORDER_STATUS,
     USER_ROLES,
     ACCESS_SCOPE,
-    MS_PER_HOUR
+    MS_PER_HOUR,
+    MIN_RATING_VALUE,
+    MAX_RATING_VALUE
 };

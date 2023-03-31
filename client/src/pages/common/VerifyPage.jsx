@@ -3,8 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header } from '../../components';
-import { verifyEmail } from '../../api';
+import { PuffLoader } from 'react-spinners';
+
+import { api } from '../../axios/axios.interceptor';
 import { getErrorText } from '../../utils';
+
+export const verifyEmail = ({ token }) => api.get(`/verify/${token}`);
 
 const VerifyPage = () => {
   const { token } = useParams();
@@ -44,11 +48,13 @@ const VerifyPage = () => {
       <Header />
       <Container>
         <center>
-          <h1>Email confirmation</h1>
+          <h1>Email confirmation, please wait...</h1>
         </center>
         <hr />
         <Row className="justify-content-md-center">
-          <Col md="auto">{token}</Col>
+          <Col md="auto">
+            <PuffLoader color="#36d7b7" />
+          </Col>
         </Row>
         <hr />
       </Container>

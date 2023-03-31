@@ -1,29 +1,37 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { PuffLoader } from 'react-spinners';
 import Multiselect from 'multiselect-react-dropdown';
 import { useSnackbar } from 'notistack';
 import { Header, ErrorContainer } from '../../components/common';
-import { getCities, register } from '../../api';
-import { validateEmail, isGlobalError, getErrorText } from '../../utils';
-import { USER_ROLES } from '../../constants';
+
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
+import { useDispatch, useSelector } from 'react-redux';
+import { registerAuth, fetchCities } from '../../store/thunks';
+import { changeNewUserField } from '../../store/actions/authActions';
+
+import { validateEmail } from '../../utils';
+import { USER_ROLES, ERROR_TYPE } from '../../constants';
 
 const RegisterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
-
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const initEmptyUser = () => ({ email: '', password: '', name: '', role: USER_ROLES.CLIENT, isTosAccepted: false, cities: [] });
-  const [user, setUser] = useState(initEmptyUser());
-  const [cities, setCities] = useState([]);
-  const [isInitialLoading, setInitialLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const { newUser, isPending } = useSelector(state => state.authReducer);
+  const { cities, error, isInitialLoading } = useSelector(state => state.cityReducer);
 
-  const [isPending, setPending] = useState(false);
+  useEffect(() => {
+    dispatch(fetchCities());
+  }, [dispatch]);
 
-  const isComponentReady = useMemo(() => !isInitialLoading && error === null, [isInitialLoading, error]);
-  const isFormValid = useCallback(() => {
-    const { email, password, name, role, isTosAccepted, cities } = user;
+  const isComponentReady = useMemo(
+    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
+    [isInitialLoading, error],
+  );
+  const isFormValid = useMemo(() => {
+    const { email, password, name, role, isTosAccepted, cities } = newUser;
     return (
       validateEmail(email) &&
       password &&
@@ -31,63 +39,34 @@ const RegisterPage = () => {
       isTosAccepted &&
       (role === USER_ROLES.CLIENT || cities.length > 0)
     );
-  }, [user]);
+  }, [newUser]);
 
-  const fetchInitialData = async abortController => {
-    setInitialLoading(true);
-    try {
-      const response = await getCities({ abortController });
-      if (response?.data?.cities) {
-        const { cities } = response.data;
-        setCities(cities);
+  const onFormFieldChange = useCallback(
+    ({ target: { type, name, value, checked } }) => {
+      if (type === 'checkbox') value = checked;
+      dispatch(changeNewUserField({ name, value }));
+    },
+    [dispatch],
+  );
+
+  const onFormSubmit = useCallback(
+    async event => {
+      event.preventDefault();
+      const action = await dispatch(registerAuth(newUser));
+      if (isFulfilled(action)) {
+        enqueueSnackbar('Success', { variant: 'success' });
+        navigate('/');
+      } else if (isRejected(action)) {
+        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
       }
-    } catch (e) {
-      setError(e);
-    } finally {
-      setInitialLoading(false);
-    }
-  };
+    },
+    [newUser, dispatch, enqueueSnackbar, navigate],
+  );
 
-  const doRegister = async user => {
-    setPending(true);
-    setError(null);
-    try {
-      await register({ ...user });
-      enqueueSnackbar('Success', { variant: 'success' });
-      setUser(initEmptyUser());
-      navigate('/');
-    } catch (e) {
-      if (isGlobalError(e)) return setError(e);
-      enqueueSnackbar(`Error: ${getErrorText(e)}`, { variant: 'error' });
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const onFormFieldChange = event => {
-    const inputField = event.target.name;
-    const inputValue = event.target.value;
-    setUser(prev => ({ ...prev, [inputField]: inputValue }));
-    setError(null);
-  };
-
-  const onFormSubmit = event => {
-    event.preventDefault();
-    doRegister({ ...user });
-  };
-
-  const onUserRoleChanged = (event, newRole) => setUser(prev => ({ ...prev, role: newRole }));
-  const onUserTosAcceptedChanged = event => setUser(prev => ({ ...prev, isTosAccepted: event.target.checked }));
-  const onUserCitySelect = (selectedList, selectedItem) => setUser(prev => ({ ...prev, cities: selectedList }));
-  const onUserCityRemove = (selectedList, removedItem) => setUser(prev => ({ ...prev, cities: selectedList }));
-
-  useEffect(() => {
-    const abortController = new AbortController();
-    fetchInitialData(abortController);
-    return () => {
-      abortController.abort();
-    };
-  }, []);
+  const onFormFieldChangeCityList = useCallback(
+    (selectedList, _) => dispatch(changeNewUserField({ name: 'cities', value: selectedList })),
+    [dispatch],
+  );
 
   return (
     <Container>
@@ -100,7 +79,7 @@ const RegisterPage = () => {
 
         {isInitialLoading ? (
           <center>
-            <Spinner animation="grow" />
+            <PuffLoader color="#36d7b7" />
           </center>
         ) : null}
 
@@ -119,7 +98,7 @@ const RegisterPage = () => {
                     autoFocus
                     required
                     onChange={onFormFieldChange}
-                    value={user.email}
+                    value={newUser.email}
                     disabled={isPending}
                   />
                 </Form.Group>
@@ -131,7 +110,7 @@ const RegisterPage = () => {
                     placeholder="Password"
                     required
                     onChange={onFormFieldChange}
-                    value={user.password}
+                    value={newUser.password}
                     disabled={isPending}
                   />
                 </Form.Group>
@@ -143,7 +122,7 @@ const RegisterPage = () => {
                     placeholder="Name"
                     required
                     onChange={onFormFieldChange}
-                    value={user.name}
+                    value={newUser.name}
                     disabled={isPending}
                   />
                 </Form.Group>
@@ -158,23 +137,24 @@ const RegisterPage = () => {
                         type="radio"
                         name="role"
                         label={roleName}
-                        checked={user.role === roleName}
+                        checked={newUser.role === roleName}
+                        value={roleName}
                         inline
                         required
-                        onChange={event => onUserRoleChanged(event, roleName)}
+                        onChange={onFormFieldChange}
                         disabled={isPending}
                       />
                     ))}
                 </Form.Group>
 
-                {user.role === USER_ROLES.MASTER ? (
+                {newUser.role === USER_ROLES.MASTER ? (
                   <Form.Group className="mb-3">
                     <Form.Label>Master cities:</Form.Label>
                     <Multiselect
-                      onSelect={onUserCitySelect}
-                      onRemove={onUserCityRemove}
+                      onSelect={onFormFieldChangeCityList}
+                      onRemove={onFormFieldChangeCityList}
                       options={cities}
-                      selectedValues={user.cities}
+                      selectedValues={newUser.cities}
                       displayValue="name"
                       disable={isPending}
                     />
@@ -188,8 +168,8 @@ const RegisterPage = () => {
                         type="checkbox"
                         name="isTosAccepted"
                         required
-                        checked={user.isTosAccepted}
-                        onChange={onUserTosAcceptedChanged}
+                        checked={newUser.isTosAccepted}
+                        onChange={onFormFieldChange}
                         disabled={isPending}
                         label="accept everything"
                       />
@@ -202,7 +182,7 @@ const RegisterPage = () => {
                   <Row>
                     <Col sm={4}>&nbsp;</Col>
                     <Col className="d-flex justify-content-md-end">
-                      <Button variant="primary" type="submit" disabled={isPending || !isFormValid()}>
+                      <Button variant="primary" type="submit" disabled={isPending || !isFormValid}>
                         {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
                         Register
                       </Button>

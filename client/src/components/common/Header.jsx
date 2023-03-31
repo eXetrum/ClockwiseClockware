@@ -1,14 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
-import { useAuth } from '../../hooks';
-import { parseToken } from '../../utils';
+
+import { useSelector } from 'react-redux';
+
 import { USER_ROLES } from '../../constants';
 
 const Header = () => {
-  const { accessToken } = useAuth();
-  const user = parseToken(accessToken);
-
+  const { authUser: auth } = useSelector(state => state.authReducer);
   return (
     <Navbar bg="light" variant="light" expand="lg" className="mb-3">
       <Container>
@@ -17,7 +16,7 @@ const Header = () => {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="admin-navbar-nav" />
         <Navbar.Collapse id="admin-navbar-nav">
-          {user && user.role === USER_ROLES.ADMIN ? (
+          {auth.user && auth.user.role === USER_ROLES.ADMIN ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/admin/cities">
                 Cities
@@ -33,14 +32,14 @@ const Header = () => {
               </Nav.Link>
             </Nav>
           ) : null}
-          {user && user.role === USER_ROLES.MASTER ? (
+          {auth.user && auth.user.role === USER_ROLES.MASTER ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/master/orders">
                 Orders
               </Nav.Link>
             </Nav>
           ) : null}
-          {user && user.role === USER_ROLES.CLIENT ? (
+          {auth.user && auth.user.role === USER_ROLES.CLIENT ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/client/orders">
                 Orders
@@ -52,8 +51,8 @@ const Header = () => {
             <Nav.Link as={Link} to="/order">
               Order
             </Nav.Link>
-            {user ? (
-              <NavDropdown title={user.email} id="basic-nav-dropdown">
+            {auth.user ? (
+              <NavDropdown title={auth.user.email} id="basic-nav-dropdown">
                 <NavDropdown.Item as={Link} to="/profile">
                   Profile
                 </NavDropdown.Item>
