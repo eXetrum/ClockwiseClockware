@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Button, Alert } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
-import { Header, OrderForm, ErrorContainer } from '../../components';
+import { Header, OrderForm, OrderSummary, ErrorContainer } from '../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -12,7 +12,6 @@ import { fetchWatches, fetchCities, addOrder } from '../../store/thunks';
 import { resetNewOrder } from '../../store/actions/orderActions';
 
 import { ACCESS_SCOPE, ERROR_TYPE } from '../../constants';
-import { formatDate, addHours, formatDecimal } from '../../utils';
 
 const OrderPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -113,166 +112,57 @@ const OrderPage = () => {
   }, [setUpOrder]);
 
   return (
-    <Container>
+    <Container fluid>
       <Header />
-      <Container>
+
+      <center>
+        <h1>Order page</h1>
+      </center>
+      <hr />
+
+      {isInitialLoading ? (
         <center>
-          <h1>Order page</h1>
+          <PuffLoader color="#36d7b7" />
         </center>
-        <hr />
+      ) : null}
 
-        {isInitialLoading ? (
-          <center>
-            <PuffLoader color="#36d7b7" />
-          </center>
-        ) : null}
+      <ErrorContainer error={error} />
 
-        <ErrorContainer error={error} />
+      {isComponentReady ? (
+        <>
+          {isOrderPlaced ? (
+            <>
+              <Row className="justify-content-md-center">
+                <Col md="auto">
+                  <Alert variant="info">
+                    <h5 className="text-center mb-4 p-1">
+                      Thank you !<br />
+                      Order confirmation message was sent to your email.
+                    </h5>
+                  </Alert>
+                </Col>
+              </Row>
 
-        {isComponentReady ? (
-          <>
-            {isOrderPlaced ? (
-              <>
-                <Row className="justify-content-md-center">
-                  <Col md="auto">
-                    <Alert variant="info">
-                      <h5 className="text-center mb-4 p-1">
-                        Thank you !<br />
-                        Order confirmation message was sent to your email.
-                      </h5>
-                    </Alert>
-                  </Col>
-                </Row>
-
-                <Row className="justify-content-md-center">
-                  <Col md="auto">
-                    <Button variant="primary" onClick={onReset}>
-                      Create new order
-                    </Button>
-                  </Col>
-                </Row>
-              </>
-            ) : (
-              <>
-                {isOrderSummary ? (
-                  <>
-                    <Row className="justify-content-md-center">
-                      <center>
-                        <h4>Order summary:</h4>
-                      </center>
-                      <Col xs lg="6">
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>Client:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">
-                            {newOrder.client ? (
-                              <>
-                                {newOrder.client?.name}, {newOrder.client?.email}
-                              </>
-                            ) : null}
-                          </Col>
-                        </Row>
-
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>Master:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">
-                            {newOrder.master ? (
-                              <>
-                                {newOrder.master?.name}, {newOrder.master?.email}
-                              </>
-                            ) : null}
-                          </Col>
-                        </Row>
-
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>City:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">{newOrder?.city?.name}</Col>
-                        </Row>
-
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>Watch type:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">{newOrder?.watch?.name}</Col>
-                        </Row>
-
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>Start date:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">{formatDate(newOrder?.startDate)}</Col>
-                        </Row>
-
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>End date:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">
-                            {formatDate(addHours(newOrder?.startDate, newOrder?.watch?.repairTime))}
-                          </Col>
-                        </Row>
-
-                        <hr />
-                        <Row>
-                          <Col sm={4}>
-                            <Form.Label>
-                              <b>Total Cost:</b>
-                            </Form.Label>
-                          </Col>
-                          <Col className="d-flex justify-content-end">{formatDecimal(newOrder?.city?.pricePerHour)}</Col>
-                        </Row>
-
-                        <hr />
-                        <Row className="justify-content-center mt-4">
-                          <Col className="d-flex justify-content-start">
-                            <Button className="mb-3 col-sm-5" onClick={onBack} disabled={isPending}>
-                              Edit
-                            </Button>
-                          </Col>
-                          <Col className="d-flex justify-content-end">
-                            <Button className="mb-3 col-sm-5" type="submit" onClick={onSubmit} variant="success" disabled={isPending}>
-                              {isPending && (
-                                <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                              )}
-                              <span>Create</span>
-                            </Button>
-                          </Col>
-                        </Row>
-                      </Col>
-                    </Row>
-                  </>
-                ) : (
-                  <OrderForm {...{ watches, cities, onSubmit: onNext, onReset, isEditForm: isClientAuth, successButtonText: 'Next' }} />
-                )}
-              </>
-            )}
-          </>
-        ) : null}
-        <hr />
-      </Container>
+              <Row className="justify-content-md-center">
+                <Col md="auto">
+                  <Button variant="primary" onClick={onReset}>
+                    Create new order
+                  </Button>
+                </Col>
+              </Row>
+            </>
+          ) : (
+            <>
+              {isOrderSummary ? (
+                <OrderSummary {...{ order: newOrder, onBack, onSubmit, isPending }} />
+              ) : (
+                <OrderForm {...{ watches, cities, onSubmit: onNext, onReset, isEditForm: isClientAuth, successButtonText: 'Next' }} />
+              )}
+            </>
+          )}
+        </>
+      ) : null}
+      <hr />
     </Container>
   );
 };

@@ -7,8 +7,7 @@ import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { AdminMastersList, SpinnerButton } from '../../components';
-import ViewMasterCard from '../master/ViewMasterCard';
+import { MasterCardList, SpinnerButton } from '../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
@@ -53,8 +52,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
 
   const onOrderDateError = useCallback(reason => {
     if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
-    if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
-    if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
+    if (reason === 'minDate' || reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
     if (reason === 'disablePast') return setDateTimeError({ reason, detail: 'Date is past' });
     setDateTimeError(null);
   }, []);
@@ -315,7 +313,34 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     </Col>
                   </Row>
                 </Col>
-                <Col>{isMasterAssigned ? <ViewMasterCard master={newOrder.master} /> : <span>Master is not assigned yet</span>}</Col>
+                <Col>
+                  {isMasterAssigned ? (
+                    <span>
+                      <b>{newOrder?.master.email}</b>
+                    </span>
+                  ) : (
+                    <span>Master is not assigned yet</span>
+                  )}
+                </Col>
+                <Row>
+                  <Col>
+                    {isShowMasters ? (
+                      <>
+                        <hr />
+                        <MasterCardList {...{ masters, currentSelectedMaster: newOrder.master, onSelect: onSelectMaster }} />
+                      </>
+                    ) : (
+                      <>
+                        {!isMasterAssigned ? (
+                          <>
+                            <hr />
+                            <center>you should search free masters to complete order</center>
+                          </>
+                        ) : null}
+                      </>
+                    )}
+                  </Col>
+                </Row>
 
                 <Row className="mt-4">
                   <Col md={{ span: 4, offset: 0 }}></Col>
@@ -345,21 +370,6 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
           </Form>
         </Col>
       </Row>
-      {isShowMasters ? (
-        <>
-          <hr />
-          <AdminMastersList {...{ masters, onSelect: onSelectMaster, currentSelectedMaster: newOrder.master, isAdminView: false }} />
-        </>
-      ) : (
-        <>
-          {!isMasterAssigned ? (
-            <>
-              <hr />
-              <center>you should search free masters to complete order</center>
-            </>
-          ) : null}
-        </>
-      )}
     </>
   );
 };

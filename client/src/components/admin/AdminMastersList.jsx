@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert, Badge } from 'react-bootstrap';
+import { Container, Table, Badge } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -9,7 +9,6 @@ import CheckIcon from '@mui/icons-material/Check';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import ViewMasterCard from '../master/ViewMasterCard';
 import { StarRating, SpinnerButton } from '../common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
@@ -19,7 +18,7 @@ import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from
 import { formatDecimal } from '../../utils';
 import { MAX_RATING_VALUE } from '../../constants';
 
-const MasterTableList = ({ masters }) => {
+const AdminMastersList = ({ masters }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
@@ -106,7 +105,7 @@ const MasterTableList = ({ masters }) => {
               <td className="text-center p-2 m-0">
                 <StarRating total={5} value={master.rating} readonly={true} />
                 <b>
-                  {formatDecimal(master.rating, 1)}/{formatDecimal(MAX_RATING_VALUE, 0)}
+                  {formatDecimal(master.rating, 1)}/{formatDecimal(MAX_RATING_VALUE, 1)}
                 </b>
               </td>
               <td className="text-center p-2 m-0">
@@ -152,64 +151,6 @@ const MasterTableList = ({ masters }) => {
       </Table>
     </Container>
   );
-};
-
-const MasterCardList = ({ masters, currentSelectedMaster, onSelect }) => {
-  const onClick = useCallback(
-    master => {
-      onSelect(master);
-    },
-    [onSelect],
-  );
-
-  const getStyle = useCallback(
-    master => {
-      if (master.id === currentSelectedMaster?.id)
-        return {
-          border: 'solid 1px #ccc',
-          backgroundColor: '#eee',
-          color: '#333',
-          padding: '5px',
-          margin: '10px',
-          borderRadius: '25px 25px 25px 25px',
-          boxShadow: '0 1px 1px rgba(0,0,0,0.08),0 2px 2px rgba(0,0,0,0.12),0 4px 4px rgba(0,0,0,0.16),0 8px 8px rgba(0,0,0,0.2)',
-        };
-    },
-    [currentSelectedMaster],
-  );
-
-  return (
-    <Container>
-      <Row className="d-flex justify-content-md-center mt-4">
-        <>
-          {masters.map(master => (
-            <Col key={master.id} md="auto" onClick={() => onClick(master)} style={getStyle(master)}>
-              <ViewMasterCard master={master} />
-            </Col>
-          ))}
-        </>
-      </Row>
-    </Container>
-  );
-};
-
-const AdminMastersList = ({ masters, currentSelectedMaster, onSelect, isAdminView = true }) => {
-  const collectionIsEmptyText = isAdminView ? 'No records yet' : 'No masters available';
-
-  if (masters.length === 0) {
-    return (
-      <Container>
-        <Row className="justify-content-md-center mt-3">
-          <Col md="auto">
-            <Alert variant="warning">{collectionIsEmptyText}</Alert>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
-
-  if (isAdminView) return <MasterTableList masters={masters} />;
-  return <MasterCardList masters={masters} currentSelectedMaster={currentSelectedMaster} onSelect={onSelect} />;
 };
 
 export default AdminMastersList;
