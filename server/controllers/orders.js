@@ -45,7 +45,7 @@ const getAll = [
 
             res.status(200).json({ orders }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -234,7 +234,7 @@ const create = [
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -258,7 +258,7 @@ const remove = [
                 return res.status(404).json({ message: 'Order not found' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -306,7 +306,7 @@ const get = [
                 return res.status(404).json({ message: 'Order not found' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -408,7 +408,7 @@ const update = [
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -519,7 +519,7 @@ const patch = [
             return res.status(204).end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Order not found' }).end();
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
