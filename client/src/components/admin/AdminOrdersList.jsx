@@ -9,18 +9,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
 
-//import React, { useCallback } from 'react';
-//import { Link } from 'react-router-dom';
-//import { Container, Row, Col, Table, Alert, Badge, Button, Spinner } from 'react-bootstrap';
-//import { confirm } from 'react-bootstrap-confirmation';
-//import { useSnackbar } from 'notistack';
-//import Stack from '@mui/material/Stack';
-//import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
-//import EditIcon from '@mui/icons-material/Edit';
-//import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-
-//import Rating from '@mui/material/Rating';
-
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { deleteOrder, completeOrder, cancelOrder } from '../../store/thunks';
