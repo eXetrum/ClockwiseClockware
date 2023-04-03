@@ -1,8 +1,9 @@
 import React, { useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Row, Col, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
@@ -15,6 +16,7 @@ import { formatDecimal } from '../../utils';
 const AdminCitiesList = ({ cities }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const onRemove = useCallback(
     async city => {
@@ -32,51 +34,41 @@ const AdminCitiesList = ({ cities }) => {
     [dispatch, enqueueSnackbar],
   );
 
+  const columns = [
+    { field: 'name', headerName: 'Name', width: 620 },
+    {
+      field: 'pricePerHour',
+      headerName: 'Hourly rate',
+      width: 200,
+      type: 'number',
+      valueFormatter: ({ value }) => formatDecimal(value),
+    },
+    {
+      field: 'actions',
+      headerName: 'actions',
+      type: 'actions',
+      width: 200,
+      disableReorder: true,
+      getActions: params => [
+        <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/cities/${params.row.id}`)} showInMenu />,
+        <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={async () => onRemove(params.row)} showInMenu />,
+      ],
+    },
+  ];
+
   if (cities.length === 0) {
     return (
-      <Container>
-        <Row className="justify-content-md-center mt-3">
-          <Col md="auto">
-            <Alert variant="warning">No records yet</Alert>
-          </Col>
-        </Row>
-      </Container>
+      <Row className="justify-content-md-center mt-3">
+        <Col md="auto">
+          <Alert variant="warning" className="text-center">
+            No records yet
+          </Alert>
+        </Col>
+      </Row>
     );
   }
 
-  return (
-    <Container>
-      <Table striped bordered responsive size="sm" className="mt-3">
-        <thead>
-          <tr>
-            <th className="text-center p-2 m-0">id</th>
-            <th className="text-center p-2 m-0">name</th>
-            <th className="text-center p-2 m-0">pricePerHour</th>
-            <th colSpan="2" className="text-center p-2 m-0"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {cities.map(city => (
-            <tr key={city.id}>
-              <td className="text-center p-2 m-0 col-2">{city.id}</td>
-              <td className="text-center p-2 m-0">{city.name}</td>
-              <th className="text-center p-2 m-0 col-1">{formatDecimal(city.pricePerHour)}</th>
-              <td className="text-center p-2 m-0 col-1">
-                <Link to={'/admin/cities/' + city.id}>
-                  <EditIcon />
-                </Link>
-              </td>
-              <td className="text-center p-2 m-0 col-1">
-                <Link to="#">
-                  <DeleteForeverIcon onClick={() => onRemove(city)} />
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Container>
-  );
+  return <DataGrid rows={cities} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
 };
 
 export default AdminCitiesList;

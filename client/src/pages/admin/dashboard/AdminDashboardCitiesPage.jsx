@@ -60,7 +60,7 @@ const AdminDashboardCitiesPage = () => {
         {isComponentReady ? (
           <>
             <Row className="justify-content-md-center">
-              <Col md="auto">
+              <Col className="d-flex justify-content-center">
                 <Link to="#">
                   <AddCircleOutlineOutlinedIcon onClick={onFormShow} />
                 </Link>
