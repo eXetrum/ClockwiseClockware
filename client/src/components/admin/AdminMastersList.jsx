@@ -1,15 +1,13 @@
 import React, { useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Container, Table, Badge } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Row, Col, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-import { StarRating, SpinnerButton } from '../common';
+import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
+import LockResetIcon from '@mui/icons-material/LockReset';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
@@ -21,6 +19,7 @@ import { MAX_RATING_VALUE } from '../../constants';
 const AdminMastersList = ({ masters }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const onRemove = useCallback(
     async master => {
@@ -70,87 +69,83 @@ const AdminMastersList = ({ masters }) => {
     [dispatch, enqueueSnackbar],
   );
 
-  return (
-    <Container>
-      <Table striped bordered responsive size="sm" className="mt-3">
-        <thead>
-          <tr>
-            <th className="text-center p-3 m-0">id</th>
-            <th className="text-center p-3 m-0">email</th>
-            <th className="text-center p-3 m-0">name</th>
-            <th className="text-center p-3 m-0">cities</th>
-            <th className="text-center p-3 m-0">rating</th>
-            <th className="text-center p-3 m-0">approved</th>
-            <th colSpan="3" className="text-center p-2 m-0"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {masters.map(master => (
-            <tr key={master.id}>
-              <td className="text-center p-3 m-0 col-2">{master.id}</td>
-              <td className="p-3 m-0">
-                <Stack direction="row" alignItems="center" gap={1}>
-                  {master.isEmailVerified ? <CheckIcon fontSize="small" /> : <QuestionMarkIcon fontSize="small" />}
-                  <Typography variant="body1">{master.email}</Typography>
-                </Stack>
-              </td>
-              <td className="p-3 m-0">{master.name}</td>
-              <td className="text-center  pt-2 m-0">
-                {master.cities.map(city => (
-                  <Badge bg="info" className="p-2 m-1" key={city.id}>
-                    {city.name}
-                  </Badge>
-                ))}
-              </td>
-              <td className="text-center p-2 m-0">
-                <StarRating total={5} value={master.rating} readonly={true} />
-                <b>
-                  {formatDecimal(master.rating, 1)}/{formatDecimal(MAX_RATING_VALUE, 1)}
-                </b>
-              </td>
-              <td className="text-center p-2 m-0">
-                {master.isApprovedByAdmin ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
-              </td>
-              <td className="text-center p-2 m-0 col-2">
-                <Stack spacing={1}>
-                  <SpinnerButton
-                    size="sm"
-                    variant="outline-warning"
-                    disabled={master.isPendingResetPassword}
-                    loading={master.isPendingResetPassword}
-                    onClick={() => onResetPassword(master)}
-                    text={'Reset password'}
-                  />
-                  {!master.isEmailVerified ? (
-                    <SpinnerButton
-                      size="sm"
-                      variant="outline-primary"
-                      disabled={master.isPendingResendEmailConfirmation}
-                      loading={master.isPendingResendEmailConfirmation}
-                      onClick={() => onResendEmailConfirmation(master)}
-                      text={'Resend email confirmation'}
-                    />
-                  ) : null}
-                </Stack>
-              </td>
-              <>
-                <td className="text-center p-3 m-0">
-                  <Link to={'/admin/masters/' + master.id}>
-                    <EditIcon />
-                  </Link>
-                </td>
-                <td className="text-center p-3 m-0">
-                  <Link to="#">
-                    <DeleteForeverIcon onClick={() => onRemove(master)} />
-                  </Link>
-                </td>
-              </>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Container>
-  );
+  const columns = [
+    { field: 'email', headerName: 'Email', width: 300 },
+    { field: 'name', headerName: 'Name', width: 300 },
+    {
+      field: 'cities',
+      headerName: 'Cities',
+      width: 240,
+      valueFormatter: ({ value }) =>
+        value
+          .map(city => city.name)
+          .sort()
+          .join(', '),
+    },
+    {
+      field: 'rating',
+      headerName: 'Rating',
+      type: 'number',
+      valueFormatter: ({ value }) => `${formatDecimal(value)}/${formatDecimal(MAX_RATING_VALUE)}`,
+    },
+    {
+      field: 'isEmailVerified',
+      headerName: 'Email Verified',
+      type: 'boolean',
+    },
+    {
+      field: 'isApprovedByAdmin',
+      headerName: 'Approved',
+      type: 'boolean',
+    },
+    {
+      field: 'actions',
+      headerName: 'actions',
+      type: 'actions',
+      width: 100,
+      disableReorder: true,
+      getActions: params => {
+        const actions = [
+          <GridActionsCellItem
+            icon={<LockResetIcon />}
+            label="Reset password"
+            onClick={() => onResetPassword(params.row)}
+            disabled={params.row.isPendingResetPassword}
+            showInMenu
+          />,
+          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/masters/${params.row.id}`)} showInMenu />,
+          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={async () => onRemove(params.row)} showInMenu />,
+        ];
+        if (!params.row.isEmailVerified) {
+          actions.unshift(
+            <GridActionsCellItem
+              icon={<ForwardToInboxIcon />}
+              label="Resend email confirmation"
+              onClick={() => onResendEmailConfirmation(params.row)}
+              disabled={params.row.isPendingResendEmailConfirmation}
+              showInMenu
+            />,
+          );
+        }
+
+        return actions;
+      },
+    },
+  ];
+
+  if (masters.length === 0) {
+    return (
+      <Row className="justify-content-md-center mt-3">
+        <Col md="auto">
+          <Alert variant="warning" className="text-center">
+            No records yet
+          </Alert>
+        </Col>
+      </Row>
+    );
+  }
+
+  return <DataGrid rows={masters} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
 };
 
 export default AdminMastersList;
