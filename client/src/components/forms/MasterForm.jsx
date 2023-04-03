@@ -1,16 +1,17 @@
 import React, { useCallback, useMemo } from 'react';
 import { Form, Row, Col } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
-import { StarRating, SpinnerButton } from '../common';
-import ModalForm from './ModalForm';
+import Rating from '@mui/material/Rating';
+import { SpinnerButton, ModalForm } from '../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { changeVisibilityAddMasterForm, changeNewMasterField } from '../../store/actions';
 import { selectAllCities, selectNewMaster, selectMasterPending, selectMasterShowAddForm } from '../../store/selectors';
 
+import { MAX_RATING_VALUE, RATING_PRECISION_STEP } from '../../constants';
 import { validateEmail } from '../../utils';
 
-const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false }) => {
+const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false, isHideRating = false }) => {
   const dispatch = useDispatch();
 
   const cities = useSelector(selectAllCities);
@@ -30,7 +31,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
 
   const onHide = useCallback(() => dispatch(changeVisibilityAddMasterForm(false)), [dispatch]);
   const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value })), [dispatch]);
-  const onFormFieldChangeRating = useCallback(value => dispatch(changeNewMasterField({ name: 'rating', value })), [dispatch]);
+  const onFormFieldChangeRating = useCallback((event, value) => dispatch(changeNewMasterField({ name: 'rating', value })), [dispatch]);
   const onFormFieldChangeCityList = useCallback(
     (selectedList, selectedItem) => dispatch(changeNewMasterField({ name: 'cities', value: selectedList })),
     [dispatch],
@@ -96,24 +97,26 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
         </Row>
       </Form.Group>
 
-      <Form.Group>
-        <Row className="mt-2">
-          <Col sm={4}>
-            <Form.Label>
-              <b>Rating:</b>
-            </Form.Label>
-          </Col>
-          <Col>
-            <StarRating
-              total={5}
-              value={newMaster.rating}
-              readonly={isPending}
-              onRatingChange={onFormFieldChangeRating}
-              onRatingReset={onFormFieldChangeRating}
-            />
-          </Col>
-        </Row>
-      </Form.Group>
+      {!isHideRating ? (
+        <Form.Group>
+          <Row className="mt-2">
+            <Col sm={4}>
+              <Form.Label>
+                <b>Rating:</b>
+              </Form.Label>
+            </Col>
+            <Col>
+              <Rating
+                value={newMaster.rating}
+                disabled={isPending}
+                onChange={onFormFieldChangeRating}
+                defaultValue={MAX_RATING_VALUE}
+                precision={RATING_PRECISION_STEP}
+              />
+            </Col>
+          </Row>
+        </Form.Group>
+      ) : null}
 
       <Form.Group>
         <Row className="mt-3">
