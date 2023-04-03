@@ -1,35 +1,34 @@
 import React, { useEffect, useMemo, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Container, Row, Col, Form, Button, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Form } from 'react-bootstrap';
 import { PuffLoader } from 'react-spinners';
 import Multiselect from 'multiselect-react-dropdown';
 import { useSnackbar } from 'notistack';
-import { Header, ErrorContainer } from '../../components/common';
+import { Header, SpinnerButton, ErrorContainer } from '../../components/common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { registerAuth, fetchCities } from '../../store/thunks';
 import { changeNewUserField } from '../../store/actions/authActions';
 
-import { validateEmail } from '../../utils';
-import { USER_ROLES, ERROR_TYPE } from '../../constants';
+import { validateEmail, isUnknownOrNoErrorType } from '../../utils';
+import { USER_ROLES, ACCESS_SCOPE } from '../../constants';
+import { selectNewUser, selectUserPending, selectAllCities, selectCityError, selectCityInitialLoading } from '../../store/selectors';
 
 const RegisterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { newUser, isPending } = useSelector(state => state.authReducer);
-  const { cities, error, isInitialLoading } = useSelector(state => state.cityReducer);
+  const newUser = useSelector(selectNewUser);
+  const isPending = useSelector(selectUserPending);
+  const cities = useSelector(selectAllCities);
+  const error = useSelector(selectCityError);
+  const isInitialLoading = useSelector(selectCityInitialLoading);
 
-  useEffect(() => {
-    dispatch(fetchCities());
-  }, [dispatch]);
+  useEffect(() => dispatch(fetchCities()), [dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
   const isFormValid = useMemo(() => {
     const { email, password, name, role, isTosAccepted, cities } = newUser;
     return (
@@ -128,23 +127,20 @@ const RegisterPage = () => {
                 </Form.Group>
 
                 <Form.Group className="mb-3">
-                  {Object.values(USER_ROLES)
-                    .filter(item => item !== USER_ROLES.ADMIN)
-                    .sort()
-                    .map(roleName => (
-                      <Form.Check
-                        key={roleName}
-                        type="radio"
-                        name="role"
-                        label={roleName}
-                        checked={newUser.role === roleName}
-                        value={roleName}
-                        inline
-                        required
-                        onChange={onFormFieldChange}
-                        disabled={isPending}
-                      />
-                    ))}
+                  {ACCESS_SCOPE.MasterOrClient.sort().map(roleName => (
+                    <Form.Check
+                      key={roleName}
+                      type="radio"
+                      name="role"
+                      label={roleName}
+                      checked={newUser.role === roleName}
+                      value={roleName}
+                      inline
+                      required
+                      onChange={onFormFieldChange}
+                      disabled={isPending}
+                    />
+                  ))}
                 </Form.Group>
 
                 {newUser.role === USER_ROLES.MASTER ? (
@@ -182,10 +178,13 @@ const RegisterPage = () => {
                   <Row>
                     <Col sm={4}>&nbsp;</Col>
                     <Col className="d-flex justify-content-md-end">
-                      <Button variant="primary" type="submit" disabled={isPending || !isFormValid}>
-                        {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                        Register
-                      </Button>
+                      <SpinnerButton
+                        variant="primary"
+                        type="submit"
+                        disabled={isPending || !isFormValid}
+                        loading={isPending}
+                        text="Register"
+                      />
                     </Col>
                   </Row>
                 </Form.Group>

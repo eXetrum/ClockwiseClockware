@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Button, Alert, Badge, Spinner } from 'react-bootstrap';
+import { Container, Table, Badge } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -9,16 +9,16 @@ import CheckIcon from '@mui/icons-material/Check';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
-import ViewMasterCard from '../master/ViewMasterCard';
-import StarRating from '../common/StarRating';
+import { StarRating, SpinnerButton } from '../common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/thunks';
 
 import { formatDecimal } from '../../utils';
+import { MAX_RATING_VALUE } from '../../constants';
 
-const MasterTableList = ({ masters }) => {
+const AdminMastersList = ({ masters }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
@@ -104,36 +104,32 @@ const MasterTableList = ({ masters }) => {
               </td>
               <td className="text-center p-2 m-0">
                 <StarRating total={5} value={master.rating} readonly={true} />
-                <b>{formatDecimal(master.rating, 1)}/5</b>
+                <b>
+                  {formatDecimal(master.rating, 1)}/{formatDecimal(MAX_RATING_VALUE, 1)}
+                </b>
               </td>
               <td className="text-center p-2 m-0">
                 {master.isApprovedByAdmin ? <Badge bg="success">Yes</Badge> : <Badge bg="secondary">No</Badge>}
               </td>
               <td className="text-center p-2 m-0 col-2">
                 <Stack spacing={1}>
-                  <Button
+                  <SpinnerButton
                     size="sm"
                     variant="outline-warning"
                     disabled={master.isPendingResetPassword}
+                    loading={master.isPendingResetPassword}
                     onClick={() => onResetPassword(master)}
-                  >
-                    {master.isPendingResetPassword ? (
-                      <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                    ) : null}
-                    Reset password
-                  </Button>
+                    text={'Reset password'}
+                  />
                   {!master.isEmailVerified ? (
-                    <Button
+                    <SpinnerButton
                       size="sm"
                       variant="outline-primary"
                       disabled={master.isPendingResendEmailConfirmation}
+                      loading={master.isPendingResendEmailConfirmation}
                       onClick={() => onResendEmailConfirmation(master)}
-                    >
-                      {master.isPendingResendEmailConfirmation ? (
-                        <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                      ) : null}
-                      Resend email confirmation
-                    </Button>
+                      text={'Resend email confirmation'}
+                    />
                   ) : null}
                 </Stack>
               </td>
@@ -155,42 +151,6 @@ const MasterTableList = ({ masters }) => {
       </Table>
     </Container>
   );
-};
-
-const MasterCardList = ({ masters, onSelect }) => {
-  return (
-    <Container>
-      <Row className="justify-content-md-center mt-4">
-        <>
-          {masters.map(master => (
-            <Col key={master.id} md="auto" onClick={() => onSelect(master)}>
-              <ViewMasterCard master={master} />
-            </Col>
-          ))}
-        </>
-      </Row>
-    </Container>
-  );
-};
-
-const AdminMastersList = ({ masters, onSelect, isAdminView = true }) => {
-  if (masters == null) return null;
-  const collectionIsEmptyText = isAdminView ? 'No records yet' : 'There is no masters available at this moment which can handle your order';
-
-  if (masters.length === 0) {
-    return (
-      <Container>
-        <Row className="justify-content-md-center mt-3">
-          <Col md="auto">
-            <Alert variant="warning">{collectionIsEmptyText}</Alert>
-          </Col>
-        </Row>
-      </Container>
-    );
-  }
-
-  if (isAdminView) return <MasterTableList masters={masters} />;
-  return <MasterCardList masters={masters} onSelect={onSelect} />;
 };
 
 export default AdminMastersList;

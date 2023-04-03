@@ -4,13 +4,16 @@ import { loginAuth, registerAuth } from '../thunks';
 import { isGlobalErrorType, parseToken } from '../../utils';
 import { USER_ROLES, ERROR_TYPE } from '../../constants';
 
+const initEmptyAuth = (token = null) => ({
+  user: { ...(token ? parseToken(token) : { role: USER_ROLES.GUEST }) },
+  accessToken: token,
+});
 const initEmptyUser = () => ({ email: '', password: '', name: '', role: USER_ROLES.CLIENT, isTosAccepted: false, cities: [] });
-const initEmptyAuth = (token = null) => ({ user: parseToken(token), accessToken: token });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
 
 const initialState = {
-  newUser: initEmptyUser(),
   authUser: initEmptyAuth(),
+  newUser: initEmptyUser(),
   error: initEmptyError(),
   isPending: false,
 };
@@ -50,9 +53,9 @@ export const authSlice = createSlice({
       state.isPending = true;
     },
     [registerAuth.fulfilled]: state => {
-      state.newUser = initEmptyUser();
       state.error = initEmptyError();
       state.isPending = false;
+      state.newUser = initEmptyUser();
     },
     [registerAuth.rejected]: (state, { payload }) => {
       state.error = payload;

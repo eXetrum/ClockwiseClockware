@@ -13,6 +13,18 @@ const compareSync = (plaintextPassword, hash) => bcrypt.compareSync(plaintextPas
 
 const dateToNearestHour = (timestamp) => Math.ceil(timestamp / MS_PER_HOUR) * MS_PER_HOUR;
 
+const formatDecimal = (value, precision = 2) => parseFloat(value).toFixed(precision);
+
+const pad = (num) => num.toString().padStart(2, '0');
+const formatDate = (value) => {
+    const date = new Date(value);
+    return (
+        [date.getFullYear(), pad(date.getMonth() + 1), pad(date.getDate())].join('-') +
+        ' ' +
+        [pad(date.getHours()), pad(date.getMinutes())].join(':')
+    );
+};
+
 const generatePassword = () => {
     const entropy = new Entropy({ total: 1e10, risk: 1e12 });
     return entropy.string();
@@ -37,5 +49,7 @@ module.exports = {
     dateToNearestHour,
     isDbErrorEntryNotFound,
     isDbErrorEntryAlreadyExists,
-    isDbErrorEntryReferences
+    isDbErrorEntryReferences,
+    formatDecimal,
+    formatDate
 };

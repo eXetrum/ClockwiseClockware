@@ -9,22 +9,22 @@ import { Header, ErrorContainer, ClientForm } from '../../../components';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchClient, updateClient } from '../../../store/thunks';
+import { selectNewClient, selectClientError, selectClientInitialLoading } from '../../../store/selectors';
 
-import { ERROR_TYPE } from '../../../constants';
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminEditClient = () => {
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { newClient, error, isInitialLoading } = useSelector(state => state.clientReducer);
+  const newClient = useSelector(selectNewClient);
+  const error = useSelector(selectClientError);
+  const isInitialLoading = useSelector(selectClientInitialLoading);
 
   useEffect(() => dispatch(fetchClient(id)), [id, dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const onFormSubmit = useCallback(
     async event => {

@@ -30,20 +30,24 @@ const initialState = {
   oldMaster: initEmptyMaster(),
   error: initEmptyError(),
   isInitialLoading: false,
-  isShowAddForm: false,
   isPending: false,
+  isShowAddForm: false,
 };
 
 export const masterSlice = createSlice({
   name: 'master',
   initialState,
   reducers: {
-    changeVisibilityAddForm(state, { payload }) {
+    changeVisibilityAddMasterForm(state, { payload }) {
       state.isShowAddForm = payload;
       state.newMaster = initEmptyMaster();
     },
     changeNewMasterField(state, { payload }) {
       state.newMaster[payload.name] = payload.value;
+    },
+    resetMasters(state, { payload }) {
+      if (!payload) state.masters = [];
+      else state.masters = payload;
     },
   },
   extraReducers: {
@@ -195,5 +199,5 @@ export const masterSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddForm, changeNewMasterField } = masterSlice.actions;
+export const { changeVisibilityAddMasterForm, changeNewMasterField, resetMasters } = masterSlice.actions;
 export default masterSlice.reducer;

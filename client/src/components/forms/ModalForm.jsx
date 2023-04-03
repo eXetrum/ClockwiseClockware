@@ -1,5 +1,6 @@
 import React from 'react';
-import { Modal, Form, Container, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Modal, Form, Container, Row, Col, Button } from 'react-bootstrap';
+import SpinnerButton from '../common/SpinnerButton';
 
 const ModalForm = ({ formContent, isPending, onSubmit, isFormValid, title, okText = 'Ok', cancelText = 'Cancel', ...props }) => {
   return (
@@ -20,10 +21,7 @@ const ModalForm = ({ formContent, isPending, onSubmit, isFormValid, title, okTex
             <Container>
               <Row className="align-items-center">
                 <Col xs>
-                  <Button variant="success" type="submit" disabled={isPending || !isFormValid}>
-                    {isPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                    {okText}
-                  </Button>
+                  <SpinnerButton variant="success" type="submit" loading={isPending} disabled={isPending || !isFormValid} text={okText} />
                 </Col>
                 <Col md="auto">
                   <Button variant="secondary" onClick={props.onHide}>

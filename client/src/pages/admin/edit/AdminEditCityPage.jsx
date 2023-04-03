@@ -9,22 +9,22 @@ import { Header, ErrorContainer, CityForm } from '../../../components';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCity, updateCity } from '../../../store/thunks';
+import { selectNewCity, selectCityError, selectCityInitialLoading } from '../../../store/selectors';
 
-import { ERROR_TYPE } from '../../../constants';
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminEditCityPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { newCity, error, isInitialLoading } = useSelector(state => state.cityReducer);
+  const newCity = useSelector(selectNewCity);
+  const error = useSelector(selectCityError);
+  const isInitialLoading = useSelector(selectCityInitialLoading);
 
   useEffect(() => dispatch(fetchCity(id)), [id, dispatch]);
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const onFormSubmit = useCallback(
     async event => {

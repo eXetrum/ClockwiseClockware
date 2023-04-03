@@ -3,11 +3,12 @@ import { Link } from 'react-router-dom';
 import { Nav, Navbar, NavDropdown, Container } from 'react-bootstrap';
 
 import { useSelector } from 'react-redux';
+import { selectAuthenticatedUser } from '../../store/selectors/authSelector';
 
-import { USER_ROLES } from '../../constants';
+import { ACCESS_SCOPE, USER_ROLES } from '../../constants';
 
 const Header = () => {
-  const { authUser: auth } = useSelector(state => state.authReducer);
+  const auth = useSelector(selectAuthenticatedUser);
   return (
     <Navbar bg="light" variant="light" expand="lg" className="mb-3">
       <Container>
@@ -16,7 +17,7 @@ const Header = () => {
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="admin-navbar-nav" />
         <Navbar.Collapse id="admin-navbar-nav">
-          {auth.user && auth.user.role === USER_ROLES.ADMIN ? (
+          {auth.user.role === USER_ROLES.ADMIN ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/admin/cities">
                 Cities
@@ -32,14 +33,14 @@ const Header = () => {
               </Nav.Link>
             </Nav>
           ) : null}
-          {auth.user && auth.user.role === USER_ROLES.MASTER ? (
+          {auth.user.role === USER_ROLES.MASTER ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/master/orders">
                 Orders
               </Nav.Link>
             </Nav>
           ) : null}
-          {auth.user && auth.user.role === USER_ROLES.CLIENT ? (
+          {auth.user.role === USER_ROLES.CLIENT ? (
             <Nav className="navbar-nav me-auto">
               <Nav.Link as={Link} to="/client/orders">
                 Orders
@@ -48,10 +49,12 @@ const Header = () => {
           ) : null}
 
           <Nav className="navbar-nav ms-auto">
-            <Nav.Link as={Link} to="/order">
-              Order
-            </Nav.Link>
-            {auth.user ? (
+            {ACCESS_SCOPE.GuestOrClient.includes(auth.user.role) ? (
+              <Nav.Link as={Link} to="/order">
+                Order
+              </Nav.Link>
+            ) : null}
+            {auth.user.role !== USER_ROLES.GUEST ? (
               <NavDropdown title={auth.user.email} id="basic-nav-dropdown">
                 <NavDropdown.Item as={Link} to="/profile">
                   Profile

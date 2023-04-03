@@ -1,19 +1,22 @@
 import React, { useCallback, useMemo } from 'react';
-import { Form, Row, Col, Button } from 'react-bootstrap';
+import { Form, Row, Col } from 'react-bootstrap';
 import Multiselect from 'multiselect-react-dropdown';
-import { StarRating } from '../common';
+import { StarRating, SpinnerButton } from '../common';
 import ModalForm from './ModalForm';
 
 import { useDispatch, useSelector } from 'react-redux';
-import { changeVisibilityAddForm, changeNewMasterField } from '../../store/actions/masterActions';
+import { changeVisibilityAddMasterForm, changeNewMasterField } from '../../store/actions';
+import { selectAllCities, selectNewMaster, selectMasterPending, selectMasterShowAddForm } from '../../store/selectors';
 
 import { validateEmail } from '../../utils';
 
 const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false, isHidePassword = false }) => {
   const dispatch = useDispatch();
 
-  const { newMaster, isShowAddForm, isPending } = useSelector(state => state.masterReducer);
-  const { cities } = useSelector(state => state.cityReducer);
+  const cities = useSelector(selectAllCities);
+  const newMaster = useSelector(selectNewMaster);
+  const isPending = useSelector(selectMasterPending);
+  const isShowAddForm = useSelector(selectMasterShowAddForm);
 
   const isFormValid = useMemo(
     () =>
@@ -25,7 +28,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
     [newMaster, isHidePassword],
   );
 
-  const onHide = useCallback(() => dispatch(changeVisibilityAddForm(false)), [dispatch]);
+  const onHide = useCallback(() => dispatch(changeVisibilityAddMasterForm(false)), [dispatch]);
   const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewMasterField({ name, value })), [dispatch]);
   const onFormFieldChangeRating = useCallback(value => dispatch(changeNewMasterField({ name: 'rating', value })), [dispatch]);
   const onFormFieldChangeCityList = useCallback(
@@ -177,9 +180,14 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
             <Row>
               <Col sm={4}></Col>
               <Col className="d-flex justify-content-md-end">
-                <Button className="ms-2" type="submit" variant="success" disabled={isPending || !isFormValid}>
-                  {okButtonText}
-                </Button>
+                <SpinnerButton
+                  className="ms-2"
+                  type="submit"
+                  variant="success"
+                  loading={isPending}
+                  disabled={isPending || !isFormValid}
+                  text={okButtonText}
+                />
               </Col>
             </Row>
           </Form.Group>

@@ -8,17 +8,32 @@ import { Header, ErrorContainer, AdminMastersList, MasterForm } from '../../../c
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCities, fetchMasters, addMaster } from '../../../store/thunks';
-import { changeVisibilityAddForm } from '../../../store/actions/masterActions';
 
-import { ERROR_TYPE } from '../../../constants';
+import { fetchCities, fetchMasters, addMaster } from '../../../store/thunks';
+import { changeVisibilityAddMasterForm } from '../../../store/actions';
+import {
+  selectAllMasters,
+  selectNewMaster,
+  selectMasterError,
+  selectMasterInitialLoading,
+  selectCityError,
+  selectCityInitialLoading,
+} from '../../../store/selectors';
+
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminDashboardMasters = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { masters, newMaster, error, isInitialLoading: isInitialLoadingMasters } = useSelector(state => state.masterReducer);
-  const { isInitialLoading: isInitialLoadingCities } = useSelector(state => state.cityReducer);
+  const masters = useSelector(selectAllMasters);
+  const newMaster = useSelector(selectNewMaster);
+  const isInitialLoadingMasters = useSelector(selectMasterInitialLoading);
+  const errorMaster = useSelector(selectMasterError);
+  const isInitialLoadingCities = useSelector(selectCityInitialLoading);
+  const errorCity = useSelector(selectCityError);
+
+  const error = !isUnknownOrNoErrorType(errorCity) ? errorCity : errorMaster;
 
   useEffect(() => {
     dispatch(fetchCities());
@@ -30,10 +45,7 @@ const AdminDashboardMasters = () => {
     [isInitialLoadingCities, isInitialLoadingMasters],
   );
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const onFormSubmit = useCallback(
     async event => {
@@ -44,6 +56,8 @@ const AdminDashboardMasters = () => {
     },
     [dispatch, enqueueSnackbar, newMaster],
   );
+
+  const onFormShow = useCallback(() => dispatch(changeVisibilityAddMasterForm(true)), [dispatch]);
 
   return (
     <Container>
@@ -67,7 +81,7 @@ const AdminDashboardMasters = () => {
             <Row className="justify-content-md-center">
               <Col md="auto">
                 <Link to="#">
-                  <AddCircleOutlineOutlinedIcon onClick={() => dispatch(changeVisibilityAddForm(true))} />
+                  <AddCircleOutlineOutlinedIcon onClick={onFormShow} />
                 </Link>
               </Col>
             </Row>

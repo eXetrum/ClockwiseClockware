@@ -9,16 +9,28 @@ import { Header, ErrorContainer, MasterForm } from '../../../components';
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, fetchMaster, updateMaster } from '../../../store/thunks';
+import {
+  selectNewMaster,
+  selectMasterError,
+  selectCityError,
+  selectMasterInitialLoading,
+  selectCityInitialLoading,
+} from '../../../store/selectors';
 
-import { ERROR_TYPE } from '../../../constants';
+import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminEditMasterPage = () => {
   const { id } = useParams();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const { newMaster, error, isInitialLoading: isInitialLoadingMaster } = useSelector(state => state.masterReducer);
-  const { isInitialLoading: isInitialLoadingCities } = useSelector(state => state.cityReducer);
+  const newMaster = useSelector(selectNewMaster);
+  const isInitialLoadingMaster = useSelector(selectMasterInitialLoading);
+  const errorMaster = useSelector(selectMasterError);
+  const isInitialLoadingCities = useSelector(selectCityInitialLoading);
+  const errorCity = useSelector(selectCityError);
+
+  const error = !isUnknownOrNoErrorType(errorCity) ? errorCity : errorMaster;
 
   useEffect(() => {
     dispatch(fetchCities());
@@ -30,10 +42,7 @@ const AdminEditMasterPage = () => {
     [isInitialLoadingCities, isInitialLoadingMaster],
   );
 
-  const isComponentReady = useMemo(
-    () => !isInitialLoading && (error.type === ERROR_TYPE.NONE || error.type === ERROR_TYPE.UNKNOWN),
-    [isInitialLoading, error],
-  );
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const onFormSubmit = useCallback(
     async event => {

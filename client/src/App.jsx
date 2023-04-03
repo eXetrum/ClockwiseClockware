@@ -26,6 +26,11 @@ const AnyAuthRoute = child => <RouteGuard scope={ACCESS_SCOPE.AnyAuth}>{child}</
 const AdminRoute = child => <RouteGuard scope={ACCESS_SCOPE.AdminOnly}>{child}</RouteGuard>;
 const MasterRoute = child => <RouteGuard scope={ACCESS_SCOPE.MasterOnly}>{child}</RouteGuard>;
 const ClientRoute = child => <RouteGuard scope={ACCESS_SCOPE.ClientOnly}>{child}</RouteGuard>;
+const GuestOrClientRoute = child => (
+  <RouteGuard scope={ACCESS_SCOPE.GuestOrClient} redirectTo="/">
+    {child}
+  </RouteGuard>
+);
 
 const App = () => {
   return (
@@ -35,7 +40,7 @@ const App = () => {
         <Route exact path="/login" element={<LoginPage />} />
         <Route exact path="/logout" element={<LogoutPage />} />
         <Route exact path="/register" element={<RegisterPage />} />
-        <Route exact path="/order" element={<OrderPage />} />
+        <Route exact path="/order" element={GuestOrClientRoute(<OrderPage />)} />
         <Route exact path="/profile" element={AnyAuthRoute(<UserProfilePage />)} />
         <Route exact path="/admin/cities" element={AdminRoute(<AdminDashboardCitiesPage />)} />
         <Route exact path="/admin/masters" element={AdminRoute(<AdminDashboardMastersPage />)} />

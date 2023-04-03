@@ -51,7 +51,6 @@ export const updateOrder = createAsyncThunk('order/updateOrder', async (order, t
         startDate: order?.startDate,
       },
     });
-
     return response.data.order;
   } catch (error) {
     return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });

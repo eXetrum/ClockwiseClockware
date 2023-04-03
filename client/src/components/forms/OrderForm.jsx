@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { Form, Row, Col, Button, Spinner } from 'react-bootstrap';
+import { Form, Row, Col, Button } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
 import dayjs from 'dayjs';
@@ -7,46 +7,37 @@ import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { AdminMastersList } from '../../components';
-import ViewMasterCard from '../master/ViewMasterCard';
+import { MasterCardList, SpinnerButton } from '../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
-import { resetNewOrder, changeNewOrderField } from '../../store/actions/orderActions';
+import { changeNewOrderField, resetMasters } from '../../store/actions';
+import { selectNewOrder, selectOrderPending, selectAllMasters, selectMasterPending } from '../../store/selectors';
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
 const MASTER_PROPS_DEPENDENCY = ['city', 'watch', 'startDate'];
 
-const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButtonText = 'Save' }) => {
+const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, successButtonText = 'Save' }) => {
   const dispatch = useDispatch();
 
-  const { newOrder, isPending: isOrderPending } = useSelector(state => state.orderReducer);
-  const { masters, isPending: isMastersPending } = useSelector(state => state.masterReducer);
+  const newOrder = useSelector(selectNewOrder);
+  const isOrderPending = useSelector(selectOrderPending);
+  const masters = useSelector(selectAllMasters);
+  const isMastersPending = useSelector(selectMasterPending);
 
-  const currentDate = dateToNearestHour();
-
+  const [currentDate, setCurrentDate] = useState(dateToNearestHour());
   const [isShowMasters, setShowMasters] = useState(false);
-
   const [dateTimeError, setDateTimeError] = useState(null);
+
   const isDateTimeError = useMemo(
     () => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason),
     [dateTimeError],
   );
-
   const isPending = useMemo(() => isMastersPending || isOrderPending, [isMastersPending, isOrderPending]);
-
-  const onOrderDateError = useCallback(reason => {
-    if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
-    if (reason === 'minDate') return setDateTimeError({ reason, detail: 'Time is past' });
-    if (reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
-    if (reason === 'disablePast') return setDateTimeError({ reason, detail: 'Date is past' });
-    setDateTimeError(null);
-  }, []);
-
   const isMasterAssigned = useMemo(() => newOrder?.master !== null, [newOrder]);
   const isOrderPreparedForMasterSearch = useMemo(
-    () => newOrder?.city !== null && newOrder?.watch !== null && newOrder?.startDate !== null,
+    () => newOrder?.city !== null && newOrder?.watch !== null && newOrder?.startDate !== null && !isNaN(newOrder.startDate),
     [newOrder],
   );
   const isOrderReady = useMemo(
@@ -58,6 +49,13 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       validateClientName(newOrder?.client?.name),
     [newOrder, currentDate],
   );
+
+  const onOrderDateError = useCallback(reason => {
+    if (reason === 'invalidDate') return setDateTimeError({ reason, detail: reason });
+    if (reason === 'minDate' || reason === 'minTime') return setDateTimeError({ reason, detail: 'Time is past' });
+    if (reason === 'disablePast') return setDateTimeError({ reason, detail: 'Date is past' });
+    setDateTimeError(null);
+  }, []);
 
   const ensureMasterCanServeCity = useCallback((master, city) => master?.cities?.find(item => item.id === city.id), []);
   const ensureMasterSchedule = useCallback(
@@ -109,16 +107,17 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       dispatch(changeNewOrderField({ name: 'master', value: null }));
 
       setShowMasters(false);
-      await dispatch(fetchAllAvailable({ watchId: newParams.watch.id, cityId: newParams.city.id, startDate: newParams.startDate }));
-      setShowMasters(true);
     },
     [newOrder, isMasterAssigned, watches, cities, dispatch, ensureMasterCanHandleOrder],
   );
 
   const onOrderDateChange = useCallback(
-    value => {
-      dispatch(changeNewOrderField({ name: 'startDate', value: new Date(value).getTime() }));
-      setShowMasters(false);
+    async value => {
+      const newStartDate = new Date(value).getTime();
+      if (!isNaN(newStartDate)) {
+        dispatch(changeNewOrderField({ name: 'startDate', value: newStartDate }));
+        setShowMasters(false);
+      }
     },
     [dispatch],
   );
@@ -132,32 +131,23 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
       await dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
       setShowMasters(true);
     },
-    [newOrder, dispatch],
+    [dispatch, newOrder],
   );
 
-  const onSelectMaster = useCallback(
-    async master => {
-      const result = await confirm(`Do you want to select "${master.email}" as your master ?`, {
-        title: 'Confirm',
-        okText: 'Accept',
-        okButtonStyle: 'success',
-      });
-      if (!result) return;
-
-      dispatch(changeNewOrderField({ name: 'master', value: master }));
-      setShowMasters(false);
-    },
-    [dispatch],
-  );
+  const onSelectMaster = useCallback(master => dispatch(changeNewOrderField({ name: 'master', value: master })), [dispatch]);
 
   const resetOrigOrder = useCallback(async () => {
-    dispatch(resetNewOrder());
+    onReset();
+    dispatch(resetMasters());
     setShowMasters(false);
-  }, [dispatch]);
+  }, [dispatch, onReset]);
 
   useEffect(() => {
-    if (!isEditForm && newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
-  }, [newOrder, cities, isEditForm, dispatch]);
+    if (newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
+    if (newOrder.watch === null && watches.length) dispatch(changeNewOrderField({ name: 'watch', value: watches[0] }));
+  }, [newOrder, cities, watches, dispatch]);
+
+  useEffect(() => setCurrentDate(dateToNearestHour()), []);
 
   return (
     <>
@@ -185,9 +175,9 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                         placeholder="Email"
                         onChange={onFormFieldChange}
                         value={newOrder.client.email}
-                        isValid={validateEmail(newOrder.client.email)}
-                        isInvalid={!validateEmail(newOrder.client.email)}
                         disabled={isPending}
+                        isValid={newOrder.client.email && validateEmail(newOrder.client.email)}
+                        isInvalid={newOrder.client.email && !validateEmail(newOrder.client.email)}
                       />
                       {newOrder.client.email && (
                         <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>
@@ -207,9 +197,9 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                         placeholder="Name"
                         onChange={onFormFieldChange}
                         value={newOrder.client.name}
-                        isValid={validateClientName(newOrder.client.name)}
-                        isInvalid={!validateClientName(newOrder.client.name)}
                         disabled={isPending}
+                        isValid={newOrder.client.name && validateClientName(newOrder.client.name)}
+                        isInvalid={newOrder.client.name && !validateClientName(newOrder.client.name)}
                       />
                       {newOrder.client.name && (
                         <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>
@@ -284,7 +274,6 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                       disablePast={true}
                       minDateTime={dayjs(currentDate)}
                       value={newOrder.startDate}
-                      disabled={isPending}
                     />
                   </LocalizationProvider>
                   {isDateTimeError && (
@@ -308,22 +297,50 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
                   </Row>
                   <Row>
                     <Col>
-                      <Button
+                      <SpinnerButton
                         className="mb-2 btn btn-sm"
                         variant="warning"
                         onClick={onFindMasterBtnClick}
                         disabled={isPending || !isOrderPreparedForMasterSearch}
-                      >
-                        {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" /> : null}
-                        {isMastersPending && (
-                          <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />
-                        )}
-                        Find New Master
-                      </Button>
+                        text={
+                          <>
+                            {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" className="me-1" /> : null}
+                            <span>Find Master</span>
+                          </>
+                        }
+                        loading={isMastersPending}
+                      />
                     </Col>
                   </Row>
                 </Col>
-                <Col>{isMasterAssigned ? <ViewMasterCard master={newOrder.master} /> : <span>Master is not assigned yet</span>}</Col>
+                <Col>
+                  {isMasterAssigned ? (
+                    <span>
+                      <b>{newOrder?.master.email}</b>
+                    </span>
+                  ) : (
+                    <span>Master is not assigned yet</span>
+                  )}
+                </Col>
+                <Row>
+                  <Col>
+                    {isShowMasters ? (
+                      <>
+                        <hr />
+                        <MasterCardList {...{ masters, currentSelectedMaster: newOrder.master, onSelect: onSelectMaster }} />
+                      </>
+                    ) : (
+                      <>
+                        {!isMasterAssigned ? (
+                          <>
+                            <hr />
+                            <center>you should search free masters to complete order</center>
+                          </>
+                        ) : null}
+                      </>
+                    )}
+                  </Col>
+                </Row>
 
                 <Row className="mt-4">
                   <Col md={{ span: 4, offset: 0 }}></Col>
@@ -333,28 +350,26 @@ const OrderForm = ({ watches, cities, onSubmit, isEditForm = true, successButton
             <hr />
             <Form.Group>
               <Row className="justify-content-md-center mt-4">
-                <Col className="d-flex justify-content-md-end">
-                  <Button className="mb-3 col-sm-4" onClick={() => resetOrigOrder()} disabled={isPending}>
+                <Col className="d-flex justify-content-start">
+                  <Button className="mb-3 col-sm-5" onClick={() => resetOrigOrder()} disabled={isPending}>
                     Reset
                   </Button>
                 </Col>
-                <Col className="d-flex justify-content-md-end">
-                  <Button className="mb-3 col-sm-4" type="submit" variant="success" disabled={isPending || !isOrderReady}>
-                    {isOrderPending && <Spinner className="me-2" as="span" animation="grow" size="sm" role="status" aria-hidden="true" />}
-                    {successButtonText}
-                  </Button>
+                <Col className="d-flex justify-content-end">
+                  <SpinnerButton
+                    className="mb-3 col-sm-5"
+                    type="submit"
+                    variant="success"
+                    loading={isOrderPending}
+                    disabled={isPending || !isOrderReady}
+                    text={successButtonText}
+                  />
                 </Col>
               </Row>
             </Form.Group>
           </Form>
         </Col>
       </Row>
-      {isShowMasters ? (
-        <>
-          <hr />
-          <AdminMastersList {...{ masters, onSelect: onSelectMaster, isAdminView: false }} />
-        </>
-      ) : null}
     </>
   );
 };
