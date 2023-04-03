@@ -83,7 +83,7 @@ module.exports = (sequelize, DataTypes) => {
             },
             rating: {
                 allowNull: true,
-                type: DataTypes.INTEGER,
+                type: DataTypes.DOUBLE,
                 defaultValue: null
             }
         },

@@ -443,8 +443,8 @@ const patch = [
             if (authUser.role === USER_ROLES.CLIENT) {
                 const { rating } = req.body;
                 if (rating === undefined) return res.status(400).json({ message: 'Order rating required' }).end();
-                const ratingIntValue = parseInt(rating);
-                if (isNaN(ratingIntValue) || ratingIntValue < MIN_RATING_VALUE || ratingIntValue > MAX_RATING_VALUE) {
+                const ratingFloatValue = parseFloat(rating);
+                if (isNaN(ratingFloatValue) || ratingFloatValue < MIN_RATING_VALUE || ratingFloatValue > MAX_RATING_VALUE) {
                     return res
                         .status(400)
                         .json({
