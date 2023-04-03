@@ -19,6 +19,7 @@ import {
 } from '../../../store/selectors';
 
 import { isUnknownOrNoErrorType } from '../../../utils';
+import { MAX_RATING_VALUE, RATING_PRECISION_STEP } from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -96,7 +97,13 @@ const ClientDashboardOrdersPage = () => {
             <>
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
-                  <Rating onChange={onRatingChange} value={newOrder.rating} disabled={isPending} />
+                  <Rating
+                    onChange={onRatingChange}
+                    value={newOrder.rating}
+                    disabled={isPending}
+                    defaultValue={MAX_RATING_VALUE}
+                    precision={RATING_PRECISION_STEP}
+                  />
                 </Row>
               </Form.Group>
             </>
