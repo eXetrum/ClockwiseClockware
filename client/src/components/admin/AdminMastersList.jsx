@@ -86,7 +86,7 @@ const AdminMastersList = ({ masters }) => {
       field: 'rating',
       headerName: 'Rating',
       type: 'number',
-      valueFormatter: ({ value }) => `${formatDecimal(value)}/${formatDecimal(MAX_RATING_VALUE)}`,
+      valueFormatter: ({ value }) => `${formatDecimal(value, 1)}/${formatDecimal(MAX_RATING_VALUE, 1)}`,
     },
     {
       field: 'isEmailVerified',
