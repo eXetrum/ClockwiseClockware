@@ -25,6 +25,9 @@ export const authSlice = createSlice({
     changeNewUserField(state, { payload }) {
       state.newUser[payload.name] = payload.value;
     },
+    clearNewUser(state) {
+      state.newUser = initEmptyUser();
+    },
     destroyAuth(state) {
       state.authUser = initEmptyAuth();
     },
@@ -65,5 +68,5 @@ export const authSlice = createSlice({
   },
 });
 
-export const { changeNewUserField } = authSlice.actions;
+export const { clearNewUser, changeNewUserField } = authSlice.actions;
 export default authSlice.reducer;

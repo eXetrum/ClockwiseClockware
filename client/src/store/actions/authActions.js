@@ -1,1 +1,1 @@
-export { changeNewUserField } from '../reducers/authSlice';
+export { clearNewUser, changeNewUserField } from '../reducers/authSlice';
