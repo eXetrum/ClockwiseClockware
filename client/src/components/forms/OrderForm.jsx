@@ -175,9 +175,9 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                         placeholder="Email"
                         onChange={onFormFieldChange}
                         value={newOrder.client.email}
-                        isValid={validateEmail(newOrder.client.email)}
-                        isInvalid={!validateEmail(newOrder.client.email)}
                         disabled={isPending}
+                        isValid={newOrder.client.email && validateEmail(newOrder.client.email)}
+                        isInvalid={newOrder.client.email && !validateEmail(newOrder.client.email)}
                       />
                       {newOrder.client.email && (
                         <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>
@@ -197,9 +197,9 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                         placeholder="Name"
                         onChange={onFormFieldChange}
                         value={newOrder.client.name}
-                        isValid={validateClientName(newOrder.client.name)}
-                        isInvalid={!validateClientName(newOrder.client.name)}
                         disabled={isPending}
+                        isValid={newOrder.client.name && validateClientName(newOrder.client.name)}
+                        isInvalid={newOrder.client.name && !validateClientName(newOrder.client.name)}
                       />
                       {newOrder.client.name && (
                         <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>
