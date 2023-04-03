@@ -7,7 +7,8 @@ import Stack from '@mui/material/Stack';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
-import StarRating from '../common/StarRating';
+//import StarRating from '../common/StarRating';
+import Rating from '@mui/material/Rating';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
@@ -117,7 +118,7 @@ const AdminOrdersList = ({ orders }) => {
                 </p>
                 <small className="text-muted">{order.master.email}</small>
                 <div className="text-center p-2 m-0">
-                  <StarRating value={order.master.rating} readonly={true} />
+                  <Rating value={order.master.rating} readOnly={true} />
                 </div>
               </td>
               <td className="text-center p-2 m-0">
