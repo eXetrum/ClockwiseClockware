@@ -7,18 +7,6 @@ import { formatDecimal, formatDate } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
 const ClientOrdersList = ({ orders, onReview }) => {
-  if (orders.length === 0) {
-    return (
-      <Row className="justify-content-md-center mt-3">
-        <Col md="auto">
-          <Alert variant="warning" className="text-center">
-            No records yet
-          </Alert>
-        </Col>
-      </Row>
-    );
-  }
-
   const columns = [
     { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: params => params.row.master.name },
     { field: 'watch', headerName: 'Service', valueGetter: params => params.row.watch.name },
@@ -68,6 +56,18 @@ const ClientOrdersList = ({ orders, onReview }) => {
       },
     },
   ];
+
+  if (orders.length === 0) {
+    return (
+      <Row className="justify-content-md-center mt-3">
+        <Col md="auto">
+          <Alert variant="warning" className="text-center">
+            No records yet
+          </Alert>
+        </Col>
+      </Row>
+    );
+  }
 
   return <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
 };
