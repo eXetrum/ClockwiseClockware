@@ -16,6 +16,8 @@ import { selectNewOrder, selectOrderPending, selectAllMasters, selectMasterPendi
 
 import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
 
+const defaultControlsFocusState = { client: { email: false, name: false } };
+
 const MASTER_PROPS_DEPENDENCY = ['city', 'watch', 'startDate'];
 
 const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, successButtonText = 'Save' }) => {
@@ -29,6 +31,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
   const [currentDate, setCurrentDate] = useState(dateToNearestHour());
   const [isShowMasters, setShowMasters] = useState(false);
   const [dateTimeError, setDateTimeError] = useState(null);
+  const [controlFocused, setControlFocused] = useState(defaultControlsFocusState);
 
   const isDateTimeError = useMemo(
     () => ['invalidDate', 'minTime', 'minDate', 'disablePast'].includes(dateTimeError?.reason),
@@ -73,6 +76,12 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
     },
     [ensureMasterCanServeCity, ensureMasterSchedule],
   );
+
+  const onFormFieldBlur = useCallback(async ({ target: { name, value } }) => {
+    const [head, ...rest] = name.split('.');
+    if (!rest.length) setControlFocused(prev => ({ ...prev, [name]: true }));
+    else setControlFocused(prev => ({ ...prev, [head]: { ...prev[head], [rest[0]]: true } }));
+  }, []);
 
   const onFormFieldChange = useCallback(
     async ({ target: { name, value } }) => {
@@ -140,6 +149,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
     onReset();
     dispatch(resetMasters());
     setShowMasters(false);
+    setControlFocused(defaultControlsFocusState);
   }, [dispatch, onReset]);
 
   useEffect(() => {
@@ -174,12 +184,13 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                         required
                         placeholder="Email"
                         onChange={onFormFieldChange}
+                        onBlur={onFormFieldBlur}
                         value={newOrder.client.email}
                         disabled={isPending}
-                        isValid={newOrder.client.email && validateEmail(newOrder.client.email)}
-                        isInvalid={newOrder.client.email && !validateEmail(newOrder.client.email)}
+                        isValid={controlFocused.client.email && validateEmail(newOrder.client.email)}
+                        isInvalid={controlFocused.client.email && !validateEmail(newOrder.client.email)}
                       />
-                      {newOrder.client.email && (
+                      {controlFocused.client.email && (
                         <Form.Control.Feedback type="invalid">Please provide a valid email (username@host.domain)</Form.Control.Feedback>
                       )}
                     </>
@@ -196,12 +207,13 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                         required
                         placeholder="Name"
                         onChange={onFormFieldChange}
+                        onBlur={onFormFieldBlur}
                         value={newOrder.client.name}
                         disabled={isPending}
-                        isValid={newOrder.client.name && validateClientName(newOrder.client.name)}
-                        isInvalid={newOrder.client.name && !validateClientName(newOrder.client.name)}
+                        isValid={controlFocused.client.name && validateClientName(newOrder.client.name)}
+                        isInvalid={controlFocused.client.name && !validateClientName(newOrder.client.name)}
                       />
-                      {newOrder.client.name && (
+                      {controlFocused.client.name && (
                         <Form.Control.Feedback type="invalid">Please provide a valid name (min length 3).</Form.Control.Feedback>
                       )}
                     </>
