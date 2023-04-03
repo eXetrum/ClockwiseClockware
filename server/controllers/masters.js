@@ -88,7 +88,7 @@ const getAvailableMasters = [
 
             res.status(200).json({ masters }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -113,7 +113,7 @@ const getAll = [
 
             res.status(200).json({ masters }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -153,10 +153,8 @@ const create = [
     body('master.rating')
         .exists()
         .withMessage('master rating required')
-        .isNumeric()
-        .withMessage('master rating should be of numeric value')
-        .isInt({ min: 0, max: 5 })
-        .withMessage('master rating must be in range [0; 5]'),
+        .isNumeric({ min: 0.0, max: 5.0 })
+        .withMessage('master rating should be of numeric value and be in range [0; 5] '),
     body('master.isApprovedByAdmin')
         .exists()
         .withMessage('master isApprovedByAdmin field required')
@@ -218,7 +216,7 @@ const create = [
                 return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -254,7 +252,7 @@ const remove = [
                 }
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -285,7 +283,7 @@ const get = [
                 return res.status(404).json({ message: 'Master not found' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -314,13 +312,6 @@ const update = [
         .withMessage('empty master email is not allowed')
         .isEmail()
         .withMessage('master email is not correct'),
-    body('master.rating')
-        .exists()
-        .withMessage('Master rating required')
-        .isNumeric()
-        .withMessage('Master rating should be of numeric value')
-        .isInt({ min: 0, max: 5 })
-        .withMessage('Master rating must be in range [0; 5]'),
     body('master.isApprovedByAdmin')
         .exists()
         .withMessage('master isApprovedByAdmin field required')
@@ -338,7 +329,7 @@ const update = [
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { name, email, rating, isApprovedByAdmin } = req.body.master;
+            const { name, email, isApprovedByAdmin } = req.body.master;
             let { cities } = req.body.master;
 
             const dbCities = await City.findAll();
@@ -361,7 +352,7 @@ const update = [
 
             const [master, details] = await db.sequelize.transaction(async (t) => {
                 const [affectedRowsMaster, resultMaster] = await Master.update(
-                    { name: name.trim(), rating, countOfReview: 1, isApprovedByAdmin },
+                    { name: name.trim(), isApprovedByAdmin },
                     {
                         where: { userId: id },
                         include: [{ model: City, as: 'cities', through: MasterCityList, required: true }],
@@ -395,7 +386,7 @@ const update = [
                 return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
