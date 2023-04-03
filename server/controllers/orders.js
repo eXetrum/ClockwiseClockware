@@ -118,6 +118,8 @@ const create = [
             });
 
             if (!master) return res.status(409).json({ message: 'Unknown master' }).end();
+            if (!master.isEmailVerified) return res.status(409).json({ message: 'Master email is not verified' }).end();
+            if (!master.isApprovedByAdmin) return res.status(409).json({ message: 'Master is not approved' }).end();
 
             // Ensure master can handle order for specified cityId
             if (master.cities.find((city) => city.id === cityId) == null) {
