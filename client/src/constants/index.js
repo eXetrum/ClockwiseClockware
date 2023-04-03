@@ -35,4 +35,4 @@ export const ERROR_TYPE = {
 };
 
 export const MAX_RATING_VALUE = 5;
-export const RATING_PRECISION_STEP = 0.1;
+export const RATING_PRECISION_STEP = 0.5;
