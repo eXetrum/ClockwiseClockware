@@ -21,3 +21,4 @@ export { default as Clock } from './common/Clock';
 export { default as SpinnerButton } from './common/SpinnerButton';
 export { default as OrderSummary } from './common/OrderSummary';
 export { default as ImageUploader } from './common/ImageUploader';
+export { default as OrderImageList } from './common/OrderImageList';
