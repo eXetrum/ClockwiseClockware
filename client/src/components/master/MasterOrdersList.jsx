@@ -1,9 +1,14 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Row, Col, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import Dialog from '@mui/material/Dialog';
+import ImageIcon from '@mui/icons-material/Image';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
+import { OrderImageList } from '../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
@@ -16,6 +21,19 @@ import { ORDER_STATUS } from '../../constants';
 const MasterOrdersList = ({ orders }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const onImagePreviewOpen = useCallback(order => {
+    setOpen(true);
+    setSelectedOrder(order);
+  }, []);
+
+  const onImagePreviewClose = useCallback(() => {
+    setOpen(false);
+    setSelectedOrder(null);
+  }, []);
 
   const onComplete = useCallback(
     async order => {
@@ -67,7 +85,7 @@ const MasterOrdersList = ({ orders }) => {
       headerName: 'actions',
       type: 'actions',
       getActions: params => {
-        return [
+        const actions = [
           <GridActionsCellItem
             icon={<TaskAltIcon />}
             label="Complete"
@@ -76,6 +94,19 @@ const MasterOrdersList = ({ orders }) => {
             showInMenu
           />,
         ];
+
+        if (params.row.images.length) {
+          actions.unshift(
+            <GridActionsCellItem
+              icon={<ImageIcon />}
+              label="Show Images"
+              onClick={async () => onImagePreviewOpen(params.row)}
+              showInMenu
+            />,
+          );
+        }
+
+        return actions;
       },
     },
   ];
@@ -92,7 +123,17 @@ const MasterOrdersList = ({ orders }) => {
     );
   }
 
-  return <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
+  return (
+    <>
+      <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />
+      <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+        <DialogTitle>Order images</DialogTitle>
+        <DialogContent>
+          <OrderImageList images={selectedOrder?.images} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
 
 export default MasterOrdersList;
