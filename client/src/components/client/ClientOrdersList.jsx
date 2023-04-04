@@ -57,7 +57,7 @@ const ClientOrdersList = ({ orders, onReview }) => {
     },
   ];
 
-  if (orders.length === 0) {
+  if (!orders.length) {
     return (
       <Row className="justify-content-md-center mt-3">
         <Col md="auto">
