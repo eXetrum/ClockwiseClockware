@@ -9,8 +9,8 @@ const port = process.env.NODE_APP_PORT || 4200;
 
 app.use(morgan('dev'));
 app.use(cors({ origin: '*' }));
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: '100mb' }));
+app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
 
 app.use('/api', require('./routes/auth'));
 app.use('/api', require('./routes/cities'));
