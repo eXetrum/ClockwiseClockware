@@ -1,19 +1,15 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import Dropzone, { useDropzone } from 'react-dropzone';
-import Container from '@mui/material/Container';
+import React, { useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
-import ListSubheader from '@mui/material/ListSubheader';
 import IconButton from '@mui/material/IconButton';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
-import InfoIcon from '@mui/icons-material/Info';
 
 import './ImageUploader.css';
 
 import { useDispatch, useSelector } from 'react-redux';
-//import { fetchCity, updateCity } from '../../../store/thunks';
 import { changeNewOrderField } from '../../store/actions';
 import { selectNewOrder } from '../../store/selectors';
 
@@ -54,9 +50,9 @@ const ImageUploader = () => {
     [dispatch, newOrder],
   );
 
-  const { getRootProps, getInputProps, isDragActive, isDragAccept, isDragReject } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     accept: ACCEPTED_IMAGE_TYPES,
-    maxFiles: MAX_IMAGES_COUNT,
+    //maxFiles: MAX_IMAGES_COUNT,
     maxSize: MAX_IMAGE_BYTES_SIZE,
     multiple: true,
     onDrop: onImageDrop,
@@ -73,20 +69,21 @@ const ImageUploader = () => {
 
   return (
     <>
-      <div className="dropzone-container">
-        <div {...getRootProps({ className: 'dropzone' })}>
-          <input {...getInputProps()} />
-          <span>Drop some files here ...</span>
+      {newOrder.images.length < MAX_IMAGES_COUNT ? (
+        <div className="dropzone-container">
+          <div {...getRootProps({ className: 'dropzone' })}>
+            <input {...getInputProps()} />
+            <span>Drop some files here ...</span>
+          </div>
         </div>
-      </div>
-
-      <ImageList sx={{ padding: 0 }} cols={3} variant="quilted">
+      ) : null}
+      <ImageList sx={{ padding: 0 }} cols={MAX_IMAGES_COUNT} variant="quilted">
         {newOrder.images.map((item, index) => {
           return (
             <ImageListItem
               id={index}
               key={index}
-              sx={{ width: 160, height: 160, border: 'solid 1px #ccc', borderRadius: '8px' }}
+              sx={{ width: 110, height: 110, border: 'solid 1px #ccc', borderRadius: '8px' }}
               className="mt-3"
             >
               <img src={`${item.url}`} srcSet={`${item.url}`} alt={item.name} style={{ borderRadius: '7px', padding: '0' }} />
