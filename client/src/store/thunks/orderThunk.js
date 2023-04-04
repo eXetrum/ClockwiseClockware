@@ -44,12 +44,7 @@ export const updateOrder = createAsyncThunk('order/updateOrder', async (order, t
   try {
     const response = await apiSecure.put(`/orders/${order.id}`, {
       id: order.id,
-      order: {
-        watchId: order?.watch?.id,
-        cityId: order?.city.id,
-        masterId: order?.master.id,
-        startDate: order?.startDate,
-      },
+      order,
     });
     return response.data.order;
   } catch (error) {
