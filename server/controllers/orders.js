@@ -2,9 +2,10 @@ require('dotenv').config();
 const { body, param, validationResult } = require('express-validator');
 const moment = require('moment');
 const db = require('../database/models/index');
-const { User, Client, Master, Watches, City, Order, Confirmations } = require('../database/models');
+const { User, Client, Master, Watches, City, Order, Confirmations, Image } = require('../database/models');
 const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
 const { sendOrderConfirmationMail, sendEmailConfirmationMail } = require('../middleware/NodeMailer');
+const { cloudinary } = require('../middleware/cloudinary');
 const {
     dateToNearestHour,
     generatePassword,
@@ -13,7 +14,16 @@ const {
     formatDate,
     formatDecimal
 } = require('../utils');
-const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, ORDER_STATUS, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
+const {
+    ACCESS_SCOPE,
+    USER_ROLES,
+    MS_PER_HOUR,
+    ORDER_STATUS,
+    MIN_RATING_VALUE,
+    MAX_RATING_VALUE,
+    MAX_IMAGES_COUNT,
+    MAX_IMAGE_SIZE_BYTES
+} = require('../constants');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
@@ -31,7 +41,8 @@ const getAll = [
                     { model: Client, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'client' },
                     { model: Watches, as: 'watch' },
                     { model: City, as: 'city' },
-                    { model: Master, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'master' }
+                    { model: Master, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'master' },
+                    { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
                 order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
@@ -94,6 +105,21 @@ const create = [
         .isInt()
         .toInt()
         .withMessage('order.timezone should be of type int'),
+    body('order.images')
+        .exists()
+        .withMessage('order.images required')
+        .isArray({ min: 0, max: MAX_IMAGES_COUNT })
+        .withMessage('order.images should be of array type'),
+    body('order.images.*.name')
+        .exists()
+        .withMessage('each object of images array should contains name field')
+        .isString()
+        .withMessage('image name should be of type string'),
+    body('order.images.*.url')
+        .exists()
+        .withMessage('each object of images array should contains url field')
+        .isString()
+        .withMessage('image url should be of type string'),
 
     async (req, res) => {
         try {
@@ -103,7 +129,7 @@ const create = [
             const authUser = parseAuthToken(req.headers);
 
             const { watchId, cityId, masterId, timezone, client } = req.body.order;
-            let { startDate } = req.body.order;
+            let { startDate, images } = req.body.order;
 
             const watch = await Watches.findOne({ where: { id: watchId } });
             if (!watch) return res.status(409).json({ message: 'Unknown watch type' }).end();
@@ -132,6 +158,7 @@ const create = [
             client.email = client.email.trim();
             const endDate = startDate + watch.repairTime * MS_PER_HOUR;
             const totalCost = city.pricePerHour * watch.repairTime;
+            images = images.slice(0, MAX_IMAGES_COUNT).filter((img) => Buffer.from(img.url, 'base64').length < MAX_IMAGE_SIZE_BYTES);
 
             const clientDateTimeStart = moment.unix((startDate + timezone * MS_PER_HOUR) / 1000);
             const clientDateTimeEnd = moment.unix((startDate + timezone * MS_PER_HOUR + watch.repairTime * MS_PER_HOUR) / 1000);
@@ -183,10 +210,26 @@ const create = [
                     clientId = dbUser.id;
                 }
 
-                return [
-                    await Order.create({ watchId, cityId, masterId, clientId, startDate, endDate, totalCost }, { transaction: t }),
-                    autoRegistration
-                ];
+                const order = await Order.create(
+                    { watchId, cityId, masterId, clientId, startDate, endDate, totalCost },
+                    { transaction: t }
+                );
+
+                // Push iamges to cloudinary
+                const result = await Promise.all(
+                    images.map((img) => {
+                        return cloudinary.uploader.upload(img.url, { upload_preset: 'clockwise-clockware' });
+                    })
+                );
+                console.log('cloudinary result: ', result);
+
+                const dbImages = await Promise.all(
+                    result.map((item, idx) => Image.create({ name: images[idx].name, url: item.secure_url }, { transaction: t }))
+                );
+
+                await order.setImages(dbImages, { transaction: t });
+
+                return [order, autoRegistration];
             });
 
             if (autoRegistration.password !== '') {
@@ -206,6 +249,7 @@ const create = [
                 totalCost: formatDecimal(totalCost)
             });
 
+            // Return result
             const order = await Order.findOne({
                 where: { id: dbOrder.id },
                 include: [
@@ -217,7 +261,8 @@ const create = [
                         as: 'master',
                         include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }],
                         attributes: { exclude: ['id', 'userId'] }
-                    }
+                    },
+                    { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
                 order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
@@ -232,6 +277,7 @@ const create = [
                 })
                 .end();
         } catch (error) {
+            console.log(error);
             if (error.constraint === 'overlapping_times') {
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
             }
@@ -286,7 +332,8 @@ const get = [
                         as: 'master',
                         include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }],
                         attributes: { exclude: ['id', 'userId'] }
-                    }
+                    },
+                    { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
                 order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
@@ -332,6 +379,26 @@ const update = [
             if (value < curDate) throw new Error('Past date time is not allowed');
             return true;
         }),
+    body('order.images')
+        .exists()
+        .withMessage('order.images required')
+        .isArray({ min: 0, max: MAX_IMAGES_COUNT })
+        .withMessage('order.images should be of array type'),
+    body('order.images.*.id')
+        .exists()
+        .withMessage('each object of images array should contains id field')
+        .isUUID()
+        .withMessage('image id should be of type string'),
+    body('order.images.*.name')
+        .exists()
+        .withMessage('each object of images array should contains name field')
+        .isString()
+        .withMessage('image name should be of type string'),
+    body('order.images.*.url')
+        .exists()
+        .withMessage('each object of images array should contains url field')
+        .isString()
+        .withMessage('image url should be of type string'),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -339,7 +406,7 @@ const update = [
 
             const { id } = req.params;
             const { watchId, cityId, masterId } = req.body.order;
-            let { startDate } = req.body.order;
+            let { startDate, images } = req.body.order;
 
             const originalOrder = await Order.findOne({ where: { id } });
             if (!originalOrder) return res.status(404).json({ message: 'Order not found' }).end();
@@ -368,6 +435,7 @@ const update = [
                 return res.status(409).json({ message: 'Master cant handle this order at specified city' }).end();
             }
 
+            images = images.slice(0, MAX_IMAGES_COUNT).filter((img) => Buffer.from(img.url, 'base64').length < MAX_IMAGE_SIZE_BYTES);
             startDate = dateToNearestHour(startDate);
             const endDate = startDate + watch.repairTime * MS_PER_HOUR;
             const totalCost = city.pricePerHour * watch.repairTime;
@@ -389,7 +457,8 @@ const update = [
                         as: 'master',
                         include: [{ model: User }, { model: Order, as: 'orders' }, { model: City, as: 'cities' }],
                         attributes: { exclude: ['id', 'userId'] }
-                    }
+                    },
+                    { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
                 order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
