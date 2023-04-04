@@ -143,7 +143,10 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
     [dispatch, newOrder],
   );
 
-  const onSelectMaster = useCallback(master => dispatch(changeNewOrderField({ name: 'master', value: master })), [dispatch]);
+  const onSelectMaster = useCallback(
+    master => dispatch(changeNewOrderField({ name: 'master', value: newOrder.master !== master ? master : null })),
+    [newOrder, dispatch],
+  );
 
   const resetOrigOrder = useCallback(async () => {
     onReset();
@@ -310,14 +313,18 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   <Row>
                     <Col>
                       <SpinnerButton
-                        className="mb-2 btn btn-sm"
+                        className="mb-2 btn"
                         variant="warning"
                         onClick={onFindMasterBtnClick}
                         disabled={isPending || !isOrderPreparedForMasterSearch}
                         text={
                           <>
-                            {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" className="me-1" /> : null}
-                            <span>Find Master</span>
+                            {isMasterAssigned && !isMastersPending ? (
+                              <HighlightOffOutlinedIcon fontSize="small" className="me-1" />
+                            ) : (
+                              <span>&nbsp;</span>
+                            )}
+                            <span className="me-1">Find Master</span>
                           </>
                         }
                         loading={isMastersPending}
