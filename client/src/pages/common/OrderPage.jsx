@@ -37,7 +37,8 @@ const OrderPage = () => {
   const setUpOrder = useCallback(() => {
     if (isClientAuth && isOrderExists) {
       dispatch(resetNewOrder({ ...location?.state?.order, client: { name: auth.user.name, email: auth.user.email } }));
-      delete location?.state?.order;
+      delete location.state.order;
+      location.state.order = null;
     } else if (isClientAuth) {
       dispatch(resetNewOrder({ client: { name: auth.user.name, email: auth.user.email } }));
     } else {
@@ -68,6 +69,7 @@ const OrderPage = () => {
       masterId: newOrder.master.id,
       startDate: new Date(newOrder.startDate).getTime(),
       timezone: new Date(newOrder.startDate).getTimezoneOffset(),
+      images: newOrder.images,
     };
 
     const action = await dispatch(addOrder(order));
@@ -89,9 +91,9 @@ const OrderPage = () => {
           },
         );
         if (result) navigate('/login', { state: { from: location, order: newOrder } });
+      } else {
+        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
       }
-    } else {
-      enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
     }
   }, [dispatch, enqueueSnackbar, newOrder, navigate, location]);
 
