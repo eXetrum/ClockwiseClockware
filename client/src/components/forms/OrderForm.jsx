@@ -232,7 +232,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     <b>Watch:</b>
                   </Form.Label>
                 </Col>
-                <Col className="d-flex justify-content-start  align-self-center" style={{ borderRight: 'solid 1px lightgray' }}>
+                <Col sm={4} className="d-flex justify-content-start align-self-center" style={{ borderRight: 'solid 1px lightgray' }}>
                   {watches.map(watch => (
                     <Form.Check
                       key={watch.id}
@@ -249,7 +249,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   ))}
                 </Col>
 
-                <Col className="d-flex justify-content-end mt-1">
+                <Col className="d-flex justify-content-start mt-1">
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DateTimePicker
                       label="Date/Time"
@@ -264,8 +264,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     />
                   </LocalizationProvider>
                   {isDateTimeError && (
-                    <strong style={{ color: 'red' }}>
-                      <br />
+                    <strong className="ms-2 align-self-center" style={{ color: 'red' }}>
                       {dateTimeError.detail}
                     </strong>
                   )}
