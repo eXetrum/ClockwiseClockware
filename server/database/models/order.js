@@ -10,6 +10,11 @@ module.exports = (sequelize, DataTypes) => {
             Order.belongsTo(models.Watches, { as: 'watch', foreignKey: 'watchId' });
             Order.belongsTo(models.City, { as: 'city', foreignKey: 'cityId' });
             Order.belongsTo(models.Master, { as: 'master', foreignKey: 'masterId', targetKey: 'userId' });
+            Order.belongsToMany(models.Image, {
+                through: models.OrderImageList,
+                foreignKey: 'orderId',
+                as: 'images'
+            });
         }
     }
 
