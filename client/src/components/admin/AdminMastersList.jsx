@@ -14,7 +14,7 @@ import { useDispatch } from 'react-redux';
 import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/thunks';
 
 import { formatDecimal } from '../../utils';
-import { MAX_RATING_VALUE } from '../../constants';
+import { MAX_RATING_VALUE, RATING_FORMAT_DECIMAL } from '../../constants';
 
 const AdminMastersList = ({ masters }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -86,7 +86,8 @@ const AdminMastersList = ({ masters }) => {
       field: 'rating',
       headerName: 'Rating',
       type: 'number',
-      valueFormatter: ({ value }) => `${formatDecimal(value, 1)}/${formatDecimal(MAX_RATING_VALUE, 1)}`,
+      valueFormatter: ({ value }) =>
+        `${formatDecimal(value, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
     },
     {
       field: 'isEmailVerified',

@@ -14,7 +14,7 @@ import { useDispatch } from 'react-redux';
 import { deleteOrder, completeOrder, cancelOrder } from '../../store/thunks';
 
 import { formatDate, formatDecimal } from '../../utils';
-import { MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
+import { MAX_RATING_VALUE, RATING_FORMAT_DECIMAL, ORDER_STATUS } from '../../constants';
 
 const AdminOrdersList = ({ orders }) => {
   const { enqueueSnackbar } = useSnackbar();
@@ -94,7 +94,8 @@ const AdminOrdersList = ({ orders }) => {
       field: 'master.rating',
       headerName: 'Master Rating',
       type: 'number',
-      valueGetter: params => `${formatDecimal(params.row.master.rating, 1)}/${formatDecimal(MAX_RATING_VALUE, 1)}`,
+      valueGetter: params =>
+        `${formatDecimal(params.row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
     },
     {
       field: 'city',
