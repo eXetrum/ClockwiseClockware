@@ -109,7 +109,7 @@ const AdminClientsList = ({ clients }) => {
     },
   ];
 
-  if (clients.length === 0) {
+  if (!clients.length) {
     return (
       <Row className="justify-content-md-center mt-3">
         <Col md="auto">

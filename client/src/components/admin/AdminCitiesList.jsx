@@ -56,7 +56,7 @@ const AdminCitiesList = ({ cities }) => {
     },
   ];
 
-  if (cities.length === 0) {
+  if (!cities.length) {
     return (
       <Row className="justify-content-md-center mt-3">
         <Col md="auto">

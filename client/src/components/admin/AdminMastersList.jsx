@@ -134,7 +134,7 @@ const AdminMastersList = ({ masters }) => {
     },
   ];
 
-  if (masters.length === 0) {
+  if (!masters.length) {
     return (
       <Row className="justify-content-md-center mt-3">
         <Col md="auto">
