@@ -42,7 +42,7 @@ const AdminEditOrderPage = () => {
   const isInitialLoadingOrder = useSelector(selectOrderInitialLoading);
 
   const error = !isUnknownOrNoErrorType(errorWatch) ? errorWatch : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorOrder;
-  console.log(newOrder);
+
   useEffect(() => {
     dispatch(fetchWatches());
     dispatch(fetchCities());
@@ -60,6 +60,7 @@ const AdminEditOrderPage = () => {
       event.preventDefault();
 
       const order = {
+        id: newOrder.id,
         watchId: newOrder?.watch?.id,
         cityId: newOrder?.city.id,
         masterId: newOrder?.master.id,

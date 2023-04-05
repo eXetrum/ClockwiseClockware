@@ -43,7 +43,6 @@ export const fetchOrder = createAsyncThunk('order/fetchOrder', async (id, thunkA
 export const updateOrder = createAsyncThunk('order/updateOrder', async (order, thunkAPI) => {
   try {
     const response = await apiSecure.put(`/orders/${order.id}`, {
-      id: order.id,
       order,
     });
     return response.data.order;
