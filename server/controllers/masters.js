@@ -3,8 +3,16 @@ const { Op } = require('sequelize');
 const { User, Master, Watches, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
 const { RequireAuth } = require('../middleware/RouteProtector');
-const { dateToNearestHour, isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const {
+    dateToNearestHour,
+    isDbErrorEntryNotFound,
+    isDbErrorEntryAlreadyExists,
+    isDbErrorEntryReferences,
+    createComparatorByProp
+} = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
+
+const cityNameComparator = createComparatorByProp('name');
 
 const getAvailableMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -78,7 +86,11 @@ const getAvailableMasters = [
                 ]
             });
 
-            masters = masters.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
+            masters = masters.map((master) => ({
+                ...master.toJSON(),
+                cities: master.cities.sort(cityNameComparator),
+                ...master.User.toJSON()
+            }));
 
             // No idea how to filter these on 'sequelize level' ([city])
             masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
@@ -109,7 +121,11 @@ const getAll = [
                 order: [['createdAt', 'DESC']]
             });
 
-            const masters = records.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
+            const masters = records.map((master) => ({
+                ...master.toJSON(),
+                cities: master.cities.sort(cityNameComparator),
+                ...master.User.toJSON()
+            }));
 
             res.status(200).json({ masters }).end();
         } catch (error) {
@@ -209,7 +225,7 @@ const create = [
 
             cities = await details.getCities();
             res.status(201)
-                .json({ master: { ...details.toJSON(), ...user.toJSON(), cities } })
+                .json({ master: { ...details.toJSON(), ...user.toJSON(), cities: cities.sort(cityNameComparator) } })
                 .end();
         } catch (error) {
             if (isDbErrorEntryAlreadyExists(error)) {
@@ -276,7 +292,7 @@ const get = [
             if (!master) return res.status(404).json({ message: '~Master not found~' }).end();
 
             res.status(200)
-                .json({ master: { ...master.toJSON(), ...master.User.toJSON() } })
+                .json({ master: { ...master.toJSON(), cities: master.cities.sort(cityNameComparator), ...master.User.toJSON() } })
                 .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) {
@@ -378,7 +394,7 @@ const update = [
 
             const newMasterCities = await master.getCities({ raw: true, through: { attributes: [] } });
             res.status(200)
-                .json({ master: { ...master.toJSON(), ...details.toJSON(), cities: newMasterCities } })
+                .json({ master: { ...master.toJSON(), ...details.toJSON(), cities: newMasterCities.sort(cityNameComparator) } })
                 .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Master not found' }).end();
