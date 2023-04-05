@@ -30,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
                     model: 'images',
                     key: 'id'
                 },
-                onDelete: 'RESTRICT'
+                onDelete: 'CASCADE'
             }
         },
         {

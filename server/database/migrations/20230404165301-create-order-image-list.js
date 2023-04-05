@@ -24,7 +24,7 @@ module.exports = {
                     model: 'images',
                     key: 'id'
                 },
-                onDelete: 'RESTRICT'
+                onDelete: 'CASCADE'
             },
             createdAt: {
                 allowNull: false,
