@@ -35,9 +35,9 @@ const MasterOrdersList = ({ orders }) => {
   );
 
   const columns = [
-    { field: 'client.name', headerName: 'Client Name', width: 240, valueGetter: params => params.row.client.name },
-    { field: 'watch', headerName: 'Service', valueGetter: params => params.row.watch.name },
-    { field: 'city', headerName: 'City', width: 200, valueGetter: params => params.row.city.name },
+    { field: 'client.name', headerName: 'Client Name', width: 240, valueGetter: ({ row }) => row.client.name },
+    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
+    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
     {
       field: 'startDate',
       headerName: 'Date Start',
@@ -66,13 +66,13 @@ const MasterOrdersList = ({ orders }) => {
       field: 'actions',
       headerName: 'actions',
       type: 'actions',
-      getActions: params => {
+      getActions: ({ row }) => {
         return [
           <GridActionsCellItem
             icon={<TaskAltIcon />}
             label="Complete"
-            onClick={() => onComplete(params.row)}
-            disabled={params.row.isCompleting || params.row.status !== ORDER_STATUS.CONFIRMED}
+            onClick={() => onComplete(row)}
+            disabled={row.isCompleting || row.status !== ORDER_STATUS.CONFIRMED}
             showInMenu
           />,
         ];

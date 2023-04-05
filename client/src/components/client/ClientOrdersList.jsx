@@ -8,9 +8,9 @@ import { ORDER_STATUS } from '../../constants';
 
 const ClientOrdersList = ({ orders, onReview }) => {
   const columns = [
-    { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: params => params.row.master.name },
-    { field: 'watch', headerName: 'Service', valueGetter: params => params.row.watch.name },
-    { field: 'city', headerName: 'City', width: 200, valueGetter: params => params.row.city.name },
+    { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: ({ row }) => row.master.name },
+    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
+    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
     {
       field: 'startDate',
       headerName: 'Date Start',
@@ -41,18 +41,18 @@ const ClientOrdersList = ({ orders, onReview }) => {
       headerAlign: 'center',
       width: 120,
       align: 'center',
-      renderCell: params => {
-        if (params.row.rating === null) {
+      renderCell: ({ row }) => {
+        if (row.rating === null) {
           return (
             <GridActionsCellItem
               icon={<ThumbUpOutlinedIcon />}
               label="Rate"
-              onClick={() => onReview(params.row)}
-              disabled={params.row.status !== ORDER_STATUS.COMPLETED || params.row.isEvaluating}
+              onClick={() => onReview(row)}
+              disabled={row.status !== ORDER_STATUS.COMPLETED || row.isEvaluating}
             />
           );
         }
-        return <span>{params.row.rating}</span>;
+        return <span>{row.rating}</span>;
       },
     },
   ];

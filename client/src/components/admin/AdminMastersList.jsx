@@ -76,11 +76,7 @@ const AdminMastersList = ({ masters }) => {
       field: 'cities',
       headerName: 'Cities',
       width: 240,
-      valueFormatter: ({ value }) =>
-        value
-          .map(city => city.name)
-          .sort()
-          .join(', '),
+      valueFormatter: ({ value }) => value.map(city => city.name).join(', '),
     },
     {
       field: 'rating',
@@ -104,25 +100,25 @@ const AdminMastersList = ({ masters }) => {
       type: 'actions',
       width: 100,
       disableReorder: true,
-      getActions: params => {
+      getActions: ({ row }) => {
         const actions = [
           <GridActionsCellItem
             icon={<LockResetIcon />}
             label="Reset password"
-            onClick={() => onResetPassword(params.row)}
-            disabled={params.row.isPendingResetPassword}
+            onClick={() => onResetPassword(row)}
+            disabled={row.isPendingResetPassword}
             showInMenu
           />,
-          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/masters/${params.row.id}`)} showInMenu />,
-          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={async () => onRemove(params.row)} showInMenu />,
+          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/masters/${row.id}`)} showInMenu />,
+          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
         ];
-        if (!params.row.isEmailVerified) {
+        if (!row.isEmailVerified) {
           actions.unshift(
             <GridActionsCellItem
               icon={<ForwardToInboxIcon />}
               label="Resend email confirmation"
-              onClick={() => onResendEmailConfirmation(params.row)}
-              disabled={params.row.isPendingResendEmailConfirmation}
+              onClick={() => onResendEmailConfirmation(row)}
+              disabled={row.isPendingResendEmailConfirmation}
               showInMenu
             />,
           );
