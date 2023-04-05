@@ -90,10 +90,10 @@ const OrderPage = () => {
             okButtonStyle: 'success',
           },
         );
-        if (result) navigate('/login', { state: { from: location, order: newOrder } });
-      } else {
-        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+        if (result) return navigate('/login', { state: { from: location, order: newOrder } });
       }
+
+      enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
     }
   }, [dispatch, enqueueSnackbar, newOrder, navigate, location]);
 
