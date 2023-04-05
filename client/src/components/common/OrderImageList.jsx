@@ -6,7 +6,7 @@ const OrderImageList = ({ images }) => {
   if (images === null || images === undefined || !images.length) return null;
 
   return (
-    <ImageList cols={3}>
+    <ImageList cols={Math.min(images.length, 3)} sx={{ width: 'auto' }}>
       {images.map((item, index) => {
         return (
           <ImageListItem
