@@ -92,34 +92,34 @@ const AdminOrdersList = ({ orders }) => {
     {
       field: 'client.email',
       headerName: 'Client Email',
-      valueGetter: params => params.row.client.email,
+      valueGetter: ({ row }) => row.client.email,
     },
     {
       field: 'client.name',
       headerName: 'Client Name',
-      valueGetter: params => params.row.client.name,
+      valueGetter: ({ row }) => row.client.name,
     },
     {
       field: 'master.email',
       headerName: 'Master Email',
-      valueGetter: params => params.row.master.email,
+      valueGetter: ({ row }) => row.master.email,
     },
     {
       field: 'master.name',
       headerName: 'Master Name',
-      valueGetter: params => params.row.master.name,
+      valueGetter: ({ row }) => row.master.name,
     },
     {
       field: 'master.rating',
       headerName: 'Master Rating',
       type: 'number',
-      valueGetter: params =>
-        `${formatDecimal(params.row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
+      valueGetter: ({ row }) =>
+        `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
     },
     {
       field: 'city',
       headerName: 'City',
-      valueGetter: params => params.row.city.name,
+      valueGetter: ({ row }) => row.city.name,
     },
     {
       field: 'watch',
@@ -156,24 +156,24 @@ const AdminOrdersList = ({ orders }) => {
       type: 'actions',
       width: 100,
       disableReorder: true,
-      getActions: params => {
+      getActions: ({ row }) => {
         const actions = [
           <GridActionsCellItem
             icon={<EditIcon />}
             label="Edit"
-            onClick={() => navigate(`/admin/orders/${params.row.id}`)}
-            disabled={params.row.status !== ORDER_STATUS.CONFIRMED}
+            onClick={() => navigate(`/admin/orders/${row.id}`)}
+            disabled={row.status !== ORDER_STATUS.CONFIRMED}
             showInMenu
           />,
-          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={async () => onRemove(params.row)} showInMenu />,
+          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
         ];
-        if (params.row.status === ORDER_STATUS.CONFIRMED) {
+        if (row.status === ORDER_STATUS.CONFIRMED) {
           actions.unshift(
             <GridActionsCellItem
               icon={<DoNotDisturbAltIcon />}
               label="Cancel"
-              onClick={async () => onCancel(params.row)}
-              disabled={params.row.isCompleting || params.row.isCanceling}
+              onClick={() => onCancel(row)}
+              disabled={row.isCompleting || row.isCanceling}
               showInMenu
             />,
           );
@@ -181,20 +181,15 @@ const AdminOrdersList = ({ orders }) => {
             <GridActionsCellItem
               icon={<TaskAltIcon />}
               label="Complete"
-              onClick={async () => onComplete(params.row)}
-              disabled={params.row.isCompleting || params.row.isCanceling}
+              onClick={() => onComplete(row)}
+              disabled={row.isCompleting || row.isCanceling}
               showInMenu
             />,
           );
         }
-        if (params.row.images.length) {
+        if (row.images.length) {
           actions.unshift(
-            <GridActionsCellItem
-              icon={<ImageIcon />}
-              label="Show Images"
-              onClick={async () => onImagePreviewOpen(params.row)}
-              showInMenu
-            />,
+            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
           );
         }
 

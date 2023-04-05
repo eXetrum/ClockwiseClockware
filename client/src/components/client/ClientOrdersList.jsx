@@ -27,9 +27,9 @@ const ClientOrdersList = ({ orders, onReview }) => {
   }, []);
 
   const columns = [
-    { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: params => params.row.master.name },
-    { field: 'watch', headerName: 'Service', valueGetter: params => params.row.watch.name },
-    { field: 'city', headerName: 'City', width: 200, valueGetter: params => params.row.city.name },
+    { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: ({ row }) => row.master.name },
+    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
+    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
     {
       field: 'startDate',
       headerName: 'Date Start',
@@ -60,35 +60,30 @@ const ClientOrdersList = ({ orders, onReview }) => {
       headerAlign: 'center',
       width: 120,
       align: 'center',
-      valueGetter: params => {
-        if (params.row.rating === null) return '-';
-        return `${formatDecimal(params.row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
+      valueGetter: ({ row }) => {
+        if (row.rating === null) return '-';
+        return `${formatDecimal(row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
       },
     },
     {
       field: 'actions',
       headerName: 'actions',
       type: 'actions',
-      getActions: params => {
+      getActions: ({ row }) => {
         const actions = [];
-        if (params.row.images.length) {
+        if (row.images.length) {
           actions.unshift(
-            <GridActionsCellItem
-              icon={<ImageIcon />}
-              label="Show Images"
-              onClick={async () => onImagePreviewOpen(params.row)}
-              showInMenu
-            />,
+            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
           );
         }
 
-        if (params.row.status === ORDER_STATUS.COMPLETED && params.row.rating === null) {
+        if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
           actions.unshift(
             <GridActionsCellItem
               icon={<ThumbUpOutlinedIcon />}
               label="Rate"
-              onClick={() => onReview(params.row)}
-              disabled={params.row.isEvaluating}
+              onClick={() => onReview(row)}
+              disabled={row.isEvaluating}
               showInMenu
             />,
           );

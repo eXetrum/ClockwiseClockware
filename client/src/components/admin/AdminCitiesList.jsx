@@ -49,9 +49,9 @@ const AdminCitiesList = ({ cities }) => {
       type: 'actions',
       width: 200,
       disableReorder: true,
-      getActions: params => [
-        <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/cities/${params.row.id}`)} showInMenu />,
-        <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={async () => onRemove(params.row)} showInMenu />,
+      getActions: ({ row }) => [
+        <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/cities/${row.id}`)} showInMenu />,
+        <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
       ],
     },
   ];
