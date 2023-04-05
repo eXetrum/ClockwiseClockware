@@ -90,7 +90,7 @@ const OrderSummary = ({ order, onBack, onSubmit, isPending }) => {
                 <b>Total Cost:</b>
               </Form.Label>
             </Col>
-            <Col className="d-flex justify-content-end">{formatDecimal(order?.city?.pricePerHour)}</Col>
+            <Col className="d-flex justify-content-end">{formatDecimal(order?.city?.pricePerHour * order?.watch?.repairTime)}</Col>
           </Row>
 
           <hr />
