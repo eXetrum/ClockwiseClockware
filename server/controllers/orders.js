@@ -13,7 +13,8 @@ const {
     generateConfirmationToken,
     isDbErrorEntryNotFound,
     formatDate,
-    formatDecimal
+    formatDecimal,
+    createComparatorByProp
 } = require('../utils');
 const {
     ACCESS_SCOPE,
@@ -25,6 +26,8 @@ const {
     MAX_IMAGES_COUNT,
     MAX_IMAGE_SIZE_BYTES
 } = require('../constants');
+
+const cityNameComparator = createComparatorByProp('name');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
@@ -516,7 +519,7 @@ const update = [
                     { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']]
             });
 
             res.status(200)

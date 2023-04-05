@@ -76,11 +76,7 @@ const AdminMastersList = ({ masters }) => {
       field: 'cities',
       headerName: 'Cities',
       width: 240,
-      valueFormatter: ({ value }) =>
-        value
-          .map(city => city.name)
-          .sort()
-          .join(', '),
+      valueFormatter: ({ value }) => value.map(city => city.name).join(', '),
     },
     {
       field: 'rating',
