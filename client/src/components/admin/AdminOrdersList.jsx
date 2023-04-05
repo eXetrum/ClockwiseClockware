@@ -16,16 +16,19 @@ import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
 import { OrderImageList } from '../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { deleteOrder, completeOrder, cancelOrder } from '../../store/thunks';
+import { selectAllOrders } from '../../store/selectors';
 
 import { formatDate, formatDecimal } from '../../utils';
 import { MAX_RATING_VALUE, RATING_FORMAT_DECIMAL, ORDER_STATUS } from '../../constants';
 
-const AdminOrdersList = ({ orders }) => {
+const AdminOrdersList = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const orders = useSelector(selectAllOrders);
 
   const [open, setOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);

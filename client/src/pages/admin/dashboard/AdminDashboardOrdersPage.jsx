@@ -5,14 +5,13 @@ import { Header, ErrorContainer, AdminOrdersList } from '../../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders } from '../../../store/thunks';
-import { selectAllOrders, selectOrderError, selectOrderInitialLoading } from '../../../store/selectors';
+import { selectOrderError, selectOrderInitialLoading } from '../../../store/selectors';
 
 import { isUnknownOrNoErrorType } from '../../../utils';
 
 const AdminDashboardOrdersPage = () => {
   const dispatch = useDispatch();
 
-  const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
   const isInitialLoading = useSelector(selectOrderInitialLoading);
 
@@ -37,7 +36,7 @@ const AdminDashboardOrdersPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady ? <AdminOrdersList orders={orders} /> : null}
+        {isComponentReady ? <AdminOrdersList /> : null}
         <hr />
       </Container>
     </Container>

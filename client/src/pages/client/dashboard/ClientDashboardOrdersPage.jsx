@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Row, Form } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { PuffLoader } from 'react-spinners';
-import { Header, ErrorContainer, ClientOrdersList, /*StarRating,*/ ModalForm } from '../../../components';
+import { Header, ErrorContainer, ClientOrdersList, ModalForm } from '../../../components';
 import Rating from '@mui/material/Rating';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
@@ -10,7 +10,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrders, rateOrder } from '../../../store/thunks';
 import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions';
 import {
-  selectAllOrders,
   selectNewOrder,
   selectOrderError,
   selectOrderInitialLoading,
@@ -25,7 +24,6 @@ const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const orders = useSelector(selectAllOrders);
   const newOrder = useSelector(selectNewOrder);
   const error = useSelector(selectOrderError);
   const isInitialLoading = useSelector(selectOrderInitialLoading);
@@ -81,7 +79,7 @@ const ClientDashboardOrdersPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady ? <ClientOrdersList orders={orders} onReview={onReview} /> : null}
+        {isComponentReady ? <ClientOrdersList onReview={onReview} /> : null}
         <hr />
 
         <ModalForm
