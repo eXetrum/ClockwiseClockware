@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { body, param, validationResult } = require('express-validator');
 const moment = require('moment');
+const { Op } = require('sequelize');
 const db = require('../database/models/index');
 const { User, Client, Master, Watches, City, Order, Confirmations, Image } = require('../database/models');
 const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
@@ -45,7 +46,8 @@ const getAll = [
                     { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']]
+                //order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
             });
 
             const orders = records.map((order) => ({
@@ -215,19 +217,22 @@ const create = [
                     { transaction: t }
                 );
 
-                // Push iamges to cloudinary
-                const result = await Promise.all(
-                    images.map((img) => {
-                        return cloudinary.uploader.upload(img.url, { upload_preset: 'clockwise-clockware' });
-                    })
-                );
-                console.log('cloudinary result: ', result);
+                if (images.length) {
+                    // Push iamges to cloudinary
+                    const result = await Promise.all(
+                        images.map((img) => {
+                            return cloudinary.uploader.upload(img.url, { upload_preset: 'clockwise-clockware' });
+                        })
+                    );
 
-                const dbImages = await Promise.all(
-                    result.map((item, idx) => Image.create({ name: images[idx].name, url: item.secure_url }, { transaction: t }))
-                );
+                    const dbImages = await Promise.all(
+                        result.map((item, idx) =>
+                            Image.create({ publicId: item.public_id, name: images[idx].name, url: item.secure_url }, { transaction: t })
+                        )
+                    );
 
-                await order.setImages(dbImages, { transaction: t });
+                    await order.setImages(dbImages, { transaction: t });
+                }
 
                 return [order, autoRegistration];
             });
@@ -277,7 +282,6 @@ const create = [
                 })
                 .end();
         } catch (error) {
-            console.log(error);
             if (error.constraint === 'overlapping_times') {
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
             }
@@ -297,8 +301,27 @@ const remove = [
 
             const { id } = req.params;
 
-            const result = await Order.destroy({ where: { id } });
-            if (result === 0) return res.status(404).json({ message: '~Order not found~' }).end();
+            await db.sequelize.transaction(async (t) => {
+                const order = await Order.findOne({ where: { id } }, { transaction: t });
+                if (!order) throw new Error('EntryNotFound');
+
+                const images = await order.getImages({ transaction: t });
+
+                const imageIds = images.map((item) => item.id);
+                const publicIds = images.map((item) => item.publicId);
+
+                if (imageIds.length) {
+                    await Image.destroy({ where: { id: { [Op.in]: imageIds } } }, { transaction: t });
+                    await order.setImages([], { transaction: t });
+                }
+
+                const result = await Order.destroy({ where: { id } }, { transaction: t });
+                if (result === 0) throw new Error('EntryNotFound');
+
+                if (publicIds.length) {
+                    await cloudinary.api.delete_resources(publicIds);
+                }
+            });
 
             res.status(204).end();
         } catch (error) {
@@ -384,11 +407,6 @@ const update = [
         .withMessage('order.images required')
         .isArray({ min: 0, max: MAX_IMAGES_COUNT })
         .withMessage('order.images should be of array type'),
-    body('order.images.*.id')
-        .exists()
-        .withMessage('each object of images array should contains id field')
-        .isUUID()
-        .withMessage('image id should be of type string'),
     body('order.images.*.name')
         .exists()
         .withMessage('each object of images array should contains name field')
@@ -440,11 +458,48 @@ const update = [
             const endDate = startDate + watch.repairTime * MS_PER_HOUR;
             const totalCost = city.pricePerHour * watch.repairTime;
 
-            const [affectedRows, result] = await Order.update(
-                { watchId, cityId, masterId, startDate, endDate, totalCost },
-                { where: { id }, returning: true, limit: 1 }
-            );
-            if (!affectedRows) return res.status(404).json({ message: '~Order not found~' }).end();
+            await db.sequelize.transaction(async (t) => {
+                const order = await Order.findOne({ where: { id } }, { transaction: t });
+                if (!order) throw new Error('EntryNotFound');
+
+                const dbImages = await order.getImages({ transaction: t });
+
+                const imageIds = dbImages.map((item) => item.id);
+                const publicIds = dbImages.map((item) => item.publicId);
+
+                if (imageIds.length) {
+                    await Image.destroy({ where: { id: { [Op.in]: imageIds } } }, { transaction: t });
+                    await order.setImages([], { transaction: t });
+                }
+
+                const [affectedRows, result] = await Order.update(
+                    { watchId, cityId, masterId, startDate, endDate, totalCost },
+                    { where: { id }, returning: true, limit: 1 },
+                    { transaction: t }
+                );
+                if (!affectedRows) throw new Error('EntryNotFound');
+
+                if (images.length) {
+                    // Push new ones
+                    const cloudPushResult = await Promise.all(
+                        images.map((img) => {
+                            return cloudinary.uploader.upload(img.url, { upload_preset: 'clockwise-clockware' });
+                        })
+                    );
+                    const dbNewImages = await Promise.all(
+                        cloudPushResult.map((item, idx) =>
+                            Image.create({ publicId: item.public_id, name: images[idx].name, url: item.secure_url }, { transaction: t })
+                        )
+                    );
+
+                    await order.setImages(dbNewImages, { transaction: t });
+                }
+
+                // Remove previous images
+                if (publicIds.length) {
+                    const cloudDelResult = await cloudinary.api.delete_resources(publicIds);
+                }
+            });
 
             const newOrder = await Order.findOne({
                 where: { id },
