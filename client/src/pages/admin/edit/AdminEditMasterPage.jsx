@@ -75,7 +75,7 @@ const AdminEditMasterPage = () => {
 
         <ErrorContainer error={error} />
 
-        {isComponentReady ? <MasterForm onSubmit={onFormSubmit} isHidePassword={true} /> : null}
+        {isComponentReady ? <MasterForm onSubmit={onFormSubmit} isHidePassword={true} isHideRating={true} /> : null}
 
         <hr />
       </Container>

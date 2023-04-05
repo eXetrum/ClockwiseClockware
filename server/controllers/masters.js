@@ -3,8 +3,16 @@ const { Op } = require('sequelize');
 const { User, Master, Watches, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
 const { RequireAuth } = require('../middleware/RouteProtector');
-const { dateToNearestHour, isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const {
+    dateToNearestHour,
+    isDbErrorEntryNotFound,
+    isDbErrorEntryAlreadyExists,
+    isDbErrorEntryReferences,
+    createComparatorByProp
+} = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR } = require('../constants');
+
+const cityNameComparator = createComparatorByProp('name');
 
 const getAvailableMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -78,7 +86,11 @@ const getAvailableMasters = [
                 ]
             });
 
-            masters = masters.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
+            masters = masters.map((master) => ({
+                ...master.toJSON(),
+                cities: master.cities.sort(cityNameComparator),
+                ...master.User.toJSON()
+            }));
 
             // No idea how to filter these on 'sequelize level' ([city])
             masters = masters.filter((master) => master.cities.find((city) => city.id === cityId));
@@ -88,7 +100,7 @@ const getAvailableMasters = [
 
             res.status(200).json({ masters }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -109,11 +121,15 @@ const getAll = [
                 order: [['createdAt', 'DESC']]
             });
 
-            const masters = records.map((master) => ({ ...master.toJSON(), ...master.User.toJSON() }));
+            const masters = records.map((master) => ({
+                ...master.toJSON(),
+                cities: master.cities.sort(cityNameComparator),
+                ...master.User.toJSON()
+            }));
 
             res.status(200).json({ masters }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -153,10 +169,8 @@ const create = [
     body('master.rating')
         .exists()
         .withMessage('master rating required')
-        .isNumeric()
-        .withMessage('master rating should be of numeric value')
-        .isInt({ min: 0, max: 5 })
-        .withMessage('master rating must be in range [0; 5]'),
+        .isNumeric({ min: 0.0, max: 5.0 })
+        .withMessage('master rating should be of numeric value and be in range [0; 5] '),
     body('master.isApprovedByAdmin')
         .exists()
         .withMessage('master isApprovedByAdmin field required')
@@ -210,15 +224,16 @@ const create = [
             });
 
             cities = await details.getCities();
+
             res.status(201)
-                .json({ master: { ...details.toJSON(), ...user.toJSON(), cities } })
+                .json({ master: { ...details.toJSON(), ...user.toJSON(), cities: cities.sort(cityNameComparator) } })
                 .end();
         } catch (error) {
             if (isDbErrorEntryAlreadyExists(error)) {
                 return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -254,7 +269,7 @@ const remove = [
                 }
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -278,14 +293,14 @@ const get = [
             if (!master) return res.status(404).json({ message: '~Master not found~' }).end();
 
             res.status(200)
-                .json({ master: { ...master.toJSON(), ...master.User.toJSON() } })
+                .json({ master: { ...master.toJSON(), cities: master.cities.sort(cityNameComparator), ...master.User.toJSON() } })
                 .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) {
                 return res.status(404).json({ message: 'Master not found' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -314,13 +329,6 @@ const update = [
         .withMessage('empty master email is not allowed')
         .isEmail()
         .withMessage('master email is not correct'),
-    body('master.rating')
-        .exists()
-        .withMessage('Master rating required')
-        .isNumeric()
-        .withMessage('Master rating should be of numeric value')
-        .isInt({ min: 0, max: 5 })
-        .withMessage('Master rating must be in range [0; 5]'),
     body('master.isApprovedByAdmin')
         .exists()
         .withMessage('master isApprovedByAdmin field required')
@@ -338,7 +346,7 @@ const update = [
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { id } = req.params;
-            const { name, email, rating, isApprovedByAdmin } = req.body.master;
+            const { name, email, isApprovedByAdmin } = req.body.master;
             let { cities } = req.body.master;
 
             const dbCities = await City.findAll();
@@ -361,7 +369,7 @@ const update = [
 
             const [master, details] = await db.sequelize.transaction(async (t) => {
                 const [affectedRowsMaster, resultMaster] = await Master.update(
-                    { name: name.trim(), rating, countOfReview: 1, isApprovedByAdmin },
+                    { name: name.trim(), isApprovedByAdmin },
                     {
                         where: { userId: id },
                         include: [{ model: City, as: 'cities', through: MasterCityList, required: true }],
@@ -387,7 +395,7 @@ const update = [
 
             const newMasterCities = await master.getCities({ raw: true, through: { attributes: [] } });
             res.status(200)
-                .json({ master: { ...master.toJSON(), ...details.toJSON(), cities: newMasterCities } })
+                .json({ master: { ...master.toJSON(), ...details.toJSON(), cities: newMasterCities.sort(cityNameComparator) } })
                 .end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Master not found' }).end();
@@ -395,7 +403,7 @@ const update = [
                 return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];

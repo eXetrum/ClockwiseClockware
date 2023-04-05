@@ -3,7 +3,7 @@ import { Container, Row, Col, Alert } from 'react-bootstrap';
 import ViewMasterCard from './ViewMasterCard';
 
 const MasterCardList = ({ masters, onSelect, currentSelectedMaster = null }) => {
-  if (masters.length === 0) {
+  if (!masters.length) {
     return (
       <Container>
         <Row className="justify-content-md-center mt-3">

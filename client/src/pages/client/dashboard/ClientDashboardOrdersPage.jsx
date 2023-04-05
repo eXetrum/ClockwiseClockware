@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Row, Form } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { PuffLoader } from 'react-spinners';
-import { Header, ErrorContainer, ClientOrdersList, StarRating, ModalForm } from '../../../components';
+import { Header, ErrorContainer, ClientOrdersList, /*StarRating,*/ ModalForm } from '../../../components';
+import Rating from '@mui/material/Rating';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,6 +19,7 @@ import {
 } from '../../../store/selectors';
 
 import { isUnknownOrNoErrorType } from '../../../utils';
+import { MAX_RATING_VALUE, RATING_PRECISION_STEP } from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -60,7 +62,7 @@ const ClientDashboardOrdersPage = () => {
 
   const onHide = useCallback(() => dispatch(changeVisibilityRateForm(false)), [dispatch]);
 
-  const onRatingChange = useCallback(value => dispatch(changeNewOrderField({ name: 'rating', value })), [dispatch]);
+  const onRatingChange = useCallback((event, value) => dispatch(changeNewOrderField({ name: 'rating', value })), [dispatch]);
 
   return (
     <Container>
@@ -95,7 +97,13 @@ const ClientDashboardOrdersPage = () => {
             <>
               <Form.Group className="justify-content-md-center">
                 <Row md="auto" className="justify-content-md-center">
-                  <StarRating onRatingChange={onRatingChange} onRatingReset={onRatingChange} value={newOrder.rating} readonly={isPending} />
+                  <Rating
+                    onChange={onRatingChange}
+                    value={newOrder.rating}
+                    disabled={isPending}
+                    defaultValue={MAX_RATING_VALUE}
+                    precision={RATING_PRECISION_STEP}
+                  />
                 </Row>
               </Form.Group>
             </>

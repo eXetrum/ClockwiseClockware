@@ -1,16 +1,13 @@
 import React, { useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { Container, Row, Col, Table, Alert } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
+import { Row, Col, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
-import CheckIcon from '@mui/icons-material/Check';
-import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
-
-import { SpinnerButton } from '../common';
+import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
+import LockResetIcon from '@mui/icons-material/LockReset';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
@@ -19,6 +16,7 @@ import { deleteClient, resetPasswordClient, resendEmailConfirmationClient } from
 const AdminClientsList = ({ clients }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const onRemove = useCallback(
     async client => {
@@ -68,78 +66,62 @@ const AdminClientsList = ({ clients }) => {
     [dispatch, enqueueSnackbar],
   );
 
-  if (clients.length === 0) {
+  const columns = [
+    { field: 'email', headerName: 'Email', width: 300 },
+    { field: 'name', headerName: 'Name', width: 300 },
+    {
+      field: 'isEmailVerified',
+      headerName: 'Email Verified',
+      type: 'boolean',
+    },
+    {
+      field: 'actions',
+      headerName: 'actions',
+      type: 'actions',
+      width: 100,
+      disableReorder: true,
+      getActions: ({ row }) => {
+        const actions = [
+          <GridActionsCellItem
+            icon={<LockResetIcon />}
+            label="Reset password"
+            onClick={() => onResetPassword(row)}
+            disabled={row.isPendingResetPassword}
+            showInMenu
+          />,
+          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/clients/${row.id}`)} showInMenu />,
+          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
+        ];
+        if (!row.isEmailVerified) {
+          actions.unshift(
+            <GridActionsCellItem
+              icon={<ForwardToInboxIcon />}
+              label="Resend email confirmation"
+              onClick={() => onResendEmailConfirmation(row)}
+              disabled={row.isPendingResendEmailConfirmation}
+              showInMenu
+            />,
+          );
+        }
+
+        return actions;
+      },
+    },
+  ];
+
+  if (!clients.length) {
     return (
-      <Container>
-        <Row className="justify-content-md-center mt-3">
-          <Col md="auto">
-            <Alert variant="warning">No records yet</Alert>
-          </Col>
-        </Row>
-      </Container>
+      <Row className="justify-content-md-center mt-3">
+        <Col md="auto">
+          <Alert variant="warning" className="text-center">
+            No records yet
+          </Alert>
+        </Col>
+      </Row>
     );
   }
 
-  return (
-    <Container>
-      <Table striped bordered responsive size="sm" className="mt-3">
-        <thead>
-          <tr>
-            <th className="text-center p-2 m-0">id</th>
-            <th className="text-center p-2 m-0">email</th>
-            <th className="text-center p-2 m-0">name</th>
-            <th colSpan="3" className="text-center p-2 m-0"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {clients.map(client => (
-            <tr key={client.id} className="m-0">
-              <td className="text-center p-3 m-0 col-2">{client.id}</td>
-              <td className="p-3 m-0">
-                <Stack direction="row" alignItems="center" gap={1}>
-                  {client.isEmailVerified ? <CheckIcon fontSize="small" /> : <QuestionMarkIcon fontSize="small" />}
-                  <Typography variant="body1">{client.email}</Typography>
-                </Stack>
-              </td>
-              <td className="p-3 m-0">{client.name}</td>
-              <td className="text-center p-2 m-0 col-2">
-                <Stack spacing={1}>
-                  <SpinnerButton
-                    size="sm"
-                    variant="outline-warning"
-                    disabled={client.isPendingResetPassword}
-                    loading={client.isPendingResetPassword}
-                    onClick={() => onResetPassword(client)}
-                    text={'Reset password'}
-                  />
-                  {!client.isEmailVerified ? (
-                    <SpinnerButton
-                      size="sm"
-                      variant="outline-primary"
-                      onClick={() => onResendEmailConfirmation(client)}
-                      disabled={client.isPendingResendEmailConfirmation}
-                      loading={client.isPendingResendEmailConfirmation}
-                      text={'Resend email confirmation'}
-                    />
-                  ) : null}
-                </Stack>
-              </td>
-              <td className="text-center p-2 m-0">
-                <Link to={'/admin/clients/' + client.id}>
-                  <EditIcon />
-                </Link>
-              </td>
-              <td className="text-center p-2 m-0">
-                <Link to="#">
-                  <DeleteForeverIcon onClick={() => onRemove(client)} />
-                </Link>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </Container>
-  );
+  return <DataGrid rows={clients} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
 };
 
 export default AdminClientsList;

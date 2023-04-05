@@ -11,9 +11,12 @@ const {
     generateConfirmationToken,
     isDbErrorEntryNotFound,
     formatDate,
-    formatDecimal
+    formatDecimal,
+    createComparatorByProp
 } = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, ORDER_STATUS, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
+
+const cityNameComparator = createComparatorByProp('name');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
@@ -45,7 +48,7 @@ const getAll = [
 
             res.status(200).json({ orders }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -118,6 +121,8 @@ const create = [
             });
 
             if (!master) return res.status(409).json({ message: 'Unknown master' }).end();
+            if (!master.isEmailVerified) return res.status(409).json({ message: 'Master email is not verified' }).end();
+            if (!master.isApprovedByAdmin) return res.status(409).json({ message: 'Master is not approved' }).end();
 
             // Ensure master can handle order for specified cityId
             if (master.cities.find((city) => city.id === cityId) == null) {
@@ -234,7 +239,7 @@ const create = [
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -258,7 +263,7 @@ const remove = [
                 return res.status(404).json({ message: 'Order not found' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -306,7 +311,7 @@ const get = [
                 return res.status(404).json({ message: 'Order not found' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -390,7 +395,7 @@ const update = [
                     }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']]
             });
 
             res.status(200)
@@ -408,7 +413,7 @@ const update = [
                 return res.status(409).json({ message: 'Master cant handle this order at specified datetime' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -441,8 +446,8 @@ const patch = [
             if (authUser.role === USER_ROLES.CLIENT) {
                 const { rating } = req.body;
                 if (rating === undefined) return res.status(400).json({ message: 'Order rating required' }).end();
-                const ratingIntValue = parseInt(rating);
-                if (isNaN(ratingIntValue) || ratingIntValue < MIN_RATING_VALUE || ratingIntValue > MAX_RATING_VALUE) {
+                const ratingFloatValue = parseFloat(rating);
+                if (isNaN(ratingFloatValue) || ratingFloatValue < MIN_RATING_VALUE || ratingFloatValue > MAX_RATING_VALUE) {
                     return res
                         .status(400)
                         .json({
@@ -519,7 +524,7 @@ const patch = [
             return res.status(204).end();
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Order not found' }).end();
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];

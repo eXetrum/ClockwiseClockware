@@ -9,7 +9,7 @@ const getAll = async (req, res) => {
         const cities = await City.findAll({ order: [['createdAt', 'DESC']] });
         res.status(200).json({ cities }).end();
     } catch (error) {
-        res.status(400).json(error).end();
+        res.status(500).json(error).end();
     }
 };
 
@@ -47,7 +47,7 @@ const create = [
         } catch (error) {
             if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -77,7 +77,7 @@ const remove = [
                 }
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -98,7 +98,7 @@ const get = [
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -142,7 +142,7 @@ const update = [
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'City not found' }).end();
             if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];

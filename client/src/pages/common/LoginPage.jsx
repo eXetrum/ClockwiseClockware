@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useEffect, useCallback, useMemo } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Container, Row, Col, Form } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
@@ -6,12 +6,13 @@ import { Header, SpinnerButton, ErrorContainer } from '../../components/common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { loginAuth } from '../../store/thunks';
-import { changeNewUserField } from '../../store/actions/authActions';
+import { clearNewUser, changeNewUserField } from '../../store/actions';
+import { selectNewUser, selectUserError, selectUserPending } from '../../store/selectors';
 
 import { validateEmail, parseToken } from '../../utils';
 import { USER_ROLES } from '../../constants';
-import { selectNewUser, selectUserError, selectUserPending } from '../../store/selectors';
 
 const LoginPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -54,6 +55,8 @@ const LoginPage = () => {
     },
     [newUser, dispatch, enqueueSnackbar, location, navigate],
   );
+
+  useEffect(() => dispatch(clearNewUser()), [dispatch]);
 
   return (
     <Container>

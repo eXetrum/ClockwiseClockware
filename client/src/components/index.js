@@ -18,6 +18,5 @@ export { default as OrderForm } from './forms/OrderForm';
 export { default as Header } from './common/Header';
 export { default as ErrorContainer } from './common/ErrorContainer';
 export { default as Clock } from './common/Clock';
-export { default as StarRating } from './common/StarRating';
 export { default as SpinnerButton } from './common/SpinnerButton';
 export { default as OrderSummary } from './common/OrderSummary';

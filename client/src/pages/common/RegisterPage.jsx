@@ -8,12 +8,13 @@ import { Header, SpinnerButton, ErrorContainer } from '../../components/common';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { registerAuth, fetchCities } from '../../store/thunks';
-import { changeNewUserField } from '../../store/actions/authActions';
+import { clearNewUser, changeNewUserField } from '../../store/actions';
+import { selectNewUser, selectUserPending, selectAllCities, selectCityError, selectCityInitialLoading } from '../../store/selectors';
 
 import { validateEmail, isUnknownOrNoErrorType } from '../../utils';
 import { USER_ROLES, ACCESS_SCOPE } from '../../constants';
-import { selectNewUser, selectUserPending, selectAllCities, selectCityError, selectCityInitialLoading } from '../../store/selectors';
 
 const RegisterPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -26,7 +27,10 @@ const RegisterPage = () => {
   const error = useSelector(selectCityError);
   const isInitialLoading = useSelector(selectCityInitialLoading);
 
-  useEffect(() => dispatch(fetchCities()), [dispatch]);
+  useEffect(() => {
+    dispatch(clearNewUser());
+    dispatch(fetchCities());
+  }, [dispatch]);
 
   const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
   const isFormValid = useMemo(() => {

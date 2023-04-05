@@ -24,7 +24,7 @@ const getAll = [
 
             res.status(200).json({ clients }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -86,7 +86,7 @@ const create = [
                 return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -114,7 +114,7 @@ const remove = [
                 return res.status(409).json({ message: 'Deletion restricted. Order(s) reference(s)' }).end();
             }
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -142,7 +142,7 @@ const get = [
         } catch (error) {
             if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Client not found' }).end();
 
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -212,7 +212,7 @@ const update = [
                 return res.status(409).json({ message: 'User with specified email already exists' }).end();
             }
 
-            res.status(400).end();
+            res.status(500).end();
         }
     }
 ];

@@ -106,7 +106,7 @@ const create = [
             return res.status(204).end();
         } catch (error) {
             if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'User email already exists' }).end();
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -160,7 +160,7 @@ const login = [
 
             res.status(200).json({ accessToken: token }).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -187,7 +187,7 @@ const verify = async (req, res) => {
 
         res.status(200).json({ message: 'Your account has been successfully verified' }).end();
     } catch (error) {
-        res.status(400).json(error).end();
+        res.status(500).json(error).end();
     }
 };
 
@@ -222,7 +222,7 @@ const resetPassword = [
 
             return res.status(204).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
@@ -261,7 +261,7 @@ const resendEmailConfirmation = [
 
             return res.status(204).end();
         } catch (error) {
-            res.status(400).json(error).end();
+            res.status(500).json(error).end();
         }
     }
 ];
