@@ -41,6 +41,14 @@ const isDbErrorEntryNotFound = (error) =>
 const isDbErrorEntryAlreadyExists = (error) => error.name === 'SequelizeUniqueConstraintError';
 const isDbErrorEntryReferences = (error) => error.name === 'SequelizeForeignKeyConstraintError' && error.parent;
 
+const compareASC = (a, b) => (a < b ? -1 : a > b ? 1 : 0);
+const compareDESC = (a, b) => (a < b ? 1 : a > b ? -1 : 0);
+
+const createComparatorByProp =
+    (propName, ASC = true) =>
+    (a, b) =>
+        ASC ? compareASC(a[propName], b[propName]) : compareDESC(a[propName], b[propName]);
+
 module.exports = {
     hashPassword,
     compareSync,
@@ -51,5 +59,6 @@ module.exports = {
     isDbErrorEntryAlreadyExists,
     isDbErrorEntryReferences,
     formatDecimal,
-    formatDate
+    formatDate,
+    createComparatorByProp
 };
