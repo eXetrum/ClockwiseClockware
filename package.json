@@ -1,10 +1,12 @@
 {
   "name": "ClockwiseClockware",
   "version": "1.0.0",
-  "description": "LEZGOOO",
+  "description": "Root cfg",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+	"install-client": "cd client && npm install",
+	"install-server": "cd server && npm install && npx sequelize-cli db:migrate",
 	"start-client": "cd client && npm start",
 	"start-server": "cd server && npm run dev",
     "dev": "npm-run-all --parallel start-client start-server"
