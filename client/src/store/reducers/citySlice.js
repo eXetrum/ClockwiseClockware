@@ -60,7 +60,7 @@ export const citySlice = createSlice({
     },
     [addCity.rejected]: (state, { payload }) => {
       state.isPending = false;
-      if (isGlobalErrorType(payload.type)) state.error = payload;
+      if (isGlobalErrorType(payload.type, [ERROR_TYPE.BAD_REQUEST])) state.error = payload;
     },
     //#endregion
     //#region Delete city by id

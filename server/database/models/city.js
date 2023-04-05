@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
                     return Number(this.getDataValue('pricePerHour') / 100).toFixed(2);
                 },
                 set(value) {
-                    this.setDataValue('pricePerHour', value * 100);
+                    this.setDataValue('pricePerHour', Math.round(value * 100));
                 }
             }
         },

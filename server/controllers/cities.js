@@ -28,7 +28,7 @@ const create = [
     body('city.pricePerHour')
         .exists()
         .withMessage('city.pricePerHour required')
-        .isDecimal()
+        .isFloat()
         .withMessage('city.pricePerHour should be of decimal type')
         .custom((value, { req }) => {
             const pricePerHour = parseFloat(value);
@@ -119,7 +119,7 @@ const update = [
     body('city.pricePerHour')
         .exists()
         .withMessage('city.pricePerHour required')
-        .isDecimal()
+        .isFloat()
         .withMessage('city.pricePerHour should be of decimal type')
         .custom((value, { req }) => {
             const pricePerHour = parseFloat(value);
