@@ -11,9 +11,12 @@ const {
     generateConfirmationToken,
     isDbErrorEntryNotFound,
     formatDate,
-    formatDecimal
+    formatDecimal,
+    createComparatorByProp
 } = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, ORDER_STATUS, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
+
+const cityNameComparator = createComparatorByProp('name');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
@@ -392,7 +395,7 @@ const update = [
                     }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']]
             });
 
             res.status(200)
