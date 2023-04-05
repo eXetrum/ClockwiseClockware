@@ -4,7 +4,7 @@ const { User, Master, Watches, City, MasterCityList, Order } = require('../datab
 const db = require('../database/models/index');
 const { RequireAuth } = require('../middleware/RouteProtector');
 const { dateToNearestHour, isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
-const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
 
 const getAvailableMasters = [
     query('cityId').exists().withMessage('cityId required').isUUID().withMessage('cityId should be of type string'),
@@ -153,8 +153,8 @@ const create = [
     body('master.rating')
         .exists()
         .withMessage('master rating required')
-        .isNumeric({ min: 0.0, max: 5.0 })
-        .withMessage('master rating should be of numeric value and be in range [0; 5] '),
+        .isNumeric({ min: MIN_RATING_VALUE, max: MAX_RATING_VALUE })
+        .withMessage(`master rating should be of numeric value and be in range [${MIN_RATING_VALUE}; ${MAX_RATING_VALUE}] `),
     body('master.isApprovedByAdmin')
         .exists()
         .withMessage('master isApprovedByAdmin field required')
