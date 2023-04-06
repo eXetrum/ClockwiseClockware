@@ -1,44 +1,76 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Container, Row, Form } from 'react-bootstrap';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Container, Form, Row } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
-import { PuffLoader } from 'react-spinners';
-import { Header, ErrorContainer, ClientOrdersList, ModalForm } from '../../../components';
-import Rating from '@mui/material/Rating';
+
+import { DataGrid, GridToolbar, GridActionsCellItem } from '@mui/x-data-grid';
+import { Dialog, DialogContent, DialogTitle, Rating } from '@mui/material';
+
+import ImageIcon from '@mui/icons-material/Image';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+
+import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { fetchOrders, rateOrder } from '../../../store/thunks';
-import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions';
 import {
-  selectNewOrder,
+  selectAllOrders,
   selectOrderError,
   selectOrderInitialLoading,
+  selectOrderTotalItems,
   selectOrderPending,
   selectOrderShowRateForm,
 } from '../../../store/selectors';
+import { changeVisibilityRateForm } from '../../../store/actions';
 
-import { isUnknownOrNoErrorType } from '../../../utils';
-import { MAX_RATING_VALUE, RATING_PRECISION_STEP } from '../../../constants';
+import { formatDate, formatDecimal } from '../../../utils';
+import {
+  ERROR_TYPE,
+  PAGINATION_PAGE_SIZE_OPTIONS,
+  RATING_PRECISION_STEP,
+  MAX_RATING_VALUE,
+  RATING_FORMAT_DECIMAL,
+  ORDER_STATUS,
+} from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const newOrder = useSelector(selectNewOrder);
+  const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
-  const isInitialLoading = useSelector(selectOrderInitialLoading);
+  const loading = useSelector(selectOrderInitialLoading);
+  const totalItems = useSelector(selectOrderTotalItems);
   const isPending = useSelector(selectOrderPending);
   const isShowRateForm = useSelector(selectOrderShowRateForm);
 
-  useEffect(() => dispatch(fetchOrders()), [dispatch]);
+  const [rating, setRating] = useState(MAX_RATING_VALUE);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
+  const fetchPage = useCallback(
+    () => dispatch(fetchOrders({ offset: page * rowsPerPage, limit: rowsPerPage })),
+    [dispatch, page, rowsPerPage],
+  );
 
-  const [orderId, setOrderId] = useState(null);
+  useEffect(() => fetchPage(), [dispatch, fetchPage]);
+
+  const onImagePreviewOpen = useCallback(order => {
+    setOpen(true);
+    setSelectedOrder(order);
+  }, []);
+
+  const onImagePreviewClose = useCallback(() => {
+    setOpen(false);
+    setSelectedOrder(null);
+  }, []);
 
   const onReview = useCallback(
     async order => {
-      setOrderId(order.id);
+      setSelectedOrder(order);
       dispatch(changeVisibilityRateForm(true));
     },
     [dispatch],
@@ -47,20 +79,97 @@ const ClientDashboardOrdersPage = () => {
   const onSubmit = useCallback(
     async event => {
       event.preventDefault();
-      const rating = newOrder.rating;
       dispatch(changeVisibilityRateForm(false));
-      const action = await dispatch(rateOrder({ id: orderId, rating }));
-      setOrderId(null);
+      const action = await dispatch(rateOrder({ id: selectedOrder?.Id, rating }));
+      setSelectedOrder(null);
 
-      if (isFulfilled(action)) enqueueSnackbar(`Order "${orderId}" rated with value=${newOrder.rating}`, { variant: 'success' });
-      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${selectedOrder?.id}" rated with value=${rating}`, { variant: 'success' });
+      else if (isRejected(action)) {
+        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) fetchPage();
+      }
     },
-    [dispatch, enqueueSnackbar, orderId, newOrder],
+    [dispatch, enqueueSnackbar, fetchPage, selectedOrder, rating],
   );
 
   const onHide = useCallback(() => dispatch(changeVisibilityRateForm(false)), [dispatch]);
+  const onRatingChange = useCallback((event, value) => setRating(value), []);
 
-  const onRatingChange = useCallback((event, value) => dispatch(changeNewOrderField({ name: 'rating', value })), [dispatch]);
+  const onPaginationModelChange = useCallback(
+    params => {
+      setPage(params.page);
+      setRowsPerPage(params.pageSize);
+    },
+    [setPage, setRowsPerPage],
+  );
+
+  const columns = [
+    { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: ({ row }) => row.master.name },
+    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
+    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
+    {
+      field: 'startDate',
+      headerName: 'Date Start',
+      width: 140,
+      type: 'dateTime',
+      valueFormatter: ({ value }) => formatDate(value),
+    },
+    {
+      field: 'endDate',
+      headerName: 'End Start',
+      width: 140,
+      type: 'dateTime',
+      valueFormatter: ({ value }) => formatDate(value),
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+    },
+    {
+      field: 'totalCost',
+      headerName: 'Total Cost',
+      type: 'number',
+      valueFormatter: ({ value }) => formatDecimal(value),
+    },
+    {
+      field: 'rating',
+      headerName: 'Rating',
+      headerAlign: 'center',
+      width: 120,
+      align: 'center',
+      valueGetter: ({ row }) => {
+        if (row.rating === null) return '-';
+        return `${formatDecimal(row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
+      },
+    },
+    {
+      field: 'actions',
+      headerName: 'actions',
+      type: 'actions',
+      getActions: ({ row }) => {
+        const actions = [];
+        if (row.images.length) {
+          actions.unshift(
+            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+          );
+        }
+
+        if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
+          actions.unshift(
+            <GridActionsCellItem
+              icon={<ThumbUpOutlinedIcon />}
+              label="Rate"
+              onClick={() => onReview(row)}
+              disabled={row.isEvaluating}
+              showInMenu
+            />,
+          );
+        }
+
+        return actions;
+      },
+    },
+  ];
 
   return (
     <Container>
@@ -71,16 +180,27 @@ const ClientDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading ? (
-          <center>
-            <PuffLoader color="#36d7b7" />
-          </center>
-        ) : null}
+        <DataGrid
+          autoHeight={true}
+          disableRowSelectionOnClick={true}
+          rows={orders}
+          columns={columns}
+          loading={loading}
+          hideFooterPagination={loading}
+          initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
+          onPaginationModelChange={onPaginationModelChange}
+          rowCount={totalItems}
+          paginationMode="server"
+          pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
+          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+        />
 
-        <ErrorContainer error={error} />
-
-        {isComponentReady ? <ClientOrdersList onReview={onReview} /> : null}
-        <hr />
+        <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+          <DialogTitle>Order images</DialogTitle>
+          <DialogContent>
+            <OrderImageList images={selectedOrder?.images} />
+          </DialogContent>
+        </Dialog>
 
         <ModalForm
           size="sm"
@@ -97,7 +217,7 @@ const ClientDashboardOrdersPage = () => {
                 <Row md="auto" className="justify-content-md-center">
                   <Rating
                     onChange={onRatingChange}
-                    value={newOrder.rating}
+                    value={rating}
                     disabled={isPending}
                     defaultValue={MAX_RATING_VALUE}
                     precision={RATING_PRECISION_STEP}

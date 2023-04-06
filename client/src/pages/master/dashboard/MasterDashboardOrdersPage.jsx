@@ -1,23 +1,136 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container } from 'react-bootstrap';
-import { PuffLoader } from 'react-spinners';
-import { Header, ErrorContainer, MasterOrdersList } from '../../../components';
+import { confirm } from 'react-bootstrap-confirmation';
+import { useSnackbar } from 'notistack';
 
+import { DataGrid, GridToolbar, GridActionsCellItem } from '@mui/x-data-grid';
+import { Dialog, DialogContent, DialogTitle } from '@mui/material';
+import TaskAltIcon from '@mui/icons-material/TaskAltOutlined';
+import ImageIcon from '@mui/icons-material/Image';
+
+import { Header, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
+
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchOrders } from '../../../store/thunks';
-import { selectOrderError, selectOrderInitialLoading } from '../../../store/selectors';
 
-import { isUnknownOrNoErrorType } from '../../../utils';
+import { fetchOrders, completeOrder } from '../../../store/thunks';
+import { selectAllOrders, selectOrderError, selectOrderInitialLoading, selectOrderTotalItems } from '../../../store/selectors';
+
+import { formatDate, formatDecimal } from '../../../utils';
+import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, ORDER_STATUS } from '../../../constants';
 
 const MasterDashboardOrdersPage = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
+  const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
-  const isInitialLoading = useSelector(selectOrderInitialLoading);
+  const loading = useSelector(selectOrderInitialLoading);
+  const totalItems = useSelector(selectOrderTotalItems);
 
-  useEffect(() => dispatch(fetchOrders()), [dispatch]);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
+  const fetchPage = useCallback(
+    () => dispatch(fetchOrders({ offset: page * rowsPerPage, limit: rowsPerPage })),
+    [dispatch, page, rowsPerPage],
+  );
+
+  useEffect(() => fetchPage(), [dispatch, fetchPage]);
+
+  const onImagePreviewOpen = useCallback(order => {
+    setOpen(true);
+    setSelectedOrder(order);
+  }, []);
+
+  const onImagePreviewClose = useCallback(() => {
+    setOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
+  const onComplete = useCallback(
+    async order => {
+      const result = await confirm(`Do you want to mark order with id=${order.id} as completed ?`, {
+        title: 'Confirm',
+        okText: 'Completed',
+        okButtonStyle: 'success',
+      });
+      if (!result) return;
+
+      const action = await dispatch(completeOrder(order.id));
+
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" maked as completed`, { variant: 'success' });
+      else if (isRejected(action)) {
+        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) fetchPage();
+      }
+    },
+    [dispatch, enqueueSnackbar, fetchPage],
+  );
+
+  const onPaginationModelChange = useCallback(
+    params => {
+      setPage(params.page);
+      setRowsPerPage(params.pageSize);
+    },
+    [setPage, setRowsPerPage],
+  );
+
+  const columns = [
+    { field: 'client.name', headerName: 'Client Name', width: 240, valueGetter: ({ row }) => row.client.name },
+    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
+    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
+    {
+      field: 'startDate',
+      headerName: 'Date Start',
+      width: 140,
+      type: 'dateTime',
+      valueFormatter: ({ value }) => formatDate(value),
+    },
+    {
+      field: 'endDate',
+      headerName: 'End Start',
+      width: 140,
+      type: 'dateTime',
+      valueFormatter: ({ value }) => formatDate(value),
+    },
+    {
+      field: 'status',
+      headerName: 'Status',
+    },
+    {
+      field: 'totalCost',
+      headerName: 'Total Cost',
+      type: 'number',
+      valueFormatter: ({ value }) => formatDecimal(value),
+    },
+    {
+      field: 'actions',
+      headerName: 'actions',
+      type: 'actions',
+      getActions: ({ row }) => {
+        const actions = [
+          <GridActionsCellItem
+            icon={<TaskAltIcon />}
+            label="Complete"
+            onClick={() => onComplete(row)}
+            disabled={row.isCompleting || row.status !== ORDER_STATUS.CONFIRMED}
+            showInMenu
+          />,
+        ];
+
+        if (row.images.length) {
+          actions.unshift(
+            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+          );
+        }
+
+        return actions;
+      },
+    },
+  ];
 
   return (
     <Container>
@@ -28,16 +141,27 @@ const MasterDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading ? (
-          <center>
-            <PuffLoader color="#36d7b7" />
-          </center>
-        ) : null}
+        <DataGrid
+          autoHeight={true}
+          disableRowSelectionOnClick={true}
+          rows={orders}
+          columns={columns}
+          loading={loading}
+          hideFooterPagination={loading}
+          initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
+          onPaginationModelChange={onPaginationModelChange}
+          rowCount={totalItems}
+          paginationMode="server"
+          pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
+          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+        />
 
-        <ErrorContainer error={error} />
-
-        {isComponentReady ? <MasterOrdersList /> : null}
-        <hr />
+        <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+          <DialogTitle>Order images</DialogTitle>
+          <DialogContent>
+            <OrderImageList images={selectedOrder?.images} />
+          </DialogContent>
+        </Dialog>
       </Container>
     </Container>
   );
