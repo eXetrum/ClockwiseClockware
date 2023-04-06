@@ -7,11 +7,13 @@ const stateMasterError = state => state.masterReducer.error;
 const stateMasterInitialLoading = state => state.masterReducer.isInitialLoading;
 const stateMasterPending = state => state.masterReducer.isPending;
 const stateMasterShowAddForm = state => state.masterReducer.isShowAddForm;
+const stateMasterTotalItems = state => state.masterReducer.totalItems;
 
 export const selectAllMasters = createSelector([stateAllMasters], allMasters => allMasters);
 export const selectNewMaster = createSelector([stateNewMaster], newMaster => newMaster);
 export const selectOldMaster = createSelector([stateOldMaster], oldMaster => oldMaster);
-export const selectMasterError = createSelector([stateMasterError], cityError => cityError);
+export const selectMasterError = createSelector([stateMasterError], masterError => masterError);
 export const selectMasterInitialLoading = createSelector([stateMasterInitialLoading], loading => loading);
 export const selectMasterPending = createSelector([stateMasterPending], pending => pending);
 export const selectMasterShowAddForm = createSelector([stateMasterShowAddForm], isShowForm => isShowForm);
+export const selectMasterTotalItems = createSelector([stateMasterTotalItems], totalItems => totalItems);
