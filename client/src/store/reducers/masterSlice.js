@@ -32,6 +32,7 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  totalItems: 0,
 };
 
 export const masterSlice = createSlice({
@@ -56,12 +57,13 @@ export const masterSlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchMasters.fulfilled]: (state, { payload }) => {
-      state.masters = payload.map(master => {
+    [fetchMasters.fulfilled]: (state, { payload: { masters, total } }) => {
+      state.masters = masters.map(master => {
         master.isPendingResetPassword = false;
         master.isPendingResendEmailConfirmation = false;
         return master;
       });
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },

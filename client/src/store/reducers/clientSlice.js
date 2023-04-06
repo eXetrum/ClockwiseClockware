@@ -23,6 +23,7 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  totalItems: 0,
 };
 
 export const clientSlice = createSlice({
@@ -43,12 +44,13 @@ export const clientSlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchClients.fulfilled]: (state, { payload }) => {
-      state.clients = payload.map(client => {
+    [fetchClients.fulfilled]: (state, { payload: { clients, total } }) => {
+      state.clients = clients.map(client => {
         client.isPendingResetPassword = false;
         client.isPendingResendEmailConfirmation = false;
         return client;
       });
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },

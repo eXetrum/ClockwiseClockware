@@ -24,6 +24,7 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowRateForm: false,
+  totalItems: 0,
 };
 
 export const orderSlice = createSlice({
@@ -52,13 +53,14 @@ export const orderSlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchOrders.fulfilled]: (state, { payload }) => {
-      state.orders = payload.map(order => {
+    [fetchOrders.fulfilled]: (state, { payload: { orders, total } }) => {
+      state.orders = orders.map(order => {
         order.isCompleting = false;
         order.isCanceling = false;
         order.isEvaluating = false;
         return order;
       });
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },

@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchCities, addCity, deleteCity, fetchCity, updateCity } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE } from '../../constants';
+import { ERROR_TYPE, PAGINATION_DEFAULT_CITY_LIMIT } from '../../constants';
 
 const initEmptyCity = (city = null) => ({ id: city?.id || -1, name: city?.name || '', pricePerHour: city?.pricePerHour || 0.0 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
@@ -15,6 +15,7 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  totalItems: 0,
 };
 
 export const citySlice = createSlice({
@@ -35,8 +36,9 @@ export const citySlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchCities.fulfilled]: (state, { payload }) => {
-      state.cities = payload;
+    [fetchCities.fulfilled]: (state, { payload: { cities, total } }) => {
+      state.cities = cities;
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
