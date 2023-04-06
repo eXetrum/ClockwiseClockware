@@ -15,9 +15,9 @@ const getAll = [
             const { offset = 0, limit } = req.query;
 
             const cities = await City.findAll({ order: [['createdAt', 'DESC']], limit, offset });
-            const count = await City.count();
+            const total = await City.count();
 
-            res.status(200).json({ cities, total: count }).end();
+            res.status(200).json({ cities, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }
@@ -52,7 +52,6 @@ const create = [
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
             const { name, pricePerHour } = req.body.city;
-            console.log('city params: ', name, pricePerHour, Number(pricePerHour));
 
             const city = await City.create({ name: name.trim(), pricePerHour: Number(pricePerHour) });
             res.status(201).json({ city }).end();
