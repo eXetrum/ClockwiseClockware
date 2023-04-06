@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const moment = require('moment');
 const { Op } = require('sequelize');
 const db = require('../database/models/index');
@@ -13,8 +13,7 @@ const {
     generateConfirmationToken,
     isDbErrorEntryNotFound,
     formatDate,
-    formatDecimal,
-    createComparatorByProp
+    formatDecimal
 } = require('../utils');
 const {
     ACCESS_SCOPE,
@@ -27,12 +26,17 @@ const {
     MAX_IMAGE_SIZE_BYTES
 } = require('../constants');
 
-const cityNameComparator = createComparatorByProp('name');
-
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
     async (req, res) => {
         try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { offset = 0, limit } = req.query;
+
             const authUser = parseAuthToken(req.headers);
 
             let where = {};
@@ -49,9 +53,11 @@ const getAll = [
                     { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['createdAt', 'DESC']]
-                //order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']],
+                limit,
+                offset
             });
+            const total = await Order.count();
 
             const orders = records.map((order) => ({
                 ...order.toJSON(),
@@ -59,7 +65,7 @@ const getAll = [
                 master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
             }));
 
-            res.status(200).json({ orders }).end();
+            res.status(200).json({ orders, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }
@@ -500,7 +506,7 @@ const update = [
 
                 // Remove previous images
                 if (publicIds.length) {
-                    const cloudDelResult = await cloudinary.api.delete_resources(publicIds);
+                    await cloudinary.api.delete_resources(publicIds);
                 }
             });
 
