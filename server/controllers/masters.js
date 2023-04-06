@@ -107,8 +107,15 @@ const getAvailableMasters = [
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
     async (req, res) => {
         try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { offset = 0, limit } = req.query;
+
             const records = await Master.findAll({
                 include: [
                     {
@@ -118,8 +125,11 @@ const getAll = [
                     { model: Order, as: 'orders' }
                 ],
                 attributes: { exclude: ['id', 'userId'] },
-                order: [['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']],
+                limit,
+                offset
             });
+            const total = await Master.count();
 
             const masters = records.map((master) => ({
                 ...master.toJSON(),
@@ -127,7 +137,7 @@ const getAll = [
                 ...master.User.toJSON()
             }));
 
-            res.status(200).json({ masters }).end();
+            res.status(200).json({ masters, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }
