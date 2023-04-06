@@ -1,16 +1,21 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { api, apiSecure } from '../../axios/axios.interceptor';
 import { getErrorType, getErrorText } from '../../utils';
+import { PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 //#region Master
-export const fetchMasters = createAsyncThunk('master/fetchAll', async (_, thunkAPI) => {
-  try {
-    const response = await apiSecure.get('/masters');
-    return response.data.masters;
-  } catch (error) {
-    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
-  }
-});
+export const fetchMasters = createAsyncThunk(
+  'master/fetchAll',
+  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0] }, thunkAPI) => {
+    try {
+      if (limit === -1) limit = undefined;
+      const response = await apiSecure.get('/masters', { params: { offset, limit } });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+    }
+  },
+);
 
 export const fetchAllAvailable = createAsyncThunk('master/fetchAllAvailable', async ({ cityId, watchId, startDate }, thunkAPI) => {
   try {
