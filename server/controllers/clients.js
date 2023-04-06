@@ -1,4 +1,4 @@
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, Client, Order } = require('../database/models');
 const { RequireAuth } = require('../middleware/RouteProtector');
@@ -7,8 +7,15 @@ const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
     async (req, res) => {
         try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { offset = 0, limit } = req.query;
+
             const records = await Client.findAll({
                 include: [
                     {
@@ -17,12 +24,14 @@ const getAll = [
                     { model: Order, as: 'orders' }
                 ],
                 attributes: { exclude: ['id', 'userId'] },
-                order: [['createdAt', 'DESC']]
+                order: [['createdAt', 'DESC']],
+                limit,
+                offset
             });
+            const total = await Client.count();
 
             const clients = records.map((client) => ({ ...client.toJSON(), ...client.User.toJSON() }));
-
-            res.status(200).json({ clients }).end();
+            res.status(200).json({ clients, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }
