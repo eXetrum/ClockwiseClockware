@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -9,14 +9,30 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Header, CityForm, LoadingOverlay, NoRowsOverlay } from '../../../components';
+import { Header, CityForm, LoadingOverlay, NoRowsOverlay, RoundedPaginationFooter } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchCities, addCity, deleteCity } from '../../../store/thunks';
-import { changeVisibilityAddCityForm } from '../../../store/actions';
-import { selectAllCities, selectNewCity, selectCityError, selectCityInitialLoading, selectCityTotalItems } from '../../../store/selectors';
+import {
+  changeVisibilityAddCityForm,
+  changeCityCurrentPage,
+  changeCityPageSize,
+  changeCitySortFieldName,
+  changeCitySortOrder,
+} from '../../../store/actions';
+import {
+  selectAllCities,
+  selectNewCity,
+  selectCityError,
+  selectCityInitialLoading,
+  selectCityCurrentPage,
+  selectCityPageSize,
+  selectCityTotalItems,
+  selectCitySortFielName,
+  selectCitySortOrder,
+} from '../../../store/selectors';
 
 import { formatDecimal } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../../constants';
@@ -30,14 +46,15 @@ const AdminDashboardCitiesPage = () => {
   const newCity = useSelector(selectNewCity);
   const error = useSelector(selectCityError);
   const loading = useSelector(selectCityInitialLoading);
+  const page = useSelector(selectCityCurrentPage);
+  const pageSize = useSelector(selectCityPageSize);
   const totalItems = useSelector(selectCityTotalItems);
-
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
+  const sortFieldName = useSelector(selectCitySortFielName);
+  const sortOrder = useSelector(selectCitySortOrder);
 
   const fetchPage = useCallback(
-    () => dispatch(fetchCities({ offset: page * rowsPerPage, limit: rowsPerPage })),
-    [dispatch, page, rowsPerPage],
+    () => dispatch(fetchCities({ offset: page * pageSize, limit: pageSize, sortFieldName, sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -79,33 +96,47 @@ const AdminDashboardCitiesPage = () => {
 
   const onPaginationModelChange = useCallback(
     params => {
-      setPage(params.page);
-      setRowsPerPage(params.pageSize);
+      if (params.page !== page) dispatch(changeCityCurrentPage(params.page));
+      if (params.pageSize !== pageSize) dispatch(changeCityPageSize(params.pageSize));
     },
-    [setPage, setRowsPerPage],
+    [dispatch, page, pageSize],
+  );
+  const onSortModelChange = useCallback(
+    params => {
+      const [fieldName = '', orderBy = ''] = params;
+      console.log('onSortModelChange: ', params, ', => ', fieldName, orderBy);
+      if (fieldName !== sortFieldName) dispatch(changeCitySortFieldName(fieldName));
+      if (orderBy !== sortOrder) dispatch(changeCitySortOrder(orderBy));
+    },
+    [dispatch, sortFieldName, sortOrder],
   );
 
-  const columns = [
-    { field: 'name', headerName: 'Name', width: 620 },
-    {
-      field: 'pricePerHour',
-      headerName: 'Hourly rate',
-      width: 200,
-      type: 'number',
-      valueFormatter: ({ value }) => formatDecimal(value),
-    },
-    {
-      field: 'actions',
-      headerName: 'actions',
-      type: 'actions',
-      width: 200,
-      disableReorder: true,
-      getActions: ({ row }) => [
-        <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/cities/${row.id}`)} showInMenu />,
-        <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
-      ],
-    },
-  ];
+  const columns = useMemo(
+    () => [
+      { field: 'name', headerName: 'Name', width: 620, flex: 1 },
+      {
+        field: 'pricePerHour',
+        headerName: 'Hourly rate',
+        width: 200,
+        type: 'number',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDecimal(value),
+      },
+      {
+        field: 'actions',
+        headerName: 'actions',
+        type: 'actions',
+        width: 200,
+        flex: 1,
+        disableReorder: true,
+        getActions: ({ row }) => [
+          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/cities/${row.id}`)} showInMenu />,
+          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
+        ],
+      },
+    ],
+    [navigate, onRemove],
+  );
 
   return (
     <Container>
@@ -133,12 +164,21 @@ const AdminDashboardCitiesPage = () => {
             columns={columns}
             loading={loading}
             hideFooterPagination={loading}
-            initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
-            onPaginationModelChange={onPaginationModelChange}
-            rowCount={totalItems}
             paginationMode="server"
+            sortingMode="server"
+            initialState={{
+              pagination: { paginationModel: { pageSize, page } },
+              sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
+            }}
+            onPaginationModelChange={onPaginationModelChange}
+            onSortModelChange={onSortModelChange}
+            rowCount={totalItems}
             pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
-            components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+            components={{
+              LoadingOverlay,
+              NoRowsOverlay: () => NoRowsOverlay({ error }),
+              Toolbar: GridToolbar,
+            }}
           />
 
           <CityForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New City'} isModal={true} />

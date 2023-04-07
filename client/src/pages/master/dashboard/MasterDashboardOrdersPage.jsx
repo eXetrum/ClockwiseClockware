@@ -79,14 +79,15 @@ const MasterDashboardOrdersPage = () => {
   );
 
   const columns = [
-    { field: 'client.name', headerName: 'Client Name', width: 240, valueGetter: ({ row }) => row.client.name },
-    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
-    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
+    { field: 'client.name', headerName: 'Client Name', width: 240, flex: 1, valueGetter: ({ row }) => row.client.name },
+    { field: 'watch', headerName: 'Service', flex: 1, valueGetter: ({ row }) => row.watch.name },
+    { field: 'city', headerName: 'City', width: 200, flex: 1, valueGetter: ({ row }) => row.city.name },
     {
       field: 'startDate',
       headerName: 'Date Start',
       width: 140,
       type: 'dateTime',
+      flex: 1,
       valueFormatter: ({ value }) => formatDate(value),
     },
     {
@@ -94,33 +95,39 @@ const MasterDashboardOrdersPage = () => {
       headerName: 'End Start',
       width: 140,
       type: 'dateTime',
+      flex: 1,
       valueFormatter: ({ value }) => formatDate(value),
     },
     {
       field: 'status',
       headerName: 'Status',
+      flex: 1,
     },
     {
       field: 'totalCost',
       headerName: 'Total Cost',
       type: 'number',
+      flex: 1,
       valueFormatter: ({ value }) => formatDecimal(value),
     },
     {
       field: 'actions',
       headerName: 'actions',
       type: 'actions',
+      flex: 1,
       getActions: ({ row }) => {
-        const actions = [
-          <GridActionsCellItem
-            icon={<TaskAltIcon />}
-            label="Complete"
-            onClick={() => onComplete(row)}
-            disabled={row.isCompleting || row.status !== ORDER_STATUS.CONFIRMED}
-            showInMenu
-          />,
-        ];
-
+        const actions = [];
+        if (row.status === ORDER_STATUS.CONFIRMED) {
+          actions.unshift(
+            <GridActionsCellItem
+              icon={<TaskAltIcon />}
+              label="Complete Order"
+              onClick={() => onComplete(row)}
+              disabled={row.isCompleting}
+              showInMenu
+            />,
+          );
+        }
         if (row.images.length) {
           actions.unshift(
             <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,

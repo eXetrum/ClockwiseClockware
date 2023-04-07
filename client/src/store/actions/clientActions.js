@@ -1,1 +1,6 @@
-export { changeVisibilityAddClientForm, changeNewClientField } from '../reducers/clientSlice';
+export {
+  changeVisibilityAddClientForm,
+  changeNewClientField,
+  changeClientCurrentPage,
+  changeClientRowsPerPage,
+} from '../reducers/clientSlice';

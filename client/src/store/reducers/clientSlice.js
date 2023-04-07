@@ -10,7 +10,7 @@ import {
   resendEmailConfirmationClient,
 } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE } from '../../constants';
+import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 const initEmptyClient = (client = null) => ({ id: client?.id || -1, email: client?.email || '', password: '', name: client?.name || '' });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
@@ -23,6 +23,8 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  currentPage: 0,
+  rowsPerPage: PAGINATION_PAGE_SIZE_OPTIONS[0],
   totalItems: 0,
 };
 
@@ -36,6 +38,12 @@ export const clientSlice = createSlice({
     },
     changeNewClientField(state, { payload }) {
       state.newClient[payload.name] = payload.value;
+    },
+    changeClientCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeClientRowsPerPage(state, { payload }) {
+      state.rowsPerPage = payload;
     },
   },
   extraReducers: {
@@ -169,5 +177,6 @@ export const clientSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddClientForm, changeNewClientField } = clientSlice.actions;
+export const { changeVisibilityAddClientForm, changeNewClientField, changeClientCurrentPage, changeClientRowsPerPage } =
+  clientSlice.actions;
 export default clientSlice.reducer;

@@ -7,6 +7,8 @@ const stateClientError = state => state.clientReducer.error;
 const stateClientInitialLoading = state => state.clientReducer.isInitialLoading;
 const stateClientPending = state => state.clientReducer.isPending;
 const stateClientShowAddForm = state => state.clientReducer.isShowAddForm;
+const stateClientCurrentPage = state => state.clientReducer.currentPage;
+const stateClientRowsPerPage = state => state.clientReducer.rowsPerPage;
 const stateClientTotalItems = state => state.clientReducer.totalItems;
 
 export const selectAllClients = createSelector([stateAllClients], allClients => allClients);
@@ -16,4 +18,6 @@ export const selectClientError = createSelector([stateClientError], clientError 
 export const selectClientInitialLoading = createSelector([stateClientInitialLoading], loading => loading);
 export const selectClientPending = createSelector([stateClientPending], pending => pending);
 export const selectClientShowAddForm = createSelector([stateClientShowAddForm], isShowForm => isShowForm);
+export const selectClientCurrentPage = createSelector([stateClientCurrentPage], currentPage => currentPage);
+export const selectClientRowsPerPage = createSelector([stateClientRowsPerPage], rowsPerPage => rowsPerPage);
 export const selectClientTotalItems = createSelector([stateClientTotalItems], totalItems => totalItems);

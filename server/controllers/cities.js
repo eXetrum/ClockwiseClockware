@@ -7,14 +7,17 @@ const { ACCESS_SCOPE } = require('../constants');
 const getAll = [
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
     query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect ').optional().isIn(['name', 'pricePerHour']),
+    query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
 
-            const cities = await City.findAll({ order: [['createdAt', 'DESC']], limit, offset });
+            const cities = await City.findAll({ order: [sortParams], limit, offset });
             const total = await City.count();
 
             res.status(200).json({ cities, total }).end();

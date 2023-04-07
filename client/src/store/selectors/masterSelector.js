@@ -7,6 +7,8 @@ const stateMasterError = state => state.masterReducer.error;
 const stateMasterInitialLoading = state => state.masterReducer.isInitialLoading;
 const stateMasterPending = state => state.masterReducer.isPending;
 const stateMasterShowAddForm = state => state.masterReducer.isShowAddForm;
+const stateMasterCurrentPage = state => state.masterReducer.currentPage;
+const stateMasterRowsPerPage = state => state.masterReducer.rowsPerPage;
 const stateMasterTotalItems = state => state.masterReducer.totalItems;
 
 export const selectAllMasters = createSelector([stateAllMasters], allMasters => allMasters);
@@ -16,4 +18,6 @@ export const selectMasterError = createSelector([stateMasterError], masterError 
 export const selectMasterInitialLoading = createSelector([stateMasterInitialLoading], loading => loading);
 export const selectMasterPending = createSelector([stateMasterPending], pending => pending);
 export const selectMasterShowAddForm = createSelector([stateMasterShowAddForm], isShowForm => isShowForm);
+export const selectMasterCurrentPage = createSelector([stateMasterCurrentPage], currentPage => currentPage);
+export const selectMasterRowsPerPage = createSelector([stateMasterRowsPerPage], rowsPerPage => rowsPerPage);
 export const selectMasterTotalItems = createSelector([stateMasterTotalItems], totalItems => totalItems);

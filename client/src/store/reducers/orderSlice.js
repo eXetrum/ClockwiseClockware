@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from '../thunks';
 import { dateToNearestHour, isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
+import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 const initEmptyOrder = (order = null) => ({
   id: order?.id || -1,
@@ -24,6 +24,8 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowRateForm: false,
+  currentPage: 0,
+  rowsPerPage: PAGINATION_PAGE_SIZE_OPTIONS[0],
   totalItems: 0,
 };
 
@@ -45,6 +47,12 @@ export const orderSlice = createSlice({
     resetNewOrder(state, { payload }) {
       if (payload) state.newOrder = initEmptyOrder(payload);
       else state.newOrder = initEmptyOrder(state.oldOrder);
+    },
+    changeOrderCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeOrderRowsPerPage(state, { payload }) {
+      state.rowsPerPage = payload;
     },
   },
   extraReducers: {
@@ -204,5 +212,6 @@ export const orderSlice = createSlice({
   },
 });
 
-export const { changeVisibilityRateForm, changeNewOrderField, resetNewOrder } = orderSlice.actions;
+export const { changeVisibilityRateForm, changeNewOrderField, resetNewOrder, changeOrderCurrentPage, changeOrderRowsPerPage } =
+  orderSlice.actions;
 export default orderSlice.reducer;

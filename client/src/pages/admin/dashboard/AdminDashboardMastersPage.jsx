@@ -130,18 +130,21 @@ const AdminDashboardMasters = () => {
   );
 
   const columns = [
-    { field: 'email', headerName: 'Email', width: 300 },
-    { field: 'name', headerName: 'Name', width: 300 },
+    { field: 'email', headerName: 'Email', flex: 1, width: 300 },
+    { field: 'name', headerName: 'Name', flex: 1, width: 300 },
     {
       field: 'cities',
       headerName: 'Cities',
       width: 240,
+      flex: 1,
+      sortable: false,
       valueFormatter: ({ value }) => value.map(city => city.name).join(', '),
     },
     {
       field: 'rating',
       headerName: 'Rating',
       type: 'number',
+      flex: 1,
       valueFormatter: ({ value }) =>
         `${formatDecimal(value, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
     },
@@ -149,17 +152,20 @@ const AdminDashboardMasters = () => {
       field: 'isEmailVerified',
       headerName: 'Email Verified',
       type: 'boolean',
+      flex: 1,
     },
     {
       field: 'isApprovedByAdmin',
       headerName: 'Approved',
       type: 'boolean',
+      flex: 1,
     },
     {
       field: 'actions',
       headerName: 'actions',
       type: 'actions',
       width: 100,
+      flex: 1,
       disableReorder: true,
       getActions: ({ row }) => {
         const actions = [

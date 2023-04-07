@@ -30,12 +30,49 @@ const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
     query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect ')
+        .optional()
+        .isIn([
+            'clientEmail',
+            'clientName',
+            'masterEmail',
+            'masterName',
+            'masterRating',
+            'cityName',
+            'repairTime',
+            'startDate',
+            'endDate',
+            'status',
+            'totalCost'
+        ]),
+    query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
+            if (orderBy === 'repairTime') sortParams.unshift({ model: Watches, as: 'watch' });
+            else if (orderBy === 'cityName') {
+                sortParams[0] = 'name';
+                sortParams.unshift({ model: City, as: 'city' });
+            } else if (orderBy === 'masterRating') {
+                sortParams[0] = 'rating';
+                sortParams.unshift({ model: Master, as: 'master' });
+            } else if (orderBy === 'masterName') {
+                sortParams[0] = 'name';
+                sortParams.unshift({ model: Master, as: 'master' });
+            } else if (orderBy === 'masterEmail') {
+                sortParams[0] = 'email';
+                sortParams.unshift({ model: Master, as: 'master' }, User);
+            } else if (orderBy === 'clientName') {
+                sortParams[0] = 'name';
+                sortParams.unshift({ model: Client, as: 'client' });
+            } else if (orderBy === 'clientEmail') {
+                sortParams[0] = 'email';
+                sortParams.unshift({ model: Client, as: 'client' }, User);
+            }
 
             const authUser = parseAuthToken(req.headers);
 
@@ -53,7 +90,7 @@ const getAll = [
                     { model: Image, as: 'images', through: { attributes: [] } }
                 ],
                 attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['createdAt', 'DESC']],
+                order: [sortParams],
                 limit,
                 offset
             });

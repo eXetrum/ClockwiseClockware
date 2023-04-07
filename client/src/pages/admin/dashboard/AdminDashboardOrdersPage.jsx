@@ -126,62 +126,76 @@ const AdminDashboardOrdersPage = () => {
     {
       field: 'client.email',
       headerName: 'Client Email',
+      flex: 1,
       valueGetter: ({ row }) => row.client.email,
     },
     {
       field: 'client.name',
       headerName: 'Client Name',
+      flex: 1,
       valueGetter: ({ row }) => row.client.name,
     },
     {
       field: 'master.email',
       headerName: 'Master Email',
+      flex: 1,
       valueGetter: ({ row }) => row.master.email,
     },
     {
       field: 'master.name',
       headerName: 'Master Name',
+      flex: 1,
       valueGetter: ({ row }) => row.master.name,
     },
     {
-      field: 'master.rating',
+      field: 'master',
       headerName: 'Master Rating',
       type: 'number',
-      valueGetter: ({ row }) =>
-        `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
+      flex: 1,
+      valueFormatter: ({ value }) =>
+        `${formatDecimal(value.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
+      sortComparator: (a, b) => a.rating - b.rating,
     },
     {
       field: 'city',
       headerName: 'City',
+      flex: 1,
       valueGetter: ({ row }) => row.city.name,
     },
     {
       field: 'watch',
       headerName: 'Clock',
+      flex: 1,
+      sortable: true,
       valueFormatter: ({ value }) => `${value.name} (${value.repairTime}h)`,
+      sortComparator: (a, b) => a.repairTime - b.repairTime,
     },
     {
       field: 'startDate',
       headerName: 'Date Start',
       width: 140,
       type: 'dateTime',
+      flex: 1,
       valueFormatter: ({ value }) => formatDate(value),
     },
     {
       field: 'endDate',
-      headerName: 'End Start',
+      headerName: 'Date End',
       width: 140,
       type: 'dateTime',
+      flex: 1,
       valueFormatter: ({ value }) => formatDate(value),
     },
     {
       field: 'status',
       headerName: 'Status',
+      flex: 1,
     },
     {
       field: 'totalCost',
       headerName: 'Total Cost',
       type: 'number',
+      flex: 1,
       valueFormatter: ({ value }) => formatDecimal(value),
     },
     {
@@ -189,38 +203,31 @@ const AdminDashboardOrdersPage = () => {
       headerName: 'actions',
       type: 'actions',
       width: 100,
+      flex: 1,
       disableReorder: true,
       getActions: ({ row }) => {
-        const actions = [
-          <GridActionsCellItem
-            icon={<EditIcon />}
-            label="Edit"
-            onClick={() => navigate(`/admin/orders/${row.id}`)}
-            disabled={row.status !== ORDER_STATUS.CONFIRMED}
-            showInMenu
-          />,
-          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
-        ];
+        const actions = [<GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />];
+
         if (row.status === ORDER_STATUS.CONFIRMED) {
           actions.unshift(
             <GridActionsCellItem
-              icon={<DoNotDisturbAltIcon />}
-              label="Cancel"
-              onClick={() => onCancel(row)}
-              disabled={row.isCompleting || row.isCanceling}
-              showInMenu
-            />,
-          );
-          actions.unshift(
-            <GridActionsCellItem
               icon={<TaskAltIcon />}
-              label="Complete"
+              label="Complete Order"
               onClick={() => onComplete(row)}
               disabled={row.isCompleting || row.isCanceling}
               showInMenu
             />,
+            <GridActionsCellItem
+              icon={<DoNotDisturbAltIcon />}
+              label="Cancel Order"
+              onClick={() => onCancel(row)}
+              disabled={row.isCompleting || row.isCanceling}
+              showInMenu
+            />,
+            <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
           );
         }
+
         if (row.images.length) {
           actions.unshift(
             <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,

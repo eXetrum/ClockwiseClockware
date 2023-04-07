@@ -109,23 +109,21 @@ const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
     query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect ').optional().isIn(['email', 'name', 'isEmailVerified', 'isApprovedByAdmin', 'rating']),
+    query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
+            if (orderBy === 'email') sortParams.unshift(User);
 
             const records = await Master.findAll({
-                include: [
-                    {
-                        model: User
-                    },
-                    { model: City, as: 'cities', through: { attributes: [] } },
-                    { model: Order, as: 'orders' }
-                ],
+                include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }, { model: Order, as: 'orders' }],
                 attributes: { exclude: ['id', 'userId'] },
-                order: [['createdAt', 'DESC']],
+                order: [sortParams],
                 limit,
                 offset
             });

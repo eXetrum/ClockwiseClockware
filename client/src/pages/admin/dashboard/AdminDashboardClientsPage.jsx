@@ -129,18 +129,20 @@ const AdminDashboardClientsPage = () => {
   );
 
   const columns = [
-    { field: 'email', headerName: 'Email', width: 300 },
-    { field: 'name', headerName: 'Name', width: 300 },
+    { field: 'email', headerName: 'Email', width: 300, flex: 1 },
+    { field: 'name', headerName: 'Name', width: 300, flex: 1 },
     {
       field: 'isEmailVerified',
       headerName: 'Email Verified',
       type: 'boolean',
+      flex: 1,
     },
     {
       field: 'actions',
       headerName: 'actions',
       type: 'actions',
       width: 100,
+      flex: 1,
       disableReorder: true,
       getActions: ({ row }) => {
         const actions = [

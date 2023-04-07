@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Form, Row } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 
@@ -68,7 +68,7 @@ const ClientDashboardOrdersPage = () => {
     setSelectedOrder(null);
   }, []);
 
-  const onReview = useCallback(
+  const onReviewStart = useCallback(
     async order => {
       setSelectedOrder(order);
       dispatch(changeVisibilityRateForm(true));
@@ -80,7 +80,7 @@ const ClientDashboardOrdersPage = () => {
     async event => {
       event.preventDefault();
       dispatch(changeVisibilityRateForm(false));
-      const action = await dispatch(rateOrder({ id: selectedOrder?.Id, rating }));
+      const action = await dispatch(rateOrder({ id: selectedOrder?.id, rating }));
       setSelectedOrder(null);
 
       if (isFulfilled(action)) enqueueSnackbar(`Order "${selectedOrder?.id}" rated with value=${rating}`, { variant: 'success' });
@@ -103,73 +103,82 @@ const ClientDashboardOrdersPage = () => {
     [setPage, setRowsPerPage],
   );
 
-  const columns = [
-    { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: ({ row }) => row.master.name },
-    { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
-    { field: 'city', headerName: 'City', width: 200, valueGetter: ({ row }) => row.city.name },
-    {
-      field: 'startDate',
-      headerName: 'Date Start',
-      width: 140,
-      type: 'dateTime',
-      valueFormatter: ({ value }) => formatDate(value),
-    },
-    {
-      field: 'endDate',
-      headerName: 'End Start',
-      width: 140,
-      type: 'dateTime',
-      valueFormatter: ({ value }) => formatDate(value),
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-    },
-    {
-      field: 'totalCost',
-      headerName: 'Total Cost',
-      type: 'number',
-      valueFormatter: ({ value }) => formatDecimal(value),
-    },
-    {
-      field: 'rating',
-      headerName: 'Rating',
-      headerAlign: 'center',
-      width: 120,
-      align: 'center',
-      valueGetter: ({ row }) => {
-        if (row.rating === null) return '-';
-        return `${formatDecimal(row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
+  const columns = useMemo(
+    () => [
+      { field: 'master.name', headerName: 'Master Name', width: 240, flex: 1, valueGetter: ({ row }) => row.master.name },
+      { field: 'watch', headerName: 'Service', flex: 1, valueGetter: ({ row }) => row.watch.name },
+      { field: 'city', headerName: 'City', width: 200, flex: 1, valueGetter: ({ row }) => row.city.name },
+      {
+        field: 'startDate',
+        headerName: 'Date Start',
+        width: 140,
+        type: 'dateTime',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDate(value),
       },
-    },
-    {
-      field: 'actions',
-      headerName: 'actions',
-      type: 'actions',
-      getActions: ({ row }) => {
-        const actions = [];
-        if (row.images.length) {
-          actions.unshift(
-            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
-          );
-        }
-
-        if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
-          actions.unshift(
-            <GridActionsCellItem
-              icon={<ThumbUpOutlinedIcon />}
-              label="Rate"
-              onClick={() => onReview(row)}
-              disabled={row.isEvaluating}
-              showInMenu
-            />,
-          );
-        }
-
-        return actions;
+      {
+        field: 'endDate',
+        headerName: 'End Start',
+        width: 140,
+        type: 'dateTime',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDate(value),
       },
-    },
-  ];
+      {
+        field: 'status',
+        headerName: 'Status',
+        flex: 1,
+      },
+      {
+        field: 'totalCost',
+        headerName: 'Total Cost',
+        type: 'number',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDecimal(value),
+      },
+      {
+        field: 'rating',
+        headerName: 'Rating',
+        headerAlign: 'center',
+        width: 120,
+        align: 'center',
+        flex: 1,
+        valueGetter: ({ row }) => {
+          if (row.rating === null) return '-';
+          return `${formatDecimal(row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
+        },
+      },
+      {
+        field: 'actions',
+        headerName: 'actions',
+        type: 'actions',
+        flex: 1,
+        getActions: ({ row }) => {
+          const actions = [];
+          if (row.images.length) {
+            actions.unshift(
+              <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+            );
+          }
+
+          if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
+            actions.unshift(
+              <GridActionsCellItem
+                icon={<ThumbUpOutlinedIcon />}
+                label="Rate Order"
+                onClick={() => onReviewStart(row)}
+                disabled={row.isEvaluating}
+                showInMenu
+              />,
+            );
+          }
+
+          return actions;
+        },
+      },
+    ],
+    [onImagePreviewOpen, onReviewStart],
+  );
 
   return (
     <Container>

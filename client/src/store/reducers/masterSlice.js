@@ -11,7 +11,7 @@ import {
   resendEmailConfirmationMaster,
 } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE } from '../../constants';
+import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 const initEmptyMaster = (master = null) => ({
   id: master?.id || -1,
@@ -32,6 +32,8 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  currentPage: 0,
+  rowsPerPage: PAGINATION_PAGE_SIZE_OPTIONS[0],
   totalItems: 0,
 };
 
@@ -49,6 +51,12 @@ export const masterSlice = createSlice({
     resetMasters(state, { payload }) {
       if (!payload) state.masters = [];
       else state.masters = payload;
+    },
+    changeMasterCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeMasterRowsPerPage(state, { payload }) {
+      state.rowsPerPage = payload;
     },
   },
   extraReducers: {
@@ -201,5 +209,6 @@ export const masterSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddMasterForm, changeNewMasterField, resetMasters } = masterSlice.actions;
+export const { changeVisibilityAddMasterForm, changeNewMasterField, resetMasters, changeMasterCurrentPage, changeMasterRowsPerPage } =
+  masterSlice.actions;
 export default masterSlice.reducer;

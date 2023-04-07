@@ -4,15 +4,18 @@ import { getErrorType, getErrorText } from '../../utils';
 import { PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 //#region City
-export const fetchCities = createAsyncThunk('city/fetchAll', async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0] }, thunkAPI) => {
-  try {
-    if (limit === -1) limit = undefined;
-    const response = await api.get('/cities', { params: { offset, limit } });
-    return response.data;
-  } catch (error) {
-    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
-  }
-});
+export const fetchCities = createAsyncThunk(
+  'city/fetchAll',
+  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], sortFieldName = '', sortOrder = '' }, thunkAPI) => {
+    try {
+      if (limit === -1) limit = undefined;
+      const response = await api.get('/cities', { params: { offset, limit, sortFieldName, sortOrder } });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+    }
+  },
+);
 
 export const addCity = createAsyncThunk('city/addCity', async (city, thunkAPI) => {
   try {
