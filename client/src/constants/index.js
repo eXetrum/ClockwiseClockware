@@ -43,3 +43,8 @@ export const MAX_IMAGES_COUNT = 5;
 export const MAX_IMAGE_BYTES_SIZE = 1024 * 1024;
 
 export const PAGINATION_PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
+
+export const SORT_ORDER = {
+  ASC: 'asc',
+  DESC: 'desc',
+};
