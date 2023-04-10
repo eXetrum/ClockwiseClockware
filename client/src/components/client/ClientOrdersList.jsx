@@ -108,7 +108,7 @@ const ClientOrdersList = ({ orders, onReview }) => {
 
   return (
     <>
-      <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />
+      <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter autoHeight />
       <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
         <DialogTitle>Order images</DialogTitle>
         <DialogContent>

@@ -1,5 +1,7 @@
 require('dotenv').config();
 
+const { JSON_BODY_LIMIT } = require('./constants');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -9,8 +11,8 @@ const port = process.env.NODE_APP_PORT || 4200;
 
 app.use(morgan('dev'));
 app.use(cors({ origin: '*' }));
-app.use(bodyParser.json({ limit: '100mb' }));
-app.use(bodyParser.urlencoded({ limit: '100mb', extended: true }));
+app.use(bodyParser.json({ limit: JSON_BODY_LIMIT }));
+app.use(bodyParser.urlencoded({ limit: JSON_BODY_LIMIT, extended: true }));
 
 app.use('/api', require('./routes/auth'));
 app.use('/api', require('./routes/cities'));
