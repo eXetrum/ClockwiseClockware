@@ -1,25 +1,44 @@
-import React, { useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Row, Col, Alert } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import Dialog from '@mui/material/Dialog';
+import ImageIcon from '@mui/icons-material/Image';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
+
+import { OrderImageList } from '../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 import { deleteOrder, completeOrder, cancelOrder } from '../../store/thunks';
 
 import { formatDate, formatDecimal } from '../../utils';
-import { MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
+import { MAX_RATING_VALUE, RATING_FORMAT_DECIMAL, ORDER_STATUS } from '../../constants';
 
 const AdminOrdersList = ({ orders }) => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const onImagePreviewOpen = useCallback(order => {
+    setOpen(true);
+    setSelectedOrder(order);
+  }, []);
+
+  const onImagePreviewClose = useCallback(() => {
+    setOpen(false);
+    setSelectedOrder(null);
+  }, []);
 
   const onRemove = useCallback(
     async order => {
@@ -94,7 +113,8 @@ const AdminOrdersList = ({ orders }) => {
       field: 'master.rating',
       headerName: 'Master Rating',
       type: 'number',
-      valueGetter: ({ row }) => `${formatDecimal(row.master.rating, 1)}/${formatDecimal(MAX_RATING_VALUE, 1)}`,
+      valueGetter: ({ row }) =>
+        `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
     },
     {
       field: 'city',
@@ -167,6 +187,11 @@ const AdminOrdersList = ({ orders }) => {
             />,
           );
         }
+        if (row.images.length) {
+          actions.unshift(
+            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+          );
+        }
 
         return actions;
       },
@@ -185,7 +210,17 @@ const AdminOrdersList = ({ orders }) => {
     );
   }
 
-  return <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
+  return (
+    <>
+      <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />
+      <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+        <DialogTitle>Order images</DialogTitle>
+        <DialogContent>
+          <OrderImageList images={selectedOrder?.images} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
 
 export default AdminOrdersList;

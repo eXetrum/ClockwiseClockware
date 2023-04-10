@@ -12,6 +12,7 @@ const initEmptyOrder = (order = null) => ({
   watch: order?.watch || null,
   startDate: new Date(order?.startDate || dateToNearestHour()).getTime(),
   rating: MAX_RATING_VALUE,
+  images: order?.images || [],
 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
 

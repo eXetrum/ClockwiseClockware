@@ -10,7 +10,7 @@ const {
     isDbErrorEntryReferences,
     createComparatorByProp
 } = require('../utils');
-const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR } = require('../constants');
+const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
 
 const cityNameComparator = createComparatorByProp('name');
 
@@ -169,8 +169,8 @@ const create = [
     body('master.rating')
         .exists()
         .withMessage('master rating required')
-        .isNumeric({ min: 0.0, max: 5.0 })
-        .withMessage('master rating should be of numeric value and be in range [0; 5] '),
+        .isNumeric({ min: MIN_RATING_VALUE, max: MAX_RATING_VALUE })
+        .withMessage(`master rating should be of numeric value and be in range [${MIN_RATING_VALUE}; ${MAX_RATING_VALUE}] `),
     body('master.isApprovedByAdmin')
         .exists()
         .withMessage('master isApprovedByAdmin field required')
@@ -224,7 +224,6 @@ const create = [
             });
 
             cities = await details.getCities();
-
             res.status(201)
                 .json({ master: { ...details.toJSON(), ...user.toJSON(), cities: cities.sort(cityNameComparator) } })
                 .end();

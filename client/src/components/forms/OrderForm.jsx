@@ -7,7 +7,7 @@ import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { MasterCardList, SpinnerButton } from '../../components';
+import { MasterCardList, SpinnerButton, ImageUploader } from '../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
@@ -143,7 +143,10 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
     [dispatch, newOrder],
   );
 
-  const onSelectMaster = useCallback(master => dispatch(changeNewOrderField({ name: 'master', value: master })), [dispatch]);
+  const onSelectMaster = useCallback(
+    master => dispatch(changeNewOrderField({ name: 'master', value: newOrder.master !== master ? master : null })),
+    [newOrder, dispatch],
+  );
 
   const resetOrigOrder = useCallback(async () => {
     onReset();
@@ -166,8 +169,8 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
           <Form onSubmit={onSubmit}>
             <hr />
             <Form.Group>
-              <Row>
-                <Col sm={4}>
+              <Row className="mb-3">
+                <Col sm={2} className="align-self-center">
                   <Form.Label>
                     <b>Client:</b>
                   </Form.Label>
@@ -180,7 +183,6 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                       <Form.Control
                         type="email"
                         name="client.email"
-                        autoFocus
                         required
                         placeholder="Email"
                         onChange={onFormFieldChange}
@@ -221,15 +223,16 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                 </Col>
               </Row>
             </Form.Group>
+
             <hr />
             <Form.Group className="mb-3">
               <Row>
-                <Col sm={4}>
+                <Col sm={2} className="align-self-center">
                   <Form.Label>
-                    <b>Watch Type:</b>
+                    <b>Watch:</b>
                   </Form.Label>
                 </Col>
-                <Col className="justify-content-md-center">
+                <Col sm={4} className="d-flex justify-content-start align-self-center" style={{ borderRight: 'solid 1px lightgray' }}>
                   {watches.map(watch => (
                     <Form.Check
                       key={watch.id}
@@ -245,39 +248,11 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     />
                   ))}
                 </Col>
-              </Row>
-            </Form.Group>
-            <hr />
-            <Form.Group className="mb-3">
-              <Row>
-                <Col sm={4}>
-                  <Form.Label>
-                    <b>City:</b>
-                  </Form.Label>
-                </Col>
-                <Col>
-                  <Form.Select name="city" disabled={isPending} value={newOrder?.city?.id} onChange={onFormFieldChange}>
-                    {cities.map(city => (
-                      <option key={city.id} value={city.id}>
-                        {city.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-              </Row>
-            </Form.Group>
-            <hr />
-            <Form.Group className="mb-3">
-              <Row>
-                <Col sm={4}>
-                  <Form.Label>
-                    <b>Date/Time:</b>
-                  </Form.Label>
-                </Col>
-                <Col>
+
+                <Col className="d-flex justify-content-start mt-1">
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DateTimePicker
-                      label="DateTimePicker"
+                      label="Date/Time"
                       renderInput={props => <TextField {...props} />}
                       views={['year', 'month', 'day', 'hours']}
                       onChange={onOrderDateChange}
@@ -289,16 +264,49 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     />
                   </LocalizationProvider>
                   {isDateTimeError && (
-                    <strong style={{ color: 'red' }}>
-                      <br />
+                    <strong className="ms-2 align-self-center" style={{ color: 'red' }}>
                       {dateTimeError.detail}
                     </strong>
                   )}
                 </Col>
               </Row>
             </Form.Group>
-            <hr />
 
+            <hr />
+            <Form.Group className="mb-3">
+              <Row>
+                <Col sm={2} className="align-self-center">
+                  <Form.Label>
+                    <b>City:</b>
+                  </Form.Label>
+                </Col>
+                <Col className="d-flex justify-content-start  align-self-center">
+                  <Form.Select name="city" disabled={isPending} value={newOrder?.city?.id} onChange={onFormFieldChange}>
+                    {cities.map(city => (
+                      <option key={city.id} value={city.id}>
+                        {city.name}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+              </Row>
+            </Form.Group>
+
+            <hr />
+            <Form.Group className="mb-4 mt-4">
+              <Row>
+                <Col sm={2} className="align-self-center">
+                  <Form.Label>
+                    <b>Images:</b>
+                  </Form.Label>
+                </Col>
+                <Col>
+                  <ImageUploader />
+                </Col>
+              </Row>
+            </Form.Group>
+
+            <hr />
             <Form.Group className="mb-4">
               <Row>
                 <Col sm={4}>
@@ -310,14 +318,18 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   <Row>
                     <Col>
                       <SpinnerButton
-                        className="mb-2 btn btn-sm"
+                        className="mb-2 btn"
                         variant="warning"
                         onClick={onFindMasterBtnClick}
                         disabled={isPending || !isOrderPreparedForMasterSearch}
                         text={
                           <>
-                            {isMasterAssigned && !isMastersPending ? <HighlightOffOutlinedIcon fontSize="small" className="me-1" /> : null}
-                            <span>Find Master</span>
+                            {isMasterAssigned && !isMastersPending ? (
+                              <HighlightOffOutlinedIcon fontSize="small" className="me-1" />
+                            ) : (
+                              <span>&nbsp;</span>
+                            )}
+                            <span className="me-1">Find Master</span>
                           </>
                         }
                         loading={isMastersPending}
@@ -353,12 +365,9 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     )}
                   </Col>
                 </Row>
-
-                <Row className="mt-4">
-                  <Col md={{ span: 4, offset: 0 }}></Col>
-                </Row>
               </Row>
             </Form.Group>
+
             <hr />
             <Form.Group>
               <Row className="justify-content-md-center mt-4">

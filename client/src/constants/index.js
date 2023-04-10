@@ -36,3 +36,8 @@ export const ERROR_TYPE = {
 
 export const MAX_RATING_VALUE = 5;
 export const RATING_PRECISION_STEP = 0.5;
+export const RATING_FORMAT_DECIMAL = 1;
+
+export const ACCEPTED_IMAGE_TYPES = { 'image/jpeg': ['.jpeg', '.jpg'], 'image/png': ['.png'] };
+export const MAX_IMAGES_COUNT = 5;
+export const MAX_IMAGE_BYTES_SIZE = 1024 * 1024;

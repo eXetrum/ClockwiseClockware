@@ -58,7 +58,17 @@ const AdminEditOrderPage = () => {
   const onSubmit = useCallback(
     async event => {
       event.preventDefault();
-      const action = await dispatch(updateOrder(newOrder));
+
+      const order = {
+        id: newOrder.id,
+        watchId: newOrder?.watch?.id,
+        cityId: newOrder?.city.id,
+        masterId: newOrder?.master.id,
+        startDate: newOrder?.startDate,
+        images: newOrder?.images,
+      };
+
+      const action = await dispatch(updateOrder(order));
       if (isFulfilled(action)) enqueueSnackbar('Order updated', { variant: 'success' });
       else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
     },
@@ -73,9 +83,9 @@ const AdminEditOrderPage = () => {
   );
 
   return (
-    <Container>
+    <Container fluid>
       <Header />
-      <Container>
+      <>
         <center>
           <h1>Admin: Edit order</h1>
           <Link to={'/admin/orders'}>
@@ -95,7 +105,7 @@ const AdminEditOrderPage = () => {
 
         {isComponentReady ? <OrderForm {...{ watches, cities, onSubmit, onReset }} /> : null}
         <hr />
-      </Container>
+      </>
     </Container>
   );
 };

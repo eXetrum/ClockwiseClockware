@@ -1,12 +1,31 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { Row, Col, Alert } from 'react-bootstrap';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import Dialog from '@mui/material/Dialog';
+import ImageIcon from '@mui/icons-material/Image';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 
+import { OrderImageList } from '../../components';
+
 import { formatDecimal, formatDate } from '../../utils';
-import { ORDER_STATUS } from '../../constants';
+import { MAX_RATING_VALUE, ORDER_STATUS, RATING_FORMAT_DECIMAL } from '../../constants';
 
 const ClientOrdersList = ({ orders, onReview }) => {
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const onImagePreviewOpen = useCallback(order => {
+    setOpen(true);
+    setSelectedOrder(order);
+  }, []);
+
+  const onImagePreviewClose = useCallback(() => {
+    setOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
   const columns = [
     { field: 'master.name', headerName: 'Master Name', width: 240, valueGetter: ({ row }) => row.master.name },
     { field: 'watch', headerName: 'Service', valueGetter: ({ row }) => row.watch.name },
@@ -41,18 +60,36 @@ const ClientOrdersList = ({ orders, onReview }) => {
       headerAlign: 'center',
       width: 120,
       align: 'center',
-      renderCell: ({ row }) => {
-        if (row.rating === null) {
-          return (
+      valueGetter: ({ row }) => {
+        if (row.rating === null) return '-';
+        return `${formatDecimal(row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
+      },
+    },
+    {
+      field: 'actions',
+      headerName: 'actions',
+      type: 'actions',
+      getActions: ({ row }) => {
+        const actions = [];
+        if (row.images.length) {
+          actions.unshift(
+            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+          );
+        }
+
+        if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
+          actions.unshift(
             <GridActionsCellItem
               icon={<ThumbUpOutlinedIcon />}
               label="Rate"
               onClick={() => onReview(row)}
-              disabled={row.status !== ORDER_STATUS.COMPLETED || row.isEvaluating}
-            />
+              disabled={row.isEvaluating}
+              showInMenu
+            />,
           );
         }
-        return <span>{row.rating}</span>;
+
+        return actions;
       },
     },
   ];
@@ -69,7 +106,17 @@ const ClientOrdersList = ({ orders, onReview }) => {
     );
   }
 
-  return <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter={true} autoHeight />;
+  return (
+    <>
+      <DataGrid rows={orders} columns={columns} rowsPerPageOptions={[]} hideFooter autoHeight />
+      <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+        <DialogTitle>Order images</DialogTitle>
+        <DialogContent>
+          <OrderImageList images={selectedOrder?.images} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 };
 
 export default ClientOrdersList;
