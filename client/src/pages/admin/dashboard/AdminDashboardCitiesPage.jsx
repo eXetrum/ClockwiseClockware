@@ -9,7 +9,7 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Header, CityForm, LoadingOverlay, NoRowsOverlay, RoundedPaginationFooter } from '../../../components';
+import { Header, CityForm, LoadingOverlay, NoRowsOverlay, DatagridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -151,6 +151,7 @@ const AdminDashboardCitiesPage = () => {
         type: 'actions',
         width: 200,
         flex: 1,
+        filterable: false,
         disableReorder: true,
         getActions: ({ row }) => [
           <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/cities/${row.id}`)} showInMenu />,
@@ -180,9 +181,11 @@ const AdminDashboardCitiesPage = () => {
           </Row>
           <hr />
 
+          <DatagridFilterContainer columns={columns} />
           <DataGrid
-            autoHeight={true}
-            disableRowSelectionOnClick={true}
+            autoHeight
+            disableRowSelectionOnClick
+            disableColumnFilter
             rows={cities}
             columns={columns}
             loading={loading}
@@ -193,13 +196,13 @@ const AdminDashboardCitiesPage = () => {
             initialState={{
               pagination: { paginationModel: { pageSize, page } },
               sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
-              filterModel: {
+              /*filterModel: {
                 items: [
                   { id: 1, field: 'rating', operator: '>', value: '1' },
                   { id: 2, field: 'name', operator: 'contains', value: 'q' },
                 ],
                 logicOperator: GridLogicOperator.Or,
-              },
+              },*/
             }}
             onPaginationModelChange={onPaginationModelChange}
             onSortModelChange={onSortModelChange}
@@ -209,15 +212,8 @@ const AdminDashboardCitiesPage = () => {
             components={{
               LoadingOverlay,
               NoRowsOverlay: () => NoRowsOverlay({ error }),
-              Toolbar: GridToolbar,
+              //Toolbar: GridToolbar,
             }}
-            componentsProps={{
-              filterPanel: {
-                disableAddFilterButton: false,
-                disableRemoveAllButton: false,
-              },
-            }}
-            visibleFields={VISIBLE_FIELDS}
           />
 
           <CityForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New City'} isModal={true} />

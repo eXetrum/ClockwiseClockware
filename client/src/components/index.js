@@ -16,3 +16,4 @@ export { default as ImageUploader } from './common/ImageUploader';
 export { default as OrderImageList } from './common/OrderImageList';
 export { default as LoadingOverlay } from './common/LoadingOverlay';
 export { default as NoRowsOverlay } from './common/NoRowsOverlay';
+export { default as DatagridFilterContainer } from './common/DatagridFilterContainer';

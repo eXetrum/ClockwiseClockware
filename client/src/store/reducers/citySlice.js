@@ -18,8 +18,9 @@ const initialState = {
   totalItems: 0,
   currentPage: 0,
   pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
-  sortFieldName: 'name',
-  sortOrder: SORT_ORDER.ASC,
+  sortFieldName: '',
+  sortOrder: '',
+  filters: [],
 };
 
 export const citySlice = createSlice({
@@ -45,6 +46,9 @@ export const citySlice = createSlice({
     changeCitySortOrder(state, { payload }) {
       state.sortOrder = payload;
     },
+    addCityFilter(state, { payload }) {},
+    removeFilter(state, { payload }) {},
+    resetFilters(state, { payload }) {},
   },
   extraReducers: {
     //#region Fetch all cities
