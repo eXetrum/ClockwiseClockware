@@ -9,6 +9,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import DateTimeRangePicker from './DateTimeRangePicker';
 
 import { formatDate, getOperatorsByTypeName, PRNG } from '../../utils';
+import { ORDER_STATUS } from '../../constants';
 
 const ListItem = styled('li')(({ theme }) => ({
   margin: theme.spacing(0.5),
@@ -31,16 +32,19 @@ const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete
   const [selectedTypeOperators, setSelectedTypeOperators] = useState([]);
   const [queryText, setQueryText] = useState('');
 
-  const onDateTimeChange = useCallback(async value => {
+  const onDateTimeChange = useCallback(value => {
     const newStartDate = new Date(value).getTime();
     if (!isNaN(newStartDate)) setQueryText(formatDate(newStartDate));
   }, []);
+
+  const onEnumSelectChange = useCallback(({ target: { value } }) => setQueryText(value), []);
 
   useEffect(() => {
     if (visibleColumns.length) {
       setSelectedTypeOperators(getOperatorsByTypeName(visibleColumns[selectedColumnIndex].type));
       if (visibleColumns[selectedColumnIndex].type === 'boolean') setQueryText('false');
       else if (visibleColumns[selectedColumnIndex].type === 'dateTime') setQueryText(formatDate(new Date()));
+      else if (visibleColumns[selectedColumnIndex].type === 'enum_orders_status') setQueryText(Object.values(ORDER_STATUS)[0]);
       else setQueryText('');
     }
   }, [visibleColumns, selectedColumnIndex]);
@@ -132,6 +136,24 @@ const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete
                       </LocalizationProvider>
                     )}
                   </Stack>
+                ) : null}
+                {visibleColumns[selectedColumnIndex].type === 'enum_orders_status' ? (
+                  <FormControl sx={{ m: 1, minWidth: 120, padding: 0 }} size="small">
+                    <InputLabel id="filter-value-select">Value</InputLabel>
+                    <Select
+                      label="Value"
+                      labelId="filter-value-select"
+                      id="filter-value-select"
+                      value={queryText}
+                      onChange={onEnumSelectChange}
+                    >
+                      {Object.values(ORDER_STATUS).map((value, idx) => (
+                        <MenuItem key={idx} value={value}>
+                          {value}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                 ) : null}
 
                 <Button
