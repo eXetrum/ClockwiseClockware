@@ -1,11 +1,17 @@
 /* eslint-disable */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { styled, Container, Stack, Paper, FormControl, InputLabel, MenuItem, Select, TextField, Switch, Button, Chip } from '@mui/material';
+import dayjs from 'dayjs';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
 
-import { getOperatorsByTypeName, PRNG } from '../../utils';
-import { OPERATORS_WITHOUT_QUERY } from '../../constants';
+//import { DateTimeRangePicker } from '../../components';
+
+import { formatDate, getOperatorsByTypeName, PRNG } from '../../utils';
+import DateTimeRangePicker from './DateTimeRangePicker';
 
 const ListItem = styled('li')(({ theme }) => ({
   margin: theme.spacing(0.5),
@@ -28,13 +34,20 @@ const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete
   const [selectedTypeOperators, setSelectedTypeOperators] = useState([]);
   const [queryText, setQueryText] = useState('');
 
+  const onDateTimeChange = useCallback(async value => {
+    const newStartDate = new Date(value).getTime();
+    console.log('newStartDate: ', newStartDate);
+    if (!isNaN(newStartDate)) setQueryText(formatDate(newStartDate));
+  }, []);
+
   useEffect(() => {
     if (visibleColumns.length) {
       setSelectedTypeOperators(getOperatorsByTypeName(visibleColumns[selectedColumnIndex].type));
+      if (visibleColumns[selectedColumnIndex].type === 'boolean') setQueryText('false');
+      else if (visibleColumns[selectedColumnIndex].type === 'dateTime') setQueryText(formatDate(new Date()));
+      else setQueryText('');
     }
   }, [visibleColumns, selectedColumnIndex]);
-
-  console.log('visibleColumns: ', visibleColumns, visibleColumns[selectedColumnIndex]);
 
   return (
     <>
@@ -83,43 +96,53 @@ const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete
                     ))}
                   </Select>
                 </FormControl>
-                {!OPERATORS_WITHOUT_QUERY.includes(selectedTypeOperators[selectedOperatorIndex].value) ? (
-                  <>
-                    {['number', 'string'].includes(visibleColumns[selectedColumnIndex].type) ? (
-                      <TextField
-                        size="small"
-                        label="Value"
-                        variant="outlined"
-                        placeholder="Filter value"
-                        type={visibleColumns[selectedColumnIndex].type === 'number' ? 'number' : 'text'}
-                        value={queryText}
-                        onChange={({ target: { value } }) => setQueryText(value)}
-                      />
-                    ) : null}
-                    {visibleColumns[selectedColumnIndex].type === 'boolean' ? (
-                      <Stack direction="row" justifyContent="center" alignItems="center">
-                        {queryText === 'false' ? <CloseIcon /> : null}
-                        <Switch
-                          sx={{ m: 1 }}
-                          checked={queryText === 'true'}
-                          onChange={({ target: { checked } }) => setQueryText(checked ? 'true' : 'false')}
+
+                {['number', 'string'].includes(visibleColumns[selectedColumnIndex].type) ? (
+                  <TextField
+                    size="small"
+                    label="Value"
+                    variant="outlined"
+                    placeholder="Filter value"
+                    type={visibleColumns[selectedColumnIndex].type === 'number' ? 'number' : 'text'}
+                    value={queryText}
+                    onChange={({ target: { value } }) => setQueryText(value)}
+                  />
+                ) : null}
+                {visibleColumns[selectedColumnIndex].type === 'boolean' ? (
+                  <Stack direction="row" justifyContent="center" alignItems="center">
+                    {queryText === 'false' ? <CloseIcon /> : null}
+                    <Switch
+                      sx={{ m: 1 }}
+                      checked={queryText === 'true'}
+                      onChange={({ target: { checked } }) => setQueryText(checked ? 'true' : 'false')}
+                    />
+                    {queryText === 'true' ? <CheckIcon /> : null}
+                  </Stack>
+                ) : null}
+                {visibleColumns[selectedColumnIndex].type === 'dateTime' ? (
+                  <Stack direction="row" justifyContent="center" alignItems="center">
+                    {selectedTypeOperators[selectedOperatorIndex].value === 'between' ? (
+                      <DateTimeRangePicker label={visibleColumns[selectedColumnIndex].headerName} onChange={setQueryText} />
+                    ) : (
+                      <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        <DateTimePicker
+                          label={visibleColumns[selectedColumnIndex].headerName}
+                          renderInput={props => <TextField size="small" style={{ width: 200 }} {...props} />}
+                          views={['year', 'month', 'day', 'hours']}
+                          onChange={onDateTimeChange}
+                          ampm={false}
+                          value={queryText}
                         />
-                        {queryText === 'true' ? <CheckIcon /> : null}
-                      </Stack>
-                    ) : null}
-                    {visibleColumns[selectedColumnIndex].type === 'dateTime' ? (
-                      <Stack direction="row" justifyContent="center" alignItems="center">
-                        DATE_OPERATORS
-                      </Stack>
-                    ) : null}
-                  </>
+                      </LocalizationProvider>
+                    )}
+                  </Stack>
                 ) : null}
 
                 <Button
                   size="small"
                   variant="contained"
                   color="success"
-                  disabled={!OPERATORS_WITHOUT_QUERY.includes(selectedTypeOperators[selectedOperatorIndex].value) && !queryText}
+                  disabled={!queryText}
                   onClick={() => {
                     onApply({
                       key: PRNG(-1e10, 1e10),
@@ -127,9 +150,8 @@ const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete
                       headerName: visibleColumns[selectedColumnIndex].headerName,
                       type: visibleColumns[selectedColumnIndex].type,
                       operator: { ...selectedTypeOperators[selectedOperatorIndex] },
-                      ...(!OPERATORS_WITHOUT_QUERY.includes(selectedTypeOperators[selectedOperatorIndex].value) && { query: queryText }),
+                      query: queryText,
                     });
-
                     setSelectedColumnIndex(0);
                     setSelectedOperatorIndex(0);
                     setQueryText('');
