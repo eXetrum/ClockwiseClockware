@@ -3,5 +3,10 @@ export {
   changeNewOrderField,
   resetNewOrder,
   changeOrderCurrentPage,
-  changeOrderRowsPerPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+  addOrderFilter,
+  removeOrderFilter,
+  resetOrderFilters,
 } from '../reducers/orderSlice';

@@ -3,5 +3,10 @@ export {
   changeNewMasterField,
   resetMasters,
   changeMasterCurrentPage,
-  changeMasterRowsPerPage,
+  changeMasterPageSize,
+  changeMasterSortFieldName,
+  changeMasterSortOrder,
+  addMasterFilter,
+  removeMasterFilter,
+  resetMasterFilters,
 } from '../reducers/masterSlice';
