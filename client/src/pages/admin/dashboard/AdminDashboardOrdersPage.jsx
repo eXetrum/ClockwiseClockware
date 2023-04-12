@@ -4,7 +4,7 @@ import { Container } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 
-import { DataGrid, GridToolbar, GridActionsCellItem } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import DialogContent from '@mui/material/DialogContent';
 import Dialog from '@mui/material/Dialog';
 import ImageIcon from '@mui/icons-material/Image';
@@ -20,9 +20,27 @@ import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchOrders, deleteOrder, completeOrder, cancelOrder } from '../../../store/thunks';
-import { selectAllOrders, selectOrderError, selectOrderInitialLoading, selectOrderTotalItems } from '../../../store/selectors';
+import {
+  changeOrderCurrentPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+  addOrderFilter,
+  removeOrderFilter,
+} from '../../../store/actions';
+import {
+  selectAllOrders,
+  selectOrderError,
+  selectOrderInitialLoading,
+  selectOrderTotalItems,
+  selectOrderCurrentPage,
+  selectOrderPageSize,
+  selectOrderSortFielName,
+  selectOrderSortOrder,
+  selectOrderFilters,
+} from '../../../store/selectors';
 
-import { formatDate, formatDecimal } from '../../../utils';
+import { formatDate, formatDecimal, buildFilter } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, MAX_RATING_VALUE, RATING_FORMAT_DECIMAL, ORDER_STATUS } from '../../../constants';
 
 const AdminDashboardOrdersPage = () => {
@@ -30,22 +48,31 @@ const AdminDashboardOrdersPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const [open, setOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+
   const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
   const loading = useSelector(selectOrderInitialLoading);
   const totalItems = useSelector(selectOrderTotalItems);
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
-  const [open, setOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const page = useSelector(selectOrderCurrentPage);
+  const pageSize = useSelector(selectOrderPageSize);
+
+  const sortFieldName = useSelector(selectOrderSortFielName);
+  const sortOrder = useSelector(selectOrderSortOrder);
+
+  const filters = useSelector(selectOrderFilters);
 
   const fetchPage = useCallback(
-    () => dispatch(fetchOrders({ offset: page * rowsPerPage, limit: rowsPerPage })),
-    [dispatch, page, rowsPerPage],
+    () =>
+      dispatch(
+        fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
+      ),
+    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
   );
 
-  useEffect(() => fetchPage(), [dispatch, fetchPage]);
+  useEffect(() => fetchPage(), [fetchPage]);
 
   const onImagePreviewOpen = useCallback(order => {
     setOpen(true);
@@ -116,10 +143,32 @@ const AdminDashboardOrdersPage = () => {
 
   const onPaginationModelChange = useCallback(
     params => {
-      setPage(params.page);
-      setRowsPerPage(params.pageSize);
+      if (params.page !== page) dispatch(changeOrderCurrentPage(params.page));
+      if (params.pageSize !== pageSize) dispatch(changeOrderPageSize(params.pageSize));
     },
-    [setPage, setRowsPerPage],
+    [dispatch, page, pageSize],
+  );
+  const onSortModelChange = useCallback(
+    params => {
+      const { field: fieldName = '', sort: order = '' } = params.length ? params[0] : {};
+      if (fieldName !== sortFieldName) dispatch(changeOrderSortFieldName(fieldName));
+      if (order !== sortOrder) dispatch(changeOrderSortOrder(order));
+    },
+    [dispatch, sortFieldName, sortOrder],
+  );
+
+  const onFilterApply = useCallback(
+    ({ ...params }) => {
+      dispatch(addOrderFilter({ ...params }));
+    },
+    [dispatch],
+  );
+
+  const onFilterRemove = useCallback(
+    ({ ...params }) => {
+      dispatch(removeOrderFilter({ ...params }));
+    },
+    [dispatch],
   );
 
   const columns = [
@@ -148,31 +197,34 @@ const AdminDashboardOrdersPage = () => {
       valueGetter: ({ row }) => row.master.name,
     },
     {
-      field: 'master',
+      field: 'master.rating',
       headerName: 'Master Rating',
       type: 'number',
       flex: 1,
-      valueFormatter: ({ value }) =>
-        `${formatDecimal(value.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
-      sortComparator: (a, b) => a.rating - b.rating,
+      valueGetter: ({ row }) =>
+        `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
+      //valueFormatter: ({ value }) =>
+      //`${formatDecimal(value, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
+      //sortComparator: (a, b) => a - b,
     },
     {
-      field: 'city',
+      field: 'city.name',
       headerName: 'City',
       flex: 1,
       valueGetter: ({ row }) => row.city.name,
     },
     {
-      field: 'watch',
+      field: 'watch.repairTime',
       headerName: 'Clock',
+      type: 'number',
       flex: 1,
-      sortable: true,
-      valueFormatter: ({ value }) => `${value.name} (${value.repairTime}h)`,
-      sortComparator: (a, b) => a.repairTime - b.repairTime,
+      valueGetter: ({ row }) => `${row.watch.name} (${row.watch.repairTime}h)`,
+      //valueFormatter: ({ value }) => `${value.name} (${value.repairTime}h)`,
+      //sortComparator: (a, b) => a.repairTime - b.repairTime,
     },
     {
       field: 'startDate',
-      headerName: 'Date Start',
+      headerName: 'Start Date/Time',
       width: 140,
       type: 'dateTime',
       flex: 1,
@@ -180,7 +232,7 @@ const AdminDashboardOrdersPage = () => {
     },
     {
       field: 'endDate',
-      headerName: 'Date End',
+      headerName: 'End Date/Time',
       width: 140,
       type: 'dateTime',
       flex: 1,
@@ -249,20 +301,27 @@ const AdminDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        <DataGridFilterContainer columns={columns} filters={[]} onApply={item => console.log(item)} onDelete={item => console.log(item)} />
+        <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
         <DataGrid
           autoHeight
           disableRowSelectionOnClick
+          disableColumnFilter
           rows={orders}
           columns={columns}
           loading={loading}
           hideFooterPagination={loading}
-          initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
-          onPaginationModelChange={onPaginationModelChange}
-          rowCount={totalItems}
           paginationMode="server"
+          sortingMode="server"
+          filterMode="server"
+          initialState={{
+            pagination: { paginationModel: { pageSize, page } },
+            sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
+          }}
+          onPaginationModelChange={onPaginationModelChange}
+          onSortModelChange={onSortModelChange}
+          rowCount={totalItems}
           pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
-          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
         />
 
         <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>

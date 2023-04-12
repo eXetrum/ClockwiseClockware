@@ -1,32 +1,45 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 
-import { DataGrid, GridToolbar, GridActionsCellItem } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
-import { Header, MasterForm, LoadingOverlay, NoRowsOverlay } from '../../../components';
+import { Header, MasterForm, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchMasters, addMaster, deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../../store/thunks';
-import { changeVisibilityAddMasterForm } from '../../../store/actions';
+import {
+  changeVisibilityAddMasterForm,
+  changeMasterCurrentPage,
+  changeMasterPageSize,
+  changeMasterSortFieldName,
+  changeMasterSortOrder,
+  addMasterFilter,
+  removeMasterFilter,
+} from '../../../store/actions';
 import {
   selectAllMasters,
   selectNewMaster,
   selectMasterError,
   selectMasterInitialLoading,
   selectMasterTotalItems,
+  selectMasterCurrentPage,
+  selectMasterPageSize,
+  selectMasterSortFielName,
+  selectMasterSortOrder,
+  selectMasterFilters,
 } from '../../../store/selectors';
 
-import { formatDecimal } from '../../../utils';
+import { formatDecimal, buildFilter } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, MAX_RATING_VALUE, RATING_FORMAT_DECIMAL } from '../../../constants';
 
 const AdminDashboardMasters = () => {
@@ -40,15 +53,23 @@ const AdminDashboardMasters = () => {
   const loading = useSelector(selectMasterInitialLoading);
   const totalItems = useSelector(selectMasterTotalItems);
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
+  const page = useSelector(selectMasterCurrentPage);
+  const pageSize = useSelector(selectMasterPageSize);
+
+  const sortFieldName = useSelector(selectMasterSortFielName);
+  const sortOrder = useSelector(selectMasterSortOrder);
+
+  const filters = useSelector(selectMasterFilters);
 
   const fetchPage = useCallback(
-    () => dispatch(fetchMasters({ offset: page * rowsPerPage, limit: rowsPerPage })),
-    [dispatch, page, rowsPerPage],
+    () =>
+      dispatch(
+        fetchMasters({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
+      ),
+    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
   );
 
-  useEffect(() => fetchPage(), [dispatch, fetchPage]);
+  useEffect(() => fetchPage(), [fetchPage]);
 
   const onRemove = useCallback(
     async master => {
@@ -123,10 +144,32 @@ const AdminDashboardMasters = () => {
 
   const onPaginationModelChange = useCallback(
     params => {
-      setPage(params.page);
-      setRowsPerPage(params.pageSize);
+      if (params.page !== page) dispatch(changeMasterCurrentPage(params.page));
+      if (params.pageSize !== pageSize) dispatch(changeMasterPageSize(params.pageSize));
     },
-    [setPage, setRowsPerPage],
+    [dispatch, page, pageSize],
+  );
+  const onSortModelChange = useCallback(
+    params => {
+      const { field: fieldName = '', sort: order = '' } = params.length ? params[0] : {};
+      if (fieldName !== sortFieldName) dispatch(changeMasterSortFieldName(fieldName));
+      if (order !== sortOrder) dispatch(changeMasterSortOrder(order));
+    },
+    [dispatch, sortFieldName, sortOrder],
+  );
+
+  const onFilterApply = useCallback(
+    ({ ...params }) => {
+      dispatch(addMasterFilter({ ...params }));
+    },
+    [dispatch],
+  );
+
+  const onFilterRemove = useCallback(
+    ({ ...params }) => {
+      dispatch(removeMasterFilter({ ...params }));
+    },
+    [dispatch],
   );
 
   const columns = [
@@ -138,6 +181,7 @@ const AdminDashboardMasters = () => {
       width: 240,
       flex: 1,
       sortable: false,
+      filterable: false,
       valueFormatter: ({ value }) => value.map(city => city.name).join(', '),
     },
     {
@@ -166,6 +210,7 @@ const AdminDashboardMasters = () => {
       type: 'actions',
       width: 100,
       flex: 1,
+      filterable: false,
       disableReorder: true,
       getActions: ({ row }) => {
         const actions = [
@@ -215,19 +260,27 @@ const AdminDashboardMasters = () => {
           </Row>
           <hr />
 
+          <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
           <DataGrid
-            autoHeight={true}
-            disableRowSelectionOnClick={true}
+            autoHeight
+            disableRowSelectionOnClick
+            disableColumnFilter
             rows={masters}
             columns={columns}
             loading={loading}
             hideFooterPagination={loading}
-            initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
-            onPaginationModelChange={onPaginationModelChange}
-            rowCount={totalItems}
             paginationMode="server"
+            sortingMode="server"
+            filterMode="server"
+            initialState={{
+              pagination: { paginationModel: { pageSize, page } },
+              sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
+            }}
+            onPaginationModelChange={onPaginationModelChange}
+            onSortModelChange={onSortModelChange}
+            rowCount={totalItems}
             pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
-            components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+            components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
           />
 
           <MasterForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Master'} isModal={true} />
