@@ -203,9 +203,6 @@ const AdminDashboardOrdersPage = () => {
       flex: 1,
       valueGetter: ({ row }) =>
         `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
-      //valueFormatter: ({ value }) =>
-      //`${formatDecimal(value, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
-      //sortComparator: (a, b) => a - b,
     },
     {
       field: 'city.name',
@@ -219,8 +216,6 @@ const AdminDashboardOrdersPage = () => {
       type: 'number',
       flex: 1,
       valueGetter: ({ row }) => `${row.watch.name} (${row.watch.repairTime}h)`,
-      //valueFormatter: ({ value }) => `${value.name} (${value.repairTime}h)`,
-      //sortComparator: (a, b) => a.repairTime - b.repairTime,
     },
     {
       field: 'startDate',
@@ -241,6 +236,7 @@ const AdminDashboardOrdersPage = () => {
     {
       field: 'status',
       headerName: 'Status',
+      type: 'enum_orders_status',
       flex: 1,
     },
     {
