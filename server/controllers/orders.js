@@ -1,7 +1,7 @@
 require('dotenv').config();
 const { body, param, query, validationResult } = require('express-validator');
 const moment = require('moment');
-const { Op } = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 const db = require('../database/models/index');
 const { User, Client, Master, Watches, City, Order, Confirmations, Image } = require('../database/models');
 const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
@@ -13,7 +13,9 @@ const {
     generateConfirmationToken,
     isDbErrorEntryNotFound,
     formatDate,
-    formatDecimal
+    formatDecimal,
+    parseFilters,
+    buildWhereClause
 } = require('../utils');
 const {
     ACCESS_SCOPE,
@@ -26,6 +28,20 @@ const {
     MAX_IMAGE_SIZE_BYTES
 } = require('../constants');
 
+const ORDER_TYPE_DEF = {
+    ['client.email']: 'string',
+    ['client.name']: 'string',
+    ['master.email']: 'string',
+    ['master.name']: 'string',
+    ['master.rating']: 'number',
+    ['city.name']: 'string',
+    ['watch.repairTime']: 'number',
+    startDate: 'dateTime',
+    endDate: 'dateTime',
+    status: 'string',
+    totalCost: 'number'
+};
+
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
@@ -33,13 +49,13 @@ const getAll = [
     query('orderBy', 'orderBy value is incorrect ')
         .optional()
         .isIn([
-            'clientEmail',
-            'clientName',
-            'masterEmail',
-            'masterName',
-            'masterRating',
-            'cityName',
-            'repairTime',
+            'client.email',
+            'client.name',
+            'master.email',
+            'master.name',
+            'master.rating',
+            'city.name',
+            'watch.repairTime',
             'startDate',
             'endDate',
             'status',
@@ -51,50 +67,99 @@ const getAll = [
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC', filter } = req.query;
             const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
-            if (orderBy === 'repairTime') sortParams.unshift({ model: Watches, as: 'watch' });
-            else if (orderBy === 'cityName') {
-                sortParams[0] = 'name';
-                sortParams.unshift({ model: City, as: 'city' });
-            } else if (orderBy === 'masterRating') {
-                sortParams[0] = 'rating';
-                sortParams.unshift({ model: Master, as: 'master' });
-            } else if (orderBy === 'masterName') {
-                sortParams[0] = 'name';
-                sortParams.unshift({ model: Master, as: 'master' });
-            } else if (orderBy === 'masterEmail') {
-                sortParams[0] = 'email';
-                sortParams.unshift({ model: Master, as: 'master' }, User);
-            } else if (orderBy === 'clientName') {
-                sortParams[0] = 'name';
-                sortParams.unshift({ model: Client, as: 'client' });
-            } else if (orderBy === 'clientEmail') {
-                sortParams[0] = 'email';
-                sortParams.unshift({ model: Client, as: 'client' }, User);
-            }
+            if (orderBy === 'client.email') sortParams[0] = Sequelize.literal('"client.User.email"');
+            else if (orderBy === 'client.name') sortParams[0] = Sequelize.literal('"client.name"');
+            else if (orderBy === 'master.email') sortParams[0] = Sequelize.literal('"master.User.email"');
+            else if (orderBy === 'master.name') sortParams[0] = Sequelize.literal('"master.name"');
+            else if (orderBy === 'master.rating') sortParams[0] = Sequelize.literal('"master.rating"');
+            else if (orderBy === 'city.name') sortParams[0] = Sequelize.literal('"city.name"');
+            else if (orderBy === 'watch.repairTime') sortParams[0] = Sequelize.literal('"watch.repairTime"');
+
+            const filters = parseFilters(filter, ORDER_TYPE_DEF);
+            const where = buildWhereClause(filters);
 
             const authUser = parseAuthToken(req.headers);
+            if (authUser.role === USER_ROLES.MASTER) where['masterId'] = authUser.id;
+            else if (authUser.role === USER_ROLES.CLIENT) where['clientId'] = authUser.id;
 
-            let where = {};
-            if (authUser.role === USER_ROLES.MASTER) where = { masterId: authUser.id };
-            else if (authUser.role === USER_ROLES.CLIENT) where = { clientId: authUser.id };
+            if ('client.email' in where) {
+                where['$client.User.email$'] = where['client.email'];
+                delete where['client.email'];
+            }
+            if ('client.name' in where) {
+                where['$client.name$'] = where['client.name'];
+                delete where['client.name'];
+            }
+            if ('master.email' in where) {
+                where['$master.User.email$'] = where['master.email'];
+                delete where['master.email'];
+            }
+            if ('master.name' in where) {
+                where['$master.name$'] = where['master.name'];
+                delete where['master.name'];
+            }
+            if ('master.rating' in where) {
+                where['$master.rating$'] = where['master.rating'];
+                delete where['master.rating'];
+            }
+            if ('city.name' in where) {
+                where['$city.name$'] = where['city.name'];
+                delete where['city.name'];
+            }
+            if ('watch.repairTime' in where) {
+                where['$watch.repairTime$'] = where['watch.repairTime'];
+                delete where['watch.repairTime'];
+            }
 
             const records = await Order.findAll({
                 where,
                 include: [
-                    { model: Client, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'client' },
-                    { model: Watches, as: 'watch' },
-                    { model: City, as: 'city' },
-                    { model: Master, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'master' },
+                    {
+                        model: Client,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'client',
+                        required: true
+                    },
+                    {
+                        model: Master,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'master',
+                        required: true
+                    },
+                    { model: City, as: 'city', required: true },
+                    { model: Watches, as: 'watch', required: true },
+
                     { model: Image, as: 'images', through: { attributes: [] } }
                 ],
-                attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
                 order: [sortParams],
                 limit,
                 offset
             });
-            const total = await Order.count();
+            const total = await Order.count({
+                where,
+                include: [
+                    {
+                        model: Client,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'client',
+                        required: true
+                    },
+                    {
+                        model: Master,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'master',
+                        required: true
+                    },
+                    { model: City, as: 'city', required: true },
+                    { model: Watches, as: 'watch', required: true }
+                ]
+            });
 
             const orders = records.map((order) => ({
                 ...order.toJSON(),

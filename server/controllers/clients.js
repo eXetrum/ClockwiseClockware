@@ -1,9 +1,18 @@
 const { body, param, query, validationResult } = require('express-validator');
+const { Sequelize } = require('sequelize');
 const db = require('../database/models/index');
 const { User, Client, Order } = require('../database/models');
 const { RequireAuth } = require('../middleware/RouteProtector');
-const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
+const {
+    isDbErrorEntryNotFound,
+    isDbErrorEntryAlreadyExists,
+    isDbErrorEntryReferences,
+    parseFilters,
+    buildWhereClause
+} = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
+
+const CLIENT_TYPE_DEF = { email: 'string', name: 'string', isEmailVerified: 'boolean' };
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -11,23 +20,36 @@ const getAll = [
     query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
     query('orderBy', 'orderBy value is incorrect ').optional().isIn(['email', 'name', 'isEmailVerified']),
     query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
+    query('filter', 'filter value is incorrect')
+        .optional()
+        .custom((value, { req }) => parseFilters(value, CLIENT_TYPE_DEF)),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC', filter } = req.query;
             const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
-            if (orderBy === 'email') sortParams.unshift(User);
+            if (orderBy === 'email') sortParams[0] = Sequelize.literal('"User.email"');
+            const filters = parseFilters(filter, CLIENT_TYPE_DEF);
+            const where = buildWhereClause(filters);
+            if ('email' in where) {
+                where['$User.email$'] = where.email;
+                delete where.email;
+            }
 
             const records = await Client.findAll({
-                include: [{ model: User }, { model: Order, as: 'orders' }],
-                attributes: { exclude: ['id', 'userId'] },
+                where,
+                include: [
+                    { model: User, required: true },
+                    { model: Order, as: 'orders' }
+                ],
+                attributes: { exclude: ['id'] },
                 order: [sortParams],
                 limit,
                 offset
             });
-            const total = await Client.count();
+            const total = await Client.count({ where, include: [{ model: User, required: true }] });
 
             const clients = records.map((client) => ({ ...client.toJSON(), ...client.User.toJSON() }));
             res.status(200).json({ clients, total }).end();

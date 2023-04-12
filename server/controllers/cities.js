@@ -1,73 +1,17 @@
 const { body, param, query, validationResult } = require('express-validator');
 const { City } = require('../database/models');
-const { Op } = require('sequelize');
+
 const { RequireAuth } = require('../middleware/RouteProtector');
 const {
     isDbErrorEntryNotFound,
     isDbErrorEntryAlreadyExists,
     isDbErrorEntryReferences,
     parseFilters,
-    FILTER_OPERATORS
+    buildWhereClause
 } = require('../utils');
 const { ACCESS_SCOPE } = require('../constants');
 
 const CITY_TYPE_DEF = { name: 'string', pricePerHour: 'number' };
-
-const getSequelizeOperator = (operatorName) => {
-    if (operatorName === 'contains') return [Op.contains];
-    if (operatorName === 'equals') return [Op.eq];
-    if (operatorName === 'startsWith') return [Op.startsWith];
-    if (operatorName === 'endsWith') return [Op.endsWith];
-};
-
-/*const FILTER_OPERATORS = {
-    // Strings
-    contains: (str, text) => str.toLowerCase().includes(text.toLowerCase()),
-    equals: (str, text) => str.toLowerCase() === text.toLowerCase(),
-    startsWith: (str, text) => str.toLowerCase().startsWith(text.toLowerCase()),
-    endsWith: (str, text) => str.toLowerCase().endsWith(text.toLowerCase()),
-    // Shared, without params
-    isEmpty: (str, _) => str.length === 0,
-    isNotEmpty: (str, _) => str.length !== 0,
-    // Numeric
-    eq: (a, b) => a === b,
-    ne: (a, b) => a !== b,
-    gt: (a, b) => a > b,
-    gte: (a, b) => a >= b,
-    lt: (a, b) => a < b,
-    lte: (a, b) => a <= b,
-    // Boolean/Datetime
-    is: (a, b) => a.valueOf() === b.valueOf(),
-    isNot: (a, b) => a.valueOf() !== b.valueOf(),
-    // Datetime
-    isAfter: (a, b) => a.valueOf() > b.valueOf(),
-    isOnOrAfter: (a, b) => a.valueOf() >= b.valueOf(),
-    isBefore: (a, b) => a.valueOf() < b.valueOf(),
-    isOnOrBefore: (a, b) => a.valueOf() <= b.valueOf(),
-    isInBetween: (a, b) => false // TODO
-};*/
-
-const buildWhereClause = (filters = []) => {
-    const where = {};
-
-    filters.forEach(({ field, operator, value }) => {
-        console.log('buildWhereClause: ', field, operator, value);
-        //govnokooood
-        if (operator === 'contains') where[field] = { [Op.substring]: value };
-        else if (['equals', 'eq'].includes(operator)) where[field] = { [Op.eq]: value };
-        else if (operator === 'startsWith') where[field] = { [Op.startsWith]: value };
-        else if (operator === 'endsWith') where[field] = { [Op.endsWith]: value };
-        else if (operator === 'isEmpty') where[field] = { [Op.is]: null };
-        else if (operator === 'isNotEmpty') where[field] = { [Op.not]: null };
-        else if (operator === 'ne') where[field] = { [Op.ne]: value };
-        else if (operator === 'gt') where[field] = { [Op.gt]: value };
-        else if (operator === 'gte') where[field] = { [Op.gte]: value };
-        else if (operator === 'lt') where[field] = { [Op.lt]: value };
-        else if (operator === 'lte') where[field] = { [Op.lte]: value };
-    });
-
-    return where;
-};
 
 const getAll = [
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
@@ -76,11 +20,7 @@ const getAll = [
     query('order', 'order value is incorrect').optional().toUpperCase().isIn(['ASC', 'DESC']),
     query('filter', 'filter value is incorrect')
         .optional()
-        .custom((value, { req }) => {
-            const filters = parseFilters(value, CITY_TYPE_DEF);
-            const fields = filters.map((item) => item.field);
-            return fields.includes('name') || fields.includes('pricePerHour');
-        }),
+        .custom((value, { req }) => parseFilters(value, CITY_TYPE_DEF)),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
@@ -89,21 +29,13 @@ const getAll = [
             const { offset = 0, limit, orderBy, order = 'ASC', filter } = req.query;
             const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
             const filters = parseFilters(filter, CITY_TYPE_DEF);
-            //filters fields['pricePerHour'].value *= 100;
             const where = buildWhereClause(filters);
-            console.log('where: ', where);
 
-            const cities = await City.findAll({ where: { pricePerHour: { [Op.is]: null } }, order: [sortParams], limit, offset });
+            const cities = await City.findAll({ where, order: [sortParams], limit, offset });
             const total = await City.count({ where });
-
-            // Apply filters one by one
-            /*filters.forEach((params) => {
-                cities = cities.filter((item) => FILTER_OPERATORS[params.operator](item[params.field], params.value));
-            });*/
 
             res.status(200).json({ cities, total }).end();
         } catch (error) {
-            console.log(error);
             res.status(500).json(error).end();
         }
     }

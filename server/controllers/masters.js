@@ -1,5 +1,5 @@
 const { body, query, param, validationResult } = require('express-validator');
-const { Op } = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 const { User, Master, Watches, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
 const { RequireAuth } = require('../middleware/RouteProtector');
@@ -8,7 +8,9 @@ const {
     isDbErrorEntryNotFound,
     isDbErrorEntryAlreadyExists,
     isDbErrorEntryReferences,
-    createComparatorByProp
+    createComparatorByProp,
+    parseFilters,
+    buildWhereClause
 } = require('../utils');
 const { ACCESS_SCOPE, USER_ROLES, MS_PER_HOUR, MIN_RATING_VALUE, MAX_RATING_VALUE } = require('../constants');
 
@@ -105,33 +107,55 @@ const getAvailableMasters = [
     }
 ];
 
+const MASTER_TYPE_DEF = {
+    email: 'string',
+    name: 'string',
+    rating: 'string',
+    isEmailVerified: 'boolean',
+    isApprovedByAdmin: 'boolean'
+};
+
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
     query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
     query('orderBy', 'orderBy value is incorrect ').optional().isIn(['email', 'name', 'isEmailVerified', 'isApprovedByAdmin', 'rating']),
     query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
+    query('filter', 'filter value is incorrect')
+        .optional()
+        .custom((value, { req }) => parseFilters(value, MASTER_TYPE_DEF)),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC', filter } = req.query;
             const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
-            if (orderBy === 'email') sortParams.unshift(User);
+            if (orderBy === 'email') sortParams[0] = Sequelize.literal('"User.email"');
+            const filters = parseFilters(filter, MASTER_TYPE_DEF);
+            const where = buildWhereClause(filters);
+            if ('email' in where) {
+                where['$User.email$'] = where.email;
+                delete where.email;
+            }
 
             const records = await Master.findAll({
-                include: [{ model: User }, { model: City, as: 'cities', through: { attributes: [] } }, { model: Order, as: 'orders' }],
-                attributes: { exclude: ['id', 'userId'] },
+                where,
+                include: [
+                    { model: User, required: true },
+                    { model: Order, as: 'orders' },
+                    { model: City, as: 'cities', through: { attributes: [] } }
+                ],
+                attributes: { exclude: ['id'] },
                 order: [sortParams],
                 limit,
                 offset
             });
-            const total = await Master.count();
+            const total = await Master.count({ where, include: [{ model: User, required: true }] });
 
             const masters = records.map((master) => ({
                 ...master.toJSON(),
-                cities: master.cities.sort(cityNameComparator),
+                cities: (master.cities || []).sort(cityNameComparator),
                 ...master.User.toJSON()
             }));
 
