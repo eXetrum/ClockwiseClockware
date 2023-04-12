@@ -32,9 +32,12 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
-  currentPage: 0,
-  rowsPerPage: PAGINATION_PAGE_SIZE_OPTIONS[0],
   totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
+  sortFieldName: '',
+  sortOrder: '',
+  filters: [],
 };
 
 export const masterSlice = createSlice({
@@ -55,8 +58,23 @@ export const masterSlice = createSlice({
     changeMasterCurrentPage(state, { payload }) {
       state.currentPage = payload;
     },
-    changeMasterRowsPerPage(state, { payload }) {
-      state.rowsPerPage = payload;
+    changeMasterPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeMasterSortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeMasterSortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
+    addMasterFilter(state, { payload }) {
+      state.filters.push(payload);
+    },
+    removeMasterFilter(state, { payload }) {
+      state.filters = state.filters.filter(item => item.key !== payload.key);
+    },
+    resetMasterFilters(state, { payload }) {
+      state.filters = [];
     },
   },
   extraReducers: {
@@ -209,6 +227,16 @@ export const masterSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddMasterForm, changeNewMasterField, resetMasters, changeMasterCurrentPage, changeMasterRowsPerPage } =
-  masterSlice.actions;
+export const {
+  changeVisibilityAddMasterForm,
+  changeNewMasterField,
+  resetMasters,
+  changeMasterCurrentPage,
+  changeMasterPageSize,
+  changeMasterSortFieldName,
+  changeMasterSortOrder,
+  addMasterFilter,
+  removeMasterFilter,
+  resetMasterFilters,
+} = masterSlice.actions;
 export default masterSlice.reducer;

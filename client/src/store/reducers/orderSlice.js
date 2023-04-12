@@ -24,9 +24,12 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowRateForm: false,
-  currentPage: 0,
-  rowsPerPage: PAGINATION_PAGE_SIZE_OPTIONS[0],
   totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
+  sortFieldName: '',
+  sortOrder: '',
+  filters: [],
 };
 
 export const orderSlice = createSlice({
@@ -51,8 +54,23 @@ export const orderSlice = createSlice({
     changeOrderCurrentPage(state, { payload }) {
       state.currentPage = payload;
     },
-    changeOrderRowsPerPage(state, { payload }) {
-      state.rowsPerPage = payload;
+    changeOrderPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeOrderSortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeOrderSortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
+    addOrderFilter(state, { payload }) {
+      state.filters.push(payload);
+    },
+    removeOrderFilter(state, { payload }) {
+      state.filters = state.filters.filter(item => item.key !== payload.key);
+    },
+    resetOrderFilters(state, { payload }) {
+      state.filters = [];
     },
   },
   extraReducers: {
@@ -212,6 +230,16 @@ export const orderSlice = createSlice({
   },
 });
 
-export const { changeVisibilityRateForm, changeNewOrderField, resetNewOrder, changeOrderCurrentPage, changeOrderRowsPerPage } =
-  orderSlice.actions;
+export const {
+  changeVisibilityRateForm,
+  changeNewOrderField,
+  resetNewOrder,
+  changeOrderCurrentPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+  addOrderFilter,
+  removeOrderFilter,
+  resetOrderFilters,
+} = orderSlice.actions;
 export default orderSlice.reducer;
