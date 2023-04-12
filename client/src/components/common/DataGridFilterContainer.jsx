@@ -8,10 +8,9 @@ import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import CloseIcon from '@mui/icons-material/Close';
 import CheckIcon from '@mui/icons-material/Check';
 
-//import { DateTimeRangePicker } from '../../components';
+import DateTimeRangePicker from './DateTimeRangePicker';
 
 import { formatDate, getOperatorsByTypeName, PRNG } from '../../utils';
-import DateTimeRangePicker from './DateTimeRangePicker';
 
 const ListItem = styled('li')(({ theme }) => ({
   margin: theme.spacing(0.5),
