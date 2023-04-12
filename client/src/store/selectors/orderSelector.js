@@ -9,7 +9,10 @@ const stateOrderPending = state => state.orderReducer.isPending;
 const stateOrderShowRateForm = state => state.orderReducer.isShowRateForm;
 const stateOrderTotalItems = state => state.orderReducer.totalItems;
 const stateOrderCurrentPage = state => state.orderReducer.currentPage;
-const stateOrderRowsPerPage = state => state.orderReducer.rowsPerPage;
+const stateOrderPageSize = state => state.orderReducer.pageSize;
+const stateOrderSortFieldName = state => state.orderReducer.sortFieldName;
+const stateOrderSortOrder = state => state.orderReducer.sortOrder;
+const stateOrderFilters = state => state.orderReducer.filters;
 
 export const selectAllOrders = createSelector([stateAllOrders], allOrders => allOrders);
 export const selectNewOrder = createSelector([stateNewOrder], newOrder => newOrder);
@@ -20,4 +23,7 @@ export const selectOrderPending = createSelector([stateOrderPending], pending =>
 export const selectOrderShowRateForm = createSelector([stateOrderShowRateForm], isShowForm => isShowForm);
 export const selectOrderTotalItems = createSelector([stateOrderTotalItems], totalItems => totalItems);
 export const selectOrderCurrentPage = createSelector([stateOrderCurrentPage], currentPage => currentPage);
-export const selectOrderRowsPerPage = createSelector([stateOrderRowsPerPage], rowsPerPage => rowsPerPage);
+export const selectOrderPageSize = createSelector([stateOrderPageSize], pageSize => pageSize);
+export const selectOrderSortFielName = createSelector([stateOrderSortFieldName], sortFieldName => sortFieldName);
+export const selectOrderSortOrder = createSelector([stateOrderSortOrder], sortOrder => sortOrder);
+export const selectOrderFilters = createSelector([stateOrderFilters], filters => filters);
