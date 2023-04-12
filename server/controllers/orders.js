@@ -39,7 +39,8 @@ const ORDER_TYPE_DEF = {
     startDate: 'dateTime',
     endDate: 'dateTime',
     status: 'string',
-    totalCost: 'number'
+    totalCost: 'number',
+    rating: 'number'
 };
 
 const getAll = [
@@ -59,7 +60,8 @@ const getAll = [
             'startDate',
             'endDate',
             'status',
-            'totalCost'
+            'totalCost',
+            'rating'
         ]),
     query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
@@ -169,6 +171,7 @@ const getAll = [
 
             res.status(200).json({ orders, total }).end();
         } catch (error) {
+            console.log(error);
             res.status(500).json(error).end();
         }
     }
