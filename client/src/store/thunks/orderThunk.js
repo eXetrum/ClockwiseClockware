@@ -4,15 +4,21 @@ import { getErrorType, getErrorText } from '../../utils';
 import { ORDER_STATUS, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 //#region Order
-export const fetchOrders = createAsyncThunk('order/fetchAll', async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0] }, thunkAPI) => {
-  try {
-    if (limit === -1) limit = undefined;
-    const response = await apiSecure.get('/orders', { params: { offset, limit } });
-    return response.data;
-  } catch (error) {
-    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
-  }
-});
+export const fetchOrders = createAsyncThunk(
+  'order/fetchAll',
+  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '', filter = '' }, thunkAPI) => {
+    try {
+      if (limit === -1) limit = undefined;
+      if (orderBy === '') orderBy = order = undefined;
+      if (filter === '') filter = undefined;
+
+      const response = await apiSecure.get('/orders', { params: { offset, limit, orderBy, order, filter } });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+    }
+  },
+);
 
 export const addOrder = createAsyncThunk('order/addOrder', async (order, thunkAPI) => {
   try {

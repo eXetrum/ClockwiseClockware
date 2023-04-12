@@ -6,10 +6,13 @@ import { PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 //#region Master
 export const fetchMasters = createAsyncThunk(
   'master/fetchAll',
-  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0] }, thunkAPI) => {
+  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '', filter = '' }, thunkAPI) => {
     try {
       if (limit === -1) limit = undefined;
-      const response = await apiSecure.get('/masters', { params: { offset, limit } });
+      if (orderBy === '') orderBy = order = undefined;
+      if (filter === '') filter = undefined;
+
+      const response = await apiSecure.get('/masters', { params: { offset, limit, orderBy, order, filter } });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
