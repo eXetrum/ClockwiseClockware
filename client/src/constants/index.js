@@ -44,7 +44,41 @@ export const MAX_IMAGE_BYTES_SIZE = 1024 * 1024;
 
 export const PAGINATION_PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
 
-export const SORT_ORDER = {
-  ASC: 'asc',
-  DESC: 'desc',
-};
+export const STRING_TYPE_OPERATORS = [
+  { name: 'contains', value: 'contains' },
+  { name: 'equals', value: 'equals' },
+  { name: 'starts with', value: 'startsWith' },
+  { name: 'ends with', value: 'endsWith' },
+  { name: 'is empty', value: 'isEmpty' },
+  { name: 'is not empty', value: 'isNotEmpty' },
+];
+
+export const NUMBER_TYPE_OPERATORS = [
+  { name: '=', value: 'eq' },
+  { name: '!=', value: 'ne' },
+  { name: '>', value: 'gt' },
+  { name: '>=', value: 'gte' },
+  { name: '<', value: 'lt' },
+  { name: '<=', value: 'lte' },
+  { name: 'is empty', value: 'isEmpty' },
+  { name: 'is not empty', value: 'isNotEmpty' },
+];
+
+export const BOOLEAN_TYPE_OPERATORS = [
+  { name: 'is', value: 'is' },
+  { name: 'is not', value: 'isNot' },
+];
+
+export const DATETIME_TYPE_OPERATORS = [
+  { name: 'is', value: 'is' },
+  { name: 'is not', value: 'isNot' },
+  { name: 'is after', value: 'isAfter' },
+  { name: 'is on or after', value: 'isOnOrAfter' },
+  { name: 'is before', value: 'isBefore' },
+  { name: 'is on or before', value: 'isOnOrBefore' },
+  { name: 'is in between', value: 'isInBetween' },
+  { name: 'is empty', value: 'isEmpty' },
+  { name: 'is not empty', value: 'isNotEmpty' },
+];
+
+export const OPERATORS_WITHOUT_QUERY = ['isEmpty', 'isNotEmpty'];

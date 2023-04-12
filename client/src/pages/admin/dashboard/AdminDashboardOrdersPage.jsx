@@ -14,7 +14,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
 
-import { Header, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
+import { Header, OrderImageList, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -204,6 +204,7 @@ const AdminDashboardOrdersPage = () => {
       type: 'actions',
       width: 100,
       flex: 1,
+      filterable: false,
       disableReorder: true,
       getActions: ({ row }) => {
         const actions = [<GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />];
@@ -248,9 +249,10 @@ const AdminDashboardOrdersPage = () => {
         </center>
         <hr />
 
+        <DataGridFilterContainer columns={columns} filters={[]} onApply={item => console.log(item)} onDelete={item => console.log(item)} />
         <DataGrid
-          autoHeight={true}
-          disableRowSelectionOnClick={true}
+          autoHeight
+          disableRowSelectionOnClick
           rows={orders}
           columns={columns}
           loading={loading}

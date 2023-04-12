@@ -5,4 +5,7 @@ export {
   changeCityPageSize,
   changeCitySortFieldName,
   changeCitySortOrder,
+  addCityFilter,
+  removeCityFilter,
+  resetCityFilters,
 } from '../reducers/citySlice';

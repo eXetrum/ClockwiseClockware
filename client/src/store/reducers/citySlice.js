@@ -46,9 +46,15 @@ export const citySlice = createSlice({
     changeCitySortOrder(state, { payload }) {
       state.sortOrder = payload;
     },
-    addCityFilter(state, { payload }) {},
-    removeFilter(state, { payload }) {},
-    resetFilters(state, { payload }) {},
+    addCityFilter(state, { payload }) {
+      state.filters.push(payload);
+    },
+    removeCityFilter(state, { payload }) {
+      state.filters = state.filters.filter(item => item.key !== payload.key);
+    },
+    resetCityFilters(state) {
+      state.filters = [];
+    },
   },
   extraReducers: {
     //#region Fetch all cities
@@ -150,5 +156,8 @@ export const {
   changeCityPageSize,
   changeCitySortFieldName,
   changeCitySortOrder,
+  addCityFilter,
+  removeCityFilter,
+  resetCityFilters,
 } = citySlice.actions;
 export default citySlice.reducer;

@@ -49,6 +49,83 @@ const createComparatorByProp =
     (a, b) =>
         ASC ? compareASC(a[propName], b[propName]) : compareDESC(a[propName], b[propName]);
 
+const FILTER_OPERATORS = {
+    // Strings
+    contains: (str, text) => str.toLowerCase().includes(text.toLowerCase()),
+    equals: (str, text) => str.toLowerCase() === text.toLowerCase(),
+    startsWith: (str, text) => str.toLowerCase().startsWith(text.toLowerCase()),
+    endsWith: (str, text) => str.toLowerCase().endsWith(text.toLowerCase()),
+    // Shared, without params
+    isEmpty: (str, _) => str.length === 0,
+    isNotEmpty: (str, _) => str.length !== 0,
+    // Numeric
+    eq: (a, b) => a === b,
+    ne: (a, b) => a !== b,
+    gt: (a, b) => a > b,
+    gte: (a, b) => a >= b,
+    lt: (a, b) => a < b,
+    lte: (a, b) => a <= b,
+    // Boolean/Datetime
+    is: (a, b) => a.valueOf() === b.valueOf(),
+    isNot: (a, b) => a.valueOf() !== b.valueOf(),
+    // Datetime
+    isAfter: (a, b) => a.valueOf() > b.valueOf(),
+    isOnOrAfter: (a, b) => a.valueOf() >= b.valueOf(),
+    isBefore: (a, b) => a.valueOf() < b.valueOf(),
+    isOnOrBefore: (a, b) => a.valueOf() <= b.valueOf(),
+    isInBetween: (a, b) => false // TODO
+};
+
+const OPERATORS_WITHOUT_QUERY = ['isEmpty', 'isNotEmpty'];
+
+const getValueByTypeName = (typeName, value) => {
+    if (typeName === 'string') return String(value);
+    if (typeName === 'number') return Number(value);
+    if (typeName === 'boolean') return Boolean(value === 'true');
+
+    return value;
+};
+
+const parseFilters = (filtersStr = '', columnTypeDef = {}) => {
+    const columnRegex = /(?:"[^"]*"|[^&])+(?:&+$)?/g;
+    const paramsRegex = /(?:"[^"]*"|[^(->)])+(?:(->)+$)?/g;
+    //
+    //{ name: 'string', pricePerHour: 'number' }
+
+    const query = decodeURIComponent(filtersStr);
+    const columns = query.match(columnRegex) || [];
+    console.log('parseFilters: columns=', columns);
+    const validColumns = Object.keys(columnTypeDef);
+    const result = [];
+    columns.forEach((col) => {
+        const params = col.match(paramsRegex) || [];
+        if ([2, 3].includes(params.length)) {
+            let [field, operator, value] = params;
+            if (!OPERATORS_WITHOUT_QUERY.includes(operator) && value === undefined) throw new Error();
+
+            if (validColumns.includes(field)) {
+                const idx = result.map((item) => item.field).indexOf(field);
+                try {
+                    value = JSON.parse(value.trim('"'));
+                } catch {}
+
+                value =
+                    field in columnTypeDef && !OPERATORS_WITHOUT_QUERY.includes(operator)
+                        ? getValueByTypeName(columnTypeDef[field], value)
+                        : value;
+
+                if (idx === -1) {
+                    result.push({ field, operator, value });
+                } else {
+                    result[idx] = { field, operator, value };
+                }
+            }
+        }
+    });
+    console.log('parseFilters result=', result);
+    return result;
+};
+
 module.exports = {
     hashPassword,
     compareSync,
@@ -60,5 +137,7 @@ module.exports = {
     isDbErrorEntryReferences,
     formatDecimal,
     formatDate,
-    createComparatorByProp
+    createComparatorByProp,
+    parseFilters,
+    FILTER_OPERATORS
 };

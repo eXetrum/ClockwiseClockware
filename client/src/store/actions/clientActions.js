@@ -2,5 +2,10 @@ export {
   changeVisibilityAddClientForm,
   changeNewClientField,
   changeClientCurrentPage,
-  changeClientRowsPerPage,
+  changeClientPageSize,
+  changeClientSortFieldName,
+  changeClientSortOrder,
+  addClientFilter,
+  removeClientFilter,
+  resetClientFilters,
 } from '../reducers/clientSlice';

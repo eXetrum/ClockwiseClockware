@@ -11,21 +11,35 @@ import EditIcon from '@mui/icons-material/Edit';
 import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
-import { Header, ClientForm, LoadingOverlay, NoRowsOverlay } from '../../../components';
+import { Header, ClientForm, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchClients, addClient, deleteClient, resetPasswordClient, resendEmailConfirmationClient } from '../../../store/thunks';
-import { changeVisibilityAddClientForm } from '../../../store/actions';
+import {
+  changeVisibilityAddClientForm,
+  changeClientCurrentPage,
+  changeClientPageSize,
+  changeClientSortFieldName,
+  changeClientSortOrder,
+  addClientFilter,
+  removeClientFilter,
+} from '../../../store/actions';
 import {
   selectAllClients,
   selectNewClient,
   selectClientError,
   selectClientInitialLoading,
   selectClientTotalItems,
+  selectClientCurrentPage,
+  selectClientPageSize,
+  selectClientSortFielName,
+  selectClientSortOrder,
+  selectClientFilters,
 } from '../../../store/selectors';
 
+import { buildFilter } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../../constants';
 
 const AdminDashboardClientsPage = () => {
@@ -39,12 +53,20 @@ const AdminDashboardClientsPage = () => {
   const loading = useSelector(selectClientInitialLoading);
   const totalItems = useSelector(selectClientTotalItems);
 
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
+  const page = useSelector(selectClientCurrentPage);
+  const pageSize = useSelector(selectClientPageSize);
+
+  const sortFieldName = useSelector(selectClientSortFielName);
+  const sortOrder = useSelector(selectClientSortOrder);
+
+  const filters = useSelector(selectClientFilters);
 
   const fetchPage = useCallback(
-    () => dispatch(fetchClients({ offset: page * rowsPerPage, limit: rowsPerPage })),
-    [dispatch, page, rowsPerPage],
+    () =>
+      dispatch(
+        fetchClients({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
+      ),
+    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -122,10 +144,32 @@ const AdminDashboardClientsPage = () => {
 
   const onPaginationModelChange = useCallback(
     params => {
-      setPage(params.page);
-      setRowsPerPage(params.pageSize);
+      if (params.page !== page) dispatch(changeClientCurrentPage(params.page));
+      if (params.pageSize !== pageSize) dispatch(changeClientPageSize(params.pageSize));
     },
-    [setPage, setRowsPerPage],
+    [dispatch, page, pageSize],
+  );
+  const onSortModelChange = useCallback(
+    params => {
+      const { field: fieldName = '', sort: order = '' } = params.length ? params[0] : {};
+      if (fieldName !== sortFieldName) dispatch(changeClientSortFieldName(fieldName));
+      if (order !== sortOrder) dispatch(changeClientSortOrder(order));
+    },
+    [dispatch, sortFieldName, sortOrder],
+  );
+
+  const onFilterApply = useCallback(
+    ({ ...params }) => {
+      dispatch(addClientFilter({ ...params }));
+    },
+    [dispatch],
+  );
+
+  const onFilterRemove = useCallback(
+    ({ ...params }) => {
+      dispatch(removeClientFilter({ ...params }));
+    },
+    [dispatch],
   );
 
   const columns = [
@@ -143,6 +187,7 @@ const AdminDashboardClientsPage = () => {
       type: 'actions',
       width: 100,
       flex: 1,
+      filterable: false,
       disableReorder: true,
       getActions: ({ row }) => {
         const actions = [
@@ -192,19 +237,27 @@ const AdminDashboardClientsPage = () => {
           </Row>
           <hr />
 
+          <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
           <DataGrid
-            autoHeight={true}
-            disableRowSelectionOnClick={true}
+            autoHeight
+            disableRowSelectionOnClick
+            disableColumnFilter
             rows={clients}
             columns={columns}
             loading={loading}
             hideFooterPagination={loading}
-            initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
-            onPaginationModelChange={onPaginationModelChange}
-            rowCount={totalItems}
             paginationMode="server"
+            sortingMode="server"
+            filterMode="server"
+            initialState={{
+              pagination: { paginationModel: { pageSize, page } },
+              sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
+            }}
+            onPaginationModelChange={onPaginationModelChange}
+            onSortModelChange={onSortModelChange}
+            rowCount={totalItems}
             pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
-            components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+            components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
           />
 
           <ClientForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Client'} isModal={true} />

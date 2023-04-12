@@ -4,12 +4,12 @@ import { Container, Row, Col } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
 import { useSnackbar } from 'notistack';
 
-import { DataGrid, GridToolbar, GridActionsCellItem, GridLogicOperator } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOutlined';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Header, CityForm, LoadingOverlay, NoRowsOverlay, DatagridFilterContainer } from '../../../components';
+import { Header, CityForm, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,23 +21,24 @@ import {
   changeCityPageSize,
   changeCitySortFieldName,
   changeCitySortOrder,
+  addCityFilter,
+  removeCityFilter,
 } from '../../../store/actions';
 import {
   selectAllCities,
   selectNewCity,
   selectCityError,
   selectCityInitialLoading,
+  selectCityTotalItems,
   selectCityCurrentPage,
   selectCityPageSize,
-  selectCityTotalItems,
   selectCitySortFielName,
   selectCitySortOrder,
+  selectCityFilters,
 } from '../../../store/selectors';
 
-import { formatDecimal } from '../../../utils';
+import { formatDecimal, buildFilter } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../../constants';
-
-const VISIBLE_FIELDS = ['name', 'rating'];
 
 const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar } = useSnackbar();
@@ -56,9 +57,14 @@ const AdminDashboardCitiesPage = () => {
   const sortFieldName = useSelector(selectCitySortFielName);
   const sortOrder = useSelector(selectCitySortOrder);
 
+  const filters = useSelector(selectCityFilters);
+
   const fetchPage = useCallback(
-    () => dispatch(fetchCities({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
-    [dispatch, page, pageSize, sortFieldName, sortOrder],
+    () =>
+      dispatch(
+        fetchCities({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
+      ),
+    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -114,29 +120,23 @@ const AdminDashboardCitiesPage = () => {
     [dispatch, sortFieldName, sortOrder],
   );
 
-  const onFilterModelChange = useCallback(filterModel => {
-    console.log('onFilterModelChange: ', filterModel);
-  }, []);
+  const onFilterApply = useCallback(
+    ({ ...params }) => {
+      dispatch(addCityFilter({ ...params }));
+    },
+    [dispatch],
+  );
 
-  const filterColumns = ({ field, columns, currentFilters }) => {
-    // remove already filtered fields from list of columns
-    const filteredFields = currentFilters?.map(item => item.field);
-    return columns
-      .filter(colDef => colDef.filterable && (colDef.field === field || !filteredFields.includes(colDef.field)))
-      .map(column => column.field);
-  };
-
-  const getColumnForNewFilter = ({ currentFilters, columns }) => {
-    const filteredFields = currentFilters?.map(({ field }) => field);
-    const columnForNewFilter = columns
-      .filter(colDef => colDef.filterable && !filteredFields.includes(colDef.field))
-      .find(colDef => colDef.filterOperators?.length);
-    return columnForNewFilter?.field ?? null;
-  };
+  const onFilterRemove = useCallback(
+    ({ ...params }) => {
+      dispatch(removeCityFilter({ ...params }));
+    },
+    [dispatch],
+  );
 
   const columns = useMemo(
     () => [
-      { field: 'name', headerName: 'Name', width: 620, flex: 1 },
+      { field: 'name', headerName: 'Name', width: 620, type: 'string', flex: 1 },
       {
         field: 'pricePerHour',
         headerName: 'Hourly rate',
@@ -181,7 +181,7 @@ const AdminDashboardCitiesPage = () => {
           </Row>
           <hr />
 
-          <DatagridFilterContainer columns={columns} />
+          <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
           <DataGrid
             autoHeight
             disableRowSelectionOnClick
@@ -196,24 +196,12 @@ const AdminDashboardCitiesPage = () => {
             initialState={{
               pagination: { paginationModel: { pageSize, page } },
               sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
-              /*filterModel: {
-                items: [
-                  { id: 1, field: 'rating', operator: '>', value: '1' },
-                  { id: 2, field: 'name', operator: 'contains', value: 'q' },
-                ],
-                logicOperator: GridLogicOperator.Or,
-              },*/
             }}
             onPaginationModelChange={onPaginationModelChange}
             onSortModelChange={onSortModelChange}
-            onFilterModelChange={onFilterModelChange}
             rowCount={totalItems}
             pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
-            components={{
-              LoadingOverlay,
-              NoRowsOverlay: () => NoRowsOverlay({ error }),
-              //Toolbar: GridToolbar,
-            }}
+            components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
           />
 
           <CityForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New City'} isModal={true} />

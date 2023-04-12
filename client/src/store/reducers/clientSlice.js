@@ -23,9 +23,12 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
-  currentPage: 0,
-  rowsPerPage: PAGINATION_PAGE_SIZE_OPTIONS[0],
   totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
+  sortFieldName: '',
+  sortOrder: '',
+  filters: [],
 };
 
 export const clientSlice = createSlice({
@@ -42,8 +45,23 @@ export const clientSlice = createSlice({
     changeClientCurrentPage(state, { payload }) {
       state.currentPage = payload;
     },
-    changeClientRowsPerPage(state, { payload }) {
-      state.rowsPerPage = payload;
+    changeClientPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeClientSortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeClientSortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
+    addClientFilter(state, { payload }) {
+      state.filters.push(payload);
+    },
+    removeClientFilter(state, { payload }) {
+      state.filters = state.filters.filter(item => item.key !== payload.key);
+    },
+    resetClientFilters(state) {
+      state.filters = [];
     },
   },
   extraReducers: {
@@ -177,6 +195,15 @@ export const clientSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddClientForm, changeNewClientField, changeClientCurrentPage, changeClientRowsPerPage } =
-  clientSlice.actions;
+export const {
+  changeVisibilityAddClientForm,
+  changeNewClientField,
+  changeClientCurrentPage,
+  changeClientPageSize,
+  changeClientSortFieldName,
+  changeClientSortOrder,
+  addClientFilter,
+  removeClientFilter,
+  resetClientFilters,
+} = clientSlice.actions;
 export default clientSlice.reducer;
