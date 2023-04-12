@@ -5,11 +5,20 @@ export const getOperatorsByTypeName = typeName => {
   if (typeName === 'number') return NUMBER_TYPE_OPERATORS;
   if (typeName === 'boolean') return BOOLEAN_TYPE_OPERATORS;
   if (typeName === 'dateTime') return DATETIME_TYPE_OPERATORS;
-  // TODO
+  // TODO: add new type operators here
   return [];
 };
 
 export const buildFilter = (filters = []) =>
   encodeURIComponent(
-    filters.map(item => `${item.field}->${item.operator.value}${item.query !== undefined ? '->"' + item.query + '"' : ''}`).join('&'),
+    filters
+      .map(item => {
+        if (item.operator.value === 'between' && item.type === 'dateTime') {
+          const [start, end] = item.query.split('->');
+          return `${item.field}->${item.operator.value}->"${new Date(start).getTime()}->${new Date(end).getTime()}"`;
+        } else {
+          return `${item.field}->${item.operator.value}->"${item.type === 'dateTime' ? new Date(item.query).getTime() : item.query}"`;
+        }
+      })
+      .join('&'),
   );
