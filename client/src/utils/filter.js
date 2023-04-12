@@ -1,10 +1,17 @@
-import { STRING_TYPE_OPERATORS, NUMBER_TYPE_OPERATORS, BOOLEAN_TYPE_OPERATORS, DATETIME_TYPE_OPERATORS } from '../constants';
+import {
+  STRING_TYPE_OPERATORS,
+  NUMBER_TYPE_OPERATORS,
+  BOOLEAN_TYPE_OPERATORS,
+  DATETIME_TYPE_OPERATORS,
+  ENUM_ORDERS_STATUS_OPERATORS,
+} from '../constants';
 
 export const getOperatorsByTypeName = typeName => {
   if (typeName === 'string') return STRING_TYPE_OPERATORS;
   if (typeName === 'number') return NUMBER_TYPE_OPERATORS;
   if (typeName === 'boolean') return BOOLEAN_TYPE_OPERATORS;
   if (typeName === 'dateTime') return DATETIME_TYPE_OPERATORS;
+  if (typeName === 'enum_orders_status') return ENUM_ORDERS_STATUS_OPERATORS;
   // TODO: add new type operators here
   return [];
 };
