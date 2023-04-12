@@ -74,3 +74,5 @@ export const DATETIME_TYPE_OPERATORS = [
   { name: 'is on or before', value: 'lte' },
   { name: 'is in between', value: 'between' },
 ];
+
+export const ENUM_ORDERS_STATUS_OPERATORS = [{ name: 'is', value: 'eq' }]; //enum_orders_status
