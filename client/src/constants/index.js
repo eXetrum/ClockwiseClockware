@@ -49,8 +49,6 @@ export const STRING_TYPE_OPERATORS = [
   { name: 'equals', value: 'equals' },
   { name: 'starts with', value: 'startsWith' },
   { name: 'ends with', value: 'endsWith' },
-  { name: 'is empty', value: 'isEmpty' },
-  { name: 'is not empty', value: 'isNotEmpty' },
 ];
 
 export const NUMBER_TYPE_OPERATORS = [
@@ -60,8 +58,6 @@ export const NUMBER_TYPE_OPERATORS = [
   { name: '>=', value: 'gte' },
   { name: '<', value: 'lt' },
   { name: '<=', value: 'lte' },
-  { name: 'is empty', value: 'isEmpty' },
-  { name: 'is not empty', value: 'isNotEmpty' },
 ];
 
 export const BOOLEAN_TYPE_OPERATORS = [
@@ -70,15 +66,11 @@ export const BOOLEAN_TYPE_OPERATORS = [
 ];
 
 export const DATETIME_TYPE_OPERATORS = [
-  { name: 'is', value: 'is' },
-  { name: 'is not', value: 'isNot' },
-  { name: 'is after', value: 'isAfter' },
-  { name: 'is on or after', value: 'isOnOrAfter' },
-  { name: 'is before', value: 'isBefore' },
-  { name: 'is on or before', value: 'isOnOrBefore' },
-  { name: 'is in between', value: 'isInBetween' },
-  { name: 'is empty', value: 'isEmpty' },
-  { name: 'is not empty', value: 'isNotEmpty' },
+  { name: 'is', value: 'eq' },
+  { name: 'is not', value: 'ne' },
+  { name: 'is after', value: 'gt' },
+  { name: 'is on or after', value: 'gte' },
+  { name: 'is before', value: 'lt' },
+  { name: 'is on or before', value: 'lte' },
+  { name: 'is in between', value: 'between' },
 ];
-
-export const OPERATORS_WITHOUT_QUERY = ['isEmpty', 'isNotEmpty'];
