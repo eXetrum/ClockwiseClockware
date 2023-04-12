@@ -1,7 +1,5 @@
-/* eslint-disable */
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { styled, Container, Stack, Paper, FormControl, InputLabel, MenuItem, Select, TextField, Switch, Button, Chip } from '@mui/material';
-import dayjs from 'dayjs';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
@@ -35,7 +33,6 @@ const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete
 
   const onDateTimeChange = useCallback(async value => {
     const newStartDate = new Date(value).getTime();
-    console.log('newStartDate: ', newStartDate);
     if (!isNaN(newStartDate)) setQueryText(formatDate(newStartDate));
   }, []);
 
