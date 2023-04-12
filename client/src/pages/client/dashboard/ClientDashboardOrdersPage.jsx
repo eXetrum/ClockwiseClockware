@@ -2,13 +2,13 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Container, Form, Row } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 
-import { DataGrid, GridToolbar, GridActionsCellItem } from '@mui/x-data-grid';
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import { Dialog, DialogContent, DialogTitle, Rating } from '@mui/material';
 
 import ImageIcon from '@mui/icons-material/Image';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 
-import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
+import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,13 +18,26 @@ import {
   selectAllOrders,
   selectOrderError,
   selectOrderInitialLoading,
-  selectOrderTotalItems,
   selectOrderPending,
   selectOrderShowRateForm,
+  selectOrderTotalItems,
+  selectOrderCurrentPage,
+  selectOrderPageSize,
+  selectOrderSortFielName,
+  selectOrderSortOrder,
+  selectOrderFilters,
 } from '../../../store/selectors';
-import { changeVisibilityRateForm } from '../../../store/actions';
+import {
+  changeVisibilityRateForm,
+  changeOrderCurrentPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+  addOrderFilter,
+  removeOrderFilter,
+} from '../../../store/actions';
 
-import { formatDate, formatDecimal } from '../../../utils';
+import { formatDate, formatDecimal, buildFilter } from '../../../utils';
 import {
   ERROR_TYPE,
   PAGINATION_PAGE_SIZE_OPTIONS,
@@ -38,25 +51,34 @@ const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
+  const [rating, setRating] = useState(MAX_RATING_VALUE);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [open, setOpen] = useState(false);
+
   const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
   const loading = useSelector(selectOrderInitialLoading);
-  const totalItems = useSelector(selectOrderTotalItems);
   const isPending = useSelector(selectOrderPending);
   const isShowRateForm = useSelector(selectOrderShowRateForm);
+  const totalItems = useSelector(selectOrderTotalItems);
 
-  const [rating, setRating] = useState(MAX_RATING_VALUE);
-  const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(PAGINATION_PAGE_SIZE_OPTIONS[0]);
-  const [open, setOpen] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  const page = useSelector(selectOrderCurrentPage);
+  const pageSize = useSelector(selectOrderPageSize);
+
+  const sortFieldName = useSelector(selectOrderSortFielName);
+  const sortOrder = useSelector(selectOrderSortOrder);
+
+  const filters = useSelector(selectOrderFilters);
 
   const fetchPage = useCallback(
-    () => dispatch(fetchOrders({ offset: page * rowsPerPage, limit: rowsPerPage })),
-    [dispatch, page, rowsPerPage],
+    () =>
+      dispatch(
+        fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
+      ),
+    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
   );
 
-  useEffect(() => fetchPage(), [dispatch, fetchPage]);
+  useEffect(() => fetchPage(), [fetchPage]);
 
   const onImagePreviewOpen = useCallback(order => {
     setOpen(true);
@@ -97,17 +119,39 @@ const ClientDashboardOrdersPage = () => {
 
   const onPaginationModelChange = useCallback(
     params => {
-      setPage(params.page);
-      setRowsPerPage(params.pageSize);
+      if (params.page !== page) dispatch(changeOrderCurrentPage(params.page));
+      if (params.pageSize !== pageSize) dispatch(changeOrderPageSize(params.pageSize));
     },
-    [setPage, setRowsPerPage],
+    [dispatch, page, pageSize],
+  );
+  const onSortModelChange = useCallback(
+    params => {
+      const { field: fieldName = '', sort: order = '' } = params.length ? params[0] : {};
+      if (fieldName !== sortFieldName) dispatch(changeOrderSortFieldName(fieldName));
+      if (order !== sortOrder) dispatch(changeOrderSortOrder(order));
+    },
+    [dispatch, sortFieldName, sortOrder],
+  );
+
+  const onFilterApply = useCallback(
+    ({ ...params }) => {
+      dispatch(addOrderFilter({ ...params }));
+    },
+    [dispatch],
+  );
+
+  const onFilterRemove = useCallback(
+    ({ ...params }) => {
+      dispatch(removeOrderFilter({ ...params }));
+    },
+    [dispatch],
   );
 
   const columns = useMemo(
     () => [
       { field: 'master.name', headerName: 'Master Name', width: 240, flex: 1, valueGetter: ({ row }) => row.master.name },
-      { field: 'watch', headerName: 'Service', flex: 1, valueGetter: ({ row }) => row.watch.name },
-      { field: 'city', headerName: 'City', width: 200, flex: 1, valueGetter: ({ row }) => row.city.name },
+      { field: 'watch.repairTime', headerName: 'Service', type: 'number', flex: 1, valueGetter: ({ row }) => row.watch.name },
+      { field: 'city.name', headerName: 'City', width: 200, flex: 1, valueGetter: ({ row }) => row.city.name },
       {
         field: 'startDate',
         headerName: 'Date Start',
@@ -127,6 +171,7 @@ const ClientDashboardOrdersPage = () => {
       {
         field: 'status',
         headerName: 'Status',
+        type: 'enum_orders_status',
         flex: 1,
       },
       {
@@ -139,6 +184,7 @@ const ClientDashboardOrdersPage = () => {
       {
         field: 'rating',
         headerName: 'Rating',
+        type: 'number',
         headerAlign: 'center',
         width: 120,
         align: 'center',
@@ -153,6 +199,8 @@ const ClientDashboardOrdersPage = () => {
         headerName: 'actions',
         type: 'actions',
         flex: 1,
+        filterable: false,
+        disableReorder: true,
         getActions: ({ row }) => {
           const actions = [];
           if (row.images.length) {
@@ -189,19 +237,27 @@ const ClientDashboardOrdersPage = () => {
         </center>
         <hr />
 
+        <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
         <DataGrid
-          autoHeight={true}
-          disableRowSelectionOnClick={true}
+          autoHeight
+          disableRowSelectionOnClick
+          disableColumnFilter
           rows={orders}
           columns={columns}
           loading={loading}
           hideFooterPagination={loading}
-          initialState={{ pagination: { paginationModel: { pageSize: rowsPerPage, page } } }}
-          onPaginationModelChange={onPaginationModelChange}
-          rowCount={totalItems}
           paginationMode="server"
+          sortingMode="server"
+          filterMode="server"
+          initialState={{
+            pagination: { paginationModel: { pageSize, page } },
+            sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
+          }}
+          onPaginationModelChange={onPaginationModelChange}
+          onSortModelChange={onSortModelChange}
+          rowCount={totalItems}
           pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
-          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }), Toolbar: GridToolbar }}
+          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
         />
 
         <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
