@@ -28,6 +28,9 @@ const {
     MAX_IMAGE_SIZE_BYTES
 } = require('../constants');
 
+const injectCloudinaryAutoQualityParams = (images) =>
+    images.map((item) => ({ ...item, url: item.url.replace('/upload/', '/upload/w_400,f_auto,q_auto:best/') }));
+
 const ORDER_TYPE_DEF = {
     ['client.email']: 'string',
     ['client.name']: 'string',
@@ -163,12 +166,16 @@ const getAll = [
                 ]
             });
 
-            const orders = records.map((order) => ({
-                ...order.toJSON(),
-                client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
-                master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
-            }));
+            const orders = records.map((order) => {
+                return {
+                    ...order.toJSON(),
+                    client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                    master: { ...order.master.toJSON(), ...order.master.User.toJSON() },
+                    images: injectCloudinaryAutoQualityParams(order.images.map((item) => item.toJSON()))
+                };
+            });
 
+            console.log(orders);
             res.status(200).json({ orders, total }).end();
         } catch (error) {
             console.log(error);
