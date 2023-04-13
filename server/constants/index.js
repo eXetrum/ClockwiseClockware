@@ -27,6 +27,8 @@ const MAX_RATING_VALUE = 5;
 const MAX_IMAGES_COUNT = 5;
 const MAX_IMAGE_SIZE_BYTES = 1024 * 1024;
 
+const JSON_BODY_LIMIT = '100mb';
+
 module.exports = {
     ORDER_STATUS,
     USER_ROLES,
@@ -35,5 +37,6 @@ module.exports = {
     MIN_RATING_VALUE,
     MAX_RATING_VALUE,
     MAX_IMAGES_COUNT,
-    MAX_IMAGE_SIZE_BYTES
+    MAX_IMAGE_SIZE_BYTES,
+    JSON_BODY_LIMIT
 };
