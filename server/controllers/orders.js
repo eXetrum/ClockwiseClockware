@@ -175,10 +175,8 @@ const getAll = [
                 };
             });
 
-            console.log(orders);
             res.status(200).json({ orders, total }).end();
         } catch (error) {
-            console.log(error);
             res.status(500).json(error).end();
         }
     }
