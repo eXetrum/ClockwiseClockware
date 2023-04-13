@@ -7,14 +7,19 @@ import Dialog from '@mui/material/Dialog';
 import ImageIcon from '@mui/icons-material/Image';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 
+import { useSelector } from 'react-redux';
+import { selectAllOrders } from '../../store/selectors';
+
 import { OrderImageList } from '../../components';
 
 import { formatDecimal, formatDate } from '../../utils';
 import { MAX_RATING_VALUE, ORDER_STATUS, RATING_FORMAT_DECIMAL } from '../../constants';
 
-const ClientOrdersList = ({ orders, onReview }) => {
+const ClientOrdersList = ({ onReview }) => {
   const [open, setOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const orders = useSelector(selectAllOrders);
 
   const onImagePreviewOpen = useCallback(order => {
     setOpen(true);

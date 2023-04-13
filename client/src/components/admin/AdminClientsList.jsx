@@ -10,13 +10,16 @@ import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { deleteClient, resetPasswordClient, resendEmailConfirmationClient } from '../../store/thunks';
+import { selectAllClients } from '../../store/selectors';
 
-const AdminClientsList = ({ clients }) => {
+const AdminClientsList = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const clients = useSelector(selectAllClients);
 
   const onRemove = useCallback(
     async client => {

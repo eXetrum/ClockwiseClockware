@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchCities, addCity } from '../../../store/thunks';
 import { changeVisibilityAddCityForm } from '../../../store/actions';
-import { selectAllCities, selectNewCity, selectCityError, selectCityInitialLoading } from '../../../store/selectors';
+import { selectNewCity, selectCityError, selectCityInitialLoading } from '../../../store/selectors';
 
 import { isUnknownOrNoErrorType } from '../../../utils';
 
@@ -19,7 +19,6 @@ const AdminDashboardCitiesPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const cities = useSelector(selectAllCities);
   const newCity = useSelector(selectNewCity);
   const error = useSelector(selectCityError);
   const isInitialLoading = useSelector(selectCityInitialLoading);
@@ -67,7 +66,7 @@ const AdminDashboardCitiesPage = () => {
               </Col>
             </Row>
             <hr />
-            <AdminCitiesList cities={cities} />
+            <AdminCitiesList />
 
             <CityForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New City'} isModal={true} />
           </>

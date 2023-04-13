@@ -11,7 +11,7 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { fetchClients, addClient } from '../../../store/thunks';
 import { changeVisibilityAddClientForm } from '../../../store/actions';
-import { selectAllClients, selectNewClient, selectClientError, selectClientInitialLoading } from '../../../store/selectors';
+import { selectNewClient, selectClientError, selectClientInitialLoading } from '../../../store/selectors';
 
 import { isUnknownOrNoErrorType } from '../../../utils';
 
@@ -19,7 +19,6 @@ const AdminDashboardClientsPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const clients = useSelector(selectAllClients);
   const newClient = useSelector(selectNewClient);
   const error = useSelector(selectClientError);
   const isInitialLoading = useSelector(selectClientInitialLoading);
@@ -67,7 +66,7 @@ const AdminDashboardClientsPage = () => {
               </Col>
             </Row>
             <hr />
-            <AdminClientsList clients={clients} />
+            <AdminClientsList />
 
             <ClientForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Client'} isModal={true} />
           </>

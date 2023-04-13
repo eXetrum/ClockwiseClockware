@@ -10,16 +10,19 @@ import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { deleteMaster, resetPasswordMaster, resendEmailConfirmationMaster } from '../../store/thunks';
+import { selectAllMasters } from '../../store/selectors';
 
 import { formatDecimal } from '../../utils';
 import { MAX_RATING_VALUE, RATING_FORMAT_DECIMAL } from '../../constants';
 
-const AdminMastersList = ({ masters }) => {
+const AdminMastersList = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const masters = useSelector(selectAllMasters);
 
   const onRemove = useCallback(
     async master => {

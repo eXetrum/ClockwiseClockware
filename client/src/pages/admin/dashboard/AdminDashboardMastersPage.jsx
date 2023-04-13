@@ -12,7 +12,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchCities, fetchMasters, addMaster } from '../../../store/thunks';
 import { changeVisibilityAddMasterForm } from '../../../store/actions';
 import {
-  selectAllMasters,
   selectNewMaster,
   selectMasterError,
   selectMasterInitialLoading,
@@ -26,7 +25,6 @@ const AdminDashboardMasters = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const masters = useSelector(selectAllMasters);
   const newMaster = useSelector(selectNewMaster);
   const isInitialLoadingMasters = useSelector(selectMasterInitialLoading);
   const errorMaster = useSelector(selectMasterError);
@@ -86,7 +84,7 @@ const AdminDashboardMasters = () => {
               </Col>
             </Row>
             <hr />
-            <AdminMastersList masters={masters} />
+            <AdminMastersList />
 
             <MasterForm onSubmit={onFormSubmit} okButtonText={'Create'} titleText={'Add New Master'} isModal={true} />
           </>

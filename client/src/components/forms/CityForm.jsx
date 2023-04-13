@@ -1,13 +1,11 @@
 import React, { useCallback, useMemo } from 'react';
 import { Form, Row, Col } from 'react-bootstrap';
 import ModalForm from './ModalForm';
-import SpinnerButton from '../common/SpinnerButton';
+import { SpinnerButton } from '../../components';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { changeVisibilityAddCityForm, changeNewCityField } from '../../store/actions';
 import { selectNewCity, selectCityPending, selectCityShowAddForm } from '../../store/selectors';
-
-import { formatDecimal } from '../../utils';
 
 const CityForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = false }) => {
   const dispatch = useDispatch();
@@ -16,7 +14,7 @@ const CityForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = f
   const isPending = useSelector(selectCityPending);
   const isShowAddForm = useSelector(selectCityShowAddForm);
 
-  const isFormValid = useMemo(() => newCity.name, [newCity]);
+  const isFormValid = useMemo(() => newCity.name && newCity.pricePerHour !== '' && !isNaN(newCity.pricePerHour), [newCity]);
 
   const onHide = useCallback(() => dispatch(changeVisibilityAddCityForm(false)), [dispatch]);
   const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewCityField({ name, value })), [dispatch]);
@@ -54,10 +52,9 @@ const CityForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal = f
             <Form.Control
               type="number"
               name="pricePerHour"
+              pattern="/([+]?([0-9]*[.])?[0-9]+)/g"
               required
-              min={0}
-              step={0.05}
-              value={formatDecimal(newCity.pricePerHour)}
+              value={newCity.pricePerHour}
               disabled={isPending}
               onChange={onFormFieldChange}
             />

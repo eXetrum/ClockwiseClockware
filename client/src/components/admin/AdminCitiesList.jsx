@@ -8,15 +8,18 @@ import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { deleteCity } from '../../store/thunks';
+import { selectAllCities } from '../../store/selectors';
 
 import { formatDecimal } from '../../utils';
 
-const AdminCitiesList = ({ cities }) => {
+const AdminCitiesList = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const cities = useSelector(selectAllCities);
 
   const onRemove = useCallback(
     async city => {

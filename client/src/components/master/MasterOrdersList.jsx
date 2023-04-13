@@ -11,16 +11,19 @@ import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { OrderImageList } from '../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
-import { useDispatch } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { completeOrder } from '../../store/thunks';
+import { selectAllOrders } from '../../store/selectors';
 
 import { formatDate, formatDecimal } from '../../utils';
 import { ORDER_STATUS } from '../../constants';
 
-const MasterOrdersList = ({ orders }) => {
+const MasterOrdersList = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+
+  const orders = useSelector(selectAllOrders);
 
   const [open, setOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
