@@ -29,7 +29,7 @@ const RegisterPage = () => {
 
   useEffect(() => {
     dispatch(clearNewUser());
-    dispatch(fetchCities());
+    dispatch(fetchCities({ limit: -1 }));
   }, [dispatch]);
 
   const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
