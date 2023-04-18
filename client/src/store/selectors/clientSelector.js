@@ -12,7 +12,6 @@ const stateClientCurrentPage = state => state.clientReducer.currentPage;
 const stateClientPageSize = state => state.clientReducer.pageSize;
 const stateClientSortFieldName = state => state.clientReducer.sortFieldName;
 const stateClientSortOrder = state => state.clientReducer.sortOrder;
-const stateClientFilters = state => state.clientReducer.filters;
 
 export const selectAllClients = createSelector([stateAllClients], allClients => allClients);
 export const selectNewClient = createSelector([stateNewClient], newClient => newClient);
@@ -26,4 +25,3 @@ export const selectClientCurrentPage = createSelector([stateClientCurrentPage], 
 export const selectClientPageSize = createSelector([stateClientPageSize], pageSize => pageSize);
 export const selectClientSortFielName = createSelector([stateClientSortFieldName], sortFieldName => sortFieldName);
 export const selectClientSortOrder = createSelector([stateClientSortOrder], sortOrder => sortOrder);
-export const selectClientFilters = createSelector([stateClientFilters], filters => filters);

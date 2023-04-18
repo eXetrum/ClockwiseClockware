@@ -20,7 +20,6 @@ const initialState = {
   pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
   sortFieldName: '',
   sortOrder: '',
-  filters: [],
 };
 
 export const citySlice = createSlice({
@@ -45,15 +44,6 @@ export const citySlice = createSlice({
     },
     changeCitySortOrder(state, { payload }) {
       state.sortOrder = payload;
-    },
-    addCityFilter(state, { payload }) {
-      state.filters.push(payload);
-    },
-    removeCityFilter(state, { payload }) {
-      state.filters = state.filters.filter(item => item.key !== payload.key);
-    },
-    resetCityFilters(state) {
-      state.filters = [];
     },
   },
   extraReducers: {
@@ -156,8 +146,5 @@ export const {
   changeCityPageSize,
   changeCitySortFieldName,
   changeCitySortOrder,
-  addCityFilter,
-  removeCityFilter,
-  resetCityFilters,
 } = citySlice.actions;
 export default citySlice.reducer;

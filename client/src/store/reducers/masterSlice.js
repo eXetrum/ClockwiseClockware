@@ -37,7 +37,6 @@ const initialState = {
   pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
   sortFieldName: '',
   sortOrder: '',
-  filters: [],
 };
 
 export const masterSlice = createSlice({
@@ -66,15 +65,6 @@ export const masterSlice = createSlice({
     },
     changeMasterSortOrder(state, { payload }) {
       state.sortOrder = payload;
-    },
-    addMasterFilter(state, { payload }) {
-      state.filters.push(payload);
-    },
-    removeMasterFilter(state, { payload }) {
-      state.filters = state.filters.filter(item => item.key !== payload.key);
-    },
-    resetMasterFilters(state, { payload }) {
-      state.filters = [];
     },
   },
   extraReducers: {
@@ -235,8 +225,5 @@ export const {
   changeMasterPageSize,
   changeMasterSortFieldName,
   changeMasterSortOrder,
-  addMasterFilter,
-  removeMasterFilter,
-  resetMasterFilters,
 } = masterSlice.actions;
 export default masterSlice.reducer;
