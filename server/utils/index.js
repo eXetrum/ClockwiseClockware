@@ -2,7 +2,8 @@ require('dotenv').config();
 const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { Entropy, charset64 } = require('entropy-string');
-const { MS_PER_HOUR } = require('../constants');
+const { validate } = require('uuid');
+const { MS_PER_HOUR, ORDER_STATUS, VALID_FILTER_TYPE } = require('../constants');
 
 const hashPassword = async (plaintextPassword) => {
     const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
@@ -49,82 +50,72 @@ const createComparatorByProp =
     (a, b) =>
         ASC ? compareASC(a[propName], b[propName]) : compareDESC(a[propName], b[propName]);
 
-function customTrim(str, charToRemove) {
+const customTrim = (str, charToRemove) => {
     let start = 0;
     let end = str.length - 1;
-
-    while (start <= end && str.charAt(start) === charToRemove) {
-        start++;
-    }
-
-    while (end >= start && str.charAt(end) === charToRemove) {
-        end--;
-    }
-
+    while (start <= end && str.charAt(start) === charToRemove) start++;
+    while (end >= start && str.charAt(end) === charToRemove) end--;
     return str.substring(start, end + 1);
-}
-
-const getValueByTypeName = (typeName, operator, value) => {
-    if (typeName === 'string') return String(value);
-    if (typeName === 'number') return Number(value);
-    if (typeName === 'boolean') return Boolean(value === 'true');
-    if (typeName === 'dateTime') {
-        if (operator === 'between') {
-            const [start, end] = value.split('->');
-            return [Number(start), Number(end)];
-        }
-        return Number(value);
-    }
-
-    return value;
 };
 
-const parseFilters = (filtersStr = '', columnTypeDef = {}) => {
-    const columnRegex = /(?:"[^"]*"|[^&])+(?:&+$)?/g;
-    const paramsRegex = /(".*?(?<!\\)"|[^->\s]+)(?=\s*->|$)/g;
+const onlyUnique = (value, index, array) => array.indexOf(value) === index;
 
-    const query = decodeURIComponent(filtersStr);
-    const columns = query.match(columnRegex) || [];
-    const validColumns = Object.keys(columnTypeDef);
-    const result = [];
-    columns.forEach((col) => {
-        const params = col.match(paramsRegex) || [];
-        if ([2, 3].includes(params.length)) {
-            let [field, operator, value] = params;
-            if (value === undefined) throw new Error();
+const sanitizeArgsByFilterType = (filterName, args) => {
+    if ([VALID_FILTER_TYPE.FILTER_BY_MASTER, VALID_FILTER_TYPE.FILTER_BY_CITY, VALID_FILTER_TYPE.FILTER_BY_WATCH].includes(filterName)) {
+        return Array.isArray(args) && args.filter(onlyUnique).filter((item) => validate(item));
+    }
 
-            if (validColumns.includes(field)) {
-                const idx = result.map((item) => item.field).indexOf(field);
-                value = customTrim(value, '"');
-                value = getValueByTypeName(columnTypeDef[field], operator, value);
+    if (filterName === VALID_FILTER_TYPE.FILTER_BY_STATUS) {
+        return Array.isArray(args) && args.filter(onlyUnique).filter((item) => Object.values(ORDER_STATUS).includes(item));
+    }
 
-                if (idx === -1) {
-                    result.push({ field, operator, value });
-                } else {
-                    result[idx] = { field, operator, value };
+    if (filterName === VALID_FILTER_TYPE.FILTER_BY_DATE) {
+        return Array.isArray(args) &&
+            args.length === 2 &&
+            args.filter((item) => item !== null).length &&
+            args.filter((item) => item === null || Number.isInteger(item))
+            ? args
+            : [];
+    }
+    return [];
+};
+
+const parseFilters = (filtersJSON = '') => {
+    try {
+        const validFilterKeys = Object.values(VALID_FILTER_TYPE);
+        const query = decodeURIComponent(filtersJSON);
+        const inputFilters = JSON.parse(query);
+        if (!Array.isArray(inputFilters)) return {};
+
+        // Drop unknown filter type(s), filters without args
+        const where = {};
+        validFilterKeys.forEach((filterType) => {
+            // Should be valid filter name
+            const idx = inputFilters.findIndex((item) => filterType in item);
+            if (idx !== -1) {
+                // Expected array of args
+                if (Array.isArray(inputFilters[idx][filterType]) && inputFilters[idx][filterType].length) {
+                    const args = sanitizeArgsByFilterType(filterType, inputFilters[idx][filterType]);
+                    // Filters without args is not allowed
+                    if (args.length) {
+                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_MASTER) where['$master.userId$'] = { [Op.in]: args };
+                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_CITY) where['$city.id$'] = { [Op.in]: args };
+                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_WATCH) where['$watch.id$'] = { [Op.in]: args };
+                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_STATUS) where['status'] = { [Op.in]: args };
+                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_DATE) {
+                            const [start, end] = args;
+                            if (start !== null && end !== null) where['startDate'] = { [Op.between]: [Number(start), Number(end)] };
+                            else if (start !== null) where['startDate'] = { [Op.gte]: Number(start) };
+                            else if (end !== null) where['startDate'] = { [Op.lte]: Number(end) };
+                        }
+                    }
                 }
             }
-        }
-    });
-    return result;
-};
-
-const buildWhereClause = (filters = []) => {
-    const where = {};
-    filters.forEach(({ field, operator, value }) => {
-        if (operator === 'contains') where[field] = { [Op.substring]: value };
-        else if (['equals', 'eq'].includes(operator)) where[field] = { [Op.eq]: value };
-        else if (operator === 'startsWith') where[field] = { [Op.startsWith]: value };
-        else if (operator === 'endsWith') where[field] = { [Op.endsWith]: value };
-        else if (operator === 'ne') where[field] = { [Op.ne]: value };
-        else if (operator === 'gt') where[field] = { [Op.gt]: value };
-        else if (operator === 'gte') where[field] = { [Op.gte]: value };
-        else if (operator === 'lt') where[field] = { [Op.lt]: value };
-        else if (operator === 'lte') where[field] = { [Op.lte]: value };
-        else if (operator === 'is') where[field] = { [Op.is]: value };
-        else if (operator === 'between') where[field] = { [Op.between]: value };
-    });
-    return where;
+        });
+        return where;
+    } catch {
+        return {};
+    }
 };
 
 module.exports = {
@@ -139,6 +130,7 @@ module.exports = {
     formatDecimal,
     formatDate,
     createComparatorByProp,
-    parseFilters,
-    buildWhereClause
+    customTrim,
+    onlyUnique,
+    parseFilters
 };
