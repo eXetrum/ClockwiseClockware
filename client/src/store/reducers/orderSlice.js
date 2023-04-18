@@ -63,14 +63,8 @@ export const orderSlice = createSlice({
     changeOrderSortOrder(state, { payload }) {
       state.sortOrder = payload;
     },
-    addOrderFilter(state, { payload }) {
-      state.filters.push(payload);
-    },
-    removeOrderFilter(state, { payload }) {
-      state.filters = state.filters.filter(item => item.key !== payload.key);
-    },
-    resetOrderFilters(state, { payload }) {
-      state.filters = [];
+    changeOrderFilters(state, { payload }) {
+      state.filters = payload;
     },
   },
   extraReducers: {
@@ -238,8 +232,6 @@ export const {
   changeOrderPageSize,
   changeOrderSortFieldName,
   changeOrderSortOrder,
-  addOrderFilter,
-  removeOrderFilter,
-  resetOrderFilters,
+  changeOrderFilters,
 } = orderSlice.actions;
 export default orderSlice.reducer;
