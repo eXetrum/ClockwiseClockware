@@ -13,6 +13,7 @@ import {
   Button,
   Chip,
   Drawer,
+  Badge,
 } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -163,9 +164,19 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   return (
     <Container maxWidth="sm" sx={{ mb: 1 }}>
       <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
-        <Button size="small" variant="contained" onClick={toggleDrawer(true)}>
-          <TuneIcon fontSize="small" /> Filters
-        </Button>
+        <Badge
+          badgeContent={filters.length}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
+          }}
+          color="secondary"
+        >
+          <Button size="small" variant="contained" onClick={toggleDrawer(true)}>
+            <TuneIcon fontSize="small" /> Filters
+          </Button>
+        </Badge>
+
         <Drawer anchor={'right'} open={isFilterTabOpen} onClose={toggleDrawer(false)}>
           <Container sx={{ mt: 25 }}>
             <Stack justifyContent="center" alignItems="center" spacing={2}>
