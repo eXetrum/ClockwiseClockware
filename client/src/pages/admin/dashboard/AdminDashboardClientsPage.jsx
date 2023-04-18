@@ -11,7 +11,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
-import { Header, ClientForm, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
+import { Header, ClientForm, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,8 +23,6 @@ import {
   changeClientPageSize,
   changeClientSortFieldName,
   changeClientSortOrder,
-  addClientFilter,
-  removeClientFilter,
 } from '../../../store/actions';
 import {
   selectAllClients,
@@ -36,10 +34,8 @@ import {
   selectClientPageSize,
   selectClientSortFielName,
   selectClientSortOrder,
-  selectClientFilters,
 } from '../../../store/selectors';
 
-import { buildFilter } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../../constants';
 
 const AdminDashboardClientsPage = () => {
@@ -59,14 +55,9 @@ const AdminDashboardClientsPage = () => {
   const sortFieldName = useSelector(selectClientSortFielName);
   const sortOrder = useSelector(selectClientSortOrder);
 
-  const filters = useSelector(selectClientFilters);
-
   const fetchPage = useCallback(
-    () =>
-      dispatch(
-        fetchClients({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
-      ),
-    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
+    () => dispatch(fetchClients({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -158,20 +149,6 @@ const AdminDashboardClientsPage = () => {
     [dispatch, sortFieldName, sortOrder],
   );
 
-  const onFilterApply = useCallback(
-    ({ ...params }) => {
-      dispatch(addClientFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
-  const onFilterRemove = useCallback(
-    ({ ...params }) => {
-      dispatch(removeClientFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
   const columns = [
     { field: 'email', headerName: 'Email', width: 300, flex: 1 },
     { field: 'name', headerName: 'Name', width: 300, flex: 1 },
@@ -237,7 +214,6 @@ const AdminDashboardClientsPage = () => {
           </Row>
           <hr />
 
-          <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
           <DataGrid
             autoHeight
             disableRowSelectionOnClick

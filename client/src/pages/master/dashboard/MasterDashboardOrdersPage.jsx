@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogTitle } from '@mui/material';
 import TaskAltIcon from '@mui/icons-material/TaskAltOutlined';
 import ImageIcon from '@mui/icons-material/Image';
 
-import { Header, OrderImageList, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
+import { Header, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,18 +23,10 @@ import {
   selectOrderPageSize,
   selectOrderSortFielName,
   selectOrderSortOrder,
-  selectOrderFilters,
 } from '../../../store/selectors';
-import {
-  changeOrderCurrentPage,
-  changeOrderPageSize,
-  changeOrderSortFieldName,
-  changeOrderSortOrder,
-  addOrderFilter,
-  removeOrderFilter,
-} from '../../../store/actions';
+import { changeOrderCurrentPage, changeOrderPageSize, changeOrderSortFieldName, changeOrderSortOrder } from '../../../store/actions';
 
-import { formatDate, formatDecimal, buildFilter } from '../../../utils';
+import { formatDate, formatDecimal } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, ORDER_STATUS } from '../../../constants';
 
 const MasterDashboardOrdersPage = () => {
@@ -55,14 +47,9 @@ const MasterDashboardOrdersPage = () => {
   const sortFieldName = useSelector(selectOrderSortFielName);
   const sortOrder = useSelector(selectOrderSortOrder);
 
-  const filters = useSelector(selectOrderFilters);
-
   const fetchPage = useCallback(
-    () =>
-      dispatch(
-        fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
-      ),
-    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
+    () => dispatch(fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -111,20 +98,6 @@ const MasterDashboardOrdersPage = () => {
       if (order !== sortOrder) dispatch(changeOrderSortOrder(order));
     },
     [dispatch, sortFieldName, sortOrder],
-  );
-
-  const onFilterApply = useCallback(
-    ({ ...params }) => {
-      dispatch(addOrderFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
-  const onFilterRemove = useCallback(
-    ({ ...params }) => {
-      dispatch(removeOrderFilter({ ...params }));
-    },
-    [dispatch],
   );
 
   const columns = [
@@ -200,7 +173,6 @@ const MasterDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
         <DataGrid
           autoHeight
           disableRowSelectionOnClick
