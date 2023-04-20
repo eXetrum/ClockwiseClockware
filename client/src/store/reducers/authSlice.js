@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { loginAuth, registerAuth } from '../thunks';
+import { loginBasicAuth, loginGoogleAuth, registerAuth } from '../thunks';
 import { isGlobalErrorType, parseToken } from '../../utils';
 import { USER_ROLES, ERROR_TYPE } from '../../constants';
 
@@ -33,19 +33,19 @@ export const authSlice = createSlice({
     },
   },
   extraReducers: {
-    //#region Login
-    [loginAuth.pending]: state => {
+    //#region Login via form
+    [loginBasicAuth.pending]: state => {
       state.isPending = true;
       state.error = initEmptyError();
       state.authUser = initEmptyAuth();
     },
-    [loginAuth.fulfilled]: (state, { payload }) => {
+    [loginBasicAuth.fulfilled]: (state, { payload }) => {
       state.authUser = initEmptyAuth(payload);
       state.newUser = initEmptyUser();
       state.error = initEmptyError();
       state.isPending = false;
     },
-    [loginAuth.rejected]: (state, { payload }) => {
+    [loginBasicAuth.rejected]: (state, { payload }) => {
       state.isPending = false;
       state.error = payload;
     },
@@ -63,6 +63,23 @@ export const authSlice = createSlice({
     [registerAuth.rejected]: (state, { payload }) => {
       state.error = payload;
       state.isPending = false;
+    },
+    //#endregion
+    //#region Login via google
+    [loginGoogleAuth.pending]: state => {
+      state.isPending = true;
+      state.error = initEmptyError();
+      state.authUser = initEmptyAuth();
+    },
+    [loginGoogleAuth.fulfilled]: (state, { payload }) => {
+      state.authUser = initEmptyAuth(payload);
+      state.newUser = initEmptyUser();
+      state.error = initEmptyError();
+      state.isPending = false;
+    },
+    [loginGoogleAuth.rejected]: (state, { payload }) => {
+      state.isPending = false;
+      state.error = payload;
     },
     //#endregion
   },
