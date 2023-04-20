@@ -63,7 +63,11 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const errorCity = useSelector(selectCityError);
   const errorWatch = useSelector(selectWatchError);
 
-  const error = !isUnknownOrNoErrorType(errorMaster) ? errorMaster : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorWatch;
+  const error = useMemo(
+    () => (!isUnknownOrNoErrorType(errorMaster) ? errorMaster : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorWatch),
+    [errorMaster, errorCity, errorWatch],
+  );
+
   const isInitialLoading = useMemo(
     () => isInitialLoadingMasters && isInitialLoadingCities && isInitialLoadingWatches,
     [isInitialLoadingMasters, isInitialLoadingCities, isInitialLoadingWatches],
