@@ -1,24 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Container,
-  Box,
-  Stack,
-  FormGroup,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  OutlinedInput,
-  TextField,
-  Button,
-  Chip,
-  Drawer,
-  Badge,
-} from '@mui/material';
+import { Container, Stack, FormGroup, TextField, Button, Drawer, Badge } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TuneIcon from '@mui/icons-material/Tune';
+
+import FilterDropDownSelector from './FilterDropDownSelector';
 
 import {
   selectAllMasters,
@@ -38,17 +25,6 @@ import { isUnknownOrNoErrorType, alignToDayStart, alignToDayEnd } from '../../ut
 import { ORDER_STATUS, VALID_FILTER_TYPE } from '../../constants';
 
 const validFilterKeys = Object.values(VALID_FILTER_TYPE);
-
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 280,
-    },
-  },
-};
 
 const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const dispatch = useDispatch();
@@ -164,6 +140,11 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const onStartDateChange = useCallback(value => setSelectedStartDate(value), []);
   const onEndDateChange = useCallback(value => setSelectedEndDate(value), []);
 
+  const masterLabelFormatter = useCallback(value => `${value.name} (${value.email})`, []);
+  const cityLabelFormatter = useCallback(value => value.name, []);
+  const watchLabelFormatter = useCallback(value => value.name, []);
+  const statusLabelFormatter = useCallback(value => value, []);
+
   return (
     <Container maxWidth="sm" sx={{ mb: 1 }}>
       <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
@@ -186,117 +167,34 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
               <FormGroup>
                 {isComponentReady ? (
                   <>
-                    {masters.length > 0 ? (
-                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                        <InputLabel id="filter-master-select">Master</InputLabel>
-                        <Select
-                          label="Master"
-                          labelId="filter-master-select"
-                          id="filter-master-select"
-                          multiple
-                          value={selectedMasters}
-                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                          renderValue={selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map(value => (
-                                <Chip key={value.id} label={`${value.name} (${value.email})`} />
-                              ))}
-                            </Box>
-                          )}
-                          MenuProps={MenuProps}
-                          onChange={onMasterSelectionChange}
-                        >
-                          {masters.map((master, index) => (
-                            <MenuItem key={index} value={master}>
-                              {`${master.name} (${master.email})`}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : null}
-                    {cities.length > 0 ? (
-                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                        <InputLabel id="filter-city-select">City</InputLabel>
-                        <Select
-                          label="City"
-                          labelId="filter-city-select"
-                          id="filter-city-select"
-                          multiple
-                          value={selectedCities}
-                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                          renderValue={selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map(value => (
-                                <Chip key={value.id} label={value.name} />
-                              ))}
-                            </Box>
-                          )}
-                          MenuProps={MenuProps}
-                          onChange={onCitySelectionChange}
-                        >
-                          {cities.map((city, index) => (
-                            <MenuItem key={index} value={city}>
-                              {city.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : null}
-                    {watches.length > 0 ? (
-                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                        <InputLabel id="filter-watch-select">Watch</InputLabel>
-                        <Select
-                          label="Watch"
-                          labelId="filter-watch-select"
-                          id="filter-watch-select"
-                          multiple
-                          value={selectedWatches}
-                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                          renderValue={selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map(value => (
-                                <Chip key={value.id} label={value.name} />
-                              ))}
-                            </Box>
-                          )}
-                          MenuProps={MenuProps}
-                          onChange={onWatchSelectionChange}
-                        >
-                          {watches.map((watch, index) => (
-                            <MenuItem key={index} value={watch}>
-                              {watch.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : null}
-                    <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                      <InputLabel id="filter-order-status-select">Status</InputLabel>
-                      <Select
-                        label="Status"
-                        labelId="filter-order-status-select"
-                        id="filter-order-status-select"
-                        multiple
-                        value={selectedStatuses}
-                        input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                        renderValue={selected => (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value, index) => (
-                              <Chip key={index} label={value} />
-                            ))}
-                          </Box>
-                        )}
-                        MenuProps={MenuProps}
-                        onChange={onStatusSelectionChange}
-                      >
-                        {Object.values(ORDER_STATUS).map((status, index) => (
-                          <MenuItem key={index} value={status}>
-                            {status}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-
+                    <FilterDropDownSelector
+                      label="Master"
+                      items={masters}
+                      selectedItems={selectedMasters}
+                      renderValueFormatter={masterLabelFormatter}
+                      onSelectionChange={onMasterSelectionChange}
+                    />
+                    <FilterDropDownSelector
+                      label="City"
+                      items={cities}
+                      selectedItems={selectedCities}
+                      renderValueFormatter={cityLabelFormatter}
+                      onSelectionChange={onCitySelectionChange}
+                    />
+                    <FilterDropDownSelector
+                      label="Watch"
+                      items={watches}
+                      selectedItems={selectedWatches}
+                      renderValueFormatter={watchLabelFormatter}
+                      onSelectionChange={onWatchSelectionChange}
+                    />
+                    <FilterDropDownSelector
+                      label="Status"
+                      items={Object.values(ORDER_STATUS)}
+                      selectedItems={selectedStatuses}
+                      renderValueFormatter={statusLabelFormatter}
+                      onSelectionChange={onStatusSelectionChange}
+                    />
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Stack direction={'row'} justifyContent="center" alignItems="center" spacing={2} sx={{ mb: 2, mt: 1 }}>
                         <DatePicker
