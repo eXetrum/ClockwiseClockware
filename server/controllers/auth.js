@@ -1,3 +1,6 @@
+require('dotenv').config();
+const { OAuth2Client } = require('google-auth-library');
+const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
 const db = require('../database/models/index');
 const { User, City, Confirmations } = require('../database/models');
@@ -7,6 +10,55 @@ const { generatePassword, generateConfirmationToken, isDbErrorEntryAlreadyExists
 const { USER_ROLES, ACCESS_SCOPE } = require('../constants');
 
 const REGISTRABLE_ENTITIES = Object.values(USER_ROLES).filter((item) => item !== 'admin');
+
+const googleAuth = [
+    async (req, res) => {
+        try {
+            const googleClientId = process.env.GOOGLE_CLIENT_ID;
+            const { token } = req.body;
+            const client = new OAuth2Client(googleClientId);
+
+            const ticket = await client.verifyIdToken({
+                idToken: token,
+                audience: googleClientId
+            });
+
+            const response = ticket.getPayload();
+            if (response.iss !== 'accounts.google.com' && response.aud !== googleClientId) {
+                return res.status(400).json({ status: 'error', error: 'Bad Request' });
+            }
+            const { email, given_name: name } = response;
+
+            const decoded = jwt.decode(token);
+            let user = await User.findOne({ where: { email: decoded.email } });
+            if (!user) {
+                user = await db.sequelize.transaction(async (t) => {
+                    const newUser = await User.create({ email, password: generatePassword(), role: USER_ROLES.CLIENT }, { transaction: t });
+                    await newUser.createClient({ name, isEmailVerified: true }, { transaction: t });
+                    return newUser;
+                });
+            }
+
+            if (!user.isEnabled) return res.status(403).json({ message: 'Account temporary disabled' }).end();
+
+            const details = await user.getDetails();
+
+            if (ACCESS_SCOPE.MasterOrClient.includes(user.role) && !details.isEmailVerified) {
+                return res.status(403).json({ message: 'Email address is not confirmed yet' }).end();
+            }
+
+            if (ACCESS_SCOPE.MasterOnly.includes(user.role) && !details.isApprovedByAdmin) {
+                return res.status(403).json({ message: 'Account is not approved yet' }).end();
+            }
+
+            const accessToken = generateAccessToken({ ...details.toJSON(), ...user.toJSON() });
+
+            res.status(200).json({ accessToken }).end();
+        } catch (error) {
+            res.status(500).json(error).end();
+        }
+    }
+];
 
 const create = [
     body('email')
@@ -271,5 +323,6 @@ module.exports = {
     login,
     verify,
     resetPassword,
-    resendEmailConfirmation
+    resendEmailConfirmation,
+    googleAuth
 };
