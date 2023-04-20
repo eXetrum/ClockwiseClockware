@@ -1,24 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import {
-  Container,
-  Box,
-  Stack,
-  FormGroup,
-  FormControl,
-  InputLabel,
-  MenuItem,
-  Select,
-  OutlinedInput,
-  TextField,
-  Button,
-  Chip,
-  Drawer,
-  Badge,
-} from '@mui/material';
+import { Container, Stack, FormGroup, TextField, Button, Drawer, Badge } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TuneIcon from '@mui/icons-material/Tune';
+
+import FilterDropDownSelector from './FilterDropDownSelector';
 
 import {
   selectAllMasters,
@@ -35,20 +22,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchMasters, fetchCities, fetchWatches } from '../../store/thunks';
 
 import { isUnknownOrNoErrorType, alignToDayStart, alignToDayEnd } from '../../utils';
-import { ORDER_STATUS, VALID_FILTER_TYPE } from '../../constants';
+import { ORDER_STATUS, FILTER_TYPE } from '../../constants';
 
-const validFilterKeys = Object.values(VALID_FILTER_TYPE);
+const validFilterNames = Object.values(FILTER_TYPE);
+const orderStatusMap = Object.values(ORDER_STATUS).map(name => ({ id: name, name }));
 
-const ITEM_HEIGHT = 48;
-const ITEM_PADDING_TOP = 8;
-const MenuProps = {
-  PaperProps: {
-    style: {
-      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-      width: 280,
-    },
-  },
-};
+const initEmptyFilters = () => Object.fromEntries(validFilterNames.map(name => [name, name === FILTER_TYPE.BY_DATE ? [null, null] : []]));
 
 const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const dispatch = useDispatch();
@@ -63,7 +42,11 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const errorCity = useSelector(selectCityError);
   const errorWatch = useSelector(selectWatchError);
 
-  const error = !isUnknownOrNoErrorType(errorMaster) ? errorMaster : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorWatch;
+  const error = useMemo(
+    () => (!isUnknownOrNoErrorType(errorMaster) ? errorMaster : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorWatch),
+    [errorMaster, errorCity, errorWatch],
+  );
+
   const isInitialLoading = useMemo(
     () => isInitialLoadingMasters && isInitialLoadingCities && isInitialLoadingWatches,
     [isInitialLoadingMasters, isInitialLoadingCities, isInitialLoadingWatches],
@@ -72,22 +55,16 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const [isFilterTabOpen, setFilterTabIsOpen] = useState(false);
-  const [selectedMasters, setSelectedMasters] = useState([]);
-  const [selectedCities, setSelectedCities] = useState([]);
-  const [selectedWatches, setSelectedWatches] = useState([]);
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
+  const [selectedFilters, setSelectedFilters] = useState(initEmptyFilters());
 
   const isApplyFilterBtnEnabled = useMemo(
     () =>
-      selectedMasters.length ||
-      selectedCities.length ||
-      selectedWatches.length ||
-      selectedStatuses.length ||
-      selectedStartDate ||
-      selectedEndDate,
-    [selectedMasters, selectedCities, selectedWatches, selectedStatuses, selectedStartDate, selectedEndDate],
+      validFilterNames
+        .map(name =>
+          name === FILTER_TYPE.BY_DATE ? selectedFilters[name].filter(item => item !== null).length : selectedFilters[name].length,
+        )
+        .some(b => b),
+    [selectedFilters],
   );
 
   useEffect(() => {
@@ -97,24 +74,22 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    validFilterKeys.forEach(filterType => {
-      // Should be valid filter name
+    const mapping = {
+      [FILTER_TYPE.BY_MASTER]: masters,
+      [FILTER_TYPE.BY_CITY]: cities,
+      [FILTER_TYPE.BY_WATCH]: watches,
+      [FILTER_TYPE.BY_STATUS]: orderStatusMap,
+    };
+    validFilterNames.forEach(filterType => {
       const idx = filters.findIndex(item => filterType in item);
       if (idx !== -1 && filters[idx][filterType].length) {
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_MASTER) {
-          setSelectedMasters(masters.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
-        }
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_CITY) {
-          setSelectedCities(cities.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
-        }
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_WATCH) {
-          setSelectedWatches(watches.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
-        }
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_STATUS) setSelectedStatuses(filters[idx][filterType]);
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_DATE) {
-          const [start, end] = filters[idx][filterType];
-          setSelectedStartDate(start);
-          setSelectedEndDate(end);
+        if (filterType === FILTER_TYPE.BY_DATE) {
+          setSelectedFilters(prev => ({ ...prev, [filterType]: filters[idx][filterType] }));
+        } else {
+          setSelectedFilters(prev => ({
+            ...prev,
+            [filterType]: mapping[filterType].filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1),
+          }));
         }
       }
     });
@@ -129,37 +104,55 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
 
   const applyFilters = useCallback(() => {
     const filters = [];
-    if (selectedMasters.length) filters.push({ filterByMaster: selectedMasters.map(item => item.id) });
-    if (selectedCities.length) filters.push({ filterByCity: selectedCities.map(item => item.id) });
-    if (selectedWatches.length) filters.push({ filterByWatch: selectedWatches.map(item => item.id) });
-    if (selectedStatuses.length) filters.push({ filterByStatus: selectedStatuses });
-    if (selectedStartDate !== null || selectedEndDate !== null) {
-      filters.push({
-        filterByDate: [
-          selectedStartDate !== null ? alignToDayStart(selectedStartDate).getTime() : null,
-          selectedEndDate !== null ? alignToDayEnd(selectedEndDate).getTime() : null,
-        ],
-      });
-    }
+    validFilterNames.forEach(name => {
+      const selectedObjects = selectedFilters[name];
+      if (name === FILTER_TYPE.BY_DATE) {
+        const [start, end] = selectedObjects;
+        if (start !== null || end !== null)
+          filters.push({
+            [name]: [start !== null ? alignToDayStart(start).getTime() : null, end !== null ? alignToDayEnd(end).getTime() : null],
+          });
+      } else if (selectedObjects.length) {
+        filters.push({ [name]: selectedObjects.map(item => item.id) });
+      }
+    });
     onApply(filters);
-  }, [onApply, selectedMasters, selectedCities, selectedWatches, selectedStatuses, selectedStartDate, selectedEndDate]);
+  }, [onApply, selectedFilters]);
 
   const resetFilters = useCallback(() => {
-    setSelectedMasters([]);
-    setSelectedCities([]);
-    setSelectedWatches([]);
-    setSelectedStatuses([]);
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
+    setSelectedFilters(initEmptyFilters());
     onApply([]);
   }, [onApply]);
 
-  const onMasterSelectionChange = useCallback(({ target: { value } }) => setSelectedMasters(value), []);
-  const onCitySelectionChange = useCallback(({ target: { value } }) => setSelectedCities(value), []);
-  const onWatchSelectionChange = useCallback(({ target: { value } }) => setSelectedWatches(value), []);
-  const onStatusSelectionChange = useCallback(({ target: { value } }) => setSelectedStatuses(value), []);
-  const onStartDateChange = useCallback(value => setSelectedStartDate(value), []);
-  const onEndDateChange = useCallback(value => setSelectedEndDate(value), []);
+  const onMasterSelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_MASTER]: value })),
+    [],
+  );
+  const onCitySelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_CITY]: value })),
+    [],
+  );
+  const onWatchSelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_WATCH]: value })),
+    [],
+  );
+  const onStatusSelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_STATUS]: value })),
+    [],
+  );
+  const onStartDateChange = useCallback(
+    value => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_DATE]: [value, prev[FILTER_TYPE.BY_DATE][1]] })),
+    [],
+  );
+  const onEndDateChange = useCallback(
+    value => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_DATE]: [prev[FILTER_TYPE.BY_DATE][0], value] })),
+    [],
+  );
+
+  const masterLabelFormatter = useCallback(value => `${value.name} (${value.email})`, []);
+  const cityLabelFormatter = useCallback(value => value.name, []);
+  const watchLabelFormatter = useCallback(value => value.name, []);
+  const statusLabelFormatter = useCallback(value => value.name, []);
 
   return (
     <Container maxWidth="sm" sx={{ mb: 1 }}>
@@ -183,117 +176,34 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
               <FormGroup>
                 {isComponentReady ? (
                   <>
-                    {masters.length > 0 ? (
-                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                        <InputLabel id="filter-master-select">Master</InputLabel>
-                        <Select
-                          label="Master"
-                          labelId="filter-master-select"
-                          id="filter-master-select"
-                          multiple
-                          value={selectedMasters}
-                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                          renderValue={selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map(value => (
-                                <Chip key={value.id} label={`${value.name} (${value.email})`} />
-                              ))}
-                            </Box>
-                          )}
-                          MenuProps={MenuProps}
-                          onChange={onMasterSelectionChange}
-                        >
-                          {masters.map((master, index) => (
-                            <MenuItem key={index} value={master}>
-                              {`${master.name} (${master.email})`}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : null}
-                    {cities.length > 0 ? (
-                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                        <InputLabel id="filter-city-select">City</InputLabel>
-                        <Select
-                          label="City"
-                          labelId="filter-city-select"
-                          id="filter-city-select"
-                          multiple
-                          value={selectedCities}
-                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                          renderValue={selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map(value => (
-                                <Chip key={value.id} label={value.name} />
-                              ))}
-                            </Box>
-                          )}
-                          MenuProps={MenuProps}
-                          onChange={onCitySelectionChange}
-                        >
-                          {cities.map((city, index) => (
-                            <MenuItem key={index} value={city}>
-                              {city.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : null}
-                    {watches.length > 0 ? (
-                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                        <InputLabel id="filter-watch-select">Watch</InputLabel>
-                        <Select
-                          label="Watch"
-                          labelId="filter-watch-select"
-                          id="filter-watch-select"
-                          multiple
-                          value={selectedWatches}
-                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                          renderValue={selected => (
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                              {selected.map(value => (
-                                <Chip key={value.id} label={value.name} />
-                              ))}
-                            </Box>
-                          )}
-                          MenuProps={MenuProps}
-                          onChange={onWatchSelectionChange}
-                        >
-                          {watches.map((watch, index) => (
-                            <MenuItem key={index} value={watch}>
-                              {watch.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                    ) : null}
-                    <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
-                      <InputLabel id="filter-order-status-select">Status</InputLabel>
-                      <Select
-                        label="Status"
-                        labelId="filter-order-status-select"
-                        id="filter-order-status-select"
-                        multiple
-                        value={selectedStatuses}
-                        input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
-                        renderValue={selected => (
-                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                            {selected.map((value, index) => (
-                              <Chip key={index} label={value} />
-                            ))}
-                          </Box>
-                        )}
-                        MenuProps={MenuProps}
-                        onChange={onStatusSelectionChange}
-                      >
-                        {Object.values(ORDER_STATUS).map((status, index) => (
-                          <MenuItem key={index} value={status}>
-                            {status}
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-
+                    <FilterDropDownSelector
+                      label="Master"
+                      items={masters}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_MASTER]}
+                      renderValueFormatter={masterLabelFormatter}
+                      onSelectionChange={onMasterSelectionChange}
+                    />
+                    <FilterDropDownSelector
+                      label="City"
+                      items={cities}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_CITY]}
+                      renderValueFormatter={cityLabelFormatter}
+                      onSelectionChange={onCitySelectionChange}
+                    />
+                    <FilterDropDownSelector
+                      label="Watch"
+                      items={watches}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_WATCH]}
+                      renderValueFormatter={watchLabelFormatter}
+                      onSelectionChange={onWatchSelectionChange}
+                    />
+                    <FilterDropDownSelector
+                      label="Status"
+                      items={orderStatusMap}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_STATUS]}
+                      renderValueFormatter={statusLabelFormatter}
+                      onSelectionChange={onStatusSelectionChange}
+                    />
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Stack direction={'row'} justifyContent="center" alignItems="center" spacing={2} sx={{ mb: 2, mt: 1 }}>
                         <DatePicker
@@ -302,7 +212,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
                           views={['year', 'month', 'day']}
                           onChange={onStartDateChange}
                           ampm={false}
-                          value={selectedStartDate}
+                          value={selectedFilters[FILTER_TYPE.BY_DATE][0]}
                         />
                         <DatePicker
                           label="StartDate to"
@@ -310,7 +220,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
                           views={['year', 'month', 'day']}
                           onChange={onEndDateChange}
                           ampm={false}
-                          value={selectedEndDate}
+                          value={selectedFilters[FILTER_TYPE.BY_DATE][1]}
                         />
                       </Stack>
                     </LocalizationProvider>
