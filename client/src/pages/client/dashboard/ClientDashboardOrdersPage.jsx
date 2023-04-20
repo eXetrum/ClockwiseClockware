@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogTitle, Rating } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
 
-import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
+import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -25,7 +25,6 @@ import {
   selectOrderPageSize,
   selectOrderSortFielName,
   selectOrderSortOrder,
-  selectOrderFilters,
 } from '../../../store/selectors';
 import {
   changeVisibilityRateForm,
@@ -33,11 +32,9 @@ import {
   changeOrderPageSize,
   changeOrderSortFieldName,
   changeOrderSortOrder,
-  addOrderFilter,
-  removeOrderFilter,
 } from '../../../store/actions';
 
-import { formatDate, formatDecimal, buildFilter } from '../../../utils';
+import { formatDate, formatDecimal } from '../../../utils';
 import {
   ERROR_TYPE,
   PAGINATION_PAGE_SIZE_OPTIONS,
@@ -68,14 +65,9 @@ const ClientDashboardOrdersPage = () => {
   const sortFieldName = useSelector(selectOrderSortFielName);
   const sortOrder = useSelector(selectOrderSortOrder);
 
-  const filters = useSelector(selectOrderFilters);
-
   const fetchPage = useCallback(
-    () =>
-      dispatch(
-        fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
-      ),
-    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
+    () => dispatch(fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -131,20 +123,6 @@ const ClientDashboardOrdersPage = () => {
       if (order !== sortOrder) dispatch(changeOrderSortOrder(order));
     },
     [dispatch, sortFieldName, sortOrder],
-  );
-
-  const onFilterApply = useCallback(
-    ({ ...params }) => {
-      dispatch(addOrderFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
-  const onFilterRemove = useCallback(
-    ({ ...params }) => {
-      dispatch(removeOrderFilter({ ...params }));
-    },
-    [dispatch],
   );
 
   const columns = useMemo(
@@ -237,7 +215,6 @@ const ClientDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
         <DataGrid
           autoHeight
           disableRowSelectionOnClick

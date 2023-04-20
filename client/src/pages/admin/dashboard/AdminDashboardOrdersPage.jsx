@@ -25,8 +25,7 @@ import {
   changeOrderPageSize,
   changeOrderSortFieldName,
   changeOrderSortOrder,
-  addOrderFilter,
-  removeOrderFilter,
+  changeOrderFilters,
 } from '../../../store/actions';
 import {
   selectAllOrders,
@@ -158,15 +157,8 @@ const AdminDashboardOrdersPage = () => {
   );
 
   const onFilterApply = useCallback(
-    ({ ...params }) => {
-      dispatch(addOrderFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
-  const onFilterRemove = useCallback(
-    ({ ...params }) => {
-      dispatch(removeOrderFilter({ ...params }));
+    selectedFilters => {
+      dispatch(changeOrderFilters(selectedFilters));
     },
     [dispatch],
   );
@@ -297,7 +289,7 @@ const AdminDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
+        <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} />
         <DataGrid
           autoHeight
           disableRowSelectionOnClick

@@ -6,7 +6,5 @@ export {
   changeOrderPageSize,
   changeOrderSortFieldName,
   changeOrderSortOrder,
-  addOrderFilter,
-  removeOrderFilter,
-  resetOrderFilters,
+  changeOrderFilters,
 } from '../reducers/orderSlice';

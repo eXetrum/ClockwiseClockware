@@ -22,15 +22,10 @@ const ViewMasterCard = ({ master, onClick, isSelected = false }) => {
   if (master == null) return;
 
   return (
-    <Col
-      md="auto"
-      className="m-2"
-      onClick={() => (onClick != null ? onClick(master) : null)}
-      style={isSelected ? selectedStyles : regularStyle}
-    >
+    <Col md="auto" sm={2} onClick={() => (onClick != null ? onClick(master) : null)} style={isSelected ? selectedStyles : regularStyle}>
       <Card className="d-flex justify-content-center" style={{ minHeight: '100%' }}>
         <Card.Body>
-          <Card.Title className="text-center">{master.name}</Card.Title>
+          <Card.Title className="text-center text-truncate">{master.name}</Card.Title>
           <Col className="d-flex justify-content-center mb-3">
             <Rating name="rating" value={master.rating} defaultValue={MAX_RATING_VALUE} precision={RATING_PRECISION_STEP} readOnly={true} />
           </Col>

@@ -15,3 +15,15 @@ export const dateRangesOverlap = (start1, end1, start2, end2) => {
   const max = (a, b) => (a > b ? a : b);
   return max(start1, start2) < min(end1, end2);
 };
+
+export const alignToDayStart = value => {
+  const date = new Date(value);
+  date.setHours(0, 0, 0, 0);
+  return date;
+};
+
+export const alignToDayEnd = value => {
+  const date = new Date(value);
+  date.setHours(23, 59, 59, 999);
+  return date;
+};

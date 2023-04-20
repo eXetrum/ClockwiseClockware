@@ -1,26 +1,31 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { Form, Row, Col, Button } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
-import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
+import { useSnackbar } from 'notistack';
 import dayjs from 'dayjs';
 import TextField from '@mui/material/TextField';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import HighlightOffOutlinedIcon from '@mui/icons-material/HighlightOffOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 import { MasterCardList, SpinnerButton, ImageUploader } from '../../components';
 
+import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchAllAvailable } from '../../store/thunks';
 import { changeNewOrderField, resetMasters } from '../../store/actions';
 import { selectNewOrder, selectOrderPending, selectAllMasters, selectMasterPending } from '../../store/selectors';
 
-import { validateEmail, validateClientName, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
+import { validateEmail, validateClientName, formatBytes, addHours, dateRangesOverlap, dateToNearestHour } from '../../utils';
+import { MAX_IMAGES_COUNT, MAX_IMAGE_BYTES_SIZE } from '../../constants';
 
 const defaultControlsFocusState = { client: { email: false, name: false } };
 
 const MASTER_PROPS_DEPENDENCY = ['city', 'watch', 'startDate'];
 
 const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, successButtonText = 'Save' }) => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
   const newOrder = useSelector(selectNewOrder);
@@ -137,10 +142,13 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
       // Drop current master
       dispatch(changeNewOrderField({ name: 'master', value: null }));
       setShowMasters(false);
-      await dispatch(fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }));
-      setShowMasters(true);
+      const action = await dispatch(
+        fetchAllAvailable({ watchId: newOrder.watch.id, cityId: newOrder.city.id, startDate: newOrder.startDate }),
+      );
+      if (isFulfilled(action)) setShowMasters(true);
+      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
     },
-    [dispatch, newOrder],
+    [dispatch, enqueueSnackbar, newOrder],
   );
 
   const onSelectMaster = useCallback(
@@ -159,6 +167,19 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
     if (newOrder.city === null && cities.length) dispatch(changeNewOrderField({ name: 'city', value: cities[0] }));
     if (newOrder.watch === null && watches.length) dispatch(changeNewOrderField({ name: 'watch', value: watches[0] }));
   }, [newOrder, cities, watches, dispatch]);
+
+  useEffect(() => {
+    if (newOrder.master !== null) {
+      if (!masters.find(item => item.id === newOrder.master.id)) {
+        dispatch(resetMasters([...masters, newOrder.master]));
+      } else {
+        dispatch(resetMasters([...masters]));
+      }
+
+      setShowMasters(true);
+    }
+    // eslint-disable-next-line
+  }, [dispatch, newOrder]);
 
   useEffect(() => setCurrentDate(dateToNearestHour()), []);
 
@@ -232,7 +253,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                     <b>Watch:</b>
                   </Form.Label>
                 </Col>
-                <Col sm={4} className="d-flex justify-content-start align-self-center" style={{ borderRight: 'solid 1px lightgray' }}>
+                <Col sm={5} className="d-flex justify-content-center align-self-center mb-0" style={{ borderRight: 'solid 1px lightgray' }}>
                   {watches.map(watch => (
                     <Form.Check
                       key={watch.id}
@@ -249,7 +270,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   ))}
                 </Col>
 
-                <Col className="d-flex justify-content-start mt-1">
+                <Col className="d-flex justify-content-center mt-1">
                   <LocalizationProvider dateAdapter={AdapterDayjs}>
                     <DateTimePicker
                       label="Date/Time"
@@ -293,7 +314,7 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
             </Form.Group>
 
             <hr />
-            <Form.Group className="mb-4 mt-4">
+            <Form.Group className="mb-3 mt-4">
               <Row>
                 <Col sm={2} className="align-self-center">
                   <Form.Label>
@@ -304,67 +325,60 @@ const OrderForm = ({ watches, cities, onSubmit, onReset, isEditForm = true, succ
                   <ImageUploader />
                 </Col>
               </Row>
+              <Row>
+                <Col className="d-flex justify-content-end align-self-center">
+                  <small className="text-muted">
+                    at most {MAX_IMAGES_COUNT} image(s), {formatBytes(MAX_IMAGE_BYTES_SIZE)} each
+                  </small>
+                </Col>
+              </Row>
             </Form.Group>
 
             <hr />
-            <Form.Group className="mb-4">
+            <Form.Group className="mb-3">
               <Row>
-                <Col sm={4}>
-                  <Row>
-                    <Form.Label>
-                      <b>Master:</b>
-                    </Form.Label>
-                  </Row>
-                  <Row>
-                    <Col>
-                      <SpinnerButton
-                        className="mb-2 btn"
-                        variant="warning"
-                        onClick={onFindMasterBtnClick}
-                        disabled={isPending || !isOrderPreparedForMasterSearch}
-                        text={
-                          <>
-                            {isMasterAssigned && !isMastersPending ? (
-                              <HighlightOffOutlinedIcon fontSize="small" className="me-1" />
-                            ) : (
-                              <span>&nbsp;</span>
-                            )}
-                            <span className="me-1">Find Master</span>
-                          </>
-                        }
-                        loading={isMastersPending}
-                      />
-                    </Col>
-                  </Row>
+                <Col sm={2} className="align-self-center">
+                  <Form.Label>
+                    <b>Master:</b>
+                  </Form.Label>
+                </Col>
+                <Col sm={3} className="d-flex justify-content-start align-self-center">
+                  <SpinnerButton
+                    className="mb-2 btn btn-sm"
+                    variant="warning"
+                    onClick={onFindMasterBtnClick}
+                    disabled={isPending || !isOrderPreparedForMasterSearch}
+                    text={
+                      <>
+                        {isMasterAssigned && !isMastersPending ? (
+                          <HighlightOffOutlinedIcon fontSize="small" className="me-1" />
+                        ) : (
+                          <SearchIcon fontSize="small" className="me-1" />
+                        )}
+                        <span className="me-1">Search</span>
+                      </>
+                    }
+                    loading={isMastersPending}
+                  />
                 </Col>
                 <Col>
-                  {isMasterAssigned ? (
-                    <span>
-                      <b>{newOrder?.master.email}</b>
-                    </span>
+                  {!isMasterAssigned ? (
+                    <>
+                      <center>you should search free masters to complete order</center>
+                    </>
+                  ) : null}
+                </Col>
+              </Row>
+              <Row>
+                <Col>
+                  {isShowMasters ? (
+                    <>
+                      <MasterCardList {...{ masters, currentSelectedMaster: newOrder.master, onSelect: onSelectMaster }} />
+                    </>
                   ) : (
-                    <span>Master is not assigned yet</span>
+                    <></>
                   )}
                 </Col>
-                <Row>
-                  <Col>
-                    {isShowMasters ? (
-                      <>
-                        <hr />
-                        <MasterCardList {...{ masters, currentSelectedMaster: newOrder.master, onSelect: onSelectMaster }} />
-                      </>
-                    ) : (
-                      <>
-                        {!isMasterAssigned ? (
-                          <>
-                            <hr />
-                            <center>you should search free masters to complete order</center>
-                          </>
-                        ) : null}
-                      </>
-                    )}
-                  </Col>
-                </Row>
               </Row>
             </Form.Group>
 

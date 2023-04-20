@@ -1,214 +1,336 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { styled, Container, Stack, Paper, FormControl, InputLabel, MenuItem, Select, TextField, Switch, Button, Chip } from '@mui/material';
+import {
+  Container,
+  Box,
+  Stack,
+  FormGroup,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  OutlinedInput,
+  TextField,
+  Button,
+  Chip,
+  Drawer,
+  Badge,
+} from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckIcon from '@mui/icons-material/Check';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import TuneIcon from '@mui/icons-material/Tune';
 
-import DateTimeRangePicker from './DateTimeRangePicker';
+import {
+  selectAllMasters,
+  selectMasterError,
+  selectMasterInitialLoading,
+  selectAllCities,
+  selectCityError,
+  selectCityInitialLoading,
+  selectAllWatches,
+  selectWatchError,
+  selectWatchInitialLoading,
+} from '../../store/selectors';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchMasters, fetchCities, fetchWatches } from '../../store/thunks';
 
-import { formatDate, getOperatorsByTypeName, PRNG } from '../../utils';
-import { ORDER_STATUS } from '../../constants';
+import { isUnknownOrNoErrorType, alignToDayStart, alignToDayEnd } from '../../utils';
+import { ORDER_STATUS, VALID_FILTER_TYPE } from '../../constants';
 
-const ListItem = styled('li')(({ theme }) => ({
-  margin: theme.spacing(0.5),
-}));
+const validFilterKeys = Object.values(VALID_FILTER_TYPE);
 
-const DataGridFilterContainer = ({ columns = [], filters = [], onApply, onDelete }) => {
-  const visibleColumns = useMemo(() => {
-    const alreadyFilteredFields = filters.map(item => item.field);
-    return columns
-      .map(col => {
-        if (col.type === undefined) col.type = 'string';
-        if (col.filterable === undefined) col.filterable = true;
-        return col;
-      })
-      .filter(col => col.filterable && alreadyFilteredFields.indexOf(col.field) === -1);
-  }, [columns, filters]);
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+  PaperProps: {
+    style: {
+      maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+      width: 280,
+    },
+  },
+};
 
-  const [selectedColumnIndex, setSelectedColumnIndex] = useState(0);
-  const [selectedOperatorIndex, setSelectedOperatorIndex] = useState(0);
-  const [selectedTypeOperators, setSelectedTypeOperators] = useState([]);
-  const [queryText, setQueryText] = useState('');
+const DataGridFilterContainer = ({ filters = [], onApply }) => {
+  const dispatch = useDispatch();
 
-  const onDateTimeChange = useCallback(value => {
-    const newStartDate = new Date(value).getTime();
-    if (!isNaN(newStartDate)) setQueryText(formatDate(newStartDate));
-  }, []);
+  const masters = useSelector(selectAllMasters);
+  const cities = useSelector(selectAllCities);
+  const watches = useSelector(selectAllWatches);
+  const isInitialLoadingMasters = useSelector(selectMasterInitialLoading);
+  const isInitialLoadingCities = useSelector(selectCityInitialLoading);
+  const isInitialLoadingWatches = useSelector(selectWatchInitialLoading);
+  const errorMaster = useSelector(selectMasterError);
+  const errorCity = useSelector(selectCityError);
+  const errorWatch = useSelector(selectWatchError);
 
-  const onEnumSelectChange = useCallback(({ target: { value } }) => setQueryText(value), []);
+  const error = !isUnknownOrNoErrorType(errorMaster) ? errorMaster : !isUnknownOrNoErrorType(errorCity) ? errorCity : errorWatch;
+  const isInitialLoading = useMemo(
+    () => isInitialLoadingMasters && isInitialLoadingCities && isInitialLoadingWatches,
+    [isInitialLoadingMasters, isInitialLoadingCities, isInitialLoadingWatches],
+  );
+
+  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
+
+  const [isFilterTabOpen, setFilterTabIsOpen] = useState(false);
+  const [selectedMasters, setSelectedMasters] = useState([]);
+  const [selectedCities, setSelectedCities] = useState([]);
+  const [selectedWatches, setSelectedWatches] = useState([]);
+  const [selectedStatuses, setSelectedStatuses] = useState([]);
+  const [selectedStartDate, setSelectedStartDate] = useState(null);
+  const [selectedEndDate, setSelectedEndDate] = useState(null);
+
+  const isApplyFilterBtnEnabled = useMemo(
+    () =>
+      selectedMasters.length ||
+      selectedCities.length ||
+      selectedWatches.length ||
+      selectedStatuses.length ||
+      selectedStartDate ||
+      selectedEndDate,
+    [selectedMasters, selectedCities, selectedWatches, selectedStatuses, selectedStartDate, selectedEndDate],
+  );
 
   useEffect(() => {
-    if (visibleColumns.length) {
-      setSelectedTypeOperators(getOperatorsByTypeName(visibleColumns[selectedColumnIndex].type));
-      if (visibleColumns[selectedColumnIndex].type === 'boolean') setQueryText('false');
-      else if (visibleColumns[selectedColumnIndex].type === 'dateTime') setQueryText(formatDate(new Date()));
-      else if (visibleColumns[selectedColumnIndex].type === 'enum_orders_status') setQueryText(Object.values(ORDER_STATUS)[0]);
-      else setQueryText('');
+    dispatch(fetchMasters({ limit: -1 }));
+    dispatch(fetchCities({ limit: -1 }));
+    dispatch(fetchWatches());
+  }, [dispatch]);
+
+  useEffect(() => {
+    validFilterKeys.forEach(filterType => {
+      // Should be valid filter name
+      const idx = filters.findIndex(item => filterType in item);
+      if (idx !== -1 && filters[idx][filterType].length) {
+        if (filterType === VALID_FILTER_TYPE.FILTER_BY_MASTER) {
+          setSelectedMasters(masters.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
+        }
+        if (filterType === VALID_FILTER_TYPE.FILTER_BY_CITY) {
+          setSelectedCities(cities.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
+        }
+        if (filterType === VALID_FILTER_TYPE.FILTER_BY_WATCH) {
+          setSelectedWatches(watches.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
+        }
+        if (filterType === VALID_FILTER_TYPE.FILTER_BY_STATUS) setSelectedStatuses(filters[idx][filterType]);
+        if (filterType === VALID_FILTER_TYPE.FILTER_BY_DATE) {
+          const [start, end] = filters[idx][filterType];
+          setSelectedStartDate(start);
+          setSelectedEndDate(end);
+        }
+      }
+    });
+  }, [filters, isComponentReady, masters, cities, watches]);
+
+  const toggleDrawer = open => event => {
+    if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
+      return;
     }
-  }, [visibleColumns, selectedColumnIndex]);
+    setFilterTabIsOpen(open);
+  };
+
+  const applyFilters = useCallback(() => {
+    const filters = [];
+    if (selectedMasters.length) filters.push({ filterByMaster: selectedMasters.map(item => item.id) });
+    if (selectedCities.length) filters.push({ filterByCity: selectedCities.map(item => item.id) });
+    if (selectedWatches.length) filters.push({ filterByWatch: selectedWatches.map(item => item.id) });
+    if (selectedStatuses.length) filters.push({ filterByStatus: selectedStatuses });
+    if (selectedStartDate !== null || selectedEndDate !== null) {
+      filters.push({
+        filterByDate: [
+          selectedStartDate !== null ? alignToDayStart(selectedStartDate).getTime() : null,
+          selectedEndDate !== null ? alignToDayEnd(selectedEndDate).getTime() : null,
+        ],
+      });
+    }
+    onApply(filters);
+  }, [onApply, selectedMasters, selectedCities, selectedWatches, selectedStatuses, selectedStartDate, selectedEndDate]);
+
+  const resetFilters = useCallback(() => {
+    setSelectedMasters([]);
+    setSelectedCities([]);
+    setSelectedWatches([]);
+    setSelectedStatuses([]);
+    setSelectedStartDate(null);
+    setSelectedEndDate(null);
+    onApply([]);
+  }, [onApply]);
+
+  const onMasterSelectionChange = useCallback(({ target: { value } }) => setSelectedMasters(value), []);
+  const onCitySelectionChange = useCallback(({ target: { value } }) => setSelectedCities(value), []);
+  const onWatchSelectionChange = useCallback(({ target: { value } }) => setSelectedWatches(value), []);
+  const onStatusSelectionChange = useCallback(({ target: { value } }) => setSelectedStatuses(value), []);
+  const onStartDateChange = useCallback(value => setSelectedStartDate(value), []);
+  const onEndDateChange = useCallback(value => setSelectedEndDate(value), []);
 
   return (
-    <>
-      {visibleColumns.length ? (
-        <Container maxWidth="sm">
-          <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
-            <FormControl sx={{ m: 1, minWidth: 120, padding: 0 }} size="small">
-              <InputLabel id="filter-column-select">Column</InputLabel>
-              <Select
-                label="Column"
-                labelId="filter-column-select"
-                id="filter-column-select"
-                value={visibleColumns[selectedColumnIndex].field}
-                onChange={({ target: { value } }) => {
-                  const idx = visibleColumns.map(col => col.field).indexOf(value);
-                  setSelectedColumnIndex(idx);
-                  setSelectedTypeOperators(getOperatorsByTypeName(visibleColumns[idx].type));
-                  setSelectedOperatorIndex(0);
-                  setQueryText('');
-                }}
-              >
-                {visibleColumns.map((col, index) => (
-                  <MenuItem key={index} value={col.field}>
-                    {col.headerName}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            {selectedColumnIndex !== -1 && selectedTypeOperators.length ? (
-              <>
-                <FormControl sx={{ m: 1, minWidth: 120, padding: 0 }} size="small">
-                  <InputLabel id="filter-operator-select">Operator</InputLabel>
-                  <Select
-                    label="Operator"
-                    labelId="filter-operator-select"
-                    id="filter-operator-select"
-                    value={selectedTypeOperators[selectedOperatorIndex].value}
-                    onChange={({ target: { value } }) =>
-                      setSelectedOperatorIndex(selectedTypeOperators.map(operator => operator.value).indexOf(value))
-                    }
-                  >
-                    {selectedTypeOperators.map(({ name, value }, idx) => (
-                      <MenuItem key={idx} value={value}>
-                        {name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-
-                {['number', 'string'].includes(visibleColumns[selectedColumnIndex].type) ? (
-                  <TextField
-                    size="small"
-                    label="Value"
-                    variant="outlined"
-                    placeholder="Filter value"
-                    type={visibleColumns[selectedColumnIndex].type === 'number' ? 'number' : 'text'}
-                    value={queryText}
-                    onChange={({ target: { value } }) => setQueryText(value)}
-                  />
-                ) : null}
-                {visibleColumns[selectedColumnIndex].type === 'boolean' ? (
-                  <Stack direction="row" justifyContent="center" alignItems="center">
-                    {queryText === 'false' ? <CloseIcon /> : null}
-                    <Switch
-                      sx={{ m: 1 }}
-                      checked={queryText === 'true'}
-                      onChange={({ target: { checked } }) => setQueryText(checked ? 'true' : 'false')}
-                    />
-                    {queryText === 'true' ? <CheckIcon /> : null}
-                  </Stack>
-                ) : null}
-                {visibleColumns[selectedColumnIndex].type === 'dateTime' ? (
-                  <Stack direction="row" justifyContent="center" alignItems="center">
-                    {selectedTypeOperators[selectedOperatorIndex].value === 'between' ? (
-                      <DateTimeRangePicker label={visibleColumns[selectedColumnIndex].headerName} onChange={setQueryText} />
-                    ) : (
-                      <LocalizationProvider dateAdapter={AdapterDayjs}>
-                        <DateTimePicker
-                          label={visibleColumns[selectedColumnIndex].headerName}
-                          renderInput={props => <TextField size="small" style={{ width: 200 }} {...props} />}
-                          views={['year', 'month', 'day', 'hours']}
-                          onChange={onDateTimeChange}
-                          ampm={false}
-                          value={queryText}
-                        />
-                      </LocalizationProvider>
-                    )}
-                  </Stack>
-                ) : null}
-                {visibleColumns[selectedColumnIndex].type === 'enum_orders_status' ? (
-                  <FormControl sx={{ m: 1, minWidth: 120, padding: 0 }} size="small">
-                    <InputLabel id="filter-value-select">Value</InputLabel>
-                    <Select
-                      label="Value"
-                      labelId="filter-value-select"
-                      id="filter-value-select"
-                      value={queryText}
-                      onChange={onEnumSelectChange}
-                    >
-                      {Object.values(ORDER_STATUS).map((value, idx) => (
-                        <MenuItem key={idx} value={value}>
-                          {value}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                ) : null}
-
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  disabled={!queryText}
-                  onClick={() => {
-                    onApply({
-                      key: PRNG(-1e10, 1e10),
-                      field: visibleColumns[selectedColumnIndex].field,
-                      headerName: visibleColumns[selectedColumnIndex].headerName,
-                      type: visibleColumns[selectedColumnIndex].type,
-                      operator: { ...selectedTypeOperators[selectedOperatorIndex] },
-                      query: queryText,
-                    });
-                    setSelectedColumnIndex(0);
-                    setSelectedOperatorIndex(0);
-                    setQueryText('');
-                  }}
-                >
-                  Apply
-                </Button>
-              </>
-            ) : null}
-          </Stack>
-        </Container>
-      ) : null}
-      {filters.length ? (
-        <Paper
-          sx={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexWrap: 'wrap',
-            listStyle: 'none',
-            p: 0.5,
-            m: 0,
-            mb: 0.5,
+    <Container maxWidth="sm" sx={{ mb: 1 }}>
+      <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
+        <Badge
+          badgeContent={filters.length}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'left',
           }}
-          component="ul"
+          color="secondary"
         >
-          {filters.map((item, idx) => {
-            return (
-              <ListItem key={item.key}>
-                <Chip
-                  label={`${item.headerName} ${item.operator.name}` + (item.query === undefined ? '' : `\`${item.query}\``)}
-                  color="primary"
-                  onDelete={() => onDelete(item)}
-                />
-              </ListItem>
-            );
-          })}
-        </Paper>
-      ) : null}
-    </>
+          <Button size="small" variant="contained" onClick={toggleDrawer(true)}>
+            <TuneIcon fontSize="small" /> Filters
+          </Button>
+        </Badge>
+
+        <Drawer anchor={'right'} open={isFilterTabOpen} onClose={toggleDrawer(false)}>
+          <Container sx={{ mt: 25 }}>
+            <Stack justifyContent="center" alignItems="center" spacing={2}>
+              <FormGroup>
+                {isComponentReady ? (
+                  <>
+                    {masters.length > 0 ? (
+                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
+                        <InputLabel id="filter-master-select">Master</InputLabel>
+                        <Select
+                          label="Master"
+                          labelId="filter-master-select"
+                          id="filter-master-select"
+                          multiple
+                          value={selectedMasters}
+                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
+                          renderValue={selected => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map(value => (
+                                <Chip key={value.id} label={`${value.name} (${value.email})`} />
+                              ))}
+                            </Box>
+                          )}
+                          MenuProps={MenuProps}
+                          onChange={onMasterSelectionChange}
+                        >
+                          {masters.map((master, index) => (
+                            <MenuItem key={index} value={master}>
+                              {`${master.name} (${master.email})`}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    ) : null}
+                    {cities.length > 0 ? (
+                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
+                        <InputLabel id="filter-city-select">City</InputLabel>
+                        <Select
+                          label="City"
+                          labelId="filter-city-select"
+                          id="filter-city-select"
+                          multiple
+                          value={selectedCities}
+                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
+                          renderValue={selected => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map(value => (
+                                <Chip key={value.id} label={value.name} />
+                              ))}
+                            </Box>
+                          )}
+                          MenuProps={MenuProps}
+                          onChange={onCitySelectionChange}
+                        >
+                          {cities.map((city, index) => (
+                            <MenuItem key={index} value={city}>
+                              {city.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    ) : null}
+                    {watches.length > 0 ? (
+                      <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
+                        <InputLabel id="filter-watch-select">Watch</InputLabel>
+                        <Select
+                          label="Watch"
+                          labelId="filter-watch-select"
+                          id="filter-watch-select"
+                          multiple
+                          value={selectedWatches}
+                          input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
+                          renderValue={selected => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                              {selected.map(value => (
+                                <Chip key={value.id} label={value.name} />
+                              ))}
+                            </Box>
+                          )}
+                          MenuProps={MenuProps}
+                          onChange={onWatchSelectionChange}
+                        >
+                          {watches.map((watch, index) => (
+                            <MenuItem key={index} value={watch}>
+                              {watch.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    ) : null}
+                    <FormControl sx={{ m: 1, minWidth: 140, padding: 0, width: 340 }} size="small">
+                      <InputLabel id="filter-order-status-select">Status</InputLabel>
+                      <Select
+                        label="Status"
+                        labelId="filter-order-status-select"
+                        id="filter-order-status-select"
+                        multiple
+                        value={selectedStatuses}
+                        input={<OutlinedInput id="select-multiple-chip" label="Chip" />}
+                        renderValue={selected => (
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                            {selected.map((value, index) => (
+                              <Chip key={index} label={value} />
+                            ))}
+                          </Box>
+                        )}
+                        MenuProps={MenuProps}
+                        onChange={onStatusSelectionChange}
+                      >
+                        {Object.values(ORDER_STATUS).map((status, index) => (
+                          <MenuItem key={index} value={status}>
+                            {status}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
+                    <LocalizationProvider dateAdapter={AdapterDayjs}>
+                      <Stack direction={'row'} justifyContent="center" alignItems="center" spacing={2} sx={{ mb: 2, mt: 1 }}>
+                        <DatePicker
+                          label="StartDate from"
+                          renderInput={props => <TextField size="small" style={{ width: 165 }} {...props} />}
+                          views={['year', 'month', 'day']}
+                          onChange={onStartDateChange}
+                          ampm={false}
+                          value={selectedStartDate}
+                        />
+                        <DatePicker
+                          label="StartDate to"
+                          renderInput={props => <TextField size="small" style={{ width: 160 }} {...props} />}
+                          views={['year', 'month', 'day']}
+                          onChange={onEndDateChange}
+                          ampm={false}
+                          value={selectedEndDate}
+                        />
+                      </Stack>
+                    </LocalizationProvider>
+                  </>
+                ) : null}
+
+                <Stack direction="row" justifyContent="center" alignItems="center" spacing={2}>
+                  <Button size="small" variant="contained" onClick={applyFilters} disabled={!isApplyFilterBtnEnabled}>
+                    Apply
+                  </Button>
+                  <Button size="small" variant="contained" onClick={resetFilters} disabled={!filters.length}>
+                    Reset
+                  </Button>
+                </Stack>
+              </FormGroup>
+            </Stack>
+          </Container>
+        </Drawer>
+      </Stack>
+    </Container>
   );
 };
 

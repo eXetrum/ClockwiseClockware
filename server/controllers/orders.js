@@ -14,8 +14,7 @@ const {
     isDbErrorEntryNotFound,
     formatDate,
     formatDecimal,
-    parseFilters,
-    buildWhereClause
+    parseFilters
 } = require('../utils');
 const {
     ACCESS_SCOPE,
@@ -28,20 +27,8 @@ const {
     MAX_IMAGE_SIZE_BYTES
 } = require('../constants');
 
-const ORDER_TYPE_DEF = {
-    ['client.email']: 'string',
-    ['client.name']: 'string',
-    ['master.email']: 'string',
-    ['master.name']: 'string',
-    ['master.rating']: 'number',
-    ['city.name']: 'string',
-    ['watch.repairTime']: 'number',
-    startDate: 'dateTime',
-    endDate: 'dateTime',
-    status: 'string',
-    totalCost: 'number',
-    rating: 'number'
-};
+const injectCloudinaryAutoQualityParams = (images) =>
+    images.map((item) => ({ ...item, url: item.url.replace('/upload/', '/upload/w_400,f_auto,q_auto:best/') }));
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
@@ -79,41 +66,11 @@ const getAll = [
             else if (orderBy === 'city.name') sortParams[0] = Sequelize.literal('"city.name"');
             else if (orderBy === 'watch.repairTime') sortParams[0] = Sequelize.literal('"watch.repairTime"');
 
-            const filters = parseFilters(filter, ORDER_TYPE_DEF);
-            const where = buildWhereClause(filters);
+            const where = parseFilters(filter);
 
             const authUser = parseAuthToken(req.headers);
             if (authUser.role === USER_ROLES.MASTER) where['masterId'] = authUser.id;
             else if (authUser.role === USER_ROLES.CLIENT) where['clientId'] = authUser.id;
-
-            if ('client.email' in where) {
-                where['$client.User.email$'] = where['client.email'];
-                delete where['client.email'];
-            }
-            if ('client.name' in where) {
-                where['$client.name$'] = where['client.name'];
-                delete where['client.name'];
-            }
-            if ('master.email' in where) {
-                where['$master.User.email$'] = where['master.email'];
-                delete where['master.email'];
-            }
-            if ('master.name' in where) {
-                where['$master.name$'] = where['master.name'];
-                delete where['master.name'];
-            }
-            if ('master.rating' in where) {
-                where['$master.rating$'] = where['master.rating'];
-                delete where['master.rating'];
-            }
-            if ('city.name' in where) {
-                where['$city.name$'] = where['city.name'];
-                delete where['city.name'];
-            }
-            if ('watch.repairTime' in where) {
-                where['$watch.repairTime$'] = where['watch.repairTime'];
-                delete where['watch.repairTime'];
-            }
 
             const records = await Order.findAll({
                 where,
@@ -163,15 +120,17 @@ const getAll = [
                 ]
             });
 
-            const orders = records.map((order) => ({
-                ...order.toJSON(),
-                client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
-                master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
-            }));
+            const orders = records.map((order) => {
+                return {
+                    ...order.toJSON(),
+                    client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                    master: { ...order.master.toJSON(), ...order.master.User.toJSON() },
+                    images: injectCloudinaryAutoQualityParams(order.images.map((item) => item.toJSON()))
+                };
+            });
 
             res.status(200).json({ orders, total }).end();
         } catch (error) {
-            console.log(error);
             res.status(500).json(error).end();
         }
     }

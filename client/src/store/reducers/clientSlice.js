@@ -28,7 +28,6 @@ const initialState = {
   pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
   sortFieldName: '',
   sortOrder: '',
-  filters: [],
 };
 
 export const clientSlice = createSlice({
@@ -53,15 +52,6 @@ export const clientSlice = createSlice({
     },
     changeClientSortOrder(state, { payload }) {
       state.sortOrder = payload;
-    },
-    addClientFilter(state, { payload }) {
-      state.filters.push(payload);
-    },
-    removeClientFilter(state, { payload }) {
-      state.filters = state.filters.filter(item => item.key !== payload.key);
-    },
-    resetClientFilters(state) {
-      state.filters = [];
     },
   },
   extraReducers: {
@@ -202,8 +192,5 @@ export const {
   changeClientPageSize,
   changeClientSortFieldName,
   changeClientSortOrder,
-  addClientFilter,
-  removeClientFilter,
-  resetClientFilters,
 } = clientSlice.actions;
 export default clientSlice.reducer;

@@ -2,37 +2,24 @@ const { body, param, query, validationResult } = require('express-validator');
 const { City } = require('../database/models');
 
 const { RequireAuth } = require('../middleware/RouteProtector');
-const {
-    isDbErrorEntryNotFound,
-    isDbErrorEntryAlreadyExists,
-    isDbErrorEntryReferences,
-    parseFilters,
-    buildWhereClause
-} = require('../utils');
+const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
 const { ACCESS_SCOPE } = require('../constants');
-
-const CITY_TYPE_DEF = { name: 'string', pricePerHour: 'number' };
 
 const getAll = [
     query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
     query('limit', 'limit value is incorrect').optional().isInt({ min: 0 }),
     query('orderBy', 'orderBy value is incorrect').optional().isIn(['name', 'pricePerHour']),
     query('order', 'order value is incorrect').optional().toUpperCase().isIn(['ASC', 'DESC']),
-    query('filter', 'filter value is incorrect')
-        .optional()
-        .custom((value, { req }) => parseFilters(value, CITY_TYPE_DEF)),
     async (req, res) => {
         try {
             const errors = validationResult(req).array();
             if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            const { offset = 0, limit, orderBy, order = 'ASC', filter } = req.query;
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
             const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
-            const filters = parseFilters(filter, CITY_TYPE_DEF);
-            const where = buildWhereClause(filters);
 
-            const cities = await City.findAll({ where, order: [sortParams], limit, offset });
-            const total = await City.count({ where });
+            const cities = await City.findAll({ order: [sortParams], limit, offset });
+            const total = await City.count({});
 
             res.status(200).json({ cities, total }).end();
         } catch (error) {

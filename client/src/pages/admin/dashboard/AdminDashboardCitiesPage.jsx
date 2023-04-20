@@ -9,7 +9,7 @@ import AddCircleOutlineOutlinedIcon from '@mui/icons-material/AddCircleOutlineOu
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import EditIcon from '@mui/icons-material/Edit';
 
-import { Header, CityForm, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
+import { Header, CityForm, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -21,8 +21,6 @@ import {
   changeCityPageSize,
   changeCitySortFieldName,
   changeCitySortOrder,
-  addCityFilter,
-  removeCityFilter,
 } from '../../../store/actions';
 import {
   selectAllCities,
@@ -34,10 +32,9 @@ import {
   selectCityPageSize,
   selectCitySortFielName,
   selectCitySortOrder,
-  selectCityFilters,
 } from '../../../store/selectors';
 
-import { formatDecimal, buildFilter } from '../../../utils';
+import { formatDecimal } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../../constants';
 
 const AdminDashboardCitiesPage = () => {
@@ -57,14 +54,9 @@ const AdminDashboardCitiesPage = () => {
   const sortFieldName = useSelector(selectCitySortFielName);
   const sortOrder = useSelector(selectCitySortOrder);
 
-  const filters = useSelector(selectCityFilters);
-
   const fetchPage = useCallback(
-    () =>
-      dispatch(
-        fetchCities({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
-      ),
-    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
+    () => dispatch(fetchCities({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -120,20 +112,6 @@ const AdminDashboardCitiesPage = () => {
     [dispatch, sortFieldName, sortOrder],
   );
 
-  const onFilterApply = useCallback(
-    ({ ...params }) => {
-      dispatch(addCityFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
-  const onFilterRemove = useCallback(
-    ({ ...params }) => {
-      dispatch(removeCityFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
   const columns = useMemo(
     () => [
       { field: 'name', headerName: 'Name', width: 620, type: 'string', flex: 1 },
@@ -181,7 +159,6 @@ const AdminDashboardCitiesPage = () => {
           </Row>
           <hr />
 
-          <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
           <DataGrid
             autoHeight
             disableRowSelectionOnClick

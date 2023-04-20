@@ -11,7 +11,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import ForwardToInboxIcon from '@mui/icons-material/ForwardToInbox';
 import LockResetIcon from '@mui/icons-material/LockReset';
 
-import { Header, MasterForm, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
+import { Header, MasterForm, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -23,8 +23,6 @@ import {
   changeMasterPageSize,
   changeMasterSortFieldName,
   changeMasterSortOrder,
-  addMasterFilter,
-  removeMasterFilter,
 } from '../../../store/actions';
 import {
   selectAllMasters,
@@ -36,10 +34,9 @@ import {
   selectMasterPageSize,
   selectMasterSortFielName,
   selectMasterSortOrder,
-  selectMasterFilters,
 } from '../../../store/selectors';
 
-import { formatDecimal, buildFilter } from '../../../utils';
+import { formatDecimal } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, MAX_RATING_VALUE, RATING_FORMAT_DECIMAL } from '../../../constants';
 
 const AdminDashboardMasters = () => {
@@ -59,14 +56,9 @@ const AdminDashboardMasters = () => {
   const sortFieldName = useSelector(selectMasterSortFielName);
   const sortOrder = useSelector(selectMasterSortOrder);
 
-  const filters = useSelector(selectMasterFilters);
-
   const fetchPage = useCallback(
-    () =>
-      dispatch(
-        fetchMasters({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder, filter: buildFilter(filters) }),
-      ),
-    [dispatch, page, pageSize, sortFieldName, sortOrder, filters],
+    () => dispatch(fetchMasters({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
   );
 
   useEffect(() => fetchPage(), [fetchPage]);
@@ -158,19 +150,7 @@ const AdminDashboardMasters = () => {
     [dispatch, sortFieldName, sortOrder],
   );
 
-  const onFilterApply = useCallback(
-    ({ ...params }) => {
-      dispatch(addMasterFilter({ ...params }));
-    },
-    [dispatch],
-  );
-
-  const onFilterRemove = useCallback(
-    ({ ...params }) => {
-      dispatch(removeMasterFilter({ ...params }));
-    },
-    [dispatch],
-  );
+  console.log('masters: ', masters);
 
   const columns = [
     { field: 'email', headerName: 'Email', flex: 1, width: 300 },
@@ -180,7 +160,6 @@ const AdminDashboardMasters = () => {
       headerName: 'Cities',
       width: 240,
       flex: 1,
-      sortable: false,
       filterable: false,
       valueFormatter: ({ value }) => value.map(city => city.name).join(', '),
     },
@@ -260,7 +239,6 @@ const AdminDashboardMasters = () => {
           </Row>
           <hr />
 
-          <DataGridFilterContainer columns={columns} filters={filters} onApply={onFilterApply} onDelete={onFilterRemove} />
           <DataGrid
             autoHeight
             disableRowSelectionOnClick
