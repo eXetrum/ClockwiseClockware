@@ -102,7 +102,6 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
 
   useEffect(() => {
     validFilterKeys.forEach(filterType => {
-      // Should be valid filter name
       const idx = filters.findIndex(item => filterType in item);
       if (idx !== -1 && filters[idx][filterType].length) {
         if (filterType === VALID_FILTER_TYPE.FILTER_BY_MASTER) {
