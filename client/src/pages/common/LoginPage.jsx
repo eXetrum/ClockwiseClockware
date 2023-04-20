@@ -4,10 +4,12 @@ import { Container, Row, Col, Form } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
 import { Header, SpinnerButton, ErrorContainer } from '../../components/common';
 
+import { GoogleLogin } from '@react-oauth/google';
+
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { loginAuth } from '../../store/thunks';
+import { loginBasicAuth, loginGoogleAuth } from '../../store/thunks';
 import { clearNewUser, changeNewUserField } from '../../store/actions';
 import { selectNewUser, selectUserError, selectUserPending } from '../../store/selectors';
 
@@ -27,12 +29,8 @@ const LoginPage = () => {
 
   const isFormValid = useMemo(() => validateEmail(newUser?.email) && newUser?.password, [newUser]);
 
-  const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewUserField({ name, value })), [dispatch]);
-
-  const onFormSubmit = useCallback(
-    async event => {
-      event.preventDefault();
-      const action = await dispatch(loginAuth(newUser));
+  const handleLoginResult = useCallback(
+    action => {
       if (isFulfilled(action)) {
         const user = parseToken(action.payload);
 
@@ -53,7 +51,33 @@ const LoginPage = () => {
         enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
       }
     },
-    [newUser, dispatch, enqueueSnackbar, location, navigate],
+    [enqueueSnackbar, location, navigate],
+  );
+
+  const onFormFieldChange = useCallback(({ target: { name, value } }) => dispatch(changeNewUserField({ name, value })), [dispatch]);
+
+  const onFormSubmit = useCallback(
+    async event => {
+      event.preventDefault();
+      const action = await dispatch(loginBasicAuth(newUser));
+      handleLoginResult(action);
+    },
+    [newUser, dispatch, handleLoginResult],
+  );
+
+  const onGoogleAuthSuccess = useCallback(
+    async response => {
+      const action = await dispatch(loginGoogleAuth({ token: response.credential }));
+      handleLoginResult(action);
+    },
+    [dispatch, handleLoginResult],
+  );
+
+  const onGoogleAuthFailure = useCallback(
+    resp => {
+      enqueueSnackbar(`Error: ${resp}`, { variant: 'error' });
+    },
+    [enqueueSnackbar],
   );
 
   useEffect(() => dispatch(clearNewUser()), [dispatch]);
@@ -90,7 +114,6 @@ const LoginPage = () => {
                   disabled={isPending}
                 />
               </Form.Group>
-
               <Form.Group>
                 <Row>
                   <Col sm={4}>&nbsp;</Col>
@@ -99,6 +122,11 @@ const LoginPage = () => {
                   </Col>
                 </Row>
               </Form.Group>
+              <hr />
+
+              <center>
+                <GoogleLogin onSuccess={onGoogleAuthSuccess} onError={onGoogleAuthFailure} />
+              </center>
 
               <hr />
               <Form.Group>
