@@ -22,9 +22,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchMasters, fetchCities, fetchWatches } from '../../store/thunks';
 
 import { isUnknownOrNoErrorType, alignToDayStart, alignToDayEnd } from '../../utils';
-import { ORDER_STATUS, VALID_FILTER_TYPE } from '../../constants';
+import { ORDER_STATUS, FILTER_TYPE } from '../../constants';
 
-const validFilterKeys = Object.values(VALID_FILTER_TYPE);
+const validFilterNames = Object.values(FILTER_TYPE);
+const orderStatusMap = Object.values(ORDER_STATUS).map(name => ({ id: name, name }));
+
+const initEmptyFilters = () => Object.fromEntries(validFilterNames.map(name => [name, name === FILTER_TYPE.BY_DATE ? [null, null] : []]));
 
 const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const dispatch = useDispatch();
@@ -52,22 +55,16 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const [isFilterTabOpen, setFilterTabIsOpen] = useState(false);
-  const [selectedMasters, setSelectedMasters] = useState([]);
-  const [selectedCities, setSelectedCities] = useState([]);
-  const [selectedWatches, setSelectedWatches] = useState([]);
-  const [selectedStatuses, setSelectedStatuses] = useState([]);
-  const [selectedStartDate, setSelectedStartDate] = useState(null);
-  const [selectedEndDate, setSelectedEndDate] = useState(null);
+  const [selectedFilters, setSelectedFilters] = useState(initEmptyFilters());
 
   const isApplyFilterBtnEnabled = useMemo(
     () =>
-      selectedMasters.length ||
-      selectedCities.length ||
-      selectedWatches.length ||
-      selectedStatuses.length ||
-      selectedStartDate ||
-      selectedEndDate,
-    [selectedMasters, selectedCities, selectedWatches, selectedStatuses, selectedStartDate, selectedEndDate],
+      validFilterNames
+        .map(name =>
+          name === FILTER_TYPE.BY_DATE ? selectedFilters[name].filter(item => item !== null).length : selectedFilters[name].length,
+        )
+        .some(b => b),
+    [selectedFilters],
   );
 
   useEffect(() => {
@@ -77,23 +74,22 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   }, [dispatch]);
 
   useEffect(() => {
-    validFilterKeys.forEach(filterType => {
+    const mapping = {
+      [FILTER_TYPE.BY_MASTER]: masters,
+      [FILTER_TYPE.BY_CITY]: cities,
+      [FILTER_TYPE.BY_WATCH]: watches,
+      [FILTER_TYPE.BY_STATUS]: orderStatusMap,
+    };
+    validFilterNames.forEach(filterType => {
       const idx = filters.findIndex(item => filterType in item);
       if (idx !== -1 && filters[idx][filterType].length) {
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_MASTER) {
-          setSelectedMasters(masters.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
-        }
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_CITY) {
-          setSelectedCities(cities.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
-        }
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_WATCH) {
-          setSelectedWatches(watches.filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1));
-        }
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_STATUS) setSelectedStatuses(filters[idx][filterType]);
-        if (filterType === VALID_FILTER_TYPE.FILTER_BY_DATE) {
-          const [start, end] = filters[idx][filterType];
-          setSelectedStartDate(start);
-          setSelectedEndDate(end);
+        if (filterType === FILTER_TYPE.BY_DATE) {
+          setSelectedFilters(prev => ({ ...prev, [filterType]: filters[idx][filterType] }));
+        } else {
+          setSelectedFilters(prev => ({
+            ...prev,
+            [filterType]: mapping[filterType].filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1),
+          }));
         }
       }
     });
@@ -108,42 +104,55 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
 
   const applyFilters = useCallback(() => {
     const filters = [];
-    if (selectedMasters.length) filters.push({ filterByMaster: selectedMasters.map(item => item.id) });
-    if (selectedCities.length) filters.push({ filterByCity: selectedCities.map(item => item.id) });
-    if (selectedWatches.length) filters.push({ filterByWatch: selectedWatches.map(item => item.id) });
-    if (selectedStatuses.length) filters.push({ filterByStatus: selectedStatuses });
-    if (selectedStartDate !== null || selectedEndDate !== null) {
-      filters.push({
-        filterByDate: [
-          selectedStartDate !== null ? alignToDayStart(selectedStartDate).getTime() : null,
-          selectedEndDate !== null ? alignToDayEnd(selectedEndDate).getTime() : null,
-        ],
-      });
-    }
+    validFilterNames.forEach(name => {
+      const selectedObjects = selectedFilters[name];
+      if (name === FILTER_TYPE.BY_DATE) {
+        const [start, end] = selectedObjects;
+        if (start !== null || end !== null)
+          filters.push({
+            [name]: [start !== null ? alignToDayStart(start).getTime() : null, end !== null ? alignToDayEnd(end).getTime() : null],
+          });
+      } else if (selectedObjects.length) {
+        filters.push({ [name]: selectedObjects.map(item => item.id) });
+      }
+    });
     onApply(filters);
-  }, [onApply, selectedMasters, selectedCities, selectedWatches, selectedStatuses, selectedStartDate, selectedEndDate]);
+  }, [onApply, selectedFilters]);
 
   const resetFilters = useCallback(() => {
-    setSelectedMasters([]);
-    setSelectedCities([]);
-    setSelectedWatches([]);
-    setSelectedStatuses([]);
-    setSelectedStartDate(null);
-    setSelectedEndDate(null);
+    setSelectedFilters(initEmptyFilters());
     onApply([]);
   }, [onApply]);
 
-  const onMasterSelectionChange = useCallback(({ target: { value } }) => setSelectedMasters(value), []);
-  const onCitySelectionChange = useCallback(({ target: { value } }) => setSelectedCities(value), []);
-  const onWatchSelectionChange = useCallback(({ target: { value } }) => setSelectedWatches(value), []);
-  const onStatusSelectionChange = useCallback(({ target: { value } }) => setSelectedStatuses(value), []);
-  const onStartDateChange = useCallback(value => setSelectedStartDate(value), []);
-  const onEndDateChange = useCallback(value => setSelectedEndDate(value), []);
+  const onMasterSelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_MASTER]: value })),
+    [],
+  );
+  const onCitySelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_CITY]: value })),
+    [],
+  );
+  const onWatchSelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_WATCH]: value })),
+    [],
+  );
+  const onStatusSelectionChange = useCallback(
+    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_STATUS]: value })),
+    [],
+  );
+  const onStartDateChange = useCallback(
+    value => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_DATE]: [value, prev[FILTER_TYPE.BY_DATE][1]] })),
+    [],
+  );
+  const onEndDateChange = useCallback(
+    value => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_DATE]: [prev[FILTER_TYPE.BY_DATE][0], value] })),
+    [],
+  );
 
   const masterLabelFormatter = useCallback(value => `${value.name} (${value.email})`, []);
   const cityLabelFormatter = useCallback(value => value.name, []);
   const watchLabelFormatter = useCallback(value => value.name, []);
-  const statusLabelFormatter = useCallback(value => value, []);
+  const statusLabelFormatter = useCallback(value => value.name, []);
 
   return (
     <Container maxWidth="sm" sx={{ mb: 1 }}>
@@ -170,28 +179,28 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
                     <FilterDropDownSelector
                       label="Master"
                       items={masters}
-                      selectedItems={selectedMasters}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_MASTER]}
                       renderValueFormatter={masterLabelFormatter}
                       onSelectionChange={onMasterSelectionChange}
                     />
                     <FilterDropDownSelector
                       label="City"
                       items={cities}
-                      selectedItems={selectedCities}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_CITY]}
                       renderValueFormatter={cityLabelFormatter}
                       onSelectionChange={onCitySelectionChange}
                     />
                     <FilterDropDownSelector
                       label="Watch"
                       items={watches}
-                      selectedItems={selectedWatches}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_WATCH]}
                       renderValueFormatter={watchLabelFormatter}
                       onSelectionChange={onWatchSelectionChange}
                     />
                     <FilterDropDownSelector
                       label="Status"
-                      items={Object.values(ORDER_STATUS)}
-                      selectedItems={selectedStatuses}
+                      items={orderStatusMap}
+                      selectedItems={selectedFilters[FILTER_TYPE.BY_STATUS]}
                       renderValueFormatter={statusLabelFormatter}
                       onSelectionChange={onStatusSelectionChange}
                     />
@@ -203,7 +212,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
                           views={['year', 'month', 'day']}
                           onChange={onStartDateChange}
                           ampm={false}
-                          value={selectedStartDate}
+                          value={selectedFilters[FILTER_TYPE.BY_DATE][0]}
                         />
                         <DatePicker
                           label="StartDate to"
@@ -211,7 +220,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
                           views={['year', 'month', 'day']}
                           onChange={onEndDateChange}
                           ampm={false}
-                          value={selectedEndDate}
+                          value={selectedFilters[FILTER_TYPE.BY_DATE][1]}
                         />
                       </Stack>
                     </LocalizationProvider>
