@@ -150,8 +150,6 @@ const AdminDashboardMasters = () => {
     [dispatch, sortFieldName, sortOrder],
   );
 
-  console.log('masters: ', masters);
-
   const columns = [
     { field: 'email', headerName: 'Email', flex: 1, width: 300 },
     { field: 'name', headerName: 'Name', flex: 1, width: 300 },
