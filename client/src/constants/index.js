@@ -44,10 +44,10 @@ export const MAX_IMAGE_BYTES_SIZE = 1024 * 1024;
 
 export const PAGINATION_PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
 
-export const VALID_FILTER_TYPE = {
-  FILTER_BY_MASTER: 'filterByMaster',
-  FILTER_BY_CITY: 'filterByCity',
-  FILTER_BY_WATCH: 'filterByWatch',
-  FILTER_BY_STATUS: 'filterByStatus',
-  FILTER_BY_DATE: 'filterByDate',
+export const FILTER_TYPE = {
+  BY_MASTER: 'filterByMaster',
+  BY_CITY: 'filterByCity',
+  BY_WATCH: 'filterByWatch',
+  BY_STATUS: 'filterByStatus',
+  BY_DATE: 'filterByDate',
 };
