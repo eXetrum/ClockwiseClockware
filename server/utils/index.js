@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { Entropy, charset64 } = require('entropy-string');
 const { validate } = require('uuid');
-const { MS_PER_HOUR, ORDER_STATUS, VALID_FILTER_TYPE } = require('../constants');
+const { MS_PER_HOUR, ORDER_STATUS, FILTER_TYPE } = require('../constants');
 
 const hashPassword = async (plaintextPassword) => {
     const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
@@ -61,15 +61,15 @@ const customTrim = (str, charToRemove) => {
 const onlyUnique = (value, index, array) => array.indexOf(value) === index;
 
 const sanitizeArgsByFilterType = (filterName, args) => {
-    if ([VALID_FILTER_TYPE.FILTER_BY_MASTER, VALID_FILTER_TYPE.FILTER_BY_CITY, VALID_FILTER_TYPE.FILTER_BY_WATCH].includes(filterName)) {
+    if ([FILTER_TYPE.BY_MASTER, FILTER_TYPE.BY_CITY, FILTER_TYPE.BY_WATCH].includes(filterName)) {
         return Array.isArray(args) && args.filter(onlyUnique).filter((item) => validate(item));
     }
 
-    if (filterName === VALID_FILTER_TYPE.FILTER_BY_STATUS) {
+    if (filterName === FILTER_TYPE.BY_STATUS) {
         return Array.isArray(args) && args.filter(onlyUnique).filter((item) => Object.values(ORDER_STATUS).includes(item));
     }
 
-    if (filterName === VALID_FILTER_TYPE.FILTER_BY_DATE) {
+    if (filterName === FILTER_TYPE.BY_DATE) {
         return Array.isArray(args) &&
             args.length === 2 &&
             args.filter((item) => item !== null).length &&
@@ -82,7 +82,7 @@ const sanitizeArgsByFilterType = (filterName, args) => {
 
 const parseFilters = (filtersJSON = '') => {
     try {
-        const validFilterKeys = Object.values(VALID_FILTER_TYPE);
+        const validFilterKeys = Object.values(FILTER_TYPE);
         const query = decodeURIComponent(filtersJSON);
         const inputFilters = JSON.parse(query);
         if (!Array.isArray(inputFilters)) return {};
@@ -98,11 +98,11 @@ const parseFilters = (filtersJSON = '') => {
                     const args = sanitizeArgsByFilterType(filterType, inputFilters[idx][filterType]);
                     // Filters without args is not allowed
                     if (args.length) {
-                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_MASTER) where['$master.userId$'] = { [Op.in]: args };
-                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_CITY) where['$city.id$'] = { [Op.in]: args };
-                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_WATCH) where['$watch.id$'] = { [Op.in]: args };
-                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_STATUS) where['status'] = { [Op.in]: args };
-                        if (filterType === VALID_FILTER_TYPE.FILTER_BY_DATE) {
+                        if (filterType === FILTER_TYPE.BY_MASTER) where['$master.userId$'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_CITY) where['$city.id$'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_WATCH) where['$watch.id$'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_STATUS) where['status'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_DATE) {
                             const [start, end] = args;
                             if (start !== null && end !== null) where['startDate'] = { [Op.between]: [Number(start), Number(end)] };
                             else if (start !== null) where['startDate'] = { [Op.gte]: Number(start) };
