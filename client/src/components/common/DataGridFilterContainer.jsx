@@ -28,7 +28,7 @@ import { ORDER_STATUS, FILTER_TYPE } from '../../constants';
 const validFilterNames = Object.values(FILTER_TYPE);
 const orderStatusMap = Object.values(ORDER_STATUS).map(name => ({ id: name, name }));
 
-const initEmptyFilters = () => Object.fromEntries(validFilterNames.map(name => [name, name === FILTER_TYPE.BY_DATE ? [null, null] : []]));
+const INIT_EMPTY_FILTERS = Object.fromEntries(validFilterNames.map(name => [name, name === FILTER_TYPE.BY_DATE ? [null, null] : []]));
 
 const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const dispatch = useDispatch();
@@ -56,7 +56,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
 
   const [isFilterTabOpen, setFilterTabIsOpen] = useState(false);
-  const [selectedFilters, setSelectedFilters] = useState(initEmptyFilters());
+  const [selectedFilters, setSelectedFilters] = useState(INIT_EMPTY_FILTERS);
 
   const isApplyFilterBtnEnabled = useMemo(
     () =>
@@ -114,7 +114,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
 
     // On close drop unaplyed filters but keep already accepted
     if (open === false) {
-      setSelectedFilters(initEmptyFilters());
+      setSelectedFilters(INIT_EMPTY_FILTERS);
       initializeAcceptedFilters();
     }
   };
@@ -138,7 +138,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   }, [onApply, selectedFilters]);
 
   const resetFilters = useCallback(() => {
-    setSelectedFilters(initEmptyFilters());
+    setSelectedFilters(INIT_EMPTY_FILTERS);
     onApply([]);
   }, [onApply]);
 
