@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Container, Stack, FormGroup, TextField, Button, Drawer, Badge } from '@mui/material';
+import { Container, Stack, FormGroup, TextField, Button, Drawer, Badge, Divider, IconButton } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TuneIcon from '@mui/icons-material/Tune';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 import FilterDropDownSelector from './FilterDropDownSelector';
 
@@ -158,6 +159,12 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
         </Badge>
 
         <Drawer anchor={'right'} open={isFilterTabOpen} onClose={toggleDrawer(false)}>
+          <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={2}>
+            <IconButton onClick={toggleDrawer(false)}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </Stack>
+          <Divider />
           <Container sx={{ mt: 25 }}>
             <Stack justifyContent="center" alignItems="center" spacing={2}>
               <FormGroup>
