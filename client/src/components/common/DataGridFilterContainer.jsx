@@ -132,6 +132,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
         filters.push({ [name]: selectedObjects.map(item => item.id) });
       }
     });
+    setFilterTabIsOpen(false);
     onApply(filters);
   }, [onApply, selectedFilters]);
 
