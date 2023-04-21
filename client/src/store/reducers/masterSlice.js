@@ -34,7 +34,7 @@ const initialState = {
   isShowAddForm: false,
   totalItems: 0,
   currentPage: 0,
-  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[0],
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[2],
   sortFieldName: '',
   sortOrder: '',
 };
