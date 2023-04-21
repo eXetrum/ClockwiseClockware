@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Container, Stack, FormGroup, TextField, Button, Drawer, Badge } from '@mui/material';
+import { Container, Stack, FormGroup, TextField, Button, Drawer, Badge, Divider, IconButton } from '@mui/material';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TuneIcon from '@mui/icons-material/Tune';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 
 import FilterDropDownSelector from './FilterDropDownSelector';
 
@@ -67,19 +68,17 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
     [selectedFilters],
   );
 
-  useEffect(() => {
-    dispatch(fetchMasters({ limit: -1 }));
-    dispatch(fetchCities({ limit: -1 }));
-    dispatch(fetchWatches());
-  }, [dispatch]);
-
-  useEffect(() => {
-    const mapping = {
-      [FILTER_TYPE.BY_MASTER]: masters,
-      [FILTER_TYPE.BY_CITY]: cities,
-      [FILTER_TYPE.BY_WATCH]: watches,
-      [FILTER_TYPE.BY_STATUS]: orderStatusMap,
-    };
+  const masterLabelFormatter = useCallback(value => `${value.name} (${value.email})`, []);
+  const filterSelectorsMapping = useMemo(
+    () => ({
+      [FILTER_TYPE.BY_MASTER]: { label: 'Master', items: masters, renderValueFormatter: masterLabelFormatter },
+      [FILTER_TYPE.BY_CITY]: { label: 'City', items: cities },
+      [FILTER_TYPE.BY_WATCH]: { label: 'Watch', items: watches },
+      [FILTER_TYPE.BY_STATUS]: { label: 'Status', items: orderStatusMap },
+    }),
+    [masters, cities, watches, masterLabelFormatter],
+  );
+  const initializeAcceptedFilters = useCallback(() => {
     validFilterNames.forEach(filterType => {
       const idx = filters.findIndex(item => filterType in item);
       if (idx !== -1 && filters[idx][filterType].length) {
@@ -88,18 +87,36 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
         } else {
           setSelectedFilters(prev => ({
             ...prev,
-            [filterType]: mapping[filterType].filter(item => filters[idx][filterType].findIndex(id => id === item.id) !== -1),
+            [filterType]: filterSelectorsMapping[filterType].items.filter(
+              item => filters[idx][filterType].findIndex(id => id === item.id) !== -1,
+            ),
           }));
         }
       }
     });
-  }, [filters, isComponentReady, masters, cities, watches]);
+  }, [filters, filterSelectorsMapping]);
+
+  useEffect(() => {
+    dispatch(fetchMasters({ limit: -1 }));
+    dispatch(fetchCities({ limit: -1 }));
+    dispatch(fetchWatches());
+  }, [dispatch]);
+
+  useEffect(() => initializeAcceptedFilters(), [isComponentReady, initializeAcceptedFilters]);
+
+  const onSelectionChange = useCallback((propName, value) => setSelectedFilters(prev => ({ ...prev, [propName]: value })), []);
 
   const toggleDrawer = open => event => {
     if (event.type === 'keydown' && (event.key === 'Tab' || event.key === 'Shift')) {
       return;
     }
     setFilterTabIsOpen(open);
+
+    // On close drop unaplyed filters but keep already accepted
+    if (open === false) {
+      setSelectedFilters(initEmptyFilters());
+      initializeAcceptedFilters();
+    }
   };
 
   const applyFilters = useCallback(() => {
@@ -116,6 +133,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
         filters.push({ [name]: selectedObjects.map(item => item.id) });
       }
     });
+    setFilterTabIsOpen(false);
     onApply(filters);
   }, [onApply, selectedFilters]);
 
@@ -123,36 +141,6 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
     setSelectedFilters(initEmptyFilters());
     onApply([]);
   }, [onApply]);
-
-  const onMasterSelectionChange = useCallback(
-    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_MASTER]: value })),
-    [],
-  );
-  const onCitySelectionChange = useCallback(
-    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_CITY]: value })),
-    [],
-  );
-  const onWatchSelectionChange = useCallback(
-    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_WATCH]: value })),
-    [],
-  );
-  const onStatusSelectionChange = useCallback(
-    ({ target: { value } }) => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_STATUS]: value })),
-    [],
-  );
-  const onStartDateChange = useCallback(
-    value => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_DATE]: [value, prev[FILTER_TYPE.BY_DATE][1]] })),
-    [],
-  );
-  const onEndDateChange = useCallback(
-    value => setSelectedFilters(prev => ({ ...prev, [FILTER_TYPE.BY_DATE]: [prev[FILTER_TYPE.BY_DATE][0], value] })),
-    [],
-  );
-
-  const masterLabelFormatter = useCallback(value => `${value.name} (${value.email})`, []);
-  const cityLabelFormatter = useCallback(value => value.name, []);
-  const watchLabelFormatter = useCallback(value => value.name, []);
-  const statusLabelFormatter = useCallback(value => value.name, []);
 
   return (
     <Container maxWidth="sm" sx={{ mb: 1 }}>
@@ -171,57 +159,50 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
         </Badge>
 
         <Drawer anchor={'right'} open={isFilterTabOpen} onClose={toggleDrawer(false)}>
+          <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={2}>
+            <IconButton onClick={toggleDrawer(false)}>
+              <ChevronLeftIcon />
+            </IconButton>
+          </Stack>
+          <Divider />
           <Container sx={{ mt: 25 }}>
             <Stack justifyContent="center" alignItems="center" spacing={2}>
               <FormGroup>
                 {isComponentReady ? (
                   <>
-                    <FilterDropDownSelector
-                      label="Master"
-                      items={masters}
-                      selectedItems={selectedFilters[FILTER_TYPE.BY_MASTER]}
-                      renderValueFormatter={masterLabelFormatter}
-                      onSelectionChange={onMasterSelectionChange}
-                    />
-                    <FilterDropDownSelector
-                      label="City"
-                      items={cities}
-                      selectedItems={selectedFilters[FILTER_TYPE.BY_CITY]}
-                      renderValueFormatter={cityLabelFormatter}
-                      onSelectionChange={onCitySelectionChange}
-                    />
-                    <FilterDropDownSelector
-                      label="Watch"
-                      items={watches}
-                      selectedItems={selectedFilters[FILTER_TYPE.BY_WATCH]}
-                      renderValueFormatter={watchLabelFormatter}
-                      onSelectionChange={onWatchSelectionChange}
-                    />
-                    <FilterDropDownSelector
-                      label="Status"
-                      items={orderStatusMap}
-                      selectedItems={selectedFilters[FILTER_TYPE.BY_STATUS]}
-                      renderValueFormatter={statusLabelFormatter}
-                      onSelectionChange={onStatusSelectionChange}
-                    />
+                    {validFilterNames
+                      .filter(item => item !== FILTER_TYPE.BY_DATE)
+                      .map((filterName, index) => (
+                        <FilterDropDownSelector
+                          key={index}
+                          label={filterSelectorsMapping[filterName].label}
+                          items={filterSelectorsMapping[filterName].items}
+                          renderValueFormatter={filterSelectorsMapping[filterName].renderValueFormatter}
+                          selectedItems={selectedFilters[filterName]}
+                          onSelectionChange={({ target: { value } }) => onSelectionChange(filterName, value)}
+                        />
+                      ))}
+
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
                       <Stack direction={'row'} justifyContent="center" alignItems="center" spacing={2} sx={{ mb: 2, mt: 1 }}>
-                        <DatePicker
-                          label="StartDate from"
-                          renderInput={props => <TextField size="small" style={{ width: 165 }} {...props} />}
-                          views={['year', 'month', 'day']}
-                          onChange={onStartDateChange}
-                          ampm={false}
-                          value={selectedFilters[FILTER_TYPE.BY_DATE][0]}
-                        />
-                        <DatePicker
-                          label="StartDate to"
-                          renderInput={props => <TextField size="small" style={{ width: 160 }} {...props} />}
-                          views={['year', 'month', 'day']}
-                          onChange={onEndDateChange}
-                          ampm={false}
-                          value={selectedFilters[FILTER_TYPE.BY_DATE][1]}
-                        />
+                        {selectedFilters[FILTER_TYPE.BY_DATE].map((date, index) => (
+                          <DatePicker
+                            key={index}
+                            label={`StartDate ${index ? 'to' : 'from'}`}
+                            renderInput={props => <TextField size="small" style={{ width: 160 + (index ? 0 : 5) }} {...props} />}
+                            views={['year', 'month', 'day']}
+                            onChange={value =>
+                              onSelectionChange(
+                                FILTER_TYPE.BY_DATE,
+                                index
+                                  ? [selectedFilters[FILTER_TYPE.BY_DATE][(index + 1) % 2], value]
+                                  : [value, selectedFilters[FILTER_TYPE.BY_DATE][(index + 1) % 2]],
+                              )
+                            }
+                            ampm={false}
+                            value={date}
+                          />
+                        ))}
                       </Stack>
                     </LocalizationProvider>
                   </>

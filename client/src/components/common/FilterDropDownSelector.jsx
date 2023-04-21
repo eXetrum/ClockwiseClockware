@@ -12,7 +12,7 @@ const MenuProps = {
   },
 };
 
-const FilterDropDownSelector = ({ label = '', items, selectedItems, renderValueFormatter, onSelectionChange }) => {
+const FilterDropDownSelector = ({ label = '', items, selectedItems, onSelectionChange, renderValueFormatter = item => item.name }) => {
   if (!items.length) return null;
 
   return (
