@@ -4,7 +4,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import TuneIcon from '@mui/icons-material/Tune';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
 
 import FilterDropDownSelector from './FilterDropDownSelector';
 
@@ -161,7 +161,7 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
         <Drawer anchor={'right'} open={isFilterTabOpen} onClose={toggleDrawer(false)}>
           <Stack direction="row" justifyContent="flex-start" alignItems="center" spacing={2}>
             <IconButton onClick={toggleDrawer(false)}>
-              <ChevronLeftIcon />
+              <HighlightOffIcon />
             </IconButton>
           </Stack>
           <Divider />
