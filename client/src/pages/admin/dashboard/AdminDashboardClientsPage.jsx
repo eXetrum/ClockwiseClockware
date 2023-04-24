@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Container, Row, Col } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -149,51 +149,54 @@ const AdminDashboardClientsPage = () => {
     [dispatch, sortFieldName, sortOrder],
   );
 
-  const columns = [
-    { field: 'email', headerName: 'Email', width: 300, flex: 1 },
-    { field: 'name', headerName: 'Name', width: 300, flex: 1 },
-    {
-      field: 'isEmailVerified',
-      headerName: 'Email Verified',
-      type: 'boolean',
-      flex: 1,
-    },
-    {
-      field: 'actions',
-      headerName: 'actions',
-      type: 'actions',
-      width: 100,
-      flex: 1,
-      filterable: false,
-      disableReorder: true,
-      getActions: ({ row }) => {
-        const actions = [
-          <GridActionsCellItem
-            icon={<LockResetIcon />}
-            label="Reset password"
-            onClick={() => onResetPassword(row)}
-            disabled={row.isPendingResetPassword}
-            showInMenu
-          />,
-          <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/clients/${row.id}`)} showInMenu />,
-          <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
-        ];
-        if (!row.isEmailVerified) {
-          actions.unshift(
+  const columns = useMemo(
+    () => [
+      { field: 'email', headerName: 'Email', width: 300, flex: 1 },
+      { field: 'name', headerName: 'Name', width: 300, flex: 1 },
+      {
+        field: 'isEmailVerified',
+        headerName: 'Email Verified',
+        type: 'boolean',
+        flex: 1,
+      },
+      {
+        field: 'actions',
+        headerName: 'actions',
+        type: 'actions',
+        width: 100,
+        flex: 1,
+        filterable: false,
+        disableReorder: true,
+        getActions: ({ row }) => {
+          const actions = [
             <GridActionsCellItem
-              icon={<ForwardToInboxIcon />}
-              label="Resend email confirmation"
-              onClick={() => onResendEmailConfirmation(row)}
-              disabled={row.isPendingResendEmailConfirmation}
+              icon={<LockResetIcon />}
+              label="Reset password"
+              onClick={() => onResetPassword(row)}
+              disabled={row.isPendingResetPassword}
               showInMenu
             />,
-          );
-        }
+            <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/clients/${row.id}`)} showInMenu />,
+            <GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />,
+          ];
+          if (!row.isEmailVerified) {
+            actions.unshift(
+              <GridActionsCellItem
+                icon={<ForwardToInboxIcon />}
+                label="Resend email confirmation"
+                onClick={() => onResendEmailConfirmation(row)}
+                disabled={row.isPendingResendEmailConfirmation}
+                showInMenu
+              />,
+            );
+          }
 
-        return actions;
+          return actions;
+        },
       },
-    },
-  ];
+    ],
+    [navigate, onResetPassword, onRemove, onResendEmailConfirmation],
+  );
 
   return (
     <Container>
