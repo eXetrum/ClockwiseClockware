@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import { confirm } from 'react-bootstrap-confirmation';
@@ -163,122 +163,125 @@ const AdminDashboardOrdersPage = () => {
     [dispatch],
   );
 
-  const columns = [
-    {
-      field: 'client.email',
-      headerName: 'Client Email',
-      flex: 1,
-      valueGetter: ({ row }) => row.client.email,
-    },
-    {
-      field: 'client.name',
-      headerName: 'Client Name',
-      flex: 1,
-      valueGetter: ({ row }) => row.client.name,
-    },
-    {
-      field: 'master.email',
-      headerName: 'Master Email',
-      flex: 1,
-      valueGetter: ({ row }) => row.master.email,
-    },
-    {
-      field: 'master.name',
-      headerName: 'Master Name',
-      flex: 1,
-      valueGetter: ({ row }) => row.master.name,
-    },
-    {
-      field: 'master.rating',
-      headerName: 'Master Rating',
-      type: 'number',
-      flex: 1,
-      valueGetter: ({ row }) =>
-        `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
-    },
-    {
-      field: 'city.name',
-      headerName: 'City',
-      flex: 1,
-      valueGetter: ({ row }) => row.city.name,
-    },
-    {
-      field: 'watch.repairTime',
-      headerName: 'Clock',
-      type: 'number',
-      flex: 1,
-      valueGetter: ({ row }) => `${row.watch.name} (${row.watch.repairTime}h)`,
-    },
-    {
-      field: 'startDate',
-      headerName: 'Start Date/Time',
-      width: 140,
-      type: 'dateTime',
-      flex: 1,
-      valueFormatter: ({ value }) => formatDate(value),
-    },
-    {
-      field: 'endDate',
-      headerName: 'End Date/Time',
-      width: 140,
-      type: 'dateTime',
-      flex: 1,
-      valueFormatter: ({ value }) => formatDate(value),
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      type: 'enum_orders_status',
-      flex: 1,
-    },
-    {
-      field: 'totalCost',
-      headerName: 'Total Cost',
-      type: 'number',
-      flex: 1,
-      valueFormatter: ({ value }) => formatDecimal(value),
-    },
-    {
-      field: 'actions',
-      headerName: 'actions',
-      type: 'actions',
-      width: 100,
-      flex: 1,
-      filterable: false,
-      disableReorder: true,
-      getActions: ({ row }) => {
-        const actions = [<GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />];
-
-        if (row.status === ORDER_STATUS.CONFIRMED) {
-          actions.unshift(
-            <GridActionsCellItem
-              icon={<TaskAltIcon />}
-              label="Complete Order"
-              onClick={() => onComplete(row)}
-              disabled={row.isCompleting || row.isCanceling}
-              showInMenu
-            />,
-            <GridActionsCellItem
-              icon={<DoNotDisturbAltIcon />}
-              label="Cancel Order"
-              onClick={() => onCancel(row)}
-              disabled={row.isCompleting || row.isCanceling}
-              showInMenu
-            />,
-            <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
-          );
-        }
-
-        if (row.images.length) {
-          actions.unshift(
-            <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
-          );
-        }
-
-        return actions;
+  const columns = useMemo(
+    () => [
+      {
+        field: 'client.email',
+        headerName: 'Client Email',
+        flex: 1,
+        valueGetter: ({ row }) => row.client.email,
       },
-    },
-  ];
+      {
+        field: 'client.name',
+        headerName: 'Client Name',
+        flex: 1,
+        valueGetter: ({ row }) => row.client.name,
+      },
+      {
+        field: 'master.email',
+        headerName: 'Master Email',
+        flex: 1,
+        valueGetter: ({ row }) => row.master.email,
+      },
+      {
+        field: 'master.name',
+        headerName: 'Master Name',
+        flex: 1,
+        valueGetter: ({ row }) => row.master.name,
+      },
+      {
+        field: 'master.rating',
+        headerName: 'Master Rating',
+        type: 'number',
+        flex: 1,
+        valueGetter: ({ row }) =>
+          `${formatDecimal(row.master.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`,
+      },
+      {
+        field: 'city.name',
+        headerName: 'City',
+        flex: 1,
+        valueGetter: ({ row }) => row.city.name,
+      },
+      {
+        field: 'watch.repairTime',
+        headerName: 'Clock',
+        type: 'number',
+        flex: 1,
+        valueGetter: ({ row }) => `${row.watch.name} (${row.watch.repairTime}h)`,
+      },
+      {
+        field: 'startDate',
+        headerName: 'Start Date/Time',
+        width: 140,
+        type: 'dateTime',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDate(value),
+      },
+      {
+        field: 'endDate',
+        headerName: 'End Date/Time',
+        width: 140,
+        type: 'dateTime',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDate(value),
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        type: 'enum_orders_status',
+        flex: 1,
+      },
+      {
+        field: 'totalCost',
+        headerName: 'Total Cost',
+        type: 'number',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDecimal(value),
+      },
+      {
+        field: 'actions',
+        headerName: 'actions',
+        type: 'actions',
+        width: 100,
+        flex: 1,
+        filterable: false,
+        disableReorder: true,
+        getActions: ({ row }) => {
+          const actions = [<GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />];
+
+          if (row.status === ORDER_STATUS.CONFIRMED) {
+            actions.unshift(
+              <GridActionsCellItem
+                icon={<TaskAltIcon />}
+                label="Complete Order"
+                onClick={() => onComplete(row)}
+                disabled={row.isCompleting || row.isCanceling}
+                showInMenu
+              />,
+              <GridActionsCellItem
+                icon={<DoNotDisturbAltIcon />}
+                label="Cancel Order"
+                onClick={() => onCancel(row)}
+                disabled={row.isCompleting || row.isCanceling}
+                showInMenu
+              />,
+              <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
+            );
+          }
+
+          if (row.images.length) {
+            actions.unshift(
+              <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+            );
+          }
+
+          return actions;
+        },
+      },
+    ],
+    [navigate, onComplete, onCancel, onImagePreviewOpen, onRemove],
+  );
 
   return (
     <Container>
