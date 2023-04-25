@@ -8,11 +8,13 @@ export const fetchOrders = createAsyncThunk(
   'order/fetchAll',
   async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '', filter = '' }, thunkAPI) => {
     try {
-      if (limit === -1) limit = undefined;
-      if (orderBy === '') orderBy = order = undefined;
-      if (filter === '') filter = undefined;
+      const params = {
+        ...(limit !== null && { offset, limit }),
+        ...(orderBy !== '' && { orderBy }),
+        ...(order !== '' && { order }),
+      };
 
-      const response = await apiSecure.get('/orders', { params: { offset, limit, orderBy, order, filter } });
+      const response = await apiSecure.get('/orders', { params });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });

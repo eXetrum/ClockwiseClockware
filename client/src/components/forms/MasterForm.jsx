@@ -28,7 +28,7 @@ const MasterForm = ({ onSubmit, okButtonText = 'Save', titleText = '', isModal =
   const isPending = useSelector(selectMasterPending);
   const isShowAddForm = useSelector(selectMasterShowAddForm);
 
-  useEffect(() => dispatch(fetchCities({ limit: -1 })), [dispatch]);
+  useEffect(() => dispatch(fetchCities({ limit: null })), [dispatch]);
 
   const isFormValid = useMemo(
     () =>
