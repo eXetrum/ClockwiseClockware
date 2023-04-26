@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import { useSnackbar } from 'notistack';
 
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
@@ -27,11 +28,24 @@ const handleFileChosen = async file => {
 };
 
 const ImageUploader = () => {
+  const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const newOrder = useSelector(selectNewOrder);
 
   const onImageDrop = useCallback(
-    async acceptedFiles => {
+    async (acceptedFiles, fileRejections) => {
+      fileRejections.forEach(file => {
+        file.errors.forEach(err => {
+          if (err.code === 'file-too-large') {
+            enqueueSnackbar(`Warning: ${file.file.name} ${err.message} (Skip)`, { variant: 'warning' });
+          }
+
+          if (err.code === 'file-invalid-type') {
+            enqueueSnackbar(`Warning: ${file.file.name} ${err.message} (Skip)`, { variant: 'warning' });
+          }
+        });
+      });
+
       if (!acceptedFiles) return;
       const prevImages = [...newOrder.images];
       const selected = [...acceptedFiles.slice(0, MAX_IMAGES_COUNT - prevImages.length)];
@@ -47,7 +61,7 @@ const ImageUploader = () => {
 
       dispatch(changeNewOrderField({ name: 'images', value: prevImages }));
     },
-    [dispatch, newOrder],
+    [enqueueSnackbar, dispatch, newOrder],
   );
 
   const { getRootProps, getInputProps } = useDropzone({

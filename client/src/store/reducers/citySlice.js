@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchCities, addCity, deleteCity, fetchCity, updateCity } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE } from '../../constants';
+import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, SORT_ORDER } from '../../constants';
 
 const initEmptyCity = (city = null) => ({ id: city?.id || -1, name: city?.name || '', pricePerHour: city?.pricePerHour || 0.0 });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
@@ -15,6 +15,11 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[2],
+  sortFieldName: '',
+  sortOrder: '',
 };
 
 export const citySlice = createSlice({
@@ -28,6 +33,18 @@ export const citySlice = createSlice({
     changeNewCityField(state, { payload }) {
       state.newCity[payload.name] = payload.value;
     },
+    changeCityCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeCityPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeCitySortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeCitySortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
   },
   extraReducers: {
     //#region Fetch all cities
@@ -35,8 +52,9 @@ export const citySlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchCities.fulfilled]: (state, { payload }) => {
-      state.cities = payload;
+    [fetchCities.fulfilled]: (state, { payload: { cities, total } }) => {
+      state.cities = cities;
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
@@ -121,5 +139,12 @@ export const citySlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddCityForm, changeNewCityField } = citySlice.actions;
+export const {
+  changeVisibilityAddCityForm,
+  changeNewCityField,
+  changeCityCurrentPage,
+  changeCityPageSize,
+  changeCitySortFieldName,
+  changeCitySortOrder,
+} = citySlice.actions;
 export default citySlice.reducer;

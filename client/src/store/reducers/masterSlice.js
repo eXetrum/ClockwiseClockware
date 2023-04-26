@@ -11,7 +11,7 @@ import {
   resendEmailConfirmationMaster,
 } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE } from '../../constants';
+import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 const initEmptyMaster = (master = null) => ({
   id: master?.id || -1,
@@ -32,6 +32,11 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[2],
+  sortFieldName: '',
+  sortOrder: '',
 };
 
 export const masterSlice = createSlice({
@@ -49,6 +54,18 @@ export const masterSlice = createSlice({
       if (!payload) state.masters = [];
       else state.masters = payload;
     },
+    changeMasterCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeMasterPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeMasterSortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeMasterSortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
   },
   extraReducers: {
     //#region Fetch all masters
@@ -56,12 +73,13 @@ export const masterSlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchMasters.fulfilled]: (state, { payload }) => {
-      state.masters = payload.map(master => {
+    [fetchMasters.fulfilled]: (state, { payload: { masters, total } }) => {
+      state.masters = masters.map(master => {
         master.isPendingResetPassword = false;
         master.isPendingResendEmailConfirmation = false;
         return master;
       });
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
@@ -199,5 +217,13 @@ export const masterSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddMasterForm, changeNewMasterField, resetMasters } = masterSlice.actions;
+export const {
+  changeVisibilityAddMasterForm,
+  changeNewMasterField,
+  resetMasters,
+  changeMasterCurrentPage,
+  changeMasterPageSize,
+  changeMasterSortFieldName,
+  changeMasterSortOrder,
+} = masterSlice.actions;
 export default masterSlice.reducer;

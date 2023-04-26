@@ -1,5 +1,5 @@
 const { body, query, param, validationResult } = require('express-validator');
-const { Op } = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 const { User, Master, Watches, City, MasterCityList, Order } = require('../database/models');
 const db = require('../database/models/index');
 const { RequireAuth } = require('../middleware/RouteProtector');
@@ -107,27 +107,49 @@ const getAvailableMasters = [
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect ')
+        .optional()
+        .isIn(['email', 'name', 'cities', 'rating', 'isEmailVerified', 'isApprovedByAdmin']),
+    query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
         try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
+            if (orderBy === 'email') sortParams[0] = Sequelize.literal('"User.email"');
+            if (orderBy === 'cities') sortParams.splice(1, 0, 'name');
+
             const records = await Master.findAll({
                 include: [
+                    { model: User, required: true },
+                    { model: Order, as: 'orders' },
                     {
-                        model: User
-                    },
-                    { model: City, as: 'cities', through: { attributes: [] } },
-                    { model: Order, as: 'orders' }
+                        model: City,
+                        as: 'cities',
+                        through: { attributes: [] },
+                        order: [['name', order]]
+                    }
                 ],
-                attributes: { exclude: ['id', 'userId'] },
-                order: [['createdAt', 'DESC']]
+                attributes: {
+                    exclude: ['id']
+                },
+
+                order: [sortParams],
+                limit,
+                offset
             });
+            const total = await Master.count({ include: [{ model: User, required: true }] });
 
             const masters = records.map((master) => ({
                 ...master.toJSON(),
-                cities: master.cities.sort(cityNameComparator),
                 ...master.User.toJSON()
             }));
 
-            res.status(200).json({ masters }).end();
+            res.status(200).json({ masters, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }

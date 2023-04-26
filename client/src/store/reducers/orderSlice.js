@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from '../thunks';
 import { dateToNearestHour, isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS } from '../../constants';
+import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 const initEmptyOrder = (order = null) => ({
   id: order?.id || -1,
@@ -24,6 +24,12 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowRateForm: false,
+  totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[2],
+  sortFieldName: '',
+  sortOrder: '',
+  filters: [],
 };
 
 export const orderSlice = createSlice({
@@ -45,6 +51,21 @@ export const orderSlice = createSlice({
       if (payload) state.newOrder = initEmptyOrder(payload);
       else state.newOrder = initEmptyOrder(state.oldOrder);
     },
+    changeOrderCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeOrderPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeOrderSortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeOrderSortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
+    changeOrderFilters(state, { payload }) {
+      state.filters = payload;
+    },
   },
   extraReducers: {
     //#region Fetch all orders
@@ -52,13 +73,14 @@ export const orderSlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchOrders.fulfilled]: (state, { payload }) => {
-      state.orders = payload.map(order => {
+    [fetchOrders.fulfilled]: (state, { payload: { orders, total } }) => {
+      state.orders = orders.map(order => {
         order.isCompleting = false;
         order.isCanceling = false;
         order.isEvaluating = false;
         return order;
       });
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
@@ -202,5 +224,14 @@ export const orderSlice = createSlice({
   },
 });
 
-export const { changeVisibilityRateForm, changeNewOrderField, resetNewOrder } = orderSlice.actions;
+export const {
+  changeVisibilityRateForm,
+  changeNewOrderField,
+  resetNewOrder,
+  changeOrderCurrentPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+  changeOrderFilters,
+} = orderSlice.actions;
 export default orderSlice.reducer;

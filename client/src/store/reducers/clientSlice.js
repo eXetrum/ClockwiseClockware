@@ -10,7 +10,7 @@ import {
   resendEmailConfirmationClient,
 } from '../thunks';
 import { isGlobalErrorType } from '../../utils';
-import { ERROR_TYPE } from '../../constants';
+import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 const initEmptyClient = (client = null) => ({ id: client?.id || -1, email: client?.email || '', password: '', name: client?.name || '' });
 const initEmptyError = () => ({ message: '', type: ERROR_TYPE.NONE });
@@ -23,6 +23,11 @@ const initialState = {
   isInitialLoading: false,
   isPending: false,
   isShowAddForm: false,
+  totalItems: 0,
+  currentPage: 0,
+  pageSize: PAGINATION_PAGE_SIZE_OPTIONS[2],
+  sortFieldName: '',
+  sortOrder: '',
 };
 
 export const clientSlice = createSlice({
@@ -36,6 +41,18 @@ export const clientSlice = createSlice({
     changeNewClientField(state, { payload }) {
       state.newClient[payload.name] = payload.value;
     },
+    changeClientCurrentPage(state, { payload }) {
+      state.currentPage = payload;
+    },
+    changeClientPageSize(state, { payload }) {
+      state.pageSize = payload;
+    },
+    changeClientSortFieldName(state, { payload }) {
+      state.sortFieldName = payload;
+    },
+    changeClientSortOrder(state, { payload }) {
+      state.sortOrder = payload;
+    },
   },
   extraReducers: {
     //#region Fetch all clients
@@ -43,12 +60,13 @@ export const clientSlice = createSlice({
       state.isInitialLoading = true;
       state.error = initEmptyError();
     },
-    [fetchClients.fulfilled]: (state, { payload }) => {
-      state.clients = payload.map(client => {
+    [fetchClients.fulfilled]: (state, { payload: { clients, total } }) => {
+      state.clients = clients.map(client => {
         client.isPendingResetPassword = false;
         client.isPendingResendEmailConfirmation = false;
         return client;
       });
+      state.totalItems = total;
       state.isInitialLoading = false;
       state.error = initEmptyError();
     },
@@ -167,5 +185,12 @@ export const clientSlice = createSlice({
   },
 });
 
-export const { changeVisibilityAddClientForm, changeNewClientField } = clientSlice.actions;
+export const {
+  changeVisibilityAddClientForm,
+  changeNewClientField,
+  changeClientCurrentPage,
+  changeClientPageSize,
+  changeClientSortFieldName,
+  changeClientSortOrder,
+} = clientSlice.actions;
 export default clientSlice.reducer;

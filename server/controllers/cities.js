@@ -1,17 +1,32 @@
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const { City } = require('../database/models');
+
 const { RequireAuth } = require('../middleware/RouteProtector');
 const { isDbErrorEntryNotFound, isDbErrorEntryAlreadyExists, isDbErrorEntryReferences } = require('../utils');
 const { ACCESS_SCOPE } = require('../constants');
 
-const getAll = async (req, res) => {
-    try {
-        const cities = await City.findAll({ order: [['createdAt', 'DESC']] });
-        res.status(200).json({ cities }).end();
-    } catch (error) {
-        res.status(500).json(error).end();
+const getAll = [
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect').optional().isIn(['name', 'pricePerHour']),
+    query('order', 'order value is incorrect').optional().toUpperCase().isIn(['ASC', 'DESC']),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
+
+            const cities = await City.findAll({ order: [sortParams], limit, offset });
+            const total = await City.count({});
+
+            res.status(200).json({ cities, total }).end();
+        } catch (error) {
+            res.status(500).json(error).end();
+        }
     }
-};
+];
 
 const create = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
@@ -42,7 +57,7 @@ const create = [
 
             const { name, pricePerHour } = req.body.city;
 
-            const city = await City.create({ name: name.trim(), pricePerHour });
+            const city = await City.create({ name: name.trim(), pricePerHour: Number(pricePerHour) });
             res.status(201).json({ city }).end();
         } catch (error) {
             if (isDbErrorEntryAlreadyExists(error)) return res.status(409).json({ message: 'City already exists' }).end();

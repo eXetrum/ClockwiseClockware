@@ -1,7 +1,7 @@
 require('dotenv').config();
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
 const moment = require('moment');
-const { Op } = require('sequelize');
+const { Sequelize, Op } = require('sequelize');
 const db = require('../database/models/index');
 const { User, Client, Master, Watches, City, Order, Confirmations, Image } = require('../database/models');
 const { RequireAuth, parseAuthToken } = require('../middleware/RouteProtector');
@@ -14,7 +14,7 @@ const {
     isDbErrorEntryNotFound,
     formatDate,
     formatDecimal,
-    createComparatorByProp
+    parseFilters
 } = require('../utils');
 const {
     ACCESS_SCOPE,
@@ -27,39 +27,109 @@ const {
     MAX_IMAGE_SIZE_BYTES
 } = require('../constants');
 
-const cityNameComparator = createComparatorByProp('name');
+const injectCloudinaryAutoQualityParams = (images) =>
+    images.map((item) => ({ ...item, url: item.url.replace('/upload/', '/upload/w_400,f_auto,q_auto:best/') }));
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AnyAuth),
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect ')
+        .optional()
+        .isIn([
+            'client.email',
+            'client.name',
+            'master.email',
+            'master.name',
+            'master.rating',
+            'city.name',
+            'watch.repairTime',
+            'startDate',
+            'endDate',
+            'status',
+            'totalCost',
+            'rating'
+        ]),
+    query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
         try {
-            const authUser = parseAuthToken(req.headers);
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
 
-            let where = {};
-            if (authUser.role === USER_ROLES.MASTER) where = { masterId: authUser.id };
-            else if (authUser.role === USER_ROLES.CLIENT) where = { clientId: authUser.id };
+            const { offset = 0, limit, orderBy, order = 'ASC', filter } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
+            if (orderBy === 'client.email') sortParams[0] = Sequelize.literal('"client.User.email"');
+            else if (orderBy === 'client.name') sortParams[0] = Sequelize.literal('"client.name"');
+            else if (orderBy === 'master.email') sortParams[0] = Sequelize.literal('"master.User.email"');
+            else if (orderBy === 'master.name') sortParams[0] = Sequelize.literal('"master.name"');
+            else if (orderBy === 'master.rating') sortParams[0] = Sequelize.literal('"master.rating"');
+            else if (orderBy === 'city.name') sortParams[0] = Sequelize.literal('"city.name"');
+            else if (orderBy === 'watch.repairTime') sortParams[0] = Sequelize.literal('"watch.repairTime"');
+
+            const where = parseFilters(filter);
+
+            const authUser = parseAuthToken(req.headers);
+            if (authUser.role === USER_ROLES.MASTER) where['masterId'] = authUser.id;
+            else if (authUser.role === USER_ROLES.CLIENT) where['clientId'] = authUser.id;
 
             const records = await Order.findAll({
                 where,
                 include: [
-                    { model: Client, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'client' },
-                    { model: Watches, as: 'watch' },
-                    { model: City, as: 'city' },
-                    { model: Master, include: [{ model: User }], attributes: { exclude: ['id', 'userId'] }, as: 'master' },
+                    {
+                        model: Client,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'client',
+                        required: true
+                    },
+                    {
+                        model: Master,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'master',
+                        required: true
+                    },
+                    { model: City, as: 'city', required: true },
+                    { model: Watches, as: 'watch', required: true },
+
                     { model: Image, as: 'images', through: { attributes: [] } }
                 ],
-                attributes: { exclude: ['clientId', 'watchId', 'cityId', 'masterId'] },
-                order: [['createdAt', 'DESC']]
-                //order: [['masterId'], ['startDate', 'DESC'], ['createdAt', 'DESC']]
+                order: [sortParams],
+                limit,
+                offset
+            });
+            const total = await Order.count({
+                where,
+                include: [
+                    {
+                        model: Client,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'client',
+                        required: true
+                    },
+                    {
+                        model: Master,
+                        include: [{ model: User, required: true }],
+                        attributes: { exclude: ['id'] },
+                        as: 'master',
+                        required: true
+                    },
+                    { model: City, as: 'city', required: true },
+                    { model: Watches, as: 'watch', required: true }
+                ]
             });
 
-            const orders = records.map((order) => ({
-                ...order.toJSON(),
-                client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
-                master: { ...order.master.toJSON(), ...order.master.User.toJSON() }
-            }));
+            const orders = records.map((order) => {
+                return {
+                    ...order.toJSON(),
+                    client: { ...order.client.toJSON(), ...order.client.User.toJSON() },
+                    master: { ...order.master.toJSON(), ...order.master.User.toJSON() },
+                    images: injectCloudinaryAutoQualityParams(order.images.map((item) => item.toJSON()))
+                };
+            });
 
-            res.status(200).json({ orders }).end();
+            res.status(200).json({ orders, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }
@@ -500,7 +570,7 @@ const update = [
 
                 // Remove previous images
                 if (publicIds.length) {
-                    const cloudDelResult = await cloudinary.api.delete_resources(publicIds);
+                    await cloudinary.api.delete_resources(publicIds);
                 }
             });
 

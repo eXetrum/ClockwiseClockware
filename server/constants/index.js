@@ -29,6 +29,14 @@ const MAX_IMAGE_SIZE_BYTES = 1024 * 1024;
 
 const JSON_BODY_LIMIT = '100mb';
 
+const FILTER_TYPE = {
+    BY_MASTER: 'filterByMaster',
+    BY_CITY: 'filterByCity',
+    BY_WATCH: 'filterByWatch',
+    BY_STATUS: 'filterByStatus',
+    BY_DATE: 'filterByDate'
+};
+
 module.exports = {
     ORDER_STATUS,
     USER_ROLES,
@@ -38,5 +46,6 @@ module.exports = {
     MAX_RATING_VALUE,
     MAX_IMAGES_COUNT,
     MAX_IMAGE_SIZE_BYTES,
-    JSON_BODY_LIMIT
+    JSON_BODY_LIMIT,
+    FILTER_TYPE
 };

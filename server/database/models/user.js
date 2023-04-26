@@ -7,9 +7,7 @@ const { hashPassword, compareSync } = require('../../utils');
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         authenticate = (plainValue) => compareSync(plainValue, this.password);
-        setPassword = async (value) => {
-            this.setDataValue('password', value);
-        };
+        setPassword = async (value) => this.setDataValue('password', value);
 
         getDetails = async () => {
             if (this.role === USER_ROLES.ADMIN) return await this.getAdmin();

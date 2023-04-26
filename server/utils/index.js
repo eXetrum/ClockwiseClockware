@@ -1,8 +1,9 @@
 require('dotenv').config();
+const { Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const { Entropy, charset64 } = require('entropy-string');
-
-const { MS_PER_HOUR } = require('../constants');
+const { validate } = require('uuid');
+const { MS_PER_HOUR, ORDER_STATUS, FILTER_TYPE } = require('../constants');
 
 const hashPassword = async (plaintextPassword) => {
     const hash = await bcrypt.hash(plaintextPassword, parseInt(process.env.BCRYPT_SALT_ROUNDS));
@@ -49,6 +50,74 @@ const createComparatorByProp =
     (a, b) =>
         ASC ? compareASC(a[propName], b[propName]) : compareDESC(a[propName], b[propName]);
 
+const customTrim = (str, charToRemove) => {
+    let start = 0;
+    let end = str.length - 1;
+    while (start <= end && str.charAt(start) === charToRemove) start++;
+    while (end >= start && str.charAt(end) === charToRemove) end--;
+    return str.substring(start, end + 1);
+};
+
+const onlyUnique = (value, index, array) => array.indexOf(value) === index;
+
+const sanitizeArgsByFilterType = (filterName, args) => {
+    if ([FILTER_TYPE.BY_MASTER, FILTER_TYPE.BY_CITY, FILTER_TYPE.BY_WATCH].includes(filterName)) {
+        return Array.isArray(args) && args.filter(onlyUnique).filter((item) => validate(item));
+    }
+
+    if (filterName === FILTER_TYPE.BY_STATUS) {
+        return Array.isArray(args) && args.filter(onlyUnique).filter((item) => Object.values(ORDER_STATUS).includes(item));
+    }
+
+    if (filterName === FILTER_TYPE.BY_DATE) {
+        return Array.isArray(args) &&
+            args.length === 2 &&
+            args.filter((item) => item !== null).length &&
+            args.filter((item) => item === null || Number.isInteger(item))
+            ? args
+            : [];
+    }
+    return [];
+};
+
+const parseFilters = (filtersJSON = '') => {
+    try {
+        const validFilterKeys = Object.values(FILTER_TYPE);
+        const query = decodeURIComponent(filtersJSON);
+        const inputFilters = JSON.parse(query);
+        if (!Array.isArray(inputFilters)) return {};
+
+        // Drop unknown filter type(s), filters without args
+        const where = {};
+        validFilterKeys.forEach((filterType) => {
+            // Should be valid filter name
+            const idx = inputFilters.findIndex((item) => filterType in item);
+            if (idx !== -1) {
+                // Expected array of args
+                if (Array.isArray(inputFilters[idx][filterType]) && inputFilters[idx][filterType].length) {
+                    const args = sanitizeArgsByFilterType(filterType, inputFilters[idx][filterType]);
+                    // Filters without args is not allowed
+                    if (args.length) {
+                        if (filterType === FILTER_TYPE.BY_MASTER) where['$master.userId$'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_CITY) where['$city.id$'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_WATCH) where['$watch.id$'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_STATUS) where['status'] = { [Op.in]: args };
+                        if (filterType === FILTER_TYPE.BY_DATE) {
+                            const [start, end] = args;
+                            if (start !== null && end !== null) where['startDate'] = { [Op.between]: [Number(start), Number(end)] };
+                            else if (start !== null) where['startDate'] = { [Op.gte]: Number(start) };
+                            else if (end !== null) where['startDate'] = { [Op.lte]: Number(end) };
+                        }
+                    }
+                }
+            }
+        });
+        return where;
+    } catch {
+        return {};
+    }
+};
+
 module.exports = {
     hashPassword,
     compareSync,
@@ -60,5 +129,8 @@ module.exports = {
     isDbErrorEntryReferences,
     formatDecimal,
     formatDate,
-    createComparatorByProp
+    createComparatorByProp,
+    customTrim,
+    onlyUnique,
+    parseFilters
 };

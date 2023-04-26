@@ -6,7 +6,6 @@ import { watchReducer, cityReducer, masterReducer, clientReducer, orderReducer, 
 const persistConfig = {
   key: 'root',
   storage,
-  blacklist: ['watchReducer', 'cityReducer', 'masterReducer', 'clientReducer', 'orderReducer'],
 };
 
 const rootReducer = combineReducers({

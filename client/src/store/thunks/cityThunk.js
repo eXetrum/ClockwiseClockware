@@ -1,17 +1,26 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-//import { getCities, createCity, deleteCityById, getCityById, updateCityById } from '../../api';
 import { api, apiSecure } from '../../axios/axios.interceptor';
 import { getErrorType, getErrorText } from '../../utils';
+import { PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 //#region City
-export const fetchCities = createAsyncThunk('city/fetchAll', async (_, thunkAPI) => {
-  try {
-    const response = await api.get('/cities');
-    return response.data.cities;
-  } catch (error) {
-    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
-  }
-});
+export const fetchCities = createAsyncThunk(
+  'city/fetchAll',
+  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '' }, thunkAPI) => {
+    try {
+      const params = {
+        ...(limit !== null && { offset, limit }),
+        ...(orderBy !== '' && { orderBy }),
+        ...(order !== '' && { order }),
+      };
+
+      const response = await api.get('/cities', { params });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+    }
+  },
+);
 
 export const addCity = createAsyncThunk('city/addCity', async (city, thunkAPI) => {
   try {

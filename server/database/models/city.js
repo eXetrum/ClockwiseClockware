@@ -40,7 +40,28 @@ module.exports = (sequelize, DataTypes) => {
             sequelize,
             modelName: 'City',
             tableName: 'cities',
-            associations: true
+            associations: true,
+            hooks: {
+                beforeFind: (options) => {
+                    if (options && options.where && options.where.pricePerHour) {
+                        const pricePerHour = options.where.pricePerHour;
+                        if (typeof pricePerHour === 'number') {
+                            options.where.pricePerHour = Math.round(pricePerHour * 100);
+                        } else if (typeof pricePerHour === 'object') {
+                            const keys = [
+                                ...Object.getOwnPropertyNames(options.where.pricePerHour),
+                                ...Object.getOwnPropertySymbols(options.where.pricePerHour)
+                            ];
+                            keys.forEach((operator) => {
+                                const value = pricePerHour[operator];
+                                options.where.pricePerHour[operator] = Math.round(parseFloat(value) * 100);
+                            });
+                        } else {
+                            throw new Error('Invalid pricePerHour value');
+                        }
+                    }
+                }
+            }
         }
     );
 

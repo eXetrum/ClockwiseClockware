@@ -41,3 +41,13 @@ export const RATING_FORMAT_DECIMAL = 1;
 export const ACCEPTED_IMAGE_TYPES = { 'image/jpeg': ['.jpeg', '.jpg'], 'image/png': ['.png'] };
 export const MAX_IMAGES_COUNT = 5;
 export const MAX_IMAGE_BYTES_SIZE = 1024 * 1024;
+
+export const PAGINATION_PAGE_SIZE_OPTIONS = [5, 10, 25, 50];
+
+export const FILTER_TYPE = {
+  BY_MASTER: 'filterByMaster',
+  BY_CITY: 'filterByCity',
+  BY_WATCH: 'filterByWatch',
+  BY_STATUS: 'filterByStatus',
+  BY_DATE: 'filterByDate',
+};

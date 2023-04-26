@@ -33,7 +33,7 @@ apiSecure.interceptors.response.use(
   },
   function (error) {
     const { authUser } = store.getState().authReducer;
-    if (error.response.status === 401 && authUser.accessToken) {
+    if (error?.response?.status === 401 && authUser.accessToken) {
       store.dispatch(destroyAuth());
     } else {
       // eslint-disable-next-line

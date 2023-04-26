@@ -1,44 +1,90 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Container, Row, Form } from 'react-bootstrap';
+import { Container, Form, Row } from 'react-bootstrap';
 import { useSnackbar } from 'notistack';
-import { PuffLoader } from 'react-spinners';
-import { Header, ErrorContainer, ClientOrdersList, ModalForm } from '../../../components';
-import Rating from '@mui/material/Rating';
+
+import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
+import { Dialog, DialogContent, DialogTitle, Rating } from '@mui/material';
+
+import ImageIcon from '@mui/icons-material/Image';
+import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+
+import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
+
 import { fetchOrders, rateOrder } from '../../../store/thunks';
-import { changeVisibilityRateForm, changeNewOrderField } from '../../../store/actions';
 import {
-  selectNewOrder,
+  selectAllOrders,
   selectOrderError,
   selectOrderInitialLoading,
   selectOrderPending,
   selectOrderShowRateForm,
+  selectOrderTotalItems,
+  selectOrderCurrentPage,
+  selectOrderPageSize,
+  selectOrderSortFielName,
+  selectOrderSortOrder,
 } from '../../../store/selectors';
+import {
+  changeVisibilityRateForm,
+  changeOrderCurrentPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+} from '../../../store/actions';
 
-import { isUnknownOrNoErrorType } from '../../../utils';
-import { MAX_RATING_VALUE, RATING_PRECISION_STEP } from '../../../constants';
+import { formatDate, formatDecimal } from '../../../utils';
+import {
+  ERROR_TYPE,
+  PAGINATION_PAGE_SIZE_OPTIONS,
+  RATING_PRECISION_STEP,
+  MAX_RATING_VALUE,
+  RATING_FORMAT_DECIMAL,
+  ORDER_STATUS,
+} from '../../../constants';
 
 const ClientDashboardOrdersPage = () => {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const newOrder = useSelector(selectNewOrder);
+  const [rating, setRating] = useState(MAX_RATING_VALUE);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [open, setOpen] = useState(false);
+
+  const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
-  const isInitialLoading = useSelector(selectOrderInitialLoading);
+  const loading = useSelector(selectOrderInitialLoading);
   const isPending = useSelector(selectOrderPending);
   const isShowRateForm = useSelector(selectOrderShowRateForm);
+  const totalItems = useSelector(selectOrderTotalItems);
 
-  useEffect(() => dispatch(fetchOrders()), [dispatch]);
+  const page = useSelector(selectOrderCurrentPage);
+  const pageSize = useSelector(selectOrderPageSize);
 
-  const isComponentReady = useMemo(() => !isInitialLoading && isUnknownOrNoErrorType(error), [isInitialLoading, error]);
+  const sortFieldName = useSelector(selectOrderSortFielName);
+  const sortOrder = useSelector(selectOrderSortOrder);
 
-  const [orderId, setOrderId] = useState(null);
+  const fetchPage = useCallback(
+    () => dispatch(fetchOrders({ offset: page * pageSize, limit: pageSize, orderBy: sortFieldName, order: sortOrder })),
+    [dispatch, page, pageSize, sortFieldName, sortOrder],
+  );
 
-  const onReview = useCallback(
+  useEffect(() => fetchPage(), [fetchPage]);
+
+  const onImagePreviewOpen = useCallback(order => {
+    setOpen(true);
+    setSelectedOrder(order);
+  }, []);
+
+  const onImagePreviewClose = useCallback(() => {
+    setOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
+  const onReviewStart = useCallback(
     async order => {
-      setOrderId(order.id);
+      setSelectedOrder(order);
       dispatch(changeVisibilityRateForm(true));
     },
     [dispatch],
@@ -47,20 +93,118 @@ const ClientDashboardOrdersPage = () => {
   const onSubmit = useCallback(
     async event => {
       event.preventDefault();
-      const rating = newOrder.rating;
       dispatch(changeVisibilityRateForm(false));
-      const action = await dispatch(rateOrder({ id: orderId, rating }));
-      setOrderId(null);
+      const action = await dispatch(rateOrder({ id: selectedOrder?.id, rating }));
+      setSelectedOrder(null);
 
-      if (isFulfilled(action)) enqueueSnackbar(`Order "${orderId}" rated with value=${newOrder.rating}`, { variant: 'success' });
-      else if (isRejected(action)) enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${selectedOrder?.id}" rated with value=${rating}`, { variant: 'success' });
+      else if (isRejected(action)) {
+        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) fetchPage();
+      }
     },
-    [dispatch, enqueueSnackbar, orderId, newOrder],
+    [dispatch, enqueueSnackbar, fetchPage, selectedOrder, rating],
   );
 
   const onHide = useCallback(() => dispatch(changeVisibilityRateForm(false)), [dispatch]);
+  const onRatingChange = useCallback((event, value) => setRating(value), []);
 
-  const onRatingChange = useCallback((event, value) => dispatch(changeNewOrderField({ name: 'rating', value })), [dispatch]);
+  const onPaginationModelChange = useCallback(
+    params => {
+      if (params.page !== page) dispatch(changeOrderCurrentPage(params.page));
+      if (params.pageSize !== pageSize) dispatch(changeOrderPageSize(params.pageSize));
+    },
+    [dispatch, page, pageSize],
+  );
+  const onSortModelChange = useCallback(
+    params => {
+      const { field: fieldName = '', sort: order = '' } = params.length ? params[0] : {};
+      if (fieldName !== sortFieldName) dispatch(changeOrderSortFieldName(fieldName));
+      if (order !== sortOrder) dispatch(changeOrderSortOrder(order));
+    },
+    [dispatch, sortFieldName, sortOrder],
+  );
+
+  const columns = useMemo(
+    () => [
+      { field: 'master.name', headerName: 'Master Name', width: 240, flex: 1, valueGetter: ({ row }) => row.master.name },
+      { field: 'watch.repairTime', headerName: 'Service', type: 'number', flex: 1, valueGetter: ({ row }) => row.watch.name },
+      { field: 'city.name', headerName: 'City', width: 200, flex: 1, valueGetter: ({ row }) => row.city.name },
+      {
+        field: 'startDate',
+        headerName: 'Date Start',
+        width: 140,
+        type: 'dateTime',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDate(value),
+      },
+      {
+        field: 'endDate',
+        headerName: 'End Start',
+        width: 140,
+        type: 'dateTime',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDate(value),
+      },
+      {
+        field: 'status',
+        headerName: 'Status',
+        type: 'enum_orders_status',
+        flex: 1,
+      },
+      {
+        field: 'totalCost',
+        headerName: 'Total Cost',
+        type: 'number',
+        flex: 1,
+        valueFormatter: ({ value }) => formatDecimal(value),
+      },
+      {
+        field: 'rating',
+        headerName: 'Rating',
+        type: 'number',
+        headerAlign: 'center',
+        width: 120,
+        align: 'center',
+        flex: 1,
+        valueGetter: ({ row }) => {
+          if (row.rating === null) return '-';
+          return `${formatDecimal(row.rating, RATING_FORMAT_DECIMAL)}/${formatDecimal(MAX_RATING_VALUE, RATING_FORMAT_DECIMAL)}`;
+        },
+      },
+      {
+        field: 'actions',
+        headerName: 'actions',
+        type: 'actions',
+        flex: 1,
+        filterable: false,
+        disableReorder: true,
+        getActions: ({ row }) => {
+          const actions = [];
+          if (row.images.length) {
+            actions.unshift(
+              <GridActionsCellItem icon={<ImageIcon />} label="Show Images" onClick={() => onImagePreviewOpen(row)} showInMenu />,
+            );
+          }
+
+          if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
+            actions.unshift(
+              <GridActionsCellItem
+                icon={<ThumbUpOutlinedIcon />}
+                label="Rate Order"
+                onClick={() => onReviewStart(row)}
+                disabled={row.isEvaluating}
+                showInMenu
+              />,
+            );
+          }
+
+          return actions;
+        },
+      },
+    ],
+    [onImagePreviewOpen, onReviewStart],
+  );
 
   return (
     <Container>
@@ -71,16 +215,34 @@ const ClientDashboardOrdersPage = () => {
         </center>
         <hr />
 
-        {isInitialLoading ? (
-          <center>
-            <PuffLoader color="#36d7b7" />
-          </center>
-        ) : null}
+        <DataGrid
+          autoHeight
+          disableRowSelectionOnClick
+          disableColumnFilter
+          rows={orders}
+          columns={columns}
+          loading={loading}
+          hideFooterPagination={loading}
+          paginationMode="server"
+          sortingMode="server"
+          filterMode="server"
+          initialState={{
+            pagination: { paginationModel: { pageSize, page } },
+            sorting: { sortModel: [{ field: sortFieldName, sort: sortOrder }] },
+          }}
+          onPaginationModelChange={onPaginationModelChange}
+          onSortModelChange={onSortModelChange}
+          rowCount={totalItems}
+          pageSizeOptions={PAGINATION_PAGE_SIZE_OPTIONS}
+          components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
+        />
 
-        <ErrorContainer error={error} />
-
-        {isComponentReady ? <ClientOrdersList onReview={onReview} /> : null}
-        <hr />
+        <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+          <DialogTitle>Order images</DialogTitle>
+          <DialogContent>
+            <OrderImageList images={selectedOrder?.images} />
+          </DialogContent>
+        </Dialog>
 
         <ModalForm
           size="sm"
@@ -97,7 +259,7 @@ const ClientDashboardOrdersPage = () => {
                 <Row md="auto" className="justify-content-md-center">
                   <Rating
                     onChange={onRatingChange}
-                    value={newOrder.rating}
+                    value={rating}
                     disabled={isPending}
                     defaultValue={MAX_RATING_VALUE}
                     precision={RATING_PRECISION_STEP}

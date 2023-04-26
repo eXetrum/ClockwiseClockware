@@ -1,4 +1,5 @@
-const { body, param, validationResult } = require('express-validator');
+const { body, param, query, validationResult } = require('express-validator');
+const { Sequelize } = require('sequelize');
 const db = require('../database/models/index');
 const { User, Client, Order } = require('../database/models');
 const { RequireAuth } = require('../middleware/RouteProtector');
@@ -7,22 +8,33 @@ const { ACCESS_SCOPE, USER_ROLES } = require('../constants');
 
 const getAll = [
     RequireAuth(ACCESS_SCOPE.AdminOnly),
+    query('offset', 'offset value is incorrect').optional().isInt({ min: 0 }),
+    query('limit', 'limit value is incorrect ').optional().isInt({ min: 0 }),
+    query('orderBy', 'orderBy value is incorrect ').optional().isIn(['email', 'name', 'isEmailVerified']),
+    query('order', 'order value is incorrect ').optional().toUpperCase().isIn(['ASC', 'DESC']),
     async (req, res) => {
         try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { offset = 0, limit, orderBy, order = 'ASC' } = req.query;
+            const sortParams = orderBy ? [orderBy, order] : ['createdAt', 'DESC'];
+            if (orderBy === 'email') sortParams[0] = Sequelize.literal('"User.email"');
+
             const records = await Client.findAll({
                 include: [
-                    {
-                        model: User
-                    },
+                    { model: User, required: true },
                     { model: Order, as: 'orders' }
                 ],
-                attributes: { exclude: ['id', 'userId'] },
-                order: [['createdAt', 'DESC']]
+                attributes: { exclude: ['id'] },
+                order: [sortParams],
+                limit,
+                offset
             });
+            const total = await Client.count({ include: [{ model: User, required: true }] });
 
             const clients = records.map((client) => ({ ...client.toJSON(), ...client.User.toJSON() }));
-
-            res.status(200).json({ clients }).end();
+            res.status(200).json({ clients, total }).end();
         } catch (error) {
             res.status(500).json(error).end();
         }

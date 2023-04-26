@@ -1,1 +1,10 @@
-export { changeVisibilityRateForm, changeNewOrderField, resetNewOrder } from '../reducers/orderSlice';
+export {
+  changeVisibilityRateForm,
+  changeNewOrderField,
+  resetNewOrder,
+  changeOrderCurrentPage,
+  changeOrderPageSize,
+  changeOrderSortFieldName,
+  changeOrderSortOrder,
+  changeOrderFilters,
+} from '../reducers/orderSlice';

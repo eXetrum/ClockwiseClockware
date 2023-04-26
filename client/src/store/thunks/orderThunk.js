@@ -1,17 +1,26 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { apiSecure } from '../../axios/axios.interceptor';
 import { getErrorType, getErrorText } from '../../utils';
-import { ORDER_STATUS } from '../../constants';
+import { ORDER_STATUS, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
 //#region Order
-export const fetchOrders = createAsyncThunk('order/fetchAll', async (_, thunkAPI) => {
-  try {
-    const response = await apiSecure.get('/orders');
-    return response.data.orders;
-  } catch (error) {
-    return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
-  }
-});
+export const fetchOrders = createAsyncThunk(
+  'order/fetchAll',
+  async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '', filter = '' }, thunkAPI) => {
+    try {
+      const params = {
+        ...(limit !== null && { offset, limit }),
+        ...(orderBy !== '' && { orderBy }),
+        ...(order !== '' && { order }),
+      };
+
+      const response = await apiSecure.get('/orders', { params });
+      return response.data;
+    } catch (error) {
+      return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
+    }
+  },
+);
 
 export const addOrder = createAsyncThunk('order/addOrder', async (order, thunkAPI) => {
   try {

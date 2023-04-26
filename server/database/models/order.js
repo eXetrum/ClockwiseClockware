@@ -96,7 +96,28 @@ module.exports = (sequelize, DataTypes) => {
             sequelize,
             modelName: 'Order',
             tableName: 'orders',
-            associations: true
+            associations: true,
+            hooks: {
+                beforeFind: (options) => {
+                    if (options && options.where && options.where.totalCost) {
+                        const totalCost = options.where.totalCost;
+                        if (typeof totalCost === 'number') {
+                            options.where.totalCost = Math.round(totalCost * 100);
+                        } else if (typeof totalCost === 'object') {
+                            const keys = [
+                                ...Object.getOwnPropertyNames(options.where.totalCost),
+                                ...Object.getOwnPropertySymbols(options.where.totalCost)
+                            ];
+                            keys.forEach((operator) => {
+                                const value = totalCost[operator];
+                                options.where.totalCost[operator] = Math.round(parseFloat(value) * 100);
+                            });
+                        } else {
+                            throw new Error('Invalid totalCost value');
+                        }
+                    }
+                }
+            }
         }
     );
 
