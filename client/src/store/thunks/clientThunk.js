@@ -8,10 +8,13 @@ export const fetchClients = createAsyncThunk(
   'client/fetchAll',
   async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '' }, thunkAPI) => {
     try {
-      if (limit === -1) limit = undefined;
-      if (orderBy === '') orderBy = order = undefined;
+      const params = {
+        ...(limit !== null && { offset, limit }),
+        ...(orderBy !== '' && { orderBy }),
+        ...(order !== '' && { order }),
+      };
 
-      const response = await apiSecure.get('/clients', { params: { offset, limit, orderBy, order } });
+      const response = await apiSecure.get('/clients', { params });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });

@@ -97,8 +97,8 @@ const DataGridFilterContainer = ({ filters = [], onApply }) => {
   }, [filters, filterSelectorsMapping]);
 
   useEffect(() => {
-    dispatch(fetchMasters({ limit: -1 }));
-    dispatch(fetchCities({ limit: -1 }));
+    dispatch(fetchMasters({ limit: null }));
+    dispatch(fetchCities({ limit: null }));
     dispatch(fetchWatches());
   }, [dispatch]);
 
