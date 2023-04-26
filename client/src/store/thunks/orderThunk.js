@@ -12,6 +12,7 @@ export const fetchOrders = createAsyncThunk(
         ...(limit !== null && { offset, limit }),
         ...(orderBy !== '' && { orderBy }),
         ...(order !== '' && { order }),
+        ...(filter !== '' && { filter }),
       };
 
       const response = await apiSecure.get('/orders', { params });
