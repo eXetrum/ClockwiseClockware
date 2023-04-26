@@ -84,4 +84,13 @@ export const rateOrder = createAsyncThunk('order/rateOrder', async ({ id, rating
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
   }
 });
+
+export const checkoutOrder = createAsyncThunk('order/checkoutOrder', async ({ id, transactionId }, thunkAPI) => {
+  try {
+    await apiSecure.patch(`/orders/${id}`, { transactionId, status: ORDER_STATUS.CONFIRMED });
+    return { id, transactionId };
+  } catch (error) {
+    return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
+  }
+});
 //#endregion
