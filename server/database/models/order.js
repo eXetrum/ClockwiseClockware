@@ -73,7 +73,7 @@ module.exports = (sequelize, DataTypes) => {
             status: {
                 type: DataTypes.ENUM(Object.values(ORDER_STATUS)),
                 allowNull: false,
-                defaultValue: 'confirmed'
+                defaultValue: ORDER_STATUS.WAITING_FOR_PAYMENT
             },
             totalCost: {
                 type: DataTypes.BIGINT,
