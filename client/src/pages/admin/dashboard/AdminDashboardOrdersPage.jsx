@@ -263,6 +263,12 @@ const AdminDashboardOrdersPage = () => {
         getActions: ({ row }) => {
           const actions = [<GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />];
 
+          if (![ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELED].includes(row.status)) {
+            actions.unshift(
+              <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
+            );
+          }
+
           if (row.status === ORDER_STATUS.WAITING_FOR_PAYMENT) {
             actions.unshift(
               <GridActionsCellItem
@@ -275,7 +281,7 @@ const AdminDashboardOrdersPage = () => {
             );
           }
 
-          if (row.status === ORDER_STATUS.CONFIRMED) {
+          if (row.status === ORDER_STATUS.WAITING_FOR_PAYMENT || row.status === ORDER_STATUS.CONFIRMED) {
             actions.unshift(
               <GridActionsCellItem
                 icon={<TaskAltIcon />}
@@ -291,7 +297,6 @@ const AdminDashboardOrdersPage = () => {
                 disabled={row.isCompleting || row.isCanceling}
                 showInMenu
               />,
-              <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
             );
           }
 
@@ -305,7 +310,7 @@ const AdminDashboardOrdersPage = () => {
         },
       },
     ],
-    [navigate, onComplete, onCancel, onImagePreviewOpen, onRemove],
+    [navigate, onComplete, onCancel, onCheckout, onImagePreviewOpen, onRemove],
   );
 
   return (
