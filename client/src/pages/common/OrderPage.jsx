@@ -48,7 +48,7 @@ const OrderPage = () => {
 
   useEffect(() => {
     dispatch(fetchWatches());
-    dispatch(fetchCities({ limit: -1 }));
+    dispatch(fetchCities({ limit: null }));
     setUpOrder();
   }, [dispatch, setUpOrder]);
 
