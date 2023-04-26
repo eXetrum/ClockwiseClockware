@@ -1,4 +1,5 @@
 export const ORDER_STATUS = {
+  WAITING_FOR_PAYMENT: 'waitingForPayment',
   CONFIRMED: 'confirmed',
   COMPLETED: 'completed',
   CANCELED: 'canceled',
