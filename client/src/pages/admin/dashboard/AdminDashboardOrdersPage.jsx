@@ -143,7 +143,7 @@ const AdminDashboardOrdersPage = () => {
 
   const onCheckout = useCallback(
     async order => {
-      const action = await dispatch(checkoutOrder({ id: order.id }));
+      const action = await dispatch(checkoutOrder({ id: order.id, transactionId: -1 }));
       if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" checkedout`, { variant: 'success' });
       else if (isRejected(action)) {
         enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
