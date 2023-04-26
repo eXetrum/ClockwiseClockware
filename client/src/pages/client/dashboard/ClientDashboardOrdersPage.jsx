@@ -5,15 +5,18 @@ import { useSnackbar } from 'notistack';
 import { DataGrid, GridActionsCellItem } from '@mui/x-data-grid';
 import { Dialog, DialogContent, DialogTitle, Rating } from '@mui/material';
 
+import { PayPalButtons } from '@paypal/react-paypal-js';
+
 import ImageIcon from '@mui/icons-material/Image';
 import ThumbUpOutlinedIcon from '@mui/icons-material/ThumbUpOutlined';
+import PaymentIcon from '@mui/icons-material/Payment';
 
 import { Header, ModalForm, OrderImageList, LoadingOverlay, NoRowsOverlay } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchOrders, rateOrder } from '../../../store/thunks';
+import { fetchOrders, rateOrder, checkoutOrder } from '../../../store/thunks';
 import {
   selectAllOrders,
   selectOrderError,
@@ -50,7 +53,8 @@ const ClientDashboardOrdersPage = () => {
 
   const [rating, setRating] = useState(MAX_RATING_VALUE);
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [open, setOpen] = useState(false);
+  const [openImages, setOpenImages] = useState(false);
+  const [openCheckout, setOpenCheckout] = useState(false);
 
   const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
@@ -73,12 +77,12 @@ const ClientDashboardOrdersPage = () => {
   useEffect(() => fetchPage(), [fetchPage]);
 
   const onImagePreviewOpen = useCallback(order => {
-    setOpen(true);
+    setOpenImages(true);
     setSelectedOrder(order);
   }, []);
 
   const onImagePreviewClose = useCallback(() => {
-    setOpen(false);
+    setOpenImages(false);
     setSelectedOrder(null);
   }, []);
 
@@ -89,6 +93,16 @@ const ClientDashboardOrdersPage = () => {
     },
     [dispatch],
   );
+
+  //openCheckout
+  const onCheckoutOpen = useCallback(order => {
+    setSelectedOrder(order);
+    setOpenCheckout(true);
+  }, []);
+  const onCheckoutClose = useCallback(() => {
+    setSelectedOrder(null);
+    setOpenCheckout(false);
+  }, []);
 
   const onSubmit = useCallback(
     async event => {
@@ -187,6 +201,18 @@ const ClientDashboardOrdersPage = () => {
             );
           }
 
+          if (row.status === ORDER_STATUS.WAITING_FOR_PAYMENT) {
+            actions.unshift(
+              <GridActionsCellItem
+                icon={<PaymentIcon />}
+                label="Pay Order"
+                onClick={() => onCheckoutOpen(row)}
+                disabled={row.isEvaluating}
+                showInMenu
+              />,
+            );
+          }
+
           if (row.status === ORDER_STATUS.COMPLETED && row.rating === null) {
             actions.unshift(
               <GridActionsCellItem
@@ -203,7 +229,7 @@ const ClientDashboardOrdersPage = () => {
         },
       },
     ],
-    [onImagePreviewOpen, onReviewStart],
+    [onImagePreviewOpen, onReviewStart, onCheckoutOpen],
   );
 
   return (
@@ -237,10 +263,52 @@ const ClientDashboardOrdersPage = () => {
           components={{ LoadingOverlay, NoRowsOverlay: () => NoRowsOverlay({ error }) }}
         />
 
-        <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
+        <Dialog onClose={onImagePreviewClose} open={openImages} maxWidth={'true'}>
           <DialogTitle>Order images</DialogTitle>
           <DialogContent>
             <OrderImageList images={selectedOrder?.images} />
+          </DialogContent>
+        </Dialog>
+
+        <Dialog onClose={onCheckoutClose} open={openCheckout} maxWidth={'true'}>
+          <DialogTitle>Order Checkout</DialogTitle>
+          <DialogContent>
+            <PayPalButtons
+              createOrder={(data, actions) => {
+                return actions.order.create({
+                  intent: 'CAPTURE',
+                  purchase_units: [
+                    {
+                      custom_id: selectedOrder.id,
+                      description: `Service: ${selectedOrder.watch.name} (${selectedOrder.watch.repairTime}h)`,
+                      amount: {
+                        value: selectedOrder.totalCost,
+                        currency_code: 'USD',
+                      },
+                    },
+                  ],
+                });
+              }}
+              onApprove={async (data, actions) => {
+                return actions.order.capture().then(async details => {
+                  console.log('paypal.paymentSuccess: ', details);
+                  const orderId = details.purchase_units[0].custom_id;
+
+                  const action = await dispatch(checkoutOrder({ id: orderId }));
+                  if (isFulfilled(action)) enqueueSnackbar(`Order "${orderId}" maked as completed`, { variant: 'success' });
+                  else if (isRejected(action)) {
+                    enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+                    if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) fetchPage();
+                  }
+                });
+              }}
+              onCancel={() => {
+                alert('paypal.paymentCancel');
+              }}
+              onError={error => {
+                alert(error);
+              }}
+            />
           </DialogContent>
         </Dialog>
 
