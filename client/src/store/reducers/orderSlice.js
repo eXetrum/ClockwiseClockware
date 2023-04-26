@@ -1,6 +1,16 @@
 /* eslint-disable */
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchOrders, addOrder, deleteOrder, fetchOrder, updateOrder, completeOrder, cancelOrder, rateOrder } from '../thunks';
+import {
+  fetchOrders,
+  addOrder,
+  deleteOrder,
+  fetchOrder,
+  updateOrder,
+  completeOrder,
+  cancelOrder,
+  rateOrder,
+  checkoutOrder,
+} from '../thunks';
 import { dateToNearestHour, isGlobalErrorType } from '../../utils';
 import { ERROR_TYPE, MAX_RATING_VALUE, ORDER_STATUS, PAGINATION_PAGE_SIZE_OPTIONS } from '../../constants';
 
@@ -216,6 +226,28 @@ export const orderSlice = createSlice({
       state.error = initEmptyError();
     },
     [rateOrder.rejected]: (state, { payload }) => {
+      const idx = state.orders.map(order => order.id).indexOf(payload.id);
+      state.orders[idx].isEvaluating = false;
+      if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter(order => order.id !== payload.id);
+    },
+    //#endregion
+
+    //#region checkout order by id
+    [checkoutOrder.pending]: (state, { meta }) => {
+      console.log('checkoutOrder.pending: ', meta);
+      const idx = state.orders.map(order => order.id).indexOf(meta.arg.id);
+      state.orders[idx].isEvaluating = true;
+      state.error = initEmptyError();
+    },
+    [checkoutOrder.fulfilled]: (state, { payload }) => {
+      console.log('checkoutOrder.fulfilled: ', payload);
+      const idx = state.orders.map(order => order.id).indexOf(payload.id);
+      state.orders[idx].isEvaluating = false;
+      state.orders[idx].status = ORDER_STATUS.CONFIRMED;
+      state.error = initEmptyError();
+    },
+    [checkoutOrder.rejected]: (state, { payload }) => {
+      console.log('checkoutOrder.rejected: ', payload);
       const idx = state.orders.map(order => order.id).indexOf(payload.id);
       state.orders[idx].isEvaluating = false;
       if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter(order => order.id !== payload.id);
