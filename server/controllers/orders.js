@@ -638,7 +638,6 @@ const patch = [
 
             // For clients there should be rating field
             if (authUser.role === USER_ROLES.CLIENT) {
-                const { rating } = req.body;
                 if (rating === undefined) return res.status(400).json({ message: 'Order rating required' }).end();
                 const ratingFloatValue = parseFloat(rating);
                 if (isNaN(ratingFloatValue) || ratingFloatValue < MIN_RATING_VALUE || ratingFloatValue > MAX_RATING_VALUE) {
