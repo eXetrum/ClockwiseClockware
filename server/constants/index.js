@@ -1,4 +1,5 @@
 const ORDER_STATUS = {
+    WAITING_FOR_PAYMENT: 'waitingForPayment',
     CONFIRMED: 'confirmed',
     COMPLETED: 'completed',
     CANCELED: 'canceled'
@@ -16,7 +17,8 @@ const ACCESS_SCOPE = {
     MasterOnly: [USER_ROLES.MASTER],
     ClientOnly: [USER_ROLES.CLIENT],
     MasterOrClient: [USER_ROLES.MASTER, USER_ROLES.CLIENT],
-    AdminOrMaster: [USER_ROLES.ADMIN, USER_ROLES.MASTER]
+    AdminOrMaster: [USER_ROLES.ADMIN, USER_ROLES.MASTER],
+    AdminOrClient: [USER_ROLES.ADMIN, USER_ROLES.CLIENT]
 };
 
 const MS_PER_HOUR = 60 * 60 * 1000;

@@ -13,13 +13,14 @@ import EditIcon from '@mui/icons-material/Edit';
 import DialogTitle from '@mui/material/DialogTitle';
 import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import DoNotDisturbAltIcon from '@mui/icons-material/DoNotDisturbAlt';
+import PaymentIcon from '@mui/icons-material/Payment';
 
 import { Header, OrderImageList, LoadingOverlay, NoRowsOverlay, DataGridFilterContainer } from '../../../components';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { fetchOrders, deleteOrder, completeOrder, cancelOrder } from '../../../store/thunks';
+import { fetchOrders, deleteOrder, completeOrder, cancelOrder, checkoutOrder } from '../../../store/thunks';
 import {
   changeOrderCurrentPage,
   changeOrderPageSize,
@@ -140,6 +141,18 @@ const AdminDashboardOrdersPage = () => {
     [dispatch, enqueueSnackbar, fetchPage],
   );
 
+  const onCheckout = useCallback(
+    async order => {
+      const action = await dispatch(checkoutOrder({ id: order.id, transactionId: -1 }));
+      if (isFulfilled(action)) enqueueSnackbar(`Order "${order.id}" checkedout`, { variant: 'success' });
+      else if (isRejected(action)) {
+        enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
+        if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) fetchPage();
+      }
+    },
+    [dispatch, enqueueSnackbar, fetchPage],
+  );
+
   const onPaginationModelChange = useCallback(
     params => {
       if (params.page !== page) dispatch(changeOrderCurrentPage(params.page));
@@ -250,7 +263,25 @@ const AdminDashboardOrdersPage = () => {
         getActions: ({ row }) => {
           const actions = [<GridActionsCellItem icon={<DeleteForeverIcon />} label="Delete" onClick={() => onRemove(row)} showInMenu />];
 
-          if (row.status === ORDER_STATUS.CONFIRMED) {
+          if (![ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELED].includes(row.status)) {
+            actions.unshift(
+              <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
+            );
+          }
+
+          if (row.status === ORDER_STATUS.WAITING_FOR_PAYMENT) {
+            actions.unshift(
+              <GridActionsCellItem
+                icon={<PaymentIcon />}
+                label="Checkout Order"
+                onClick={() => onCheckout(row)}
+                disabled={row.isEvaluating}
+                showInMenu
+              />,
+            );
+          }
+
+          if (row.status === ORDER_STATUS.WAITING_FOR_PAYMENT || row.status === ORDER_STATUS.CONFIRMED) {
             actions.unshift(
               <GridActionsCellItem
                 icon={<TaskAltIcon />}
@@ -266,7 +297,6 @@ const AdminDashboardOrdersPage = () => {
                 disabled={row.isCompleting || row.isCanceling}
                 showInMenu
               />,
-              <GridActionsCellItem icon={<EditIcon />} label="Edit" onClick={() => navigate(`/admin/orders/${row.id}`)} showInMenu />,
             );
           }
 
@@ -280,7 +310,7 @@ const AdminDashboardOrdersPage = () => {
         },
       },
     ],
-    [navigate, onComplete, onCancel, onImagePreviewOpen, onRemove],
+    [navigate, onComplete, onCancel, onCheckout, onImagePreviewOpen, onRemove],
   );
 
   return (

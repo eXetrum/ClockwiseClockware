@@ -638,7 +638,6 @@ const patch = [
 
             // For clients there should be rating field
             if (authUser.role === USER_ROLES.CLIENT) {
-                const { rating } = req.body;
                 if (rating === undefined) return res.status(400).json({ message: 'Order rating required' }).end();
                 const ratingFloatValue = parseFloat(rating);
                 if (isNaN(ratingFloatValue) || ratingFloatValue < MIN_RATING_VALUE || ratingFloatValue > MAX_RATING_VALUE) {
@@ -695,7 +694,7 @@ const patch = [
                 return res.status(409).json({ message: 'Restricted. Unable to update order details. Order is finallized now.' }).end();
             }
 
-            // === Master === (only can mark order as completed)
+            // === Master === (can mark order as completed)
             if (authUser.role === USER_ROLES.MASTER) {
                 if (status !== ORDER_STATUS.COMPLETED) {
                     return res.status(409).json({ message: 'Restricted. Specified order status is not allowable for master role' }).end();
@@ -707,7 +706,7 @@ const patch = [
             if (originalOrder.status === ORDER_STATUS.COMPLETED) {
                 return res.status(409).json({ message: 'Order already completed' }).end();
             }
-            // Order canceled
+            // Order already canceled
             if (originalOrder.status === ORDER_STATUS.CANCELED) {
                 return res.status(409).json({ message: 'Order canceled and cannot be marked as completed' }).end();
             }
@@ -723,11 +722,46 @@ const patch = [
     }
 ];
 
+const checkout = [
+    RequireAuth(ACCESS_SCOPE.AdminOrClient),
+    param('id').exists().withMessage('Order ID required').isUUID().withMessage('Order ID should be of type string'),
+    body('transactionId').exists().withMessage('transactionId required'),
+    async (req, res) => {
+        try {
+            const errors = validationResult(req).array();
+            if (errors && errors.length) return res.status(400).json({ message: errors[0].msg }).end();
+
+            const { id } = req.params;
+            const { transactionId } = req.body;
+
+            const originalOrder = await Order.findOne({ where: { id } });
+            if (!originalOrder) return res.status(404).json({ message: 'Order not found' }).end();
+
+            if ([ORDER_STATUS.COMPLETED, ORDER_STATUS.CANCELED].includes(originalOrder.status)) {
+                return res.status(409).json({ message: 'Restricted. Unable to update order details. Order is finallized now.' }).end();
+            }
+
+            if (originalOrder.status === ORDER_STATUS.CONFIRMED) return res.status(409).json({ message: 'Already paid' }).end();
+
+            const [affectedRows, result] = await Order.update(
+                { status: ORDER_STATUS.CONFIRMED },
+                { where: { id }, returning: true, limit: 1 }
+            );
+            if (!affectedRows) return res.status(404).json({ message: '~Order not found~' }).end();
+            return res.status(204).end();
+        } catch (error) {
+            if (isDbErrorEntryNotFound(error)) return res.status(404).json({ message: 'Order not found' }).end();
+            res.status(500).json(error).end();
+        }
+    }
+];
+
 module.exports = {
     getAll,
     create,
     remove,
     get,
     update,
-    patch
+    patch,
+    checkout
 };
