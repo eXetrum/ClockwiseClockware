@@ -234,20 +234,17 @@ export const orderSlice = createSlice({
 
     //#region checkout order by id
     [checkoutOrder.pending]: (state, { meta }) => {
-      console.log('checkoutOrder.pending: ', meta);
       const idx = state.orders.map(order => order.id).indexOf(meta.arg.id);
       state.orders[idx].isEvaluating = true;
       state.error = initEmptyError();
     },
     [checkoutOrder.fulfilled]: (state, { payload }) => {
-      console.log('checkoutOrder.fulfilled: ', payload);
       const idx = state.orders.map(order => order.id).indexOf(payload.id);
       state.orders[idx].isEvaluating = false;
       state.orders[idx].status = ORDER_STATUS.CONFIRMED;
       state.error = initEmptyError();
     },
     [checkoutOrder.rejected]: (state, { payload }) => {
-      console.log('checkoutOrder.rejected: ', payload);
       const idx = state.orders.map(order => order.id).indexOf(payload.id);
       state.orders[idx].isEvaluating = false;
       if (payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) state.orders.filter(order => order.id !== payload.id);
