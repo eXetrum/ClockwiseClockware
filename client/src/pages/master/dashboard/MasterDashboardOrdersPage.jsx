@@ -30,11 +30,11 @@ import { formatDate, formatDecimal } from '../../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, ORDER_STATUS } from '../../../constants';
 
 const MasterDashboardOrdersPage = () => {
-  const { enqueueSnackbar } = useSnackbar();
-  const dispatch = useDispatch();
-
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [open, setOpen] = useState(false);
+
+  const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
   const orders = useSelector(selectAllOrders);
   const error = useSelector(selectOrderError);
