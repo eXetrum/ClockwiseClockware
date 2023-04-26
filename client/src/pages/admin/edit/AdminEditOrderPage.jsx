@@ -45,7 +45,7 @@ const AdminEditOrderPage = () => {
 
   useEffect(() => {
     dispatch(fetchWatches());
-    dispatch(fetchCities({ limit: -1 }));
+    dispatch(fetchCities({ limit: null }));
     dispatch(fetchOrder(id));
   }, [dispatch, id]);
 
