@@ -8,11 +8,14 @@ export const fetchOrders = createAsyncThunk(
   'order/fetchAll',
   async ({ offset = 0, limit = PAGINATION_PAGE_SIZE_OPTIONS[0], orderBy = '', order = '', filter = '' }, thunkAPI) => {
     try {
-      if (limit === -1) limit = undefined;
-      if (orderBy === '') orderBy = order = undefined;
-      if (filter === '') filter = undefined;
+      const params = {
+        ...(limit !== null && { offset, limit }),
+        ...(orderBy !== '' && { orderBy }),
+        ...(order !== '' && { order }),
+        ...(filter !== '' && { filter }),
+      };
 
-      const response = await apiSecure.get('/orders', { params: { offset, limit, orderBy, order, filter } });
+      const response = await apiSecure.get('/orders', { params });
       return response.data;
     } catch (error) {
       return thunkAPI.rejectWithValue({ message: getErrorText(error), type: getErrorType(error) });
@@ -87,7 +90,7 @@ export const rateOrder = createAsyncThunk('order/rateOrder', async ({ id, rating
 
 export const checkoutOrder = createAsyncThunk('order/checkoutOrder', async ({ id, transactionId }, thunkAPI) => {
   try {
-    await apiSecure.patch(`/orders/${id}`, { transactionId, status: ORDER_STATUS.CONFIRMED });
+    await apiSecure.post(`/orders/checkout/${id}`, { transactionId });
     return { id, transactionId };
   } catch (error) {
     return thunkAPI.rejectWithValue({ id, message: getErrorText(error), type: getErrorType(error) });
