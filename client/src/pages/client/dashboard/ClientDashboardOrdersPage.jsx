@@ -291,22 +291,24 @@ const ClientDashboardOrdersPage = () => {
               }}
               onApprove={async (data, actions) => {
                 return actions.order.capture().then(async details => {
-                  console.log('paypal.paymentSuccess: ', details);
                   const orderId = details.purchase_units[0].custom_id;
 
-                  const action = await dispatch(checkoutOrder({ id: orderId }));
-                  if (isFulfilled(action)) enqueueSnackbar(`Order "${orderId}" maked as completed`, { variant: 'success' });
+                  const action = await dispatch(checkoutOrder({ id: orderId, transactionId: details.id }));
+                  if (isFulfilled(action)) enqueueSnackbar(`Payment for order="${orderId}" completed`, { variant: 'success' });
                   else if (isRejected(action)) {
                     enqueueSnackbar(`Error: ${action.payload.message}`, { variant: 'error' });
                     if (action.payload.type === ERROR_TYPE.ENTRY_NOT_FOUND) fetchPage();
                   }
+                  onCheckoutClose();
                 });
               }}
               onCancel={() => {
-                alert('paypal.paymentCancel');
+                enqueueSnackbar('PayPal payment cancel', { variant: 'warning' });
+                onCheckoutClose();
               }}
               onError={error => {
-                alert(error);
+                enqueueSnackbar(`Error: ${error}`, { variant: 'error' });
+                onCheckoutClose();
               }}
             />
           </DialogContent>
