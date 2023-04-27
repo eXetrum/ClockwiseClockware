@@ -38,6 +38,9 @@ const Header = () => {
               <Nav.Link as={Link} to="/master/orders">
                 Orders
               </Nav.Link>
+              <Nav.Link as={Link} to="/master/schedule">
+                Schedule
+              </Nav.Link>
             </Nav>
           ) : null}
           {auth.user.role === USER_ROLES.CLIENT ? (
