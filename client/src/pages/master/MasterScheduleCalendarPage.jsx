@@ -5,10 +5,9 @@ import { useSnackbar } from 'notistack';
 
 import { Header, OrderImageList } from '../../components';
 
-import FullCalendar from '@fullcalendar/react';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import timeGridPlugin from '@fullcalendar/timegrid';
-import interactionPlugin from '@fullcalendar/interaction';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import moment from 'moment';
 
 import { isFulfilled, isRejected } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
@@ -28,6 +27,8 @@ import { changeOrderCurrentPage, changeOrderPageSize, changeOrderSortFieldName, 
 
 import { formatDate, formatDecimal } from '../../utils';
 import { ERROR_TYPE, PAGINATION_PAGE_SIZE_OPTIONS, ORDER_STATUS } from '../../constants';
+
+const localizer = momentLocalizer(moment);
 
 const MasterScheduleCalendarPage = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -84,8 +85,10 @@ const MasterScheduleCalendarPage = () => {
     [dispatch, enqueueSnackbar, fetchPage],
   );
 
+  //const [selectedView, setSelectedView] = useState(CalendarView.WEEK);
+
   return (
-    <Container>
+    <Container maxWidth={'true'}>
       <Header />
       <Container>
         <center>
@@ -93,7 +96,13 @@ const MasterScheduleCalendarPage = () => {
         </center>
         <hr />
 
-        <FullCalendar plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]} initialView="dayGridMonth" />
+        <Calendar
+          localizer={localizer}
+          events={orders.map(item => ({ start: item.startDate, end: item.endDate, title: item.id }))}
+          startAccessor="start"
+          endAccessor="end"
+          style={{ height: 650 }}
+        />
 
         <Dialog onClose={onImagePreviewClose} open={open} maxWidth={'true'}>
           <DialogTitle>Order images</DialogTitle>
