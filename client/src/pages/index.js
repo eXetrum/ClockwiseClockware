@@ -10,6 +10,7 @@ export { default as AdminEditOrderPage } from './admin/edit/AdminEditOrderPage';
 
 // export { default as ... } from './master/...';
 export { default as MasterDashboardOrdersPage } from './master/dashboard/MasterDashboardOrdersPage';
+export { default as MasterScheduleCalendarPage } from './master/MasterScheduleCalendarPage';
 
 // export { default as ... } from './client/...';
 export { default as ClientDashboardOrdersPage } from './client/dashboard/ClientDashboardOrdersPage';
