@@ -16,7 +16,7 @@ import {
   AdminDashboardOrdersPage,
 } from './pages/admin/dashboard';
 import { AdminEditCityPage, AdminEditMasterPage, AdminEditClientPage, AdminEditOrderPage } from './pages/admin/edit';
-import { MasterDashboardOrdersPage } from './pages/master/dashboard';
+import { MasterDashboardOrdersPage, MasterScheduleCalendarPage } from './pages/master';
 import { ClientDashboardOrdersPage } from './pages/client/dashboard';
 
 import { RouteGuard } from './providers';
@@ -51,6 +51,7 @@ const App = () => {
         <Route exact path="/admin/clients/:id" element={AdminRoute(<AdminEditClientPage />)} />
         <Route exact path="/admin/orders/:id" element={AdminRoute(<AdminEditOrderPage />)} />
         <Route exact path="/master/orders" element={MasterRoute(<MasterDashboardOrdersPage />)} />
+        <Route exact path="/master/schedule" element={MasterRoute(<MasterScheduleCalendarPage />)} />
         <Route exact path="/client/orders" element={ClientRoute(<ClientDashboardOrdersPage />)} />
         <Route exact path="/verify/:token" element={<VerifyPage />} />
         <Route path="*" element={<Navigate to="/" />} />
